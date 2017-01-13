@@ -17,10 +17,13 @@
 (def url-get-element-text "/session/%s/element/%s/text")
 (def url-get-element-name "/session/%s/element/%s/name")
 (def url-element-enabled? "/session/%s/element/%s/enabled")
-
+(def url-find-element "/session/%s/element")
+(def url-find-elements "/session/%s/elements")
 (def url-element-click! "/session/%s/element/%s/click")
 (def url-element-clear! "/session/%s/element/%s/clear")
 (def url-element-value! "/session/%s/element/%s/value")
+
+;; /session/{session id}/element/{element id}/element
 
 
 (def params
@@ -169,3 +172,27 @@
       (client/post
        (assoc params :form-params {:value (vec text)}))
       :body))
+
+(defn find-element [session locator selector]
+  (-> (str url-server
+           (format url-find-element
+                   (:sessionId session)))
+      (client/post
+       (assoc params :form-params {:using locator :value selector}))
+      :body
+      :value
+      first
+      second
+      )) ;; todo
+
+(defn find-elements [session locator selector]
+  (-> (str url-server
+           (format url-find-elements
+                   (:sessionId session)))
+      (client/post
+       (assoc params :form-params {:using locator :value selector}))
+      :body
+      :value ;; todo keys
+
+
+      ))
