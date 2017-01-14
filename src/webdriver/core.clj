@@ -1,12 +1,15 @@
 (ns webdriver.core
   (:require [clj-http.client :as client]
+            [clojure.string :as str]
             [clojure.data.codec.base64 :as b64]
             [clojure.java.io :as io]
             [clojure.test :refer [is deftest]]))
 
 (def url-server "http://127.0.0.1:4444")
 
+(def url-status "/status")
 (def url-session "/session")
+(def url-session-delete "/session/%s")
 (def url-go-url "/session/%s/url")
 (def url-go-back "/session/%s/back")
 (def url-go-forward "/session/%s/forward")
@@ -29,11 +32,7 @@
 (def url-execute-script-sync! "/session/%s/execute/sync")
 (def url-screenshot "/session/%s/screenshot")
 
-
-
-
 ;; /session/{session id}/element/{element id}/element
-
 
 (def params
   {:as :json
@@ -41,16 +40,53 @@
    :content-type :json
    :form-params {}
    :debug true
-   :throw-exceptions false})
+   ;; :throw-exceptions false
+   })
 
-(defn get-session []
-  (-> "http://127.0.0.1:4444/session"
-      (client/post params)
-      :body))
+(def api-params
+  {:as :json
+   :accept :json
+   :content-type :json
+   :form-params {}
+   :debug true
+   ;; :throw-exceptions false
+   })
 
-(defn go-url [session url]
-  (-> (str url-server
-           (format url-go-url (:sessionId session)))
+(defn url-item [item]
+  (cond
+    (keyword? item) (name item)
+    (string? item) item
+    :else (str item)))
+
+(defn get-path [& args]
+  (str/join "/" (map url-item args)))
+
+(defn get-status [server]
+  (-> server
+      (str "/" (get-path :status))
+      (client/get params)
+      :body
+      :value))
+
+(defn get-session [server opt]
+  (-> server
+      (str "/" (get-path :session))
+      (client/post
+       (assoc params :form-params opt))
+      :body)) ;; todo erro
+
+(defn delete-session [server session]
+  (-> server
+      (str "/" (get-path :session (:sessionId session)))
+      (client/delete params)
+      :body
+      :value))
+
+(defn go-url [server session url]
+  (-> server
+      (str "/" (get-path :session
+                         (:sessionId session)
+                         :url))
       (client/post
        (assoc params :form-params {:url url}))
       :body))
@@ -243,9 +279,6 @@
       (io/copy "foo.png")
 ))
 
-
-
-
 (defn is-url-matches? [session url-regex]
   (->> session
        get-url
@@ -256,40 +289,167 @@
   (let [element (find-element browser :foo :bar)]
     (element-value! browser element text)))
 
+(defn connect [host port])
+
+;; DELETE	/session/{session id}
+
+(def host "127.0.0.1")
+(def port 4444)
+
+
+
+(defn start-server [host port]
+  {:host "127.0.0.1"
+   :port 4444
+   :url "http://127.0.0.1:4444"
+   :process {:_process :todo
+             :id 15324
+             :in :todo
+             :out :todo
+             :terminate (-> :todo delay)}})
+
+(def server "http://127.0.0.1:4444")
+
+(defn make-server [])
+
+(defn start-server [])
+
+(defn start-session [browser opt]
+  (-> browser
+      :server
+      :url
+      (str (get-path :session))
+      (client/post
+       (assoc params :form-params opt))
+      :body
+      ))
+
+(defn api [browser method path-args payload]
+  (let [url (-> browser :server :url
+                (str "/" (get-path path-args)))
+        params (merge api-params
+                      {:url url
+                       :method method})]
+    (-> params
+        client/request
+        :body)))
+
+(defn go-url [browser url]
+  (api browser
+       :post
+       [:session (-> browser :session :sessionId) :url]
+       {:url url}))
+
+(defn go-fwd [browser]
+  (api browser :post
+       [:session (-> browser :session :sessionId) :forward]
+       {}))
+
+(def browser {:server {:host "127.0.0.1"
+                       :port 4444
+                       :url "http://127.0.0.1:4444"}
+              :process {:__process :todo
+                        :id 15324
+                        :env {}
+                        :cmd "geckodriver"
+                        :args []
+                        :in :todo
+                        :out :todo
+                        :terminate (-> :todo delay)}
+              :session {:sessionId "29538feb-c7b1-a848-9d8c-29f1aad1d008"
+                        :value {:browserName "firefox"
+                                :platformVersion "15.6.0"
+                                :takesElementScreenshot true
+                                :specificationLevel 0
+                                :acceptSslCerts false
+                                :appBuildId "20161208153507"
+                                :processId 68410
+                                :takesScreenshot true
+                                :proxy {}
+                                :raisesAccessibilityExceptions false
+                                :command_id 1
+                                :browserVersion "50.1.0"
+                                :rotatable false
+                                :platformName "darwin"
+                                :version "50.1.0"
+                                :XULappId "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                                :platform "DARWIN"}}})
+
+(def session {:sessionId "29538feb-c7b1-a848-9d8c-29f1aad1d008"
+              :value {:browserName "firefox"
+                      :platformVersion "15.6.0"
+                      :takesElementScreenshot true
+                      :specificationLevel 0
+                      :acceptSslCerts false
+                      :appBuildId "20161208153507"
+                      :processId 68410
+                      :takesScreenshot true
+                      :proxy {}
+                      :raisesAccessibilityExceptions false
+                      :command_id 1
+                      :browserVersion "50.1.0"
+                      :rotatable false
+                      :platformName "darwin"
+                      :version "50.1.0"
+                      :XULappId "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                      :platform "DARWIN"}})
+
+(deftest bar
+  (let [host "127.0.0.1"
+        port 4444
+        server (make-server host port)
+        process (make-process)
+
+        ]))
+
 (deftest foo
-  (let [browser :todo]
-    (doto browser
-      (goto "http://ya.ru")
-      (go-back)
-      (go-forward)
-      (-> (has-text "hello") is)
+  (-> server
+      get-status
+      :ready
+      is)
+  (let [params {}
+        session (-> server (get-session params))]
+    (doto server
+      (-> get-status :ready not is)
+      (go-url session "http://ya.ru")
+      (delete-session session)
+      (-> get-status :ready is)
+      )))
 
-      )
+;; (deftest foo
+;;   (let [browser :todo]
+;;     (doto browser
+;;       (goto "http://ya.ru")
+;;       (go-back)
+;;       (go-forward)
+;;       (-> (has-text "hello") is)
 
-    (doto browser
-      (-> )
-      (has-text "hello")
-      )
+;;       )
 
-    (-> (has-text "hello") is)
+;;     (doto browser
+;;       (-> )
+;;       (has-text "hello")
+;;       )
 
-    (is (has-text browser "hello"))
+;;     (-> (has-text "hello") is)
 
-    (-> browser
-        (goto "http://ya.ru")
-        (go-back)
-        (go-forward)
-        (is-url-matches? #"todo")
-        (click "todo")
-        (fill-in "name" "Ivan")
-        (fill-in "password" "test")
-        (set-cookie "foo" "bar" "baz")
-        (delete-cookie "foo")
-        (has-cookie! "name")
-        (has-text! "test")
-        (click "submit")
-        (wait-for-element "message")
-        (exists "ready")
-        (pause 1000)
-        (assert )
-        (end))))
+;;     (is (has-text browser "hello"))
+
+;;     (-> browser
+;;         (goto "http://ya.ru")
+;;         (go-back)
+;;         (go-forward)
+;;         (is-url-matches? #"todo")
+;;         (click "todo")
+;;         (fill-in "name" "Ivan")
+;;         (fill-in "password" "test")
+;;         (set-cookie "foo" "bar" "baz")
+;;         (delete-cookie "foo")
+;;         (has-cookie! "name")
+;;         (has-text! "test")
+;;         (click "submit")
+;;         (wait-for-element "message")
+;;         (exists "ready")
+;;         (pause 1000)
+;;         (assert )
+;;         (end))))
