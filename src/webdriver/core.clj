@@ -1,5 +1,8 @@
 (ns webdriver.core
-  (:require [clj-http.client :as client]))
+  (:require [clj-http.client :as client]
+            [clojure.data.codec.base64 :as b64]
+            [clojure.java.io :as io]
+            [clojure.test :refer [is deftest]]))
 
 (def url-server "http://127.0.0.1:4444")
 
@@ -8,6 +11,7 @@
 (def url-go-back "/session/%s/back")
 (def url-go-forward "/session/%s/forward")
 (def url-get-title "/session/%s/title")
+(def url-get-url "/session/%s/url")
 (def url-get-cookie "/session/%s/cookie")
 (def url-get-cookie-by-name "/session/%s/cookie/%s")
 (def url-get-active-element "/session/%s/element/active")
@@ -22,6 +26,11 @@
 (def url-element-click! "/session/%s/element/%s/click")
 (def url-element-clear! "/session/%s/element/%s/clear")
 (def url-element-value! "/session/%s/element/%s/value")
+(def url-execute-script-sync! "/session/%s/execute/sync")
+(def url-screenshot "/session/%s/screenshot")
+
+
+
 
 ;; /session/{session id}/element/{element id}/element
 
@@ -196,3 +205,91 @@
 
 
       ))
+
+(defn execute-script-sync! [session script & args]
+  (-> (str url-server
+           (format url-execute-script-sync!
+                   (:sessionId session)))
+      (client/post
+       (assoc params :form-params {:script script :args args}))
+      :body
+      :value))
+
+(defn inject-script! [session url]
+  (let [script (str "var s = document.createElement('script');"
+                    "s.type = 'text/javascript';"
+                    "s.src = arguments[0];"
+                    "document.head.appendChild(s);")]
+    (execute-script-sync! session script url)))
+
+(defn get-url [session]
+  (-> (str url-server
+           (format url-get-url
+                   (:sessionId session)))
+      (client/get params)
+      :body
+      :value))
+
+(defn get-screenshot [session]
+  (-> (str url-server
+           (format url-screenshot
+                   (:sessionId session)))
+      (client/get params)
+      :body
+      :value
+      .getBytes
+      b64/decode
+      ;; byte-array
+      (io/copy "foo.png")
+))
+
+
+
+
+(defn is-url-matches? [session url-regex]
+  (->> session
+       get-url
+       (re-matches url-regex)
+       is))
+
+(defn fill-in [browser selector text]
+  (let [element (find-element browser :foo :bar)]
+    (element-value! browser element text)))
+
+(deftest foo
+  (let [browser :todo]
+    (doto browser
+      (goto "http://ya.ru")
+      (go-back)
+      (go-forward)
+      (-> (has-text "hello") is)
+
+      )
+
+    (doto browser
+      (-> )
+      (has-text "hello")
+      )
+
+    (-> (has-text "hello") is)
+
+    (is (has-text browser "hello"))
+
+    (-> browser
+        (goto "http://ya.ru")
+        (go-back)
+        (go-forward)
+        (is-url-matches? #"todo")
+        (click "todo")
+        (fill-in "name" "Ivan")
+        (fill-in "password" "test")
+        (set-cookie "foo" "bar" "baz")
+        (delete-cookie "foo")
+        (has-cookie! "name")
+        (has-text! "test")
+        (click "submit")
+        (wait-for-element "message")
+        (exists "ready")
+        (pause 1000)
+        (assert )
+        (end))))
