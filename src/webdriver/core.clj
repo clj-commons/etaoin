@@ -403,6 +403,20 @@
         ]))
 
 (deftest foo
+  (with-foo (make-server)
+    (with-bar (sdf)
+      (go "ya.ru")
+      (reload)
+      (go-back)
+      (go-fwd)
+      (fill-in "search" "What is clojure?")
+      (wait 3)
+      (is-exists! "navbar")
+      (-> (exists? "navbar") is)
+      (wait-for-element "message" {:timeout 30})
+      (click "submit")
+      )
+        (with-trx sdfsdf))
   (-> server
       get-status
       :ready
