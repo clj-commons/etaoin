@@ -98,12 +98,31 @@
       (api :get [:session (session-id browser) :title])
       :value))
 
-(defn element-find [server session selector]
-  (api server session
-       :post
-       [:session (-> session :sessionId) :element]
-       {:foo 42})
-  )
+(defn element-find [browser selector]
+  (-> browser
+      (api :post
+           [:session (session-id browser) :element]
+           {:using "xpath" :value selector})
+      :value
+      first
+      second))
+
+(defn element-value [browser element text]
+  (-> browser
+      (api :post
+           [:session (session-id browser) :element element :value]
+           {:value (vec text)})))
+
+
+;; (defn element-value! [session element text]
+;;   (-> (str url-server
+;;            (format url-element-value!
+;;                    (:sessionId session)
+;;                    element))
+;;       (client/post
+;;        (assoc params :form-params {:value (vec text)}))
+;;       :body))
+
 
 (defn element-click [server session element]
   ;; (api browser

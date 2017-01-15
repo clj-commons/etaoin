@@ -47,6 +47,10 @@
 
 (def get-title api/get-title)
 
+(defn fill-in [browser selector text]
+  (let [element (api/element-find browser selector)]
+    (api/element-value browser element text)))
+
 ;; (defn title-matches [browser re-title]
 ;;   (re-matches re-title (api/get-title browser)))
 
@@ -56,12 +60,19 @@
 
 ;; (def is-title-matches (comp title-matches (fn [x] (is x))))
 
+(defn wait [sec]
+  (Thread/sleep (* sec 1000)))
+
 (deftest foo
-  (let [browser (make-browser "127.0.0.1" 8910)]
-    (url browser"http://ya.ru")
+  (let [browser (make-browser "127.0.0.1" 4444)]
+    (url browser "http://ya.ru")
     (let [title (get-title browser)]
-      (is (re-matches #"Яндекс" title)))
-    (end browser)))
+      (is (= title "Яндекс")))
+    (wait 6)
+    (fill-in browser "//input[@id=\"text\"]" "Clojure official site\uE007")
+
+    ;; (end browser)
+    ))
 
 ;; (is-title-matches #"Яндекс2")
 ;; (-> (title-matches #"Яндекс2") is)
