@@ -30,9 +30,13 @@
 
 (defmacro with-element [term & body]
   `(if (bound? #'*element*)
-     (with-bindings {#'*element* (find-element-from-element *element* ~term)}
+     (with-bindings {#'*element* (api/find-element-from-element
+                                  *session* *element*
+                                  (make-selector ~term))}
        ~@body)
-     (with-bindings {#'*element* (find-element ~term)}
+     (with-bindings {#'*element* (api/find-element
+                                  *session*
+                                  (make-selector ~term))}
        ~@body)))
 
 (defn go-url [url]
@@ -70,7 +74,7 @@
 (defn wait [sec]
   (Thread/sleep (* sec 1000)))
 
-(deftest foo
+(deftest todo
   (with-session "127.0.0.1" 4444 {}
     (go-url "http://ya.ru")
     (wait 7)
