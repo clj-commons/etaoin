@@ -28,9 +28,6 @@
 (defn find-element-from-element [element term]
   (api/find-element-from-element *session* element (make-selector term)))
 
-(defn element-value [element text]
-  (api/element-value *session* element text))
-
 (defmacro with-element [term & body]
   `(if (bound? #'*element*)
      (with-bindings {#'*element* (find-element-from-element *element* ~term)}
@@ -48,10 +45,11 @@
   (api/get-url *session*))
 
 (defn fill
-  ([text] (fill *element* text))
+  ([text]
+   (api/element-value *session* *element* text))
   ([term text]
    (let [element (api/find-element *session* (make-selector term))]
-     (element-value element text))))
+     (api/element-value *session* element text))))
 
 (defn click
   ([]
@@ -77,7 +75,8 @@
     (go-url "http://ya.ru")
     (wait 7)
     (with-xpath
-      (fill "//input[@id=\"text\"]" "test"))
+      (with-element "//input[@id=\"text\"]"
+        (fill "test")))
     (wait 5)
     (is 1)))
 
