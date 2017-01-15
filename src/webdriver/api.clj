@@ -9,7 +9,7 @@
    :accept :json
    :content-type :json
    :form-params {}
-   ;; :throw-exceptions false
+   :throw-exceptions true
    :debug true})
 
 (def default-capabilities
@@ -44,10 +44,10 @@
 ;;          :body))))
 
 (defn api
-  ([browser method path-args]
-   (api browser method path-args {}))
-  ([browser method path-args payload]
-   (let [url (-> browser :server :url
+  ([session method path-args]
+   (api session method path-args {}))
+  ([session method path-args payload]
+   (let [url (-> session :url
                  (str "/" (get-url-path path-args)))
          params (merge default-api-params
                        {:url url
@@ -57,22 +57,23 @@
          client/request
          :body))))
 
-(defn session-create [browser]
-  (api browser :post [:session]
-       {:desiredCapabilities default-capabilities}))
+(defn new-session [server capabilities]
+  (api server :post [:session]
+       {:desiredCapabilities (merge default-capabilities
+                                    capabilities)}))
 
-(defn session-delete [browser]
-  (api browser
+(defn delete-session [session]
+  (api session
        :delete
-       [:session (-> browser :session :sessionId)]))
+       [:session (-> session :sessionId)]))
 
 ;; (defn get-status [browser]
 ;;   (api browser :get [:status]))
 
-(defn go-url [browser url]
-  (api browser
+(defn go-url [session url]
+  (api session
        :post
-       [:session (-> browser :session :sessionId) :url]
+       [:session (-> session :sessionId) :url]
        {:url url}))
 
 (defn go-back [browser]
@@ -90,22 +91,51 @@
        :get
        [:session (-> browser :session :sessionId) :url]))
 
-(defn session-id [browser]
-  (-> browser :session :sessionId))
+(defn session-id [session]
+  (-> session :sessionId))
 
 (defn get-title [browser]
   (-> browser
       (api :get [:session (session-id browser) :title])
       :value))
 
-(defn element-find [browser selector]
+(defn element-attribute [browser element attribute]
+  (-> browser
+      (api :get
+           [:session (session-id browser)
+            :element element
+            :attribute attribute])
+      :value))
+
+(defn find-element [browser [locator term]]
   (-> browser
       (api :post
-           [:session (session-id browser) :element]
-           {:using "xpath" :value selector})
+           [:session (:sessionId browser) :element]
+           {:using locator :value term})
       :value
       first
       second))
+
+(defn element-find [browser [locator term]]
+  (-> browser
+      (api :post
+           [:session (:sessionId browser) :element]
+           {:using locator :value term})
+      :value
+      first
+      second))
+
+(defn find-element-from-element [browser element selector]
+  (-> browser
+      (api :post
+           [:session (session-id browser) :element element]
+           {:using "xpath" :value "test"})
+      :value
+      first
+      second))
+
+
+
 
 (defn element-value [browser element text]
   (-> browser
@@ -124,7 +154,7 @@
 ;;       :body))
 
 
-(defn element-click [server session element]
+(defn element-click [browser element]
   ;; (api browser
   ;;      :post
   ;;      [:session (-> browser :session :sessionId) :element element :click])
