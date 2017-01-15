@@ -12,6 +12,14 @@
    ;; :throw-exceptions false
    :debug true})
 
+(def default-capabilities
+  {:browserName "firefox"
+   :javascriptEnabled true
+   :acceptSslCerts true
+   :platform "ANY"
+   :marionette true
+   :name "Sample Test"})
+
 (defn url-item-str [item]
   (cond
     (keyword? item) (name item)
@@ -36,10 +44,10 @@
 ;;          :body))))
 
 (defn api
-  ([server method path-args]
-   (api server method path-args {}))
-  ([server method path-args payload]
-   (let [url (-> server :url
+  ([browser method path-args]
+   (api browser method path-args {}))
+  ([browser method path-args payload]
+   (let [url (-> browser :server :url
                  (str "/" (get-url-path path-args)))
          params (merge default-api-params
                        {:url url
@@ -49,25 +57,28 @@
          client/request
          :body))))
 
-(defn session-create [server]
-  (api server :post [:session]))
+(defn session-create [browser]
+  (api browser :post [:session]
+       {:desiredCapabilities default-capabilities}))
 
-(defn session-delete [server session]
-  (api server :delete [:session (:sessionId session)]))
+(defn session-delete [browser]
+  (api browser
+       :delete
+       [:session (-> browser :session :sessionId)]))
 
 ;; (defn get-status [browser]
 ;;   (api browser :get [:status]))
 
-(defn go-url [server session url]
-  (api server
+(defn go-url [browser url]
+  (api browser
        :post
-       [:session (:sessionId session) :url]
+       [:session (-> browser :session :sessionId) :url]
        {:url url}))
 
-(defn go-back [server session]
-  (api server
+(defn go-back [browser]
+  (api browser
        :post
-       [:session (:sessionId session) :back]))
+       [:session (-> browser :session :sessionId) :back]))
 
 (defn go-fwd [browser]
   (api browser
@@ -79,10 +90,13 @@
        :get
        [:session (-> browser :session :sessionId) :url]))
 
+(defn session-id [browser]
+  (-> browser :session :sessionId))
+
 (defn get-title [browser]
-  (api browser
-       :get
-       [:session (-> browser :session :sessionId) :title]))
+  (-> browser
+      (api :get [:session (session-id browser) :title])
+      :value))
 
 (defn element-find [server session selector]
   (api server session
