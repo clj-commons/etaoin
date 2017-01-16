@@ -13,6 +13,8 @@
 ;; todo variable bound checks?
 ;; todo: on exception return source code and screenshot
 ;; (inject-script "http://ya.ru/test.js")
+;; scenarios
+;; multi-browser run in threads
 
 (def ^:dynamic *session*)
 (def ^:dynamic *element*)
