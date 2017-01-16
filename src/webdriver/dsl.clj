@@ -7,8 +7,11 @@
             [slingshot.slingshot :refer [try+ throw+]]
             [clojure.test :refer [is deftest]]))
 
-;; todo bound checks?
-
+;;
+;; todos
+;;
+;; todo variable bound checks?
+;; todo: on exception return source code and screenshot
 ;; (inject-script "http://ya.ru/test.js")
 
 (def ^:dynamic *session*)
@@ -193,7 +196,7 @@
 
 (deftest simple-test
   (let [host "127.0.0.1"
-        port 4444
+        port 8910 ;; 4444
         capabilities {}
         input "//input[@id=\"text\"]"]
     (with-session host port capabilities
@@ -204,5 +207,5 @@
         (with-element input
           (fill-human "Clojure")
           (enter)))
-      (wait 5)
+      (wait 2)
       (is 1))))
