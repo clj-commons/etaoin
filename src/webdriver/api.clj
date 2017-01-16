@@ -125,6 +125,18 @@
       first
       second))
 
+(defn element-tag-name [browser element]
+  (-> browser
+      (api :get
+           [:session (:sessionId browser) :element element :name])
+      :value))
+
+(defn element-enabled [browser element]
+  (-> browser
+      (api :get
+           [:session (session-id browser) :element element :enabled])
+      :value))
+
 (defn find-element-from-element [browser element selector]
   (-> browser
       (api :post
@@ -134,14 +146,16 @@
       first
       second))
 
-
-
+(defn text-to-array [text]
+  (cond
+    (char? text) [text]
+    :else (vec text)))
 
 (defn element-value [browser element text]
   (-> browser
       (api :post
            [:session (session-id browser) :element element :value]
-           {:value (vec text)})))
+           {:value (text-to-array text)})))
 
 
 ;; (defn element-value! [session element text]
