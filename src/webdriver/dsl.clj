@@ -2,10 +2,13 @@
   (:require [clj-http.client :as client]
             [clojure.string :as str]
             [webdriver.api :as api]
+            [webdriver.keys :as keys]
+            [webdriver.proc :as proc]
             [clojure.data.codec.base64 :as b64]
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [try+ throw+]]
-            [clojure.test :refer [is deftest]]))
+            [clojure.test :refer [is deftest run-tests]])
+  (:import java.net.ConnectException))
 
 ;;
 ;; todos
@@ -15,6 +18,11 @@
 ;; (inject-script "http://ya.ru/test.js")
 ;; scenarios
 ;; multi-browser run in threads
+;; wait for process
+;; HTTP parse error json
+;; catch ConnectException when no server?
+;; http connection pool
+;;
 
 (def ^:dynamic *session*)
 (def ^:dynamic *element*)
@@ -85,16 +93,16 @@
 (defn make-fill-key [key]
   (-> fill flip (partial key)))
 
-(def enter (make-fill-key \uE007))
-
-(def backspace (make-fill-key \u0008))
-
-(defn enter
-  ([] (fill \uE007))
-  ([term] (fill term \uE007)))
+(def enter(make-fill-key keys/enter))
+(def backspace (make-fill-key keys/backspace))
+(def up (make-fill-key keys/up))
+(def right (make-fill-key keys/right))
+(def down (make-fill-key keys/down))
+(def left (make-fill-key keys/left))
 
 (defn fill-human [text]
   "Inputs text like we typically do: with random delays and corrections."
+  ;; todo multiple arguments
   ;; todo random values
   ;; todo weights
   ;; todo multi-form
@@ -172,7 +180,7 @@
   (loop [times 0
          time-rest timeout]
     (when (< time-rest 0)
-      (throw+ :todo)) ;; todo error data
+      (throw+ {:type ::time-has-left})) ;; todo error data
     (when-not (predicate)
       (wait delta)
       (recur (inc times)
@@ -196,18 +204,99 @@
          (partial visible? term)
          args))
 
+;; todo exception decorator
+(defn running? [host port]
+  (try+
+   (api/status {:url (format "http://%s:%d" host port)})
+   true
+   (catch ConnectException _
+     false)))
+
+(defn wait-for-running [host port & args]
+  (apply wait-for-predicate
+         (partial running? host port)
+         args))
+
+;; todo handle exceptions
+;; check alive
+(defmacro with-process [host port & body]
+  `(let [proc# (proc/run-gecko ~host ~port)]
+     (wait 1) ;; todo wait time
+     (when-not (and (nil? (proc/exit-code proc#))
+                    (proc/alive? proc#))
+       (throw+ {:type ::process-error})) ;; error
+     (wait-for-running ~host ~port)
+     ~@body
+     (proc/kill proc#)))
+
+(defmacro with-browsers [browsers & body]
+  `(doseq [browser# ~browsers]
+     (with-process browser#
+       ~@body)))
+
+(defmacro with-server [& body]
+  `(let []
+     ~@body))
+
+(defmacro with-start [host port & body]
+  `(with-process ;; todo
+     (with-server host# port#
+       ~@body)))
+
+(defmacro with-start-multi [connections & body]
+  `(doseq [[host# port#] ~connections]
+     (with-process ;; todo
+       (with-server host# port#
+         ~@body))))
+
+(defmacro with-connect [host port & body]
+  `(with-server host# port#
+     ~@body))
+
+(defmacro with-connect-multi [connections & body]
+  `(doseq [[host# port#] ~connections]
+     (with-server host# port#
+       ~@body)))
+
 (deftest simple-test
   (let [host "127.0.0.1"
-        port 8910 ;; 4444
+        port (+ 1024 (rand-int 50000)) ;; 4444 ;; 8910 ;; todo port function
         capabilities {}
         input "//input[@id=\"text\"]"]
-    (with-session host port capabilities
-      (go-url "http://ya.ru")
-      (wait-for-element-exists input)
-      ;;(wait 3)
-      (with-xpath
-        (with-element input
-          (fill-human "Clojure")
-          (enter)))
-      (wait 2)
-      (is 1))))
+
+    ;; (with-browsers []
+    ;;   (with-session host port capabilities
+    ;;     (go-url "http://ya.ru")
+    ;;     (wait-for-element-exists input)
+    ;;     (with-xpath
+    ;;       (with-element input
+    ;;         (fill-human "Clojure")
+    ;;         (enter)))
+    ;;     (wait 2)
+    ;;     (is 1)))
+
+    (with-process host port
+      (with-session host port capabilities
+        (go-url "http://ya.ru")
+        (wait-for-element-exists input)
+          (with-xpath
+          (with-element input
+            (fill-human "Clojure")
+            (enter)))
+        ;; (wait 2)
+        (is 1))
+      ;; (with-session host port capabilities
+      ;;   (go-url "http://ya.ru")
+      ;;   (wait-for-element-exists input)
+      ;;   (with-xpath
+      ;;     (with-element input
+      ;;       (fill-human "Google")
+      ;;       (enter)))
+      ;;   (wait 2)
+      ;;   (is 1))
+      )))
+
+(defn foo []
+  (doseq [foo [1 2 3  2 2 2 2 2 2 2 2 2]]
+    (future (run-tests)))
+  )

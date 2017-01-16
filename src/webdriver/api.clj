@@ -10,7 +10,8 @@
    :content-type :json
    :form-params {}
    :throw-exceptions true
-   :debug true})
+   ;; :debug true
+   })
 
 (def default-capabilities
   {:browserName "firefox"
@@ -67,8 +68,8 @@
        :delete
        [:session (-> session :sessionId)]))
 
-;; (defn get-status [browser]
-;;   (api browser :get [:status]))
+(defn status [session]
+  (api session :get [:status]))
 
 (defn go-url [session url]
   (api session
