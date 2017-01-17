@@ -22,8 +22,9 @@
 ;; HTTP parse error json
 ;; catch ConnectException when no server?
 ;; http connection pool
-;;
+;; process logs
 
+(def ^:dynamic *server*)
 (def ^:dynamic *session*)
 (def ^:dynamic *element*)
 (def ^:dynamic *locator*)
@@ -56,13 +57,13 @@
 ;;
 
 (defn go-url [url]
-  (api/go-url *session* url))
+  (api/go-url *server* *session* url))
 
 (defn get-title []
-  (api/get-title *session*))
+  (api/get-title *server* *session*))
 
 (defn get-url []
-  (api/get-url *session*))
+  (api/get-url *server* *session*))
 
 ;;
 ;; elements
@@ -71,11 +72,11 @@
 (defmacro with-element [term & body]
   `(if (bound? #'*element*)
      (binding [*element* (api/find-element-from-element
-                          *session* *element*
+                          *server* *session* *element*
                           (make-selector ~term))]
        ~@body)
      (binding [*element* (api/find-element
-                          *session*
+                          *server* *session*
                           (make-selector ~term))]
        ~@body)))
 
@@ -85,10 +86,10 @@
 
 (defn fill
   ([text]
-   (api/element-value *session* *element* text))
+   (api/element-value *server* *session* *element* text))
   ([term text]
    (with-element term
-     (api/element-value *session* *element* text))))
+     (api/element-value *server* *session* *element* text))))
 
 (defn make-fill-key [key]
   (-> fill flip (partial key)))
@@ -118,14 +119,12 @@
 ;; session
 ;;
 
-(defmacro with-session [host port capabilities & body]
-  `(let [url# (format "http://%s:%d" ~host ~port)
-         server# {:url url#}
-         session# (api/new-session server# ~capabilities)]
-     (binding [*session* (merge session# server#)]
-       (let [result# (do ~@body)] ;; todo try catch
-         (api/delete-session *session*)
-         result#))))
+(defmacro with-session [capabilities & body]
+  `(binding [*session* (api/new-session *server* ~capabilities)]
+     (try
+       ~@body
+       (finally
+         (api/delete-session *server* *session*)))))
 
 ;;
 ;; clicks
@@ -133,10 +132,10 @@
 
 (defn click
   ([]
-   (api/element-click *session* *element*))
+   (api/element-click *server* *session* *element*))
   ([term]
    (with-element term
-     (api/element-click *session* *element*))))
+     (api/element-click *server* *session* *element*))))
 
 ;;
 ;; predicates
@@ -145,24 +144,24 @@
 (defn exists?
   ([]
    (try+
-    (api/element-tag-name *session* *element*)
+    (api/element-tag-name *server* *session* *element*)
     true
     (catch [:status 404] _
       false)))
   ([term]
    (with-element term
      (try+
-      (api/element-tag-name *session* *element*)
+      (api/element-tag-name *server* *session* *element*)
       true
       (catch [:status 404] _
         false)))))
 
 (defn enabled?
   ([]
-   (api/element-enabled *session* *element*))
+   (api/element-enabled *server* *session* *element*))
   ([term]
    (with-element term
-     (api/element-enabled *session* *element*))))
+     (api/element-enabled *server* *session* *element*))))
 
 (defn visible? []
   )
@@ -221,80 +220,65 @@
 ;; check alive
 (defmacro with-process [host port & body]
   `(let [proc# (proc/run-gecko ~host ~port)]
-     (wait 1) ;; todo wait time
-     (when-not (and (nil? (proc/exit-code proc#))
+     (wait 1) ;; todo what time to wait?
+     (when-not (and (nil? (proc/exit-code proc#)) ;; todo sep func for that
                     (proc/alive? proc#))
        (throw+ {:type ::process-error})) ;; error
-     (wait-for-running ~host ~port)
-     ~@body
-     (proc/kill proc#)))
+     ;; (wait-for-running ~host ~port)
+     (try
+      ~@body
+      (finally
+        (proc/kill proc#)))))
 
-(defmacro with-browsers [browsers & body]
-  `(doseq [browser# ~browsers]
-     (with-process browser#
-       ~@body)))
+(defn make-server-url [host port]
+  (format "http://%s:%d" host port))
 
-(defmacro with-server [& body]
-  `(let []
+(defn make-server [host port]
+  {:host host
+   :port port
+   :url (make-server-url host port)})
+
+(defmacro with-server [host port & body]
+  `(binding [*server* (make-server ~host ~port)]
      ~@body))
 
+(defmacro with-server-multi [servers & body]
+  `(doseq [[host# port#] ~servers]
+     (binding [*server* (make-server host# port#)]
+       ~@body)))
+
 (defmacro with-start [host port & body]
-  `(with-process ;; todo
-     (with-server host# port#
+  `(with-server ~host ~port
+     (with-process ~host ~port
        ~@body)))
 
 (defmacro with-start-multi [connections & body]
   `(doseq [[host# port#] ~connections]
-     (with-process ;; todo
-       (with-server host# port#
+     (with-server host# port#
+       (with-process host# port#
          ~@body))))
 
-(defmacro with-connect [host port & body]
-  `(with-server host# port#
-     ~@body))
-
-(defmacro with-connect-multi [connections & body]
-  `(doseq [[host# port#] ~connections]
-     (with-server host# port#
-       ~@body)))
+(defn random-port []
+  (let [max-port 65536
+        offset 1024]
+    (+ (rand-int (- max-port offset))
+       offset)))
 
 (deftest simple-test
   (let [host "127.0.0.1"
-        port (+ 1024 (rand-int 50000)) ;; 4444 ;; 8910 ;; todo port function
+        port (random-port) ;; 4444 ;; 8910
         capabilities {}
         input "//input[@id=\"text\"]"]
-
-    ;; (with-browsers []
-    ;;   (with-session host port capabilities
-    ;;     (go-url "http://ya.ru")
-    ;;     (wait-for-element-exists input)
-    ;;     (with-xpath
-    ;;       (with-element input
-    ;;         (fill-human "Clojure")
-    ;;         (enter)))
-    ;;     (wait 2)
-    ;;     (is 1)))
-
-    (with-process host port
-      (with-session host port capabilities
+    (with-start host port
+      (with-session capabilities
         (go-url "http://ya.ru")
         (wait-for-element-exists input)
-          (with-xpath
+        (with-xpath
           (with-element input
             (fill-human "Clojure")
             (enter)))
-        ;; (wait 2)
-        (is 1))
-      ;; (with-session host port capabilities
-      ;;   (go-url "http://ya.ru")
-      ;;   (wait-for-element-exists input)
-      ;;   (with-xpath
-      ;;     (with-element input
-      ;;       (fill-human "Google")
-      ;;       (enter)))
-      ;;   (wait 2)
-      ;;   (is 1))
-      )))
+        (wait 1)
+        (is 1)))))
 
 (defn foo []
   (doseq [foo [1 2 3  2 2 2 2 2 2 2 2 2]]

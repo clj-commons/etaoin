@@ -21,6 +21,10 @@
    :marionette true
    :name "Sample Test"})
 
+;;
+;; tools
+;;
+
 (defn url-item-str [item]
   (cond
     (keyword? item) (name item)
@@ -30,26 +34,24 @@
 (defn get-url-path [items]
   (str/join "/" (map url-item-str items)))
 
-;; (defn api
-;;   ([browser method path-args]
-;;    (api browser method path-args nil))
-;;   ([browser method path-args payload]
-;;    (let [url (-> browser :server :url
-;;                  (str "/" (get-url-path path-args)))
-;;          params (merge default-api-params
-;;                        {:url url
-;;                         :method method
-;;                         :form-params payload})]
-;;      (-> params
-;;          client/request
-;;          :body))))
+(defn session-id [session]
+  (-> session :sessionId))
+
+(defn text-to-array [text]
+  (cond
+    (char? text) [text]
+    :else (vec text)))
+
+;;
+;; api
+;;
 
 (defn api
-  ([session method path-args]
-   (api session method path-args {}))
-  ([session method path-args payload]
-   (let [url (-> session :url
-                 (str "/" (get-url-path path-args)))
+  ([server method path-args]
+   (api server method path-args {}))
+  ([server method path-args payload]
+   (let [path (get-url-path path-args)
+         url (-> server :url (str "/" path))
          params (merge default-api-params
                        {:url url
                         :method method
@@ -63,118 +65,101 @@
        {:desiredCapabilities (merge default-capabilities
                                     capabilities)}))
 
-(defn delete-session [session]
-  (api session
+(defn delete-session [server session]
+  (api server
        :delete
-       [:session (-> session :sessionId)]))
+       [:session (session-id session)]))
 
-(defn status [session]
-  (api session :get [:status]))
+(defn status [server]
+  (api server :get [:status]))
 
-(defn go-url [session url]
-  (api session
+(defn go-url [server session url]
+  (api server
        :post
-       [:session (-> session :sessionId) :url]
+       [:session (session-id session) :url]
        {:url url}))
 
-(defn go-back [browser]
-  (api browser
+(defn go-back [server session]
+  (api server
        :post
-       [:session (-> browser :session :sessionId) :back]))
+       [:session (session-id session) :back]))
 
-(defn go-fwd [browser]
-  (api browser
+(defn go-fwd [server session]
+  (api server
        :post
-       [:session (-> browser :session :sessionId) :forward]))
+       [:session (session-id session) :forward]))
 
-(defn get-url [browser]
-  (api browser
+(defn get-url [server session]
+  (api server
        :get
-       [:session (-> browser :session :sessionId) :url]))
+       [:session (session-id session) :url]))
 
-(defn session-id [session]
-  (-> session :sessionId))
-
-(defn get-title [browser]
-  (-> browser
-      (api :get [:session (session-id browser) :title])
+(defn get-title [server session]
+  (-> server
+      (api :get [:session (session-id session) :title])
       :value))
 
-(defn element-attribute [browser element attribute]
-  (-> browser
+(defn element-attribute [server session element attribute]
+  (-> server
       (api :get
-           [:session (session-id browser)
-            :element element
-            :attribute attribute])
+           [:session
+            (session-id session)
+            :element
+            element
+            :attribute
+            attribute])
       :value))
 
-(defn find-element [browser [locator term]]
-  (-> browser
+(defn find-element [server session [locator term]]
+  (-> server
       (api :post
-           [:session (:sessionId browser) :element]
+           [:session (session-id session) :element]
            {:using locator :value term})
       :value
       first
       second))
 
-(defn element-find [browser [locator term]]
-  (-> browser
+(defn element-find [server session [locator term]]
+  (-> server
       (api :post
-           [:session (:sessionId browser) :element]
+           [:session (session-id session) :element]
            {:using locator :value term})
       :value
       first
       second))
 
-(defn element-tag-name [browser element]
-  (-> browser
+(defn element-tag-name [server session element]
+  (-> server
       (api :get
-           [:session (:sessionId browser) :element element :name])
+           [:session (session-id session) :element element :name])
       :value))
 
-(defn element-enabled [browser element]
-  (-> browser
+(defn element-enabled [server session element]
+  (-> server
       (api :get
-           [:session (session-id browser) :element element :enabled])
+           [:session (session-id session) :element element :enabled])
       :value))
 
-(defn find-element-from-element [browser element selector]
-  (-> browser
+(defn find-element-from-element [server session element selector]
+  (-> server
       (api :post
-           [:session (session-id browser) :element element]
+           [:session (session-id session) :element element]
            {:using "xpath" :value "test"})
       :value
       first
       second))
 
-(defn text-to-array [text]
-  (cond
-    (char? text) [text]
-    :else (vec text)))
-
-(defn element-value [browser element text]
-  (-> browser
+(defn element-value [server session element text]
+  (-> server
       (api :post
-           [:session (session-id browser) :element element :value]
+           [:session (session-id session) :element element :value]
            {:value (text-to-array text)})))
 
-
-;; (defn element-value! [session element text]
-;;   (-> (str url-server
-;;            (format url-element-value!
-;;                    (:sessionId session)
-;;                    element))
-;;       (client/post
-;;        (assoc params :form-params {:value (vec text)}))
-;;       :body))
-
-
-(defn element-click [browser element]
-  ;; (api browser
-  ;;      :post
-  ;;      [:session (-> browser :session :sessionId) :element element :click])
-  )
-
+;; (defn element-click [browser element]
+;;   ;; (api browser
+;;   ;;      :post
+;;   ;;      [:session (-> browser :session :sessionId) :element element :click])
+;;   )
 
 
 ;; (def url-element-click! "/session/%s/element/%s/click")
