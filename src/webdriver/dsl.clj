@@ -23,6 +23,9 @@
 ;; catch ConnectException when no server?
 ;; http connection pool
 ;; process logs
+;; skip decorator
+;; conditinal decorator
+;; with window decorator
 
 (def ^:dynamic *server*)
 (def ^:dynamic *session*)
@@ -49,9 +52,6 @@
   `(with-locator "xpath"
      ~@body))
 
-(defn make-selector [term]
-  [*locator* term])
-
 ;;
 ;; navigation
 ;;
@@ -72,12 +72,10 @@
 (defmacro with-element [term & body]
   `(if (bound? #'*element*)
      (binding [*element* (api/find-element-from-element
-                          *server* *session* *element*
-                          (make-selector ~term))]
+                          *server* *session* *element* *locator* ~term)]
        ~@body)
      (binding [*element* (api/find-element
-                          *server* *session*
-                          (make-selector ~term))]
+                          *server* *session* *locator* ~term)]
        ~@body)))
 
 ;;

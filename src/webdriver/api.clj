@@ -4,6 +4,14 @@
             [clojure.data.codec.base64 :as b64]
             [clojure.java.io :as io]))
 
+;;
+;; todo http timeout
+;;
+
+;;
+;; params
+;;
+
 (def default-api-params
   {:as :json
    :accept :json
@@ -61,43 +69,122 @@
          :body))))
 
 (defn new-session [server capabilities]
+  "https://www.w3.org/TR/webdriver/#dfn-new-session"
   (api server :post [:session]
        {:desiredCapabilities (merge default-capabilities
                                     capabilities)}))
 
 (defn delete-session [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-delete-session"
   (api server
        :delete
        [:session (session-id session)]))
 
 (defn status [server]
+  "https://www.w3.org/TR/webdriver/#dfn-status"
   (api server :get [:status]))
 
-(defn go-url [server session url]
+(defn get-timeout [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-get-timeout"
+  (api server :get
+       [:session (session-id session) :timeouts]))
+
+(defn set-timeout [server session type msec]
+  "https://www.w3.org/TR/webdriver/#dfn-set-timeouts"
+  (api server :post
+       [:session (session-id session) :timeouts]
+       {:type type :ms msec}))
+
+(defn go [server session url]
+  "https://www.w3.org/TR/webdriver/#dfn-go"
   (api server
        :post
        [:session (session-id session) :url]
        {:url url}))
 
-(defn go-back [server session]
-  (api server
-       :post
-       [:session (session-id session) :back]))
-
-(defn go-fwd [server session]
-  (api server
-       :post
-       [:session (session-id session) :forward]))
-
-(defn get-url [server session]
+(defn get-current-url [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-get-current-url"
   (api server
        :get
        [:session (session-id session) :url]))
 
+(defn back [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-back"
+  (api server
+       :post
+       [:session (session-id session) :back]))
+
+(defn forward [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-forward"
+  (api server
+       :post
+       [:session (session-id session) :forward]))
+
+(defn refresh [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-refresh"
+  (api server
+       :post
+       [:session (session-id session) :refresh]))
+
 (defn get-title [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-get-title"
   (-> server
       (api :get [:session (session-id session) :title])
       :value))
+
+(defn get-window-handle [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-get-window-handle"
+  (-> server
+      (api :get [:session (session-id session) :window])
+      :value))
+
+(defn close-window [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-get-window-handle"
+  (api server :delete [:session (session-id session) :window]))
+
+(defn switch-to-window [server session handle]
+  "https://www.w3.org/TR/webdriver/#dfn-switch-to-window"
+  (api server :post
+       [:session (session-id session) :window]
+       {:handle handle}))
+
+(defn get-window-handles [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-get-window-handles"
+  (-> server
+      (api :get [:session (session-id session) :window :handles])
+      :value))
+
+;; Switch To Frame
+;; https://www.w3.org/TR/webdriver/#dfn-switch-to-frame
+
+;; Switch To Parent Frame
+;; https://www.w3.org/TR/webdriver/#dfn-switch-to-parent-frame
+
+;; todo
+(defn get-window-rect [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-get-window-rect"
+  (-> server
+      (api :get [:session (session-id session) :window :rect])
+      :value))
+
+;; todo
+(defn set-window-rect [server session x y width height]
+  "https://www.w3.org/TR/webdriver/#dfn-set-window-rect"
+  (api :post
+       [:session (session-id session) :window :rect]
+       {:x x :y y :width width :height height}))
+
+;; todo
+(defn maximize-window [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-maximize-window"
+  (api server :post
+       [:session (session-id session) :window :maximize]))
+
+;; todo
+(defn fullscreen-window [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-fullscreen-window"
+  (api server :post
+       [:session (session-id session) :window :fullscreen]))
 
 (defn element-attribute [server session element attribute]
   (-> server
@@ -110,7 +197,7 @@
             attribute])
       :value))
 
-(defn find-element [server session [locator term]]
+(defn find-element [server session locator term]
   (-> server
       (api :post
            [:session (session-id session) :element]
@@ -119,7 +206,7 @@
       first
       second))
 
-(defn element-find [server session [locator term]]
+(defn element-find [server session locator term]
   (-> server
       (api :post
            [:session (session-id session) :element]
