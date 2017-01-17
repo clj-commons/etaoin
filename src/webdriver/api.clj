@@ -160,323 +160,175 @@
 ;; Switch To Parent Frame
 ;; https://www.w3.org/TR/webdriver/#dfn-switch-to-parent-frame
 
-;; todo
+;; todo doesn't work
 (defn get-window-rect [server session]
   "https://www.w3.org/TR/webdriver/#dfn-get-window-rect"
   (-> server
-      (api :get [:session (session-id session) :window :rect])
-      :value))
+      (api :get [:session (session-id session) :window :size])))
 
-;; todo
+;; todo doesn't work
 (defn set-window-rect [server session x y width height]
   "https://www.w3.org/TR/webdriver/#dfn-set-window-rect"
   (api :post
        [:session (session-id session) :window :rect]
        {:x x :y y :width width :height height}))
 
-;; todo
+;; todo doesn't work
 (defn maximize-window [server session]
   "https://www.w3.org/TR/webdriver/#dfn-maximize-window"
   (api server :post
        [:session (session-id session) :window :maximize]))
 
-;; todo
+;; todo doesn't work
 (defn fullscreen-window [server session]
   "https://www.w3.org/TR/webdriver/#dfn-fullscreen-window"
   (api server :post
        [:session (session-id session) :window :fullscreen]))
 
-(defn element-attribute [server session element attribute]
-  (-> server
-      (api :get
-           [:session
-            (session-id session)
-            :element
-            element
-            :attribute
-            attribute])
-      :value))
+(defn parse-element [data]
+  (-> data first second))
+
+;; todo ff only
+(defn get-active-element [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-get-active-element"
+  (-> (api server :get
+           [:session (session-id session) :element :active])
+      :value
+      parse-element))
 
 (defn find-element [server session locator term]
+  "https://www.w3.org/TR/webdriver/#dfn-find-element"
   (-> server
       (api :post
            [:session (session-id session) :element]
            {:using locator :value term})
       :value
-      first
-      second))
+      parse-element))
 
-(defn element-find [server session locator term]
+(defn find-elements [server session locator term]
+  "https://www.w3.org/TR/webdriver/#dfn-find-elements"
   (-> server
       (api :post
-           [:session (session-id session) :element]
+           [:session (session-id session) :elements]
            {:using locator :value term})
       :value
-      first
-      second))
+      (->> (mapv parse-element))))
 
-(defn element-tag-name [server session element]
+(defn find-element-from-element [server session element locator term]
+  "https://www.w3.org/TR/webdriver/#dfn-find-element-from-element"
+  (-> server
+      (api :post
+           [:session (session-id session) :element element :element]
+           {:using locator :value term})
+      :value
+      parse-element))
+
+(defn find-elements-from-element [server session element locator term]
+  "https://www.w3.org/TR/webdriver/#dfn-find-elements-from-element"
+  (-> server
+      (api :post
+           [:session (session-id session) :element element :elements]
+           {:using locator :value term})
+      :value
+      (->> (mapv parse-element))))
+
+(defn is-element-selected [server session element]
+  "https://www.w3.org/TR/webdriver/#dfn-is-element-selected"
+  (-> server
+      (api :get
+           [:session (session-id session) :element element :selected])
+      :value))
+
+(defn get-element-attribute [server session element attribute]
+  "https://www.w3.org/TR/webdriver/#dfn-get-element-attribute"
+  (-> server
+      (api :get
+           [:session (session-id session) :element element :attribute attribute])
+      :value))
+
+(defn get-element-property [server session element property]
+  "https://www.w3.org/TR/webdriver/#dfn-get-element-property"
+  (-> server
+      (api :get
+           [:session (session-id session) :element element :property property])
+      :value))
+
+(defn get-element-css-value [server session element property]
+  "https://www.w3.org/TR/webdriver/#dfn-get-element-css-value"
+  (-> server
+      (api :get
+           [:session (session-id session) :element element :css property])
+      :value))
+
+(defn get-element-text [server session element]
+  "https://www.w3.org/TR/webdriver/#dfn-get-element-text"
+  (-> server
+      (api :get
+           [:session (session-id session) :element element :text])
+      :value))
+
+(defn get-element-tag-name [server session element]
+  "https://www.w3.org/TR/webdriver/#dfn-get-element-tag-name"
   (-> server
       (api :get
            [:session (session-id session) :element element :name])
       :value))
 
-(defn element-enabled [server session element]
+(defn get-element-rect [server session element]
+  "https://www.w3.org/TR/webdriver/#dfn-get-element-rect"
+  (-> server
+      (api :get
+           [:session (session-id session) :element element :rect])))
+
+(defn is-element-enabled [server session element]
+  "https://www.w3.org/TR/webdriver/#dfn-is-element-enabled"
   (-> server
       (api :get
            [:session (session-id session) :element element :enabled])
       :value))
 
-(defn find-element-from-element [server session element selector]
+(defn element-click [server session element]
+  "https://www.w3.org/TR/webdriver/#dfn-is-element-enabled"
   (-> server
       (api :post
-           [:session (session-id session) :element element]
-           {:using "xpath" :value "test"})
-      :value
-      first
-      second))
+           [:session (session-id session) :element element :click])))
 
-(defn element-value [server session element text]
+(defn element-clear [server session element]
+  "https://www.w3.org/TR/webdriver/#dfn-element-clear"
+  (-> server
+      (api :post
+           [:session (session-id session) :element element :clear])))
+
+(defn element-send-keys [server session element text]
+  "https://www.w3.org/TR/webdriver/#dfn-element-send-keys"
   (-> server
       (api :post
            [:session (session-id session) :element element :value]
            {:value (text-to-array text)})))
 
-;; (defn element-click [browser element]
-;;   ;; (api browser
-;;   ;;      :post
-;;   ;;      [:session (-> browser :session :sessionId) :element element :click])
-;;   )
 
+(defn get-page-source [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-get-page-source"
+  (-> server
+      (api :get
+           [:session (session-id session) :source])
+      :value))
 
-;; (def url-element-click! "/session/%s/element/%s/click")
+(defn execute-script [server session script & args]
+  "https://www.w3.org/TR/webdriver/#dfn-execute-script"
+  (-> server
+      (api :post
+           [:session (session-id session) :execute :sync]
+           {:script script :args args})
+      :value))
 
-
-;; (def url-session "/session")
-;; (def url-session-delete "/session/%s")
-;; (def url-go-url "/session/%s/url")
-;; (def url-go-back "/session/%s/back")
-;; (def url-go-forward "/session/%s/forward")
-;; (def url-get-title "/session/%s/title")
-;; (def url-get-url "/session/%s/url")
-;; (def url-get-cookie "/session/%s/cookie")
-;; (def url-get-cookie-by-name "/session/%s/cookie/%s")
-;; (def url-get-active-element "/session/%s/element/active")
-;; (def url-element-selected? "/session/%s/element/%s/selected")
-;; (def url-get-element-attr "/session/%s/element/%s/attribute/%s")
-;; (def url-get-element-prop "/session/%s/element/%s/property/%s")
-;; (def url-get-element-text "/session/%s/element/%s/text")
-;; (def url-get-element-name "/session/%s/element/%s/name")
-;; (def url-element-enabled? "/session/%s/element/%s/enabled")
-;; (def url-find-element "/session/%s/element")
-;; (def url-find-elements "/session/%s/elements")
-;; (def url-element-click! "/session/%s/element/%s/click")
-;; (def url-element-clear! "/session/%s/element/%s/clear")
-;; (def url-element-value! "/session/%s/element/%s/value")
-;; (def url-execute-script-sync! "/session/%s/execute/sync")
-;; (def url-screenshot "/session/%s/screenshot")
-
-;; /session/{session id}/element/{element id}/element
-
-
-;; (defn url-item [item]
-;;   (cond
-;;     (keyword? item) (name item)
-;;     (string? item) item
-;;     :else (str item)))
-
-;; (defn get-path [& args]
-;;   (str/join "/" (map url-item args)))
-
-;; (defn get-status [server]
-;;   (-> server
-;;       (str "/" (get-path :status))
-;;       (client/get params)
-;;       :body
-;;       :value))
-
-;; (defn get-session [server opt]
-;;   (-> server
-;;       (str "/" (get-path :session))
-;;       (client/post
-;;        (assoc params :form-params opt))
-;;       :body)) ;; todo erro
-
-;; (defn delete-session [server session]
-;;   (-> server
-;;       (str "/" (get-path :session (:sessionId session)))
-;;       (client/delete params)
-;;       :body
-;;       :value))
-
-;; (defn go-url [server session url]
-;;   (-> server
-;;       (str "/" (get-path :session
-;;                          (:sessionId session)
-;;                          :url))
-;;       (client/post
-;;        (assoc params :form-params {:url url}))
-;;       :body))
-
-;; (defn go-back [session]
-;;   (-> (str url-server
-;;            (format url-go-back (:sessionId session)))
-;;       (client/post params)
-;;       :body))
-
-;; (defn go-forward [session]
-;;   (-> (str url-server
-;;            (format url-go-forward (:sessionId session)))
-;;       (client/post params)
-;;       :body))
-
-;; (defn get-title [session]
-;;   (-> (str url-server
-;;            (format url-get-title (:sessionId session)))
-;;       (client/get params)
-;;       :body
-;;       :value))
-
-;; (defn get-cookie [session]
-;;   (-> (str url-server
-;;            (format url-get-cookie (:sessionId session)))
-;;       (client/get params)
-;;       :body
-;;       :value))
-
-;; (defn get-cookie-by-name [session name]
-;;   (-> (str url-server
-;;            (format url-get-cookie-by-name
-;;                    (:sessionId session)
-;;                    name))
-;;       (client/get params)
-;;       :body
-;;       :value
-;;       first))
-
-;; (defn get-active-element [session]
-;;   (-> (str url-server
-;;            (format url-get-active-element
-;;                    (:sessionId session)))
-;;       (client/get params)
-;;       :body
-;;       :value
-;;       first
-;;       second))
-
-;; (defn element-selected? [session element]
-;;   (-> (str url-server
-;;            (format url-element-selected?
-;;                    (:sessionId session)
-;;                    element))
-;;       (client/get params)
-;;       :body
-;;       :value))
-
-;; (defn get-element-attr [session element attr]
-;;   (-> (str url-server
-;;            (format url-get-element-attr
-;;                    (:sessionId session)
-;;                    element
-;;                    attr))
-;;       (client/get params)
-;;       :body
-;;       :value))
-
-;; (defn get-element-prop [session element prop]
-;;   (-> (str url-server
-;;            (format url-get-element-prop
-;;                    (:sessionId session)
-;;                    element
-;;                    prop))
-;;       (client/get params)
-;;       :body
-;;       :value))
-
-;; (defn get-element-text [session element]
-;;   (-> (str url-server
-;;            (format url-get-element-text
-;;                    (:sessionId session)
-;;                    element))
-;;       (client/get params)
-;;       :body
-;;       :value))
-
-;; (defn get-element-name [session element]
-;;   (-> (str url-server
-;;            (format url-get-element-name
-;;                    (:sessionId session)
-;;                    element))
-;;       (client/get params)
-;;       :body
-;;       :value))
-
-;; (defn element-enabled? [session element]
-;;   (-> (str url-server
-;;            (format url-element-enabled?
-;;                    (:sessionId session)
-;;                    element))
-;;       (client/get params)
-;;       :body
-;;       :value))
-
-;; (defn element-click! [session element]
-;;   (-> (str url-server
-;;            (format url-element-click!
-;;                    (:sessionId session)
-;;                    element))
-;;       (client/post params)
-;;       :body))
-
-;; (defn element-clear! [session element]
-;;   (-> (str url-server
-;;            (format url-element-clear!
-;;                    (:sessionId session)
-;;                    element))
-;;       (client/post params)
-;;       :body))
-
-;; (defn element-value! [session element text]
-;;   (-> (str url-server
-;;            (format url-element-value!
-;;                    (:sessionId session)
-;;                    element))
-;;       (client/post
-;;        (assoc params :form-params {:value (vec text)}))
-;;       :body))
-
-;; (defn find-element [session locator selector]
-;;   (-> (str url-server
-;;            (format url-find-element
-;;                    (:sessionId session)))
-;;       (client/post
-;;        (assoc params :form-params {:using locator :value selector}))
-;;       :body
-;;       :value
-;;       first
-;;       second
-;;       )) ;; todo
-
-;; (defn find-elements [session locator selector]
-;;   (-> (str url-server
-;;            (format url-find-elements
-;;                    (:sessionId session)))
-;;       (client/post
-;;        (assoc params :form-params {:using locator :value selector}))
-;;       :body
-;;       :value ;; todo keys
-
-
-;;       ))
-
-;; (defn execute-script-sync! [session script & args]
-;;   (-> (str url-server
-;;            (format url-execute-script-sync!
-;;                    (:sessionId session)))
-;;       (client/post
-;;        (assoc params :form-params {:script script :args args}))
-;;       :body
-;;       :value))
+;; todo didn't catch how it works
+(defn execute-async-script [server session script & args]
+  "https://www.w3.org/TR/webdriver/#dfn-execute-async-script"
+  (-> server
+      (api :post
+           [:session (session-id session) :execute :async]
+           {:script script :args args})))
 
 ;; (defn inject-script! [session url]
 ;;   (let [script (str "var s = document.createElement('script');"

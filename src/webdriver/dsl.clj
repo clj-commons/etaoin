@@ -78,6 +78,17 @@
                           *server* *session* *locator* ~term)]
        ~@body)))
 
+(defmacro with-elements [term & body]
+  `(if (bound? #'*element*)
+     (doseq [element# (api/find-element-from-element
+                       *server* *session* *element* *locator* ~term)]
+       (binding [*element* element#]
+         ~@body))
+     (doseq [element# (api/find-elements
+                       *server* *session* *locator* ~term)]
+       (binding [*element* element#]
+         ~@body))))
+
 ;;
 ;; keys and input
 ;;
