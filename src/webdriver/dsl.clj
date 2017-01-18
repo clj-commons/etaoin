@@ -87,11 +87,23 @@
 (defn go-url [url]
   (api/go-url *server* *session* url))
 
+;;
+;; url and title
+;;
+
 (defn get-title []
   (api/get-title *server* *session*))
 
 (defn get-url []
   (api/get-url *server* *session*))
+
+(defmacro with-title [name & body]
+  `(let [~name (get-title)]
+     ~@body))
+
+(defmacro with-url [name & body]
+  `(let [~name (get-url)]
+     ~@body))
 
 ;;
 ;; elements
