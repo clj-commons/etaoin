@@ -8,6 +8,7 @@
 ;; todo http timeout
 ;; global param names
 ;; client module?
+;; todo use as->
 ;;
 
 ;;
@@ -171,27 +172,40 @@
 ;; Switch To Parent Frame
 ;; https://www.w3.org/TR/webdriver/#dfn-switch-to-parent-frame
 
-;; todo doesn't work
-(defn get-window-rect [server session]
-  "https://www.w3.org/TR/webdriver/#dfn-get-window-rect"
+(defn get-window-size [server session]
   (-> server
       (api :get [:session (session-id session) :window :size])))
 
-;; todo doesn't work
-(defn set-window-rect [server session x y width height]
+(defn set-window-size [server session width height]
+  (-> server
+      (api :post [:session (session-id session) :window :size]
+           {:width width :height height})))
+
+(defn set-window-position [server session x y]
+  (-> server
+      (api :post [:session (session-id session) :window :position]
+           {:x x :y y})))
+
+(defn ^:not-implemented
+  get-window-rect [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-get-window-rect"
+  (-> server
+      (api :get [:session (session-id session) :window :rect])))
+
+(defn ^:not-implemented
+  set-window-rect [server session x y width height]
   "https://www.w3.org/TR/webdriver/#dfn-set-window-rect"
   (api :post
        [:session (session-id session) :window :rect]
        {:x x :y y :width width :height height}))
 
-;; todo doesn't work
 (defn maximize-window [server session]
   "https://www.w3.org/TR/webdriver/#dfn-maximize-window"
   (api server :post
        [:session (session-id session) :window :maximize]))
 
-;; todo doesn't work
-(defn fullscreen-window [server session]
+(defn ^:not-implemented
+  fullscreen-window [server session]
   "https://www.w3.org/TR/webdriver/#dfn-fullscreen-window"
   (api server :post
        [:session (session-id session) :window :fullscreen]))
@@ -239,6 +253,13 @@
            {:using locator :value term})
       :value
       (->> (mapv parse-element))))
+
+(defn is-element-displayed [server session element]
+  "https://www.w3.org/TR/webdriver/#dfn-is-element-selected"
+  (-> server
+      (api :get
+           [:session (session-id session) :element element :displayed])
+      :value))
 
 (defn is-element-selected [server session element]
   "https://www.w3.org/TR/webdriver/#dfn-is-element-selected"
@@ -300,6 +321,12 @@
   (-> server
       (api :post
            [:session (session-id session) :element element :click])))
+
+(defn element-tap [server session element]
+  "https://www.w3.org/TR/webdriver/#dfn-is-element-enabled"
+  (-> server
+      (api :post
+           [:session (session-id session) :element element :tap])))
 
 (defn element-clear [server session element]
   "https://www.w3.org/TR/webdriver/#dfn-element-clear"
@@ -381,8 +408,7 @@
   (-> server
       (api :post
            [:session (session-id session) :actions] ;; :data ;; id
-           {:actions [{:type "none" :id "foo" :actions [{:type "pause" :value "R"}
-                                                        ]}]})))
+           {:actions [{:type "pointer" :actions [{:type "pointerDown" :button 123}]}]})))
 
 ;; todo doesn't work
 (defn release-actions [server session]
