@@ -52,6 +52,9 @@
     (char? text) [text]
     :else (vec text)))
 
+(defn parse-element [data]
+  (-> data first second))
+
 (defn b64-to-file [b64str filename]
   (with-open [out (io/output-stream filename)]
     (.write out (-> b64str
@@ -192,9 +195,6 @@
   "https://www.w3.org/TR/webdriver/#dfn-fullscreen-window"
   (api server :post
        [:session (session-id session) :window :fullscreen]))
-
-(defn parse-element [data]
-  (-> data first second))
 
 ;; todo ff only
 (defn get-active-element [server session]
