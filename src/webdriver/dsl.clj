@@ -26,6 +26,8 @@
 ;; skip decorator
 ;; conditinal decorator
 ;; with window decorator
+;; todo add local html test
+;;
 
 (def ^:dynamic *server*)
 (def ^:dynamic *session*)
@@ -40,6 +42,12 @@
   (fn [& args]
     (apply f (reverse args))))
 
+(defn random-port []
+  (let [max-port 65536
+        offset 1024]
+    (+ (rand-int (- max-port offset))
+       offset)))
+
 ;;
 ;; selectors
 ;;
@@ -51,6 +59,26 @@
 (defmacro with-xpath [& body]
   `(with-locator "xpath"
      ~@body))
+
+;;
+;; windowing
+;;
+
+(defmacro with-window [handler & body]
+  `(let [h# (api/get-window-handle *server* *session*)]
+     (api/switch-to-window *server* *session* ~handler)
+     (try
+       ~@body
+       (finally
+         (api/switch-to-window *server* *session* h#)))))
+
+(defmacro with-all-windows [& body]
+  `(doseq [h# (api/get-window-handles *server* *session*)]
+     (with-window h#
+       ~@body)))
+
+(defn close []
+  (api/close-window *server* *session*))
 
 ;;
 ;; navigation
@@ -164,7 +192,7 @@
 ;; predicates
 ;;
 
-(defn exists?
+(defn exists? ;; todo one form
   ([]
    (try+
     (api/element-tag-name *server* *session* *element*)
@@ -187,6 +215,7 @@
      (api/element-enabled *server* *session* *element*))))
 
 (defn visible? []
+  ;; todo C. Element Displayedness
   )
 
 ;;
@@ -239,6 +268,10 @@
          (partial running? host port)
          args))
 
+;;
+;; proceses
+;;
+
 ;; todo handle exceptions
 ;; check alive
 (defmacro with-process [host port & body]
@@ -280,12 +313,6 @@
      (with-server host# port#
        (with-process host# port#
          ~@body))))
-
-(defn random-port []
-  (let [max-port 65536
-        offset 1024]
-    (+ (rand-int (- max-port offset))
-       offset)))
 
 (deftest simple-test
   (let [host "127.0.0.1"
