@@ -147,6 +147,20 @@
      (api/element-click *server* *session* *element*))))
 
 ;;
+;; scripts
+;;
+
+(defn execute-js [script & args]
+  (apply api/execute-script *server* *session* script args))
+
+(defn inject-js [url]
+  (let [script (str "var s = document.createElement('script');"
+                    "s.type = 'text/javascript';"
+                    "s.src = arguments[0];"
+                    "document.head.appendChild(s);")]
+    (execute-js script url)))
+
+;;
 ;; predicates
 ;;
 

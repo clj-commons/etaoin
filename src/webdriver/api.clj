@@ -50,6 +50,12 @@
     (char? text) [text]
     :else (vec text)))
 
+(defn b64-to-file [b64str filename]
+  (with-open [out (io/output-stream filename)]
+    (.write out (-> b64str
+                    .getBytes
+                    b64/decode))))
+
 ;;
 ;; api
 ;;
@@ -330,30 +336,98 @@
            [:session (session-id session) :execute :async]
            {:script script :args args})))
 
-;; (defn inject-script! [session url]
-;;   (let [script (str "var s = document.createElement('script');"
-;;                     "s.type = 'text/javascript';"
-;;                     "s.src = arguments[0];"
-;;                     "document.head.appendChild(s);")]
-;;     (execute-script-sync! session script url)))
+(defn get-all-cookies [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-get-all-cookies"
+  (-> server
+      (api :get
+           [:session (session-id session) :cookie])
+      :value))
 
-;; (defn get-url [session]
-;;   (-> (str url-server
-;;            (format url-get-url
-;;                    (:sessionId session)))
-;;       (client/get params)
-;;       :body
-;;       :value))
+(defn get-named-cookie [server session name]
+  "https://www.w3.org/TR/webdriver/#dfn-get-named-cookie"
+  (-> server
+      (api :get
+           [:session (session-id session) :cookie name])
+      :value
+      first))
 
-;; (defn get-screenshot [session]
-;;   (-> (str url-server
-;;            (format url-screenshot
-;;                    (:sessionId session)))
-;;       (client/get params)
-;;       :body
-;;       :value
-;;       .getBytes
-;;       b64/decode
-;;       ;; byte-array
-;;       (io/copy "foo.png")
-;; ))
+;; todo params
+(defn add-cookie [server session name]
+  "https://www.w3.org/TR/webdriver/#dfn-add-cookie"
+  (-> server
+      ;; (api :post
+      ;;      [:session (session-id session) :cookie]
+      ;;      {:name name :value value :path path
+      ;;       :domain domain :secure secure
+      ;;       :httpOnly httpOnly :expiry expiry})
+      ))
+
+(defn delete-cookie [server session name]
+  "https://www.w3.org/TR/webdriver/#dfn-delete-cookie"
+  (-> server
+      (api :delete
+           [:session (session-id session) :cookie name])))
+
+(defn delete-all-cookies [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-delete-all-cookies"
+  (-> server
+      (api :delete
+           [:session (session-id session) :cookie])))
+
+;; todo doesn't work
+(defn perform-actions [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-perform-implementation-specific-action-dispatch-steps"
+  (-> server
+      (api :post
+           [:session (session-id session) :actions] ;; :data ;; id
+           {:actions [{:type "none" :id "foo" :actions [{:type "pause" :value "R"}
+                                                        ]}]})))
+
+;; todo doesn't work
+(defn release-actions [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-release-actions"
+  (-> server
+      (api :delete
+           [:session (session-id session) :actions])))
+
+(defn dismiss-alert [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-dismiss-alert"
+  (-> server
+      (api :post
+           [:session (session-id session) :alert :dismiss])))
+
+(defn accept-alert [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-accept-alert"
+  (-> server
+      (api :post
+           [:session (session-id session) :alert :accept])))
+
+(defn get-alert-text [server session]
+  "https://www.w3.org/TR/webdriver/#dfn-get-alert-text"
+  (-> server
+      (api :get
+           [:session (session-id session) :alert :text])
+      :value))
+
+(defn send-alert-text [server session text]
+  "https://www.w3.org/TR/webdriver/#dfn-send-alert-text"
+  (-> server
+      (api :post
+           [:session (session-id session) :alert :text]
+           {:value (text-to-array text)})))
+
+(defn take-screenshot [server session filename]
+  "https://www.w3.org/TR/webdriver/#dfn-take-screenshot"
+  (-> server
+      (api :get
+           [:session (session-id session) :screenshot])
+      :value ;; todo might be empty string
+      (b64-to-file filename)))
+
+(defn take-element-screenshot [server session element filename]
+  "https://www.w3.org/TR/webdriver/#dfn-take-element-screenshot"
+  (-> server
+      (api :get
+           [:session (session-id session) :element element :screenshot])
+      :value ;; todo might be empty string
+      (b64-to-file filename)))

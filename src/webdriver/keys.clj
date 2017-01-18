@@ -1,6 +1,6 @@
 (ns webdriver.keys)
 
-;; https://github.com/SeleniumHQ/selenium/blob/master/java/client/src/org/openqa/selenium/Keys.java
+;; https://www.w3.org/TR/webdriver/#keyboard-actions
 
 (def enter \uE007)
 (def backspace \u0008)
