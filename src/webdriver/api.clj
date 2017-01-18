@@ -6,6 +6,8 @@
 
 ;;
 ;; todo http timeout
+;; global param names
+;; client module?
 ;;
 
 ;;
@@ -311,7 +313,6 @@
       (api :post
            [:session (session-id session) :element element :value]
            {:value (text-to-array text)})))
-
 
 (defn get-page-source [server session]
   "https://www.w3.org/TR/webdriver/#dfn-get-page-source"
