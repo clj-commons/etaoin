@@ -8,6 +8,8 @@
 ;; todo http timeout
 ;; global param names
 ;; client module?
+;; client with override params
+;; clinet parse json error
 ;; todo use as->
 ;;
 

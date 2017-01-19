@@ -147,7 +147,7 @@
          (api/delete-session *server* *session*)))))
 
 ;;
-;; clicks
+;; actions
 ;;
 
 (defn click
@@ -157,10 +157,63 @@
    (with-element term
      (api/element-click *server* *session* *element*))))
 
+(defn clear
+  ([]
+   (api/element-clear *server* *session* *element*))
+  ([term]
+   (with-element term
+     (api/element-clear *server* *session* *element*))))
+
+(defn tap
+  ([]
+   (api/element-tap *server* *session* *element*))
+  ([term]
+   (with-element term
+     (api/element-tap *server* *session* *element*))))
+
+;;
+;; cookies
+;;
+
+;; todo params
+;; todo without-cookie
+;; with-get-cooke
+;; multiple forms
+;; without-all-cookies?
+;;
+(defmacro with-cookie [cookie & body]
+  `(try
+     (api/add-cookie *server* *session* cookie)
+     ~@body
+     (finally
+       (api/delete-cookie-cookie *server* *session* cookie))))
+
+;;
+;; alerts
+;;
+
+;; todo alerts stuff
+
+;;
+;; screenshots
+;;
+
+;; todo compose filename func
+(defn screenshot [filename]
+  (api/take-screenshot *server* *session* filename))
+
+(defn screenshot-el
+  ([filename]
+   (api/take-element-screenshot *server* *session* *element* filename))
+  ([term filename]
+   (with-element term
+     (api/take-element-screenshot *server* *session* *element* filename))))
+
 ;;
 ;; scripts
 ;;
 
+;; todo naming? js-...
 (defn execute-js [script & args]
   (apply api/execute-script *server* *session* script args))
 
@@ -290,6 +343,14 @@
     (fill key)
     (wait 0.2)))
 
+;; todo multi-form
+;; todo fill form human
+(defn fill-form [form]
+  (doseq [[field text] form]
+    (let [term (format "//input[@name='%s']" (name field))]
+      (with-element term
+        (fill text)))))
+
 ;;
 ;; proceses
 ;;
@@ -336,55 +397,71 @@
        (with-process host# port#
          ~@body))))
 
-(defmacro with-el-attr [attr & body]
-  (let [attr-name (str attr)]
-    `(let [~attr (api/get-element-attribute *server* *session* *element* ~attr-name)]
-       ~@body)))
-
-;; attr-names (mapv str attrs)
+(defn el-attr [attr]
+  (api/get-element-attribute *server* *session* *element* attr))
 
 (defmacro with-el-attrs [attrs & body]
   (let [pair-func (fn [attr]
                     (let [attr-str (str attr)]
-                      [attr `(api/get-element-attribute
-                              *server* *session* *element* ~attr-str)]))
+                      [attr `(el-attr ~attr-str)]))
         binds (->> attrs
                    (map pair-func)
                    (apply concat)
                    vec
                    vector)]
     `(let ~@binds
-       ~@body))
+       ~@body)))
 
-  ;; (let [bind-func (fn [name]
-  ;;                   [name (api/get-element-attribute
-  ;;                          *server* *session* *element* name)])
-  ;;       bind-vect (->> names
-  ;;                      (map bind-func)
-  ;;                      flatten
-  ;;                      vec)]
-  ;;   `(let ~bind-vect
-  ;;      ~@body))
-  )
+(defmacro with-el-attr [attr & body]
+  `(with-el-attrs [~attr]
+     ~@body))
+
+(defn el-prop [prop]
+  (api/get-element-property *server* *session* *element* prop))
+
+(defmacro with-el-props [props & body]
+  (let [pair-func (fn [prop]
+                    (let [prop-str (str prop)]
+                      [prop `(el-prop ~prop-str)]))
+        binds (->> props
+                   (map pair-func)
+                   (apply concat)
+                   vec
+                   vector)]
+    `(let ~@binds
+       ~@body)))
+
+;; todo for multiple prop
+;; todo namin
+;; todo the same for attr
+(defmacro with-prop [term prop & body]
+  `(with-element [~term]
+     (with-el-prop [~prop]
+       ~@body)))
+
+(defmacro with-el-prop [prop & body]
+  `(with-el-props [~prop]
+     ~@body))
 
 (deftest simple-test
   (let [host "127.0.0.1"
         port (random-port) ;; 4444 ;; 8910
         capabilities {}
-        input "//input[@id=\"text\"]"]
+        html "<input class=\"input__control input__input\" tabindex=\"2\" autocomplete=\"off\" autocorrect=\"off\" autocapitalize=\"off\" spellcheck=\"false\" aria-autocomplete=\"list\" aria-label=\"Запрос\" id=\"text\" maxlength=\"400\" name=\"text\">"
+        input "//input[@id='text']"]
     (with-start host port
       (with-session capabilities
         (go-url "http://ya.ru")
         (with-xpath
           (wait-for-element-exists input)
           (with-element input
-            ;; (let [name (api/get-element-attribute *server* *session* *element* 'name)]
-            ;;   (is (= 1 name))
-            ;;   )
-            ;; (with-el-attrs [name]
-            ;;   (is (= 1 name))
 
-            ;;   )
+            (with-el-prop outerHTML
+              (is (= outerHTML html)))
+
+            (with-el-props [outerHTML innerHTML]
+              (is (= outerHTML html))
+              (is (= innerHTML "")))
 
             (with-el-attr name
               (is (= name "text")))
@@ -398,8 +475,13 @@
               (is (= maxlength "400")))
 
             (fill "Clojure")
-            (enter)))
-        (wait 1)
+            ;; (enter)
+            )
+          (with-element "//form"
+            (fill-form {:text "ho-ho-ho"}))
+
+          )
+        (wait 2)
         (is 1)))))
 
 (defn foo []
