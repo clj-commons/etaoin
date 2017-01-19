@@ -85,7 +85,7 @@
 ;;
 
 (defn go-url [url]
-  (api/go-url *server* *session* url))
+  (api/go *server* *session* url))
 
 ;;
 ;; url and title
@@ -95,7 +95,7 @@
   (api/get-title *server* *session*))
 
 (defn get-url []
-  (api/get-url *server* *session*))
+  (api/get-current-url *server* *session*))
 
 (defmacro with-title [name & body]
   `(let [~name (get-title)]
@@ -104,6 +104,12 @@
 (defmacro with-url [name & body]
   `(let [~name (get-url)]
      ~@body))
+
+
+;; (defmacro with-el-attr [name & body]
+;;   `(with-el-attrs [name]
+;;      ~@body))
+
 
 ;;
 ;; elements
@@ -128,41 +134,6 @@
                        *server* *session* *locator* ~term)]
        (binding [*element* element#]
          ~@body))))
-
-;;
-;; keys and input
-;;
-
-(defn fill
-  ([text]
-   (api/element-value *server* *session* *element* text))
-  ([term text]
-   (with-element term
-     (api/element-value *server* *session* *element* text))))
-
-(defn make-fill-key [key]
-  (-> fill flip (partial key)))
-
-(def enter(make-fill-key keys/enter))
-(def backspace (make-fill-key keys/backspace))
-(def up (make-fill-key keys/up))
-(def right (make-fill-key keys/right))
-(def down (make-fill-key keys/down))
-(def left (make-fill-key keys/left))
-
-(defn fill-human [text]
-  "Inputs text like we typically do: with random delays and corrections."
-  ;; todo multiple arguments
-  ;; todo random values
-  ;; todo weights
-  ;; todo multi-form
-  (doseq [key text]
-    (when (< (rand) 0.3)
-      (fill \A)
-      (wait 0.3)
-      (backspace))
-    (fill key)
-    (wait 0.2)))
 
 ;;
 ;; session
@@ -204,31 +175,35 @@
 ;; predicates
 ;;
 
+;; todo simplify
 (defn exists? ;; todo one form
   ([]
    (try+
-    (api/element-tag-name *server* *session* *element*)
+    (api/get-element-tag-name *server* *session* *element*)
     true
     (catch [:status 404] _
       false)))
   ([term]
    (with-element term
      (try+
-      (api/element-tag-name *server* *session* *element*)
+      (api/get-element-tag-name *server* *session* *element*)
       true
       (catch [:status 404] _
         false)))))
 
 (defn enabled?
   ([]
-   (api/element-enabled *server* *session* *element*))
+   (api/is-element-enabled *server* *session* *element*))
   ([term]
    (with-element term
-     (api/element-enabled *server* *session* *element*))))
+     (api/is-element-enabled *server* *session* *element*))))
 
-(defn visible? []
-  ;; todo C. Element Displayedness
-  )
+(defn displayed?
+  ([]
+   (api/is-element-displayed *server* *session* *element*))
+  ([term]
+   (with-element term
+     (api/is-element-displayed *server* *session* *element*))))
 
 ;;
 ;; wait functions
@@ -261,10 +236,10 @@
          (partial enabled? term)
          args))
 
-(defn wait-for-element-visible [term & args]
+(defn wait-for-element-displayed [term & args]
   ;; todo multi-form
   (apply wait-for-predicate
-         (partial visible? term)
+         (partial displayed? term)
          args))
 
 ;; todo exception decorator
@@ -279,6 +254,41 @@
   (apply wait-for-predicate
          (partial running? host port)
          args))
+
+;;
+;; keys and input
+;;
+
+(defn fill
+  ([text]
+   (api/element-send-keys *server* *session* *element* text))
+  ([term text]
+   (with-element term
+     (api/element-send-keys *server* *session* *element* text))))
+
+(defn make-fill-key [key]
+  (-> fill flip (partial key)))
+
+(def enter(make-fill-key keys/enter))
+(def backspace (make-fill-key keys/backspace))
+(def up (make-fill-key keys/up))
+(def right (make-fill-key keys/right))
+(def down (make-fill-key keys/down))
+(def left (make-fill-key keys/left))
+
+(defn fill-human [text]
+  "Inputs text like we typically do: with random delays and corrections."
+  ;; todo multiple arguments
+  ;; todo random values
+  ;; todo weights
+  ;; todo multi-form
+  (doseq [key text]
+    (when (< (rand) 0.3)
+      (fill \A)
+      (wait 0.3)
+      (backspace))
+    (fill key)
+    (wait 0.2)))
 
 ;;
 ;; proceses
@@ -326,6 +336,37 @@
        (with-process host# port#
          ~@body))))
 
+(defmacro with-el-attr [attr & body]
+  (let [attr-name (str attr)]
+    `(let [~attr (api/get-element-attribute *server* *session* *element* ~attr-name)]
+       ~@body)))
+
+;; attr-names (mapv str attrs)
+
+(defmacro with-el-attrs [attrs & body]
+  (let [pair-func (fn [attr]
+                    (let [attr-str (str attr)]
+                      [attr `(api/get-element-attribute
+                              *server* *session* *element* ~attr-str)]))
+        binds (->> attrs
+                   (map pair-func)
+                   (apply concat)
+                   vec
+                   vector)]
+    `(let ~@binds
+       ~@body))
+
+  ;; (let [bind-func (fn [name]
+  ;;                   [name (api/get-element-attribute
+  ;;                          *server* *session* *element* name)])
+  ;;       bind-vect (->> names
+  ;;                      (map bind-func)
+  ;;                      flatten
+  ;;                      vec)]
+  ;;   `(let ~bind-vect
+  ;;      ~@body))
+  )
+
 (deftest simple-test
   (let [host "127.0.0.1"
         port (random-port) ;; 4444 ;; 8910
@@ -334,10 +375,29 @@
     (with-start host port
       (with-session capabilities
         (go-url "http://ya.ru")
-        (wait-for-element-exists input)
         (with-xpath
+          (wait-for-element-exists input)
           (with-element input
-            (fill-human "Clojure")
+            ;; (let [name (api/get-element-attribute *server* *session* *element* 'name)]
+            ;;   (is (= 1 name))
+            ;;   )
+            ;; (with-el-attrs [name]
+            ;;   (is (= 1 name))
+
+            ;;   )
+
+            (with-el-attr name
+              (is (= name "text")))
+
+            (with-el-attrs [name class tabindex
+                            autocomplete maxlength]
+              (is (= name "text"))
+              (is (= class "input__control input__input"))
+              (is (= tabindex "2"))
+              (is (= autocomplete "off"))
+              (is (= maxlength "400")))
+
+            (fill "Clojure")
             (enter)))
         (wait 1)
         (is 1)))))

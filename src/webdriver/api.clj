@@ -39,6 +39,7 @@
 (defn url-item-str [item]
   (cond
     (keyword? item) (name item)
+    (symbol? item) (name item)
     (string? item) item
     :else (str item)))
 
