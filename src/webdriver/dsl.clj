@@ -27,6 +27,7 @@
 ;; conditinal decorator
 ;; with window decorator
 ;; todo add local html test
+;; custom HTML files for tests
 ;;
 
 (def ^:dynamic *server*)
@@ -59,6 +60,21 @@
 (defmacro with-xpath [& body]
   `(with-locator "xpath"
      ~@body))
+
+;;
+;; css staff
+;;
+;; todo implements css
+
+;; todo elemet size
+;; todo elemet rect
+;; element location
+;; resize
+;; position
+;; url-hash
+;; all the locators
+;; wait for (not) present/visible/enabled
+;;
 
 ;;
 ;; windowing
@@ -345,6 +361,7 @@
 
 ;; todo multi-form
 ;; todo fill form human
+;; todo submit form
 (defn fill-form [form]
   (doseq [[field text] form]
     (let [term (format "//input[@name='%s']" (name field))]
