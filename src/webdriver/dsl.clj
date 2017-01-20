@@ -230,22 +230,23 @@
 ;; scripts
 ;;
 
-;; todo naming? js-...
-(defn execute-js [script & args]
+;; todo names? execute inject
+(defn js-execute [script & args]
   (apply api/execute-script *server* *session* script args))
 
-(defn inject-js [url]
+(defn js-inject-script [url]
   (let [script (str "var s = document.createElement('script');"
                     "s.type = 'text/javascript';"
                     "s.src = arguments[0];"
                     "document.head.appendChild(s);")]
-    (execute-js script url)))
+    (js-execute script url)))
 
 ;;
 ;; predicates
 ;;
 
 ;; todo simplify
+;; todo form for []?
 (defn exists? ;; todo one form
   ([]
    (try+
@@ -414,6 +415,8 @@
 ;;      (with-server host# port#
 ;;        (with-process host# port#
 ;;          ~@body))))
+
+;; todo multi-futures
 
 (defn el-attr [attr]
   (api/get-element-attribute *server* *session* *element* attr))
