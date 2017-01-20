@@ -1,38 +1,29 @@
 (ns webdriver.proc
-  (:require [clojure.test :refer [is deftest]]
-            [clojure.java.io :as io])
+  (:require [clojure.java.io :as io])
   (:import java.lang.Runtime
            java.lang.IllegalThreadStateException))
 
-(defmulti run2 (fn [& attrs] (mapv class attrs)))
+(defmacro exec [& args]
+  `(.exec (Runtime/getRuntime) ~@args))
 
-(defmethod run2 [clojure.lang.PersistentVector & foo] [params]
-  (print 42))
+(defn java-params [params]
+  (->> params
+       (map str)
+       (into-array String)))
 
-;; (defmethod run [clojure.lang.PersistentVector APersistentMap]
-;;   )
+(defn java-env [env]
+  (->> env
+       (map (fn [[k v]]
+              (format "%s=%s" (name k) v)))
+       (into-array String)))
 
-
-(defn run3
-
-  ;; ([cmd]
-  ;;  (run cmd ))
-  ;; ([cmd params]
-  ;;  (run cmd []))
-
-  [cmd params env dir]
-  (let [java-params (->> params
-                         (cons cmd)
-                         (map str)
-                         (into-array String))
-        env-pair (fn [[k v]] (format "%s=%s" (name k) v))
-        java-env (->> env (map env-pair) (into-array String))
-        java-file (io/file dir)
-        runtime (Runtime/getRuntime)]
-    (.exec runtime
-           java-params
-           java-env
-           java-file)))
+(defn run
+  ([params]
+   (exec (java-params params)))
+  ([params env]
+   (exec (java-params params) (java-env env)))
+  ([params env dir]
+   (exec (java-params params) (java-env env) (io/file dir))))
 
 (defn alive? [proc]
   (-> proc .isAlive))
@@ -45,8 +36,8 @@
 (defn kill [proc]
   (-> proc .destroy))
 
-(defn run-server [command host port & args]
-  )
+(defn read-out [proc]
+  (-> proc .getInputStream slurp))
 
-(defn run-gecko [host port & args]
-  (apply run "geckodriver" "--host" host "--port" port args))
+(defn read-err [proc]
+  (-> proc .getErrorStream slurp))

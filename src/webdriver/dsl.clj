@@ -28,6 +28,7 @@
 ;; with window decorator
 ;; todo add local html test
 ;; custom HTML files for tests
+;; js clear local storage
 ;;
 
 (def ^:dynamic *server*)
@@ -403,16 +404,16 @@
      (binding [*server* (make-server host# port#)]
        ~@body)))
 
-(defmacro with-start [host port & body]
-  `(with-server ~host ~port
-     (with-process ~host ~port
-       ~@body)))
+;; (defmacro with-start [host port & body]
+;;   `(with-server ~host ~port
+;;      (with-process ~host ~port
+;;        ~@body)))
 
-(defmacro with-start-multi [connections & body]
-  `(doseq [[host# port#] ~connections]
-     (with-server host# port#
-       (with-process host# port#
-         ~@body))))
+;; (defmacro with-start-multi [connections & body]
+;;   `(doseq [[host# port#] ~connections]
+;;      (with-server host# port#
+;;        (with-process host# port#
+;;          ~@body))))
 
 (defn el-attr [attr]
   (api/get-element-attribute *server* *session* *element* attr))
@@ -460,48 +461,50 @@
   `(with-el-props [~prop]
      ~@body))
 
+(defmacro with-process [args & body]
+  `(let [p# (apply proc/run ~args)]
+     (try
+       ~@body
+       (finally
+         (proc/kill p#)))))
+
 (deftest simple-test
   (let [host "127.0.0.1"
         port (random-port) ;; 4444 ;; 8910
+        args ["geckodriver" "--host" host "--port" port]
         capabilities {}
         html "<input class=\"input__control input__input\" tabindex=\"2\" autocomplete=\"off\" autocorrect=\"off\" autocapitalize=\"off\" spellcheck=\"false\" aria-autocomplete=\"list\" aria-label=\"Запрос\" id=\"text\" maxlength=\"400\" name=\"text\">"
         input "//input[@id='text']"]
-    (with-start host port
-      (with-session capabilities
-        (go-url "http://ya.ru")
-        (with-xpath
-          (wait-for-element-exists input)
-          (with-element input
 
-            (with-el-prop outerHTML
-              (is (= outerHTML html)))
-
-            (with-el-props [outerHTML innerHTML]
-              (is (= outerHTML html))
-              (is (= innerHTML "")))
-
-            (with-el-attr name
-              (is (= name "text")))
-
-            (with-el-attrs [name class tabindex
-                            autocomplete maxlength]
-              (is (= name "text"))
-              (is (= class "input__control input__input"))
-              (is (= tabindex "2"))
-              (is (= autocomplete "off"))
-              (is (= maxlength "400")))
-
-            (fill "Clojure")
-            ;; (enter)
-            )
-          (with-element "//form"
-            (fill-form {:text "ho-ho-ho"}))
-
-          )
-        (wait 2)
-        (is 1)))))
+    ;; with-start host port
+    (with-process [args]
+      (with-server host port
+        (wait 1) ;; todo fix that
+        (with-session capabilities
+          (go-url "http://ya.ru")
+          (with-xpath
+            (wait-for-element-exists input)
+            (with-element input
+              (with-el-prop outerHTML
+                (is (= outerHTML html)))
+              (with-el-props [outerHTML innerHTML]
+                (is (= outerHTML html))
+                (is (= innerHTML "")))
+              (with-el-attr name
+                (is (= name "text")))
+              (with-el-attrs [name class tabindex
+                              autocomplete maxlength]
+                (is (= name "text"))
+                (is (= class "input__control input__input"))
+                (is (= tabindex "2"))
+                (is (= autocomplete "off"))
+                (is (= maxlength "400")))
+              (fill "Clojure"))
+            (with-element "//form"
+              (fill-form {:text "ho-ho-ho"})))
+          (wait 2)
+          (is 1))))))
 
 (defn foo []
   (doseq [foo [1 2 3  2 2 2 2 2 2 2 2 2]]
-    (future (run-tests)))
-  )
+    (future (run-tests))))
