@@ -13,6 +13,7 @@
 ;;
 ;; todos
 ;;
+;; todo unused imports
 ;; todo variable bound checks?
 ;; todo: on exception return source code and screenshot
 ;; (inject-script "http://ya.ru/test.js")
@@ -34,7 +35,7 @@
 (def ^:dynamic *server*)
 (def ^:dynamic *session*)
 (def ^:dynamic *element*)
-(def ^:dynamic *locator*)
+(def ^:dynamic *locator* "xpath")
 
 ;;
 ;; tools
@@ -51,11 +52,28 @@
        offset)))
 
 ;;
-;; selectors
+;; locators
 ;;
 
 (defmacro with-locator [locator & body]
   `(binding [*locator* ~locator]
+     ~@body))
+
+(defmacro with-css-selector [& body]
+  `(with-locator "css selector"
+     ~@body))
+
+
+(defmacro with-link-text [& body]
+  `(with-locator "link text"
+     ~@body))
+
+(defmacro with-partial-link-text [& body]
+  `(with-locator "partial link text"
+     ~@body))
+
+(defmacro with-tag-name [& body]
+  `(with-locator "tag name"
      ~@body))
 
 (defmacro with-xpath [& body]

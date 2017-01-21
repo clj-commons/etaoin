@@ -2,17 +2,15 @@
   (:require [webdriver.client :as client]
             [clojure.java.io :as io]
             [clojure.data.codec.base64 :as b64]
-            ))
+            [slingshot.slingshot :refer [throw+]]))
 
 ;;
 ;; todos
 ;; default capabilities
-;; locator keyword
 
 ;;
-;; params
+;; defaults
 ;;
-
 
 (def default-capabilities
   {:browserName "firefox"
@@ -43,8 +41,13 @@
                     .getBytes
                     b64/decode))))
 
+(defn check-screenshot [value context]
+  (if (empty? value)
+    (throw+ (assoc context :type ::empty-screenshot))
+    value))
+
 ;;
-;; client/call
+;; api
 ;;
 
 (defn new-session [server capabilities]
@@ -353,16 +356,12 @@
       :value
       first))
 
-;; todo params
-(defn add-cookie [server session name]
+(defn add-cookie [server session cookie]
   "https://www.w3.org/TR/webdriver/#dfn-add-cookie"
   (-> server
-      ;; (client/call :post
-      ;;      [:session (session-id session) :cookie]
-      ;;      {:name name :value value :path path
-      ;;       :domain domain :secure secure
-      ;;       :httpOnly httpOnly :expiry expiry})
-      ))
+      (client/call :post
+                   [:session (session-id session) :cookie]
+                   {:cookie cookie})))
 
 (defn delete-cookie [server session name]
   "https://www.w3.org/TR/webdriver/#dfn-delete-cookie"
@@ -422,7 +421,9 @@
   (-> server
       (client/call :get
                    [:session (session-id session) :screenshot])
-      :value ;; todo might be empty string
+      :value
+      (check-screenshot {:server server
+                         :filename filename})
       (b64-to-file filename)))
 
 (defn take-element-screenshot [server session element filename]
@@ -430,5 +431,8 @@
   (-> server
       (client/call :get
                    [:session (session-id session) :element element :screenshot])
-      :value ;; todo might be empty string
+      :value
+      (check-screenshot {:server server
+                         :element element
+                         :filename filename})
       (b64-to-file filename)))

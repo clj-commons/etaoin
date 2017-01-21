@@ -2,7 +2,7 @@
   (:require [clojure.string :as str]
             [clj-http.client :as client]
             [cheshire.core :refer [parse-string]]
-            [slingshot.slingshot :refer [try+ throw+]]))
+            [slingshot.slingshot :refer [throw+]]))
 
 ;;
 ;; defaults
