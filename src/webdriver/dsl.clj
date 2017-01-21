@@ -1,9 +1,9 @@
 (ns webdriver.dsl
-  (:require [clj-http.client :as client :refer [with-connection-pool]]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [webdriver.api :as api]
             [webdriver.keys :as keys]
             [webdriver.proc :as proc]
+            [webdriver.client :as client]
             [clojure.data.codec.base64 :as b64]
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [try+ throw+]]
@@ -16,14 +16,12 @@
 ;; todo unused imports
 ;; todo variable bound checks?
 ;; todo: on exception return source code and screenshot
-;; (inject-script "http://ya.ru/test.js")
 ;; scenarios
 ;; multi-browser run in threads
 ;; wait for process
-;; HTTP parse error json
 ;; catch ConnectException when no server?
-;; http connection pool
 ;; process logs
+;; todo fill keys
 ;; skip decorator
 ;; conditinal decorator
 ;; with window decorator
@@ -83,7 +81,46 @@
 ;;
 ;; css staff
 ;;
-;; todo implements css
+
+;; todo refactor attrs
+
+(defn css-prop [prop]
+  (api/get-element-css-value *server* *session* *element* prop))
+
+(defn css-props [props]
+  (mapv css-prop props))
+
+(defn css-prop-el [term prop]
+  (with-element term
+    (css-prop prop)))
+
+(defn css-props-el [term props]
+  (with-element term
+    (mapv css-prop props)))
+
+(defmacro with-css-prop [prop & body]
+  `(let [~prop (css-prop ~prop)]
+     ~@body))
+
+(defmacro with-css-prop-el [term prop & body]
+  `(with-element ~term
+     (with-css-prop ~prop
+       ~body)))
+
+(defmacro with-css-props [props & body]
+  (let [bind-func (fn [prop] [prop `(css-prop ~(str prop))])
+        binds (->> props
+                   (map bind-func)
+                   (apply concat)
+                   vec
+                   vector)]
+    `(let ~@binds
+       ~body)))
+
+(defmacro with-css-props-el [term props & body]
+  `(with-element ~term
+     (with-css-props ~props
+       ~@body)))
 
 ;; todo elemet size
 ;; todo elemet rect
@@ -176,11 +213,10 @@
 
 (defmacro with-session [capabilities & body]
   `(binding [*session* (api/new-session *server* ~capabilities)]
-     (with-connection-pool {:timeout 5 :threads 4 :insecure? false :default-per-route 10} ;; todo defaults
-       (try
-         ~@body
-         (finally
-           (api/delete-session *server* *session*))))))
+     (try
+       ~@body
+       (finally
+         (api/delete-session *server* *session*)))))
 
 ;;
 ;; actions
@@ -359,7 +395,7 @@
 (defn make-fill-key [key]
   (-> fill flip (partial key)))
 
-(def enter(make-fill-key keys/enter))
+(def enter (make-fill-key keys/enter))
 (def backspace (make-fill-key keys/backspace))
 (def up (make-fill-key keys/up))
 (def right (make-fill-key keys/right))
@@ -503,27 +539,28 @@
       (with-server host port
         (wait 1) ;; todo fix that wait-for-server mb?
         (with-session capabilities
-          (go-url "http://ya.ru")
-          (with-xpath
-            (wait-for-element-exists input) ;; name shorter
-            (with-element input
-              (with-el-prop outerHTML
-                (is (= outerHTML html)))
-              (with-el-props [outerHTML innerHTML]
-                (is (= outerHTML html))
-                (is (= innerHTML "")))
-              (with-el-attr name
-                (is (= name "text")))
-              (with-el-attrs [name class tabindex
-                              autocomplete maxlength]
-                (is (= name "text"))
-                (is (= class "input__control input__input"))
-                (is (= tabindex "2"))
-                (is (= autocomplete "off"))
-                (is (= maxlength "400")))
-              (fill "Clojure"))
-            (with-element "//form"
-              (fill-form {:text "ho-ho-ho"})))
+          (client/with-pool {}
+            (go-url "http://ya.ru")
+            (with-xpath
+              (wait-for-element-exists input) ;; name shorter
+              (with-element input
+                (with-el-prop outerHTML
+                  (is (= outerHTML html)))
+                (with-el-props [outerHTML innerHTML]
+                  (is (= outerHTML html))
+                  (is (= innerHTML "")))
+                (with-el-attr name
+                  (is (= name "text")))
+                (with-el-attrs [name class tabindex
+                                autocomplete maxlength]
+                  (is (= name "text"))
+                  (is (= class "input__control input__input"))
+                  (is (= tabindex "2"))
+                  (is (= autocomplete "off"))
+                  (is (= maxlength "400")))
+                (fill "Clojure"))
+              (with-element "//form"
+                (fill-form {:text "ho-ho-ho"}))))
           (wait 2)
           (is 1))))))
 
