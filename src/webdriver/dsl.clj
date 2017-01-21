@@ -1,5 +1,5 @@
 (ns webdriver.dsl
-  (:require [clj-http.client :as client]
+  (:require [clj-http.client :as client :refer [with-connection-pool]]
             [clojure.string :as str]
             [webdriver.api :as api]
             [webdriver.keys :as keys]
@@ -158,10 +158,11 @@
 
 (defmacro with-session [capabilities & body]
   `(binding [*session* (api/new-session *server* ~capabilities)]
-     (try
-       ~@body
-       (finally
-         (api/delete-session *server* *session*)))))
+     (with-connection-pool {:timeout 5 :threads 4 :insecure? false :default-per-route 10} ;; todo defaults
+       (try
+         ~@body
+         (finally
+           (api/delete-session *server* *session*))))))
 
 ;;
 ;; actions
@@ -482,11 +483,11 @@
     ;; with-start host port
     (with-process [args]
       (with-server host port
-        (wait 1) ;; todo fix that
+        (wait 1) ;; todo fix that wait-for-server mb?
         (with-session capabilities
           (go-url "http://ya.ru")
           (with-xpath
-            (wait-for-element-exists input)
+            (wait-for-element-exists input) ;; name shorter
             (with-element input
               (with-el-prop outerHTML
                 (is (= outerHTML html)))
