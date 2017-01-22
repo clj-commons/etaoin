@@ -15,13 +15,9 @@
 ;; todo: on exception return source code and screenshot
 ;; scenarios
 ;; multi-browser run in threads
-;; wait for process
-;; catch ConnectException when no server?
 ;; process logs
 ;; todo fill keys
 ;; skip decorator
-;; conditinal decorator
-;; with window decorator
 ;; todo add local html test
 ;; custom HTML files for tests
 ;; js clear local storage
@@ -140,6 +136,26 @@
   `(doseq [h# (api/get-window-handles *server* *session*)]
      (with-window h#
        ~@body)))
+
+;;
+;; geometry
+;;
+
+(defn get-el-rect-el [el]
+  (api/get-element-rect *server* *session* el))
+
+(defn get-el-rect [term]
+  (with-el term el
+    (get-el-rect-el el)))
+
+(defmacro with-el-rect-el [el bind-form & body]
+  `(let [~bind-form (get-el-rect-el ~el)]
+     ~@body))
+
+(defmacro with-el-rect [term bind-form & body]
+  `(with-el ~term el#
+     (let [~bind-form (get-el-rect-el el#)]
+     ~@body)))
 
 ;;
 ;; css stuff
@@ -603,7 +619,11 @@
                 (is (= border-collapse "collapse")))
               (fill-form "//form" {:text "sdfsdfsdfsdfs"})
               (fill-human input "I dunno why I do that.")
-              ))
+              (with-el-rect input {:keys [x y width height]}
+                (is (= x 222.0))
+                (is (= y 295.0))
+                (is (= width 692.0))
+                (is (= height 46.0)))))
           (wait 2)
           (is 1))))))
 
