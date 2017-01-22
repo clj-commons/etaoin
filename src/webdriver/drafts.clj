@@ -1,6 +1,9 @@
 ;;
 ;; todos
 ;;
+;; text present on page
+;; page src
+;; todo move to tests
 ;; todo unused imports
 ;; todo variable bound checks?
 ;; todo: on exception return source code and screenshot
@@ -17,7 +20,7 @@
 ;; element location
 ;; resize
 ;; position
-;; url-hash
+;; get-hash
 ;; check if process is alive
 ;; wait for (not) present/visible/enabled
 ;;
@@ -32,7 +35,6 @@
 ;;     (let [term (format "//input[@name='%s']" (name field))]
 ;;       (with-element term
 ;;         (fill text)))))
-
 
 ;; (defmacro with-server-multi [servers & body]
 ;;   `(doseq [[host# port#] ~servers]

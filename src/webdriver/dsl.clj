@@ -343,6 +343,8 @@
 (defn js-clear-local-storage []
   (js-execute "localStorage.clear();"))
 
+(defn js-set-hash [hash]
+  (js-execute "window.location.hash = arguments[0];" hash))
 
 ;;
 ;; predicates
@@ -580,6 +582,10 @@
         (with-session capabilities
           (client/with-pool {}
             (go-url "http://ya.ru")
+            (wait 3)
+            (js-set-hash "fooooo")
+            (with-url url
+              (is (= url 1)))
             (with-xpath
               (wait-visible input)
               (with-el input el
