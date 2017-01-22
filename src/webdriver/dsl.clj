@@ -5,31 +5,8 @@
             [webdriver.client :as client]
             [slingshot.slingshot :refer [try+ throw+]]
             [clojure.test :refer [is deftest]])
-  (:import java.net.ConnectException)) ;; need that class?
+  (:import java.net.ConnectException))
 
-;;
-;; todos
-;;
-;; todo unused imports
-;; todo variable bound checks?
-;; todo: on exception return source code and screenshot
-;; scenarios
-;; multi-browser run in threads
-;; process logs
-;; todo fill keys
-;; skip decorator
-;; todo add local html test
-;; custom HTML files for tests
-;; js clear local storage
-;; todo elemet size
-;; todo elemet rect
-;; element location
-;; resize
-;; position
-;; url-hash
-;; check if process is alive
-;; wait for (not) present/visible/enabled
-;;
 
 (def ^:dynamic *server*)
 (def ^:dynamic *session*)
@@ -48,6 +25,28 @@
         offset 1024]
     (+ (rand-int (- max-port offset))
        offset)))
+
+;;
+;; exceptions
+;;
+
+(defmacro with-exception [catch fallback & body]
+  `(try+
+    ~@body
+    (catch ~catch ~(quote _)
+      ~fallback)))
+
+(defmacro with-400 [& body]
+  `(with-exception [:status 400] false
+     ~@body))
+
+(defmacro with-404 [& body]
+  `(with-exception [:status 404] false
+     ~@body))
+
+(defmacro with-conn-error [& body]
+  `(with-exception ConnectException false
+     ~@body))
 
 ;;
 ;; locators
@@ -217,6 +216,24 @@
      ~@body))
 
 ;;
+;; name and text
+;;
+
+(defn text-el [el]
+  (api/get-element-text *server* *session* el))
+
+(defn text [term]
+  (with-el term el
+    (text-el el)))
+
+(defn tag-name-el [el]
+  (api/get-element-tag-name *server* *session* el))
+
+(defn tag-name [term]
+  (with-el term el
+    (tag-name-el el)))
+
+;;
 ;; actions
 ;;
 
@@ -256,72 +273,80 @@
 ;; cookies
 ;;
 
-;; ;; todo params
-;; ;; todo without-cookie
-;; ;; with-get-cooke
-;; ;; multiple forms
-;; ;; without-all-cookies?
-;; ;;
-;; (defmacro with-cookie [cookie & body]
-;;   `(try
-;;      (api/add-cookie *server* *session* cookie)
-;;      ~@body
-;;      (finally
-;;        (api/delete-cookie-cookie *server* *session* cookie))))
+(defn get-cookie [name]
+  (api/get-named-cookie *server* *session* name))
 
-;; ;;
-;; ;; alerts
-;; ;;
+(defn get-cookies []
+  (api/get-all-cookies *server* *session*))
 
-;; ;; todo alerts stuff
+(defmacro with-cookie [name bind & body]
+  `(let [~bind (get-cookie ~name)]
+     ~@body))
 
-;; ;;
-;; ;; screenshots
-;; ;;
+(defn set-cookie [cookie]
+  (api/add-cookie *server* *session* cookie))
 
-;; ;; todo compose filename func
-;; (defn screenshot [filename]
-;;   (api/take-screenshot *server* *session* filename))
+(defn delete-cookie [name]
+  (api/delete-cookie *server* *session* name))
 
-;; (defn screenshot-el
-;;   ([filename]
-;;    (api/take-element-screenshot *server* *session* *element* filename))
-;;   ([term filename]
-;;    (with-element term
-;;      (api/take-element-screenshot *server* *session* *element* filename))))
+(defn delete-cookies []
+  (api/delete-all-cookies *server* *session*))
 
-;; ;;
-;; ;; scripts
-;; ;;
+;;
+;; alerts
+;;
 
-;; ;; todo names? execute inject
-;; (defn js-execute [script & args]
-;;   (apply api/execute-script *server* *session* script args))
+(defn dismiss-alert []
+  (api/dismiss-alert *server* *session*))
 
-;; (defn js-inject-script [url]
-;;   (let [script (str "var s = document.createElement('script');"
-;;                     "s.type = 'text/javascript';"
-;;                     "s.src = arguments[0];"
-;;                     "document.head.appendChild(s);")]
-;;     (js-execute script url)))
+(defn accept-alert []
+  (api/accept-alert *server* *session*))
+
+(defn get-alert-text []
+  (api/get-alert-text *server* *session*))
+
+(defmacro with-alert-text [bind & body]
+  `(let [~bind (get-alert-text)]
+     ~@body))
+
+(defn set-prompt-text [text]
+  (api/send-alert-text *server* *session* text))
+
+;;
+;; screenshots
+;;
+
+(defn screenshot-el [el filename]
+  (api/take-element-screenshot *server* *session* el filename))
+
+(defn screenshot
+  ([filename]
+   (api/take-screenshot *server* *session* filename))
+  ([term filename]
+   (with-el term el
+     (screenshot-el el filename))))
+
+;;
+;; scripts
+;;
+
+(defn js-execute [script & args]
+  (apply api/execute-script *server* *session* script args))
+
+(defn js-add-script [url]
+  (let [script (str "var s = document.createElement('script');"
+                    "s.type = 'text/javascript';"
+                    "s.src = arguments[0];"
+                    "document.head.appendChild(s);")]
+    (js-execute script url)))
+
+(defn js-clear-local-storage []
+  (js-execute "localStorage.clear();"))
+
 
 ;;
 ;; predicates
 ;;
-
-(defmacro with-exception [catch fallback & body]
-  `(try+
-    ~@body
-    (catch ~catch ~(quote _)
-      ~fallback)))
-
-(defmacro with-404 [& body]
-  `(with-exception [:status 404] false
-     ~@body))
-
-(defmacro with-conn-error [& body]
-  `(with-exception ConnectException false
-     ~@body))
 
 (defn exists-el [el]
   (with-404
@@ -352,6 +377,11 @@
 (defn running []
   (with-conn-error
     (api/status *server*)))
+
+(defn has-alert []
+  (with-400
+    (get-alert-text)
+    true))
 
 ;;
 ;; wait functions
@@ -394,6 +424,9 @@
 (defn wait-visible [term & args]
   (apply wait-for-predicate #(visible term) args))
 
+(defn wait-has-alert [& args]
+  (apply wait-for-predicate has-alert args))
+
 (defn wait-running [& args]
   (apply wait-for-predicate running args))
 
@@ -408,30 +441,14 @@
   (with-el term el
     (fill-el el text)))
 
-(defn enter-el [el]
+(defn submit-el [el]
   (fill-el el keys/enter))
 
-(defn enter [term]
+(defn submit [term]
   (fill term keys/enter))
 
-(defn backspace-el [el]
-  (fill-el el keys/backspace))
-
-(defn backspace [term]
-  (fill term keys/backspace))
-
-;; (defn make-fill-key [key]
-;;   (-> fill flip (partial key)))
-
-;; (def enter (make-fill-key keys/enter))
-;; (def backspace (make-fill-key keys/backspace))
-;; (def up (make-fill-key keys/up))
-;; (def right (make-fill-key keys/right))
-;; (def down (make-fill-key keys/down))
-;; (def left (make-fill-key keys/left))
-
 (defn fill-human-el [el text & {:keys [mistake pause]
-                                :or {mistake 0.3 pause 0.2}}]
+                                :or {mistake 0.1 pause 0.2}}]
   (let [rand-char #(-> 26 rand-int (+ 97) char)
         wait-key #(let [r (rand)]
                     (wait (if (> r pause) pause r)))]
@@ -439,7 +456,7 @@
       (when (< (rand) mistake)
         (fill-el el (rand-char))
         (wait-key)
-        (backspace-el el)
+        (fill-el el keys/backspace)
         (wait-key))
       (fill-el el key)
       (wait-key))))
@@ -458,16 +475,6 @@
   (with-el term el-form
     (fill-form-el el-form form)))
 
-;; ;; todo submit form
-;; ;; todo multi-form
-;; ;; todo fill form human
-;; ;; todo submit form
-;; (defn fill-form [form]
-;;   (doseq [[field text] form]
-;;     (let [term (format "//input[@name='%s']" (name field))]
-;;       (with-element term
-;;         (fill text)))))
-
 ;;
 ;; proceses
 ;;
@@ -483,25 +490,6 @@
 (defmacro with-server [host port & body]
   `(binding [*server* (make-server ~host ~port)]
      ~@body))
-
-;; (defmacro with-server-multi [servers & body]
-;;   `(doseq [[host# port#] ~servers]
-;;      (binding [*server* (make-server host# port#)]
-;;        ~@body)))
-
-;; ;; (defmacro with-start [host port & body]
-;; ;;   `(with-server ~host ~port
-;; ;;      (with-process ~host ~port
-;; ;;        ~@body)))
-
-;; ;; (defmacro with-start-multi [connections & body]
-;; ;;   `(doseq [[host# port#] ~connections]
-;; ;;      (with-server host# port#
-;; ;;        (with-process host# port#
-;; ;;          ~@body))))
-
-;; ;; todo multi-futures
-
 
 ;;
 ;; element attributes
@@ -611,9 +599,8 @@
               (with-props input [outerHTML innerHTML]
                 (is (= outerHTML html))
                 (is (= innerHTML "")))
-              (with-csss input [display font-size height border-right-width border-collapse]
+              (with-csss input [display height border-right-width border-collapse]
                 (is (= display "inline"))
-                ;; (is (= font-size "19px")) ;; todo ?
                 (is (= height "46px"))
                 (is (= border-right-width "40px"))
                 (is (= border-collapse "collapse")))
@@ -624,9 +611,6 @@
                 (is (= y 295.0))
                 (is (= width 692.0))
                 (is (= height 46.0)))))
-          (wait 2)
-          (is 1))))))
-
-;; (defn foo []
-;;   (doseq [foo [1 2 3  2 2 2 2 2 2 2 2 2]]
-;;     (future (run-tests))))
+          (screenshot "page.png")
+          (screenshot input "element.png")
+          )))))
