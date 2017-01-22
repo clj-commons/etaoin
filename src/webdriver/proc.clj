@@ -41,3 +41,10 @@
 
 (defn read-err [proc]
   (-> proc .getErrorStream slurp))
+
+(defmacro with-proc [proc args & body]
+  `(let [~proc (apply run ~args)]
+     (try
+       ~@body
+       (finally
+         (kill ~proc)))))
