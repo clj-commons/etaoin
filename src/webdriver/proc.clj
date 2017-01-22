@@ -1,7 +1,8 @@
 (ns webdriver.proc
   (:require [clojure.java.io :as io])
   (:import java.lang.Runtime
-           java.lang.IllegalThreadStateException))
+           java.lang.IllegalThreadStateException
+           java.io.IOException))
 
 (defmacro exec [& args]
   `(.exec (Runtime/getRuntime) ~@args))
@@ -37,10 +38,14 @@
   (-> proc .destroy))
 
 (defn read-out [proc]
-  (-> proc .getInputStream slurp))
+  (try
+    (-> proc .getInputStream slurp)
+    (catch IOException _)))
 
 (defn read-err [proc]
-  (-> proc .getErrorStream slurp))
+  (try
+    (-> proc .getErrorStream slurp)
+    (catch IOException _)))
 
 (defmacro with-proc [proc args & body]
   `(let [~proc (apply run ~args)]
