@@ -43,7 +43,7 @@
 
 (defn check-screenshot [value context]
   (if (empty? value)
-    (throw+ (assoc context :type ::empty-screenshot))
+    (throw+ (assoc context :type :webdriver/empty-screenshot))
     value))
 
 ;;

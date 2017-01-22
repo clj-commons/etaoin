@@ -25,6 +25,14 @@
 ;; todo add local html test
 ;; custom HTML files for tests
 ;; js clear local storage
+;; todo elemet size
+;; todo elemet rect
+;; element location
+;; resize
+;; position
+;; url-hash
+;; check if process is alive
+;; wait for (not) present/visible/enabled
 ;;
 
 (def ^:dynamic *server*)
@@ -80,6 +88,15 @@
 (defn go-url [url]
   (api/go *server* *session* url))
 
+(defn back []
+  (api/back *server* *session*))
+
+(defn forward []
+  (api/forward *server* *session*))
+
+(defn refresh []
+  (api/refresh *server* *session*))
+
 ;;
 ;; url and title
 ;;
@@ -99,83 +116,65 @@
      ~@body))
 
 ;;
-;; css staff
+;; windows
 ;;
 
-;; ;; todo refactor attrs
+(defn close []
+  (api/close-window *server* *session*))
 
-;; (defn css-prop-el [term prop]
-;;   (as-> term $
-;;     (api/find-element *server* *session* *locator* $)
-;;     (api/get-element-css-value *server* *session* $ prop)))
+(defn maximize []
+  (api/maximize-window *server* *session*))
 
-;; (defn css-props-el [term props]
-;;   (as-> term $
-;;     (api/find-element *server* *session* *locator* $)
-;;     (mapv #(api/get-element-css-value *server* *session* $ %) props)))
+(defn fullscreen []
+  (api/fullscreen-window *server* *session*))
 
-;; (defmacro with-css-prop-el [term prop & body]
-;;   (let [$ '$]
-;;     `(as-> term ~$
-;;        (api/find-element *server* *session* *locator* ~$)
-;;        (let [~prop ~$]
-;;          ~@body))))
+(defmacro with-window [handler & body]
+  `(let [h# (api/get-window-handle *server* *session*)]
+     (api/switch-to-window *server* *session* ~handler)
+     (try
+       ~@body
+       (finally
+         (api/switch-to-window *server* *session* h#)))))
 
-;; (defn css-prop [prop]
-;;   (api/get-element-css-value *server* *session* *element* prop))
+(defmacro with-all-windows [& body]
+  `(doseq [h# (api/get-window-handles *server* *session*)]
+     (with-window h#
+       ~@body)))
 
-;; (defn css-props [props]
-;;   (mapv #(api/get-element-css-value *server* *session* *element* %) props))
+;;
+;; css stuff
+;;
 
-;; (defmacro with-css-prop [prop & body]
-;;   `(let [~prop (css-prop ~prop)]
-;;      ~@body))
+(defn css-el [el name]
+  (api/get-element-css-value *server* *session* el name))
 
-;; ;; (defmacro with-css-props [props & body]
-;; ;;   (let [bind-func (fn [prop] [prop `(css-prop ~(str prop))])
-;; ;;         binds (->> props
-;; ;;                    (map bind-func)
-;; ;;                    (apply concat)
-;; ;;                    vec
-;; ;;                    vector)]
-;; ;;     `(let ~@binds
-;; ;;        ~body)))
+(defn css [term name]
+  (with-el term el
+    (css-el el name)))
 
-;; ;; (defmacro with-css-props-el [term props & body]
-;; ;;   `(with-element ~term
-;; ;;      (with-css-props ~props
-;; ;;        ~@body)))
+(defmacro with-css-el [el name & body]
+  `(let [~name (css-el ~el ~(str name))]
+     ~@body))
 
-;; ;; todo elemet size
-;; ;; todo elemet rect
-;; ;; element location
-;; ;; resize
-;; ;; position
-;; ;; url-hash
-;; ;; all the locators
-;; ;; wait for (not) present/visible/enabled
-;; ;;
+(defmacro with-css [term name & body]
+  `(with-el ~term el#
+     (with-css-el el# ~name
+       ~@body)))
 
-;; ;;
-;; ;; windowing
-;; ;;
+(defmacro with-csss-el [el names & body]
+  (let [func (fn [name] `(css-el ~el ~(str name)))
+        forms (map func names)
+        binds (-> names
+                  (interleave forms)
+                  vec
+                  vector)]
+    `(let ~@binds
+       ~@body)))
 
-;; (defmacro with-window [handler & body]
-;;   `(let [h# (api/get-window-handle *server* *session*)]
-;;      (api/switch-to-window *server* *session* ~handler)
-;;      (try
-;;        ~@body
-;;        (finally
-;;          (api/switch-to-window *server* *session* h#)))))
-
-;; (defmacro with-all-windows [& body]
-;;   `(doseq [h# (api/get-window-handles *server* *session*)]
-;;      (with-window h#
-;;        ~@body)))
-
-;; (defn close []
-;;   (api/close-window *server* *session*))
-
+(defmacro with-csss [term names & body]
+  `(with-el ~term el#
+     (with-csss-el el# ~names
+       ~@body)))
 
 ;;
 ;; find elements
@@ -197,16 +196,13 @@
   `(doseq [~el (api/find-elements-from-element *server* *session* ~parent *locator* ~term)]
      ~@body))
 
+(defn with-el-active [el & body]
+  `(let [~el (api/get-active-element *server* *session*)]
+     ~@body))
+
 ;;
 ;; actions
 ;;
-
-(defn fill-el [el text]
-  (api/element-send-keys *server* *session* el text))
-
-(defn fill [term text]
-  (with-el term el
-    (fill-el el text)))
 
 (defn click-el [el]
   (api/element-click *server* *session* el))
@@ -293,40 +289,53 @@
 ;;                     "document.head.appendChild(s);")]
 ;;     (js-execute script url)))
 
-;; ;;
-;; ;; predicates
-;; ;;
+;;
+;; predicates
+;;
 
-;; ;; todo simplify
-;; ;; todo form for []?
-;; (defn exists? ;; todo one form
-;;   ([]
-;;    (try+
-;;     (api/get-element-tag-name *server* *session* *element*)
-;;     true
-;;     (catch [:status 404] _
-;;       false)))
-;;   ([term]
-;;    (with-element term
-;;      (try+
-;;       (api/get-element-tag-name *server* *session* *element*)
-;;       true
-;;       (catch [:status 404] _
-;;         false)))))
+(defmacro with-exception [catch fallback & body]
+  `(try+
+    ~@body
+    (catch ~catch ~(quote _)
+      ~fallback)))
 
-;; (defn enabled?
-;;   ([]
-;;    (api/is-element-enabled *server* *session* *element*))
-;;   ([term]
-;;    (with-element term
-;;      (api/is-element-enabled *server* *session* *element*))))
+(defmacro with-404 [& body]
+  `(with-exception [:status 404] false
+     ~@body))
 
-;; (defn displayed?
-;;   ([]
-;;    (api/is-element-displayed *server* *session* *element*))
-;;   ([term]
-;;    (with-element term
-;;      (api/is-element-displayed *server* *session* *element*))))
+(defmacro with-conn-error [& body]
+  `(with-exception ConnectException false
+     ~@body))
+
+(defn exists-el [el]
+  (with-404
+    (api/get-element-tag-name *server* *session* el)
+    true))
+
+(defn exists [term]
+  (with-404
+    (with-el term el
+      true)))
+
+(defn enabled-el [el]
+  (api/is-element-enabled *server* *session* el))
+
+(defn enabled [term]
+  (with-el term el
+    (enabled-el el)))
+
+(defn visible-el [el]
+  (with-404
+    (api/is-element-displayed *server* *session* el)))
+
+(defn visible [term]
+  (with-404
+    (with-el term el
+      (visible-el el))))
+
+(defn running []
+  (with-conn-error
+    (api/status *server*)))
 
 ;;
 ;; wait functions
@@ -336,58 +345,64 @@
   (Thread/sleep (* sec 1000)))
 
 (defn wait-for-predicate
-  [predicate & {:keys [timeout delta]
-                :or {timeout 30 delta 1}}]
+  [predicate & {:keys [timeout poll]
+                :or {timeout 10 poll 0.5}}]
   (loop [times 0
          time-rest timeout]
     (when (< time-rest 0)
-      (throw+ {:type ::time-has-left})) ;; todo error data
+      (throw+ {:type :webdriver/timeout
+               :timeout timeout
+               :poll poll
+               :times times
+               :predicate predicate}))
     (when-not (predicate)
-      (wait delta)
+      (wait poll)
       (recur (inc times)
-             (- time-rest delta)))))
+             (- time-rest poll)))))
 
-;; (defn wait-for-element-exists [term & args]
-;;   ;; todo multi-form
-;;   (apply wait-for-predicate
-;;          (partial exists? term)
-;;          args))
+(defn wait-enabled-el [el & args]
+  (apply wait-for-predicate #(enabled-el el) args))
 
-;; (defn wait-for-element-enabled [term & args]
-;;   ;; todo multi-form
-;;   (apply wait-for-predicate
-;;          (partial enabled? term)
-;;          args))
+(defn wait-enabled [term & args]
+  (apply wait-for-predicate #(enabled term) args))
 
-;; (defn wait-for-element-displayed [term & args]
-;;   ;; todo multi-form
-;;   (apply wait-for-predicate
-;;          (partial displayed? term)
-;;          args))
+(defn wait-exists-el [el & args]
+  (apply wait-for-predicate #(exists-el el) args))
 
-;; ;; todo exception decorator
-;; (defn running? [host port]
-;;   (try+
-;;    (api/status {:url (format "http://%s:%d" host port)})
-;;    true
-;;    (catch ConnectException _
-;;      false)))
+(defn wait-exists [term & args]
+  (apply wait-for-predicate #(exists term) args))
 
-;; (defn wait-for-running [host port & args]
-;;   (apply wait-for-predicate
-;;          (partial running? host port)
-;;          args))
+(defn wait-visible-el [el & args]
+  (apply wait-for-predicate #(visible-el el) args))
 
-;; ;;
-;; ;; keys and input
-;; ;;
+(defn wait-visible [term & args]
+  (apply wait-for-predicate #(visible term) args))
 
-;; (defn fill
-;;   ([text]
-;;    (api/element-send-keys *server* *session* *element* text))
-;;   ([term text]
-;;    (with-element term
-;;      (api/element-send-keys *server* *session* *element* text))))
+(defn wait-running [& args]
+  (apply wait-for-predicate running args))
+
+;;
+;; keys and input
+;;
+
+(defn fill-el [el text]
+  (api/element-send-keys *server* *session* el text))
+
+(defn fill [term text]
+  (with-el term el
+    (fill-el el text)))
+
+(defn enter-el [el]
+  (fill-el el keys/enter))
+
+(defn enter [term]
+  (fill term keys/enter))
+
+(defn backspace-el [el]
+  (fill-el el keys/backspace))
+
+(defn backspace [term]
+  (fill term keys/backspace))
 
 ;; (defn make-fill-key [key]
 ;;   (-> fill flip (partial key)))
@@ -399,20 +414,35 @@
 ;; (def down (make-fill-key keys/down))
 ;; (def left (make-fill-key keys/left))
 
-;; (defn fill-human [text]
-;;   "Inputs text like we typically do: with random delays and corrections."
-;;   ;; todo multiple arguments
-;;   ;; todo random values
-;;   ;; todo weights
-;;   ;; todo multi-form
-;;   (doseq [key text]
-;;     (when (< (rand) 0.3)
-;;       (fill \A)
-;;       (wait 0.3)
-;;       (backspace))
-;;     (fill key)
-;;     (wait 0.2)))
+(defn fill-human-el [el text & {:keys [mistake pause]
+                                :or {mistake 0.3 pause 0.2}}]
+  (let [rand-char #(-> 26 rand-int (+ 97) char)
+        wait-key #(let [r (rand)]
+                    (wait (if (> r pause) pause r)))]
+    (doseq [key text]
+      (when (< (rand) mistake)
+        (fill-el el (rand-char))
+        (wait-key)
+        (backspace-el el)
+        (wait-key))
+      (fill-el el key)
+      (wait-key))))
 
+(defn fill-human [term text]
+  (with-el term el
+    (fill-human-el el text)))
+
+(defn fill-form-el [el-form form]
+  (doseq [[field value] form]
+    (let [term (format "//input[@name='%s']" (name field))]
+      (with-el-from el-form term el-input
+        (fill-el el-input (str value))))))
+
+(defn fill-form [term form]
+  (with-el term el-form
+    (fill-form-el el-form form)))
+
+;; ;; todo submit form
 ;; ;; todo multi-form
 ;; ;; todo fill form human
 ;; ;; todo submit form
@@ -422,23 +452,9 @@
 ;;       (with-element term
 ;;         (fill text)))))
 
-;; ;;
-;; ;; proceses
-;; ;;
-
-;; todo handle exceptions
-;; check alive
-;; (defmacro with-process [host port & body]
-;;   `(let [proc# (proc/run-gecko ~host ~port)]
-;;      (wait 1) ;; todo what time to wait?
-;;      (when-not (and (nil? (proc/exit-code proc#)) ;; todo sep func for that
-;;                     (proc/alive? proc#))
-;;        (throw+ {:type ::process-error})) ;; error
-;;      ;; (wait-for-running ~host ~port)
-;;      (try
-;;       ~@body
-;;       (finally
-;;         (proc/kill proc#)))))
+;;
+;; proceses
+;;
 
 (defn make-server-url [host port]
   (format "http://%s:%d" host port))
@@ -480,7 +496,7 @@
 
 (defn attr [term name]
   (with-el term el
-    (api/get-element-attribute *server* *session* el name)))
+    (attr-el el name)))
 
 (defmacro with-attr-el [el name & body]
   `(let [~name (attr-el ~el ~(str name))]
@@ -506,52 +522,44 @@
      (with-attrs-el el# ~names
        ~@body)))
 
-;; (defn el-attr [attr]
-;;   (api/get-element-attribute *server* *session* *element* attr))
+;;
+;; element properties
+;;
 
-(defmacro with-el-attrs [attrs & body]
-  (let [pair-func (fn [attr]
-                    (let [attr-str (str attr)]
-                      [attr `(el-attr ~attr-str)]))
-        binds (->> attrs
-                   (map pair-func)
-                   (apply concat)
-                   vec
-                   vector)]
+(defn prop-el [el name]
+  (api/get-element-property *server* *session* el name))
+
+(defn prop [term name]
+  (with-el term el
+    (prop-el el name)))
+
+(defmacro with-prop-el [el name & body]
+  `(let [~name (prop-el ~el ~(str name))]
+     ~@body))
+
+(defmacro with-prop [term name & body]
+  `(with-el ~term el#
+     (with-prop-el el# ~name
+       ~@body)))
+
+(defmacro with-props-el [el names & body]
+  (let [func (fn [name] `(prop-el ~el ~(str name)))
+        forms (map func names)
+        binds (-> names
+                  (interleave forms)
+                  vec
+                  vector)]
     `(let ~@binds
        ~@body)))
 
-;; (defmacro with-el-attr [attr & body]
-;;   `(with-el-attrs [~attr]
-;;      ~@body))
+(defmacro with-props [term names & body]
+  `(with-el ~term el#
+     (with-props-el el# ~names
+       ~@body)))
 
-;; (defn el-prop [prop]
-;;   (api/get-element-property *server* *session* *element* prop))
-
-;; (defmacro with-el-props [props & body]
-;;   (let [pair-func (fn [prop]
-;;                     (let [prop-str (str prop)]
-;;                       [prop `(el-prop ~prop-str)]))
-;;         binds (->> props
-;;                    (map pair-func)
-;;                    (apply concat)
-;;                    vec
-;;                    vector)]
-;;     `(let ~@binds
-;;        ~@body)))
-
-;; ;; todo for multiple prop
-;; ;; todo namin
-;; ;; todo the same for attr
-;; (defmacro with-prop [term prop & body]
-;;   `(with-element [~term]
-;;      (with-el-prop [~prop]
-;;        ~@body)))
-
-;; (defmacro with-el-prop [prop & body]
-;;   `(with-el-props [~prop]
-;;      ~@body))
-
+;;
+;; tests
+;;
 
 (deftest simple-test
   (let [host "127.0.0.1"
@@ -564,12 +572,12 @@
     ;; with-start host port
     (proc/with-proc p [args]
       (with-server host port
-        (wait 1) ;; todo fix that wait-for-server mb?
+        (wait-running)
         (with-session capabilities
           (client/with-pool {}
             (go-url "http://ya.ru")
             (with-xpath
-              (wait 2)
+              (wait-visible input)
               (with-el input el
                 (fill-el el "test")
                 (with-attr-el el maxlength
@@ -584,26 +592,17 @@
                 (is (= tabindex "2"))
                 (is (= autocomplete "off"))
                 (is (= maxlength "400")))
-              ;; (wait-for-element-exists input)
-              ;; name shorter
-              ;; (with-element input
-              ;;   ;; (with-el-prop outerHTML
-              ;;   ;;   (is (= outerHTML html)))
-              ;;   ;; (with-el-props [outerHTML innerHTML]
-              ;;   ;;   (is (= outerHTML html))
-              ;;   ;;   (is (= innerHTML "")))
-              ;;   ;; (with-el-attr name
-              ;;   ;;   (is (= name "text")))
-              ;;   ;; (with-el-attrs [name class tabindex
-              ;;   ;;                 autocomplete maxlength]
-              ;;   ;;   (is (= name "text"))
-              ;;   ;;   (is (= class "input__control input__input"))
-              ;;   ;;   (is (= tabindex "2"))
-              ;;   ;;   (is (= autocomplete "off"))
-              ;;   ;;   (is (= maxlength "400")))
-              ;;   (fill "Clojure"))
-              ;; (with-element "//form"
-              ;;   (fill-form {:text "ho-ho-ho"}))
+              (with-props input [outerHTML innerHTML]
+                (is (= outerHTML html))
+                (is (= innerHTML "")))
+              (with-csss input [display font-size height border-right-width border-collapse]
+                (is (= display "inline"))
+                ;; (is (= font-size "19px")) ;; todo ?
+                (is (= height "46px"))
+                (is (= border-right-width "40px"))
+                (is (= border-collapse "collapse")))
+              (fill-form "//form" {:text "sdfsdfsdfsdfs"})
+              (fill-human input "I dunno why I do that.")
               ))
           (wait 2)
           (is 1))))))
