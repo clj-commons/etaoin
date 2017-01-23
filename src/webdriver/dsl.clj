@@ -49,6 +49,30 @@
      ~@body))
 
 ;;
+;; find elements
+;;
+
+(defmacro with-el [term el & body]
+  `(let [~el (api/find-element *server* *session* *locator* ~term)]
+     ~@body))
+
+(defmacro with-els [term el & body]
+  `(doseq [~el (api/find-elements *server* *session* *locator* ~term)]
+     ~@body))
+
+(defmacro with-el-from [parent term el & body]
+  `(let [~el (api/find-element-from-element *server* *session* ~parent *locator* ~term)]
+     ~@body))
+
+(defmacro with-els-from [el-parent term el & body]
+  `(doseq [~el (api/find-elements-from-element *server* *session* ~el-parent *locator* ~term)]
+     ~@body))
+
+(defn with-el-active [el & body]
+  `(let [~el (api/get-active-element *server* *session*)]
+     ~@body))
+
+;;
 ;; locators
 ;;
 
@@ -192,30 +216,6 @@
        ~@body)))
 
 ;;
-;; find elements
-;;
-
-(defmacro with-el [term el & body]
-  `(let [~el (api/find-element *server* *session* *locator* ~term)]
-     ~@body))
-
-(defmacro with-els [term el & body]
-  `(for [~el (api/find-elements *server* *session* *locator* ~term)]
-     ~@body))
-
-(defmacro with-el-from [parent term el & body]
-  `(let [~el (api/find-element-from-element *server* *session* ~parent *locator* ~term)]
-     ~@body))
-
-(defmacro with-els-from [el-parent term el & body]
-  `(for [~el (api/find-elements-from-element *server* *session* ~el-parent *locator* ~term)]
-     ~@body))
-
-(defn with-el-active [el & body]
-  `(let [~el (api/get-active-element *server* *session*)]
-     ~@body))
-
-;;
 ;; name and text
 ;;
 
@@ -262,8 +262,8 @@
 ;; session
 ;;
 
-(defmacro with-session [capabilities & body]
-  `(binding [*session* (api/new-session *server* ~capabilities)]
+(defmacro with-session [cap-desired cap-required & body]
+  `(binding [*session* (api/new-session *server* ~cap-desired ~cap-required)]
      (try
        ~@body
        (finally
@@ -385,6 +385,12 @@
     (get-alert-text)
     true))
 
+(defn has-text [text]
+  (with-xpath
+    (with-404
+      (with-el (format "//*[contains(text(),'%s')]" text) el
+        true))))
+
 ;;
 ;; wait functions
 ;;
@@ -393,12 +399,14 @@
   (Thread/sleep (* sec 1000)))
 
 (defn wait-for-predicate
-  [predicate & {:keys [timeout poll]
+  [predicate & {:keys [timeout poll message]
                 :or {timeout 10 poll 0.5}}]
   (loop [times 0
          time-rest timeout]
     (when (< time-rest 0)
+      (is false message)
       (throw+ {:type :webdriver/timeout
+               :message message
                :timeout timeout
                :poll poll
                :times times
@@ -431,6 +439,44 @@
 
 (defn wait-running [& args]
   (apply wait-for-predicate running args))
+
+(defn wait-has-text [text & args]
+  (apply wait-for-predicate #(has-text text) args))
+
+;;
+;; element properties
+;;
+
+(defn prop-el [el name]
+  (api/get-element-property *server* *session* el name))
+
+(defn prop [term name]
+  (with-el term el
+    (prop-el el name)))
+
+(defmacro with-prop-el [el name & body]
+  `(let [~name (prop-el ~el ~(str name))]
+     ~@body))
+
+(defmacro with-prop [term name & body]
+  `(with-el ~term el#
+     (with-prop-el el# ~name
+       ~@body)))
+
+(defmacro with-props-el [el names & body]
+  (let [func (fn [name] `(prop-el ~el ~(str name)))
+        forms (map func names)
+        binds (-> names
+                  (interleave forms)
+                  vec
+                  vector)]
+    `(let ~@binds
+       ~@body)))
+
+(defmacro with-props [term names & body]
+  `(with-el ~term el#
+     (with-props-el el# ~names
+       ~@body)))
 
 ;;
 ;; keys and input
@@ -470,12 +516,32 @@
 (defn fill-form-el [el-form form]
   (doseq [[field value] form]
     (let [term (format "//input[@name='%s']" (name field))]
-      (with-el-from el-form term el-input
-        (fill-el el-input (str value))))))
+      (with-xpath
+        (with-el-from el-form term el-input
+          (fill-el el-input (str value)))))))
 
 (defn fill-form [term form]
   (with-el term el-form
     (fill-form-el el-form form)))
+
+(defn submit-form-el [el-form form]
+  (fill-form-el el-form form)
+  (with-xpath
+    (with-el-from el-form "//submit | //button[@type='submit']" el-submit
+      (click-el el-submit))))
+
+(defn submit-form [term form]
+  (with-el term el-form
+    (submit-form-el el-form form)))
+
+(defn clear-form-el [el-form]
+  (with-xpath
+    (with-els-from el-form "//input[not(@type='hidden')]" el-input
+      (clear-el el-input))))
+
+(defn clear-form [term]
+  (with-el term el-form
+    (clear-form-el el-form)))
 
 (defn get-form-el [el-form]
   (let [term "//input"
@@ -541,59 +607,24 @@
        ~@body)))
 
 ;;
-;; element properties
-;;
-
-(defn prop-el [el name]
-  (api/get-element-property *server* *session* el name))
-
-(defn prop [term name]
-  (with-el term el
-    (prop-el el name)))
-
-(defmacro with-prop-el [el name & body]
-  `(let [~name (prop-el ~el ~(str name))]
-     ~@body))
-
-(defmacro with-prop [term name & body]
-  `(with-el ~term el#
-     (with-prop-el el# ~name
-       ~@body)))
-
-(defmacro with-props-el [el names & body]
-  (let [func (fn [name] `(prop-el ~el ~(str name)))
-        forms (map func names)
-        binds (-> names
-                  (interleave forms)
-                  vec
-                  vector)]
-    `(let ~@binds
-       ~@body)))
-
-(defmacro with-props [term names & body]
-  `(with-el ~term el#
-     (with-props-el el# ~names
-       ~@body)))
-
-;;
 ;; tests
 ;;
 
 (deftest simple-test
   (let [host "127.0.0.1"
-        port (random-port) ;; 4444 ;; 8910
+        port (random-port)
         args ["geckodriver" "--host" host "--port" port]
-        capabilities {}
         html "<input class=\"input__control input__input\" tabindex=\"2\" autocomplete=\"off\" autocorrect=\"off\" autocapitalize=\"off\" spellcheck=\"false\" aria-autocomplete=\"list\" aria-label=\"Запрос\" id=\"text\" maxlength=\"400\" name=\"text\">"
         input "//input[@id='text']"]
 
     ;; with-start host port
     (proc/with-proc p [args]
       (with-server host port
-        (wait-running)
-        (with-session capabilities
+        (wait-running :message "The server did not start.")
+        (with-session {} {}
           (client/with-pool {}
             (go-url "http://ya.ru")
+            (wait-has-text "Найти" :message "Найти was not found on the page")
             (js-set-hash "fooooo")
             ;; (with-url url
             ;;   (is (= url 1)))
@@ -633,4 +664,7 @@
                 (is (= height 46.0)))))
           (screenshot "page.png")
           (screenshot input "element.png")
+          (clear-form "//form")
+          ;; (submit-form "//form" {:text "sdfsdfsdfsdfs"})
+          ;; (wait 5)
           )))))
