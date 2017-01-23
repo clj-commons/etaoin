@@ -5,20 +5,16 @@
             [slingshot.slingshot :refer [throw+]]))
 
 ;;
-;; todos
-;; default capabilities
-
-;;
 ;; defaults
 ;;
 
 (def default-capabilities
-  {:browserName "firefox"
-   :javascriptEnabled true
-   :acceptSslCerts true
-   :platform "ANY"
-   :marionette true
-   :name "Sample Test"})
+  {:browserName "*"
+   :browserVersion "*"
+   :platformName "*"
+   :platformVersion "*"
+   :acceptInsecureCerts false
+   :javascriptEnabled true})
 
 ;;
 ;; helpers
@@ -50,11 +46,11 @@
 ;; api
 ;;
 
-(defn new-session [server capabilities]
+(defn new-session [server cap-desired cap-required]
   "https://www.w3.org/TR/webdriver/#dfn-new-session"
   (client/call server :post [:session]
-               {:desiredCapabilities (merge default-capabilities
-                                            capabilities)}))
+               {:desiredCapabilities (merge default-capabilities cap-desired)
+                :requiredCapabilities cap-required}))
 
 (defn delete-session [server session]
   "https://www.w3.org/TR/webdriver/#dfn-delete-session"
@@ -333,7 +329,6 @@
                    {:script script :args args})
       :value))
 
-;; todo didn't catch how it works
 (defn execute-async-script [server session script & args]
   "https://www.w3.org/TR/webdriver/#dfn-execute-async-script"
   (-> server
@@ -375,28 +370,30 @@
       (client/call :delete
                    [:session (session-id session) :cookie])))
 
-;; todo doesn't work
-;; {:actions [{:type "pointer" :actions [{:type "pointerDown" :button 123}]}]}
 (defn perform-actions [server session actions]
   "https://www.w3.org/TR/webdriver/#dfn-perform-implementation-specific-action-dispatch-steps"
   (-> server
       (client/call :post
-                   [:session (session-id session) :actions])))
+                   [:session (session-id session) :actions]
+                   actions)))
 
-;; todo doesn't work
 (defn release-actions [server session]
   "https://www.w3.org/TR/webdriver/#dfn-release-actions"
   (-> server
       (client/call :delete
                    [:session (session-id session) :actions])))
 
-(defn dismiss-alert [server session]
+(defn
+  ^{:firefox false}
+  dismiss-alert [server session]
   "https://www.w3.org/TR/webdriver/#dfn-dismiss-alert"
   (-> server
       (client/call :post
                    [:session (session-id session) :alert :dismiss])))
 
-(defn accept-alert [server session]
+(defn
+  ^{:firefox false}
+  accept-alert [server session]
   "https://www.w3.org/TR/webdriver/#dfn-accept-alert"
   (-> server
       (client/call :post
