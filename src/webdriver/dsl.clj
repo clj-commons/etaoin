@@ -200,15 +200,15 @@
      ~@body))
 
 (defmacro with-els [term el & body]
-  `(doseq [~el (api/find-elements *server* *session* *locator* ~term)]
+  `(for [~el (api/find-elements *server* *session* *locator* ~term)]
      ~@body))
 
 (defmacro with-el-from [parent term el & body]
   `(let [~el (api/find-element-from-element *server* *session* ~parent *locator* ~term)]
      ~@body))
 
-(defmacro with-els-from [parent term el & body]
-  `(doseq [~el (api/find-elements-from-element *server* *session* ~parent *locator* ~term)]
+(defmacro with-els-from [el-parent term el & body]
+  `(for [~el (api/find-elements-from-element *server* *session* ~el-parent *locator* ~term)]
      ~@body))
 
 (defn with-el-active [el & body]
@@ -477,6 +477,18 @@
   (with-el term el-form
     (fill-form-el el-form form)))
 
+(defn get-form-el [el-form]
+  (let [term "//input"
+        el-inputs (api/find-elements-from-element
+                   *server* *session* el-form *locator* term)
+        fields (map #(prop-el % "name") el-inputs)
+        values (map #(prop-el % "value") el-inputs)]
+    (apply hash-map (interleave (map keyword fields) values))))
+
+(defn get-form [term]
+  (with-el term el-form
+    (get-form-el el-form)))
+
 ;;
 ;; proceses
 ;;
@@ -582,10 +594,9 @@
         (with-session capabilities
           (client/with-pool {}
             (go-url "http://ya.ru")
-            (wait 3)
             (js-set-hash "fooooo")
-            (with-url url
-              (is (= url 1)))
+            ;; (with-url url
+            ;;   (is (= url 1)))
             (with-xpath
               (wait-visible input)
               (with-el input el
@@ -611,7 +622,10 @@
                 (is (= border-right-width "40px"))
                 (is (= border-collapse "collapse")))
               (fill-form "//form" {:text "sdfsdfsdfsdfs"})
-              (fill-human input "I dunno why I do that.")
+              (let [form (get-form "//form")]
+                (is (= (-> form (dissoc :msid))
+                       {:text "testtestsdfsdfsdfsdfs"})))
+              ;; (fill-human input "I dunno why I do that.")
               (with-el-rect input {:keys [x y width height]}
                 (is (= x 222.0))
                 (is (= y 295.0))
