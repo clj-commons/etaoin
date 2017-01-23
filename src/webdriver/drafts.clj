@@ -1,6 +1,8 @@
 ;;
 ;; todos
 ;;
+;; forms support textarea, etc
+;; xpath in elements
 ;; text present on page
 ;; page src
 ;; todo move to tests
