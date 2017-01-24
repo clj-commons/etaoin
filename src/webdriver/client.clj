@@ -13,7 +13,7 @@
    :accept :json
    :content-type :json
    :form-params {}
-   :throw-exceptions false
+   :throw-exceptions true
    :debug true})
 
 (def default-pool-params

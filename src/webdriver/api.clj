@@ -64,21 +64,35 @@
 ;; api
 ;;
 
-(defn new-session [server cap-desired cap-required]
+(defn new-session
   "https://www.w3.org/TR/webdriver/#dfn-new-session"
-  (client/call server :post [:session]
-               {:desiredCapabilities (merge default-capabilities cap-desired)
-                :requiredCapabilities cap-required}))
+  [server cap-desired cap-required]
+  {:pre [(map? server) (map? cap-desired) (map? cap-required)]
+   :post [(string? %)]}
+  (let [meth :post
+        path [:session]
+        body {:desiredCapabilities (merge default-capabilities cap-desired)
+              :requiredCapabilities cap-required}
+        resp (client/call server meth path body)]
+    (:sessionId resp)))
 
 (defn delete-session [server session]
   "https://www.w3.org/TR/webdriver/#dfn-delete-session"
-  (client/call server
-               :delete
-               [:session (session-id session)]))
+  (let [meth :delete
+        path [:session session]
+        body {}
+        resp (client/call server meth path body)]
+    (-> resp :value)))
 
-(defn status [server]
+(defn status
   "https://www.w3.org/TR/webdriver/#dfn-status"
-  (client/call server :get [:status]))
+  [server]
+  {:pre [(map? server)]
+   :post [(map? %)]}
+  (let [meth :get
+        path [:status]
+        resp (client/call server meth path)]
+    (-> resp :value)))
 
 (defn get-timeout [server session]
   "https://www.w3.org/TR/webdriver/#dfn-get-timeout"
@@ -93,16 +107,21 @@
 
 (defn go [server session url]
   "https://www.w3.org/TR/webdriver/#dfn-go"
-  (client/call server
-               :post
-               [:session (session-id session) :url]
-               {:url url}))
+  (let [meth :post
+        path [:session session :url]
+        body {:url url}
+        resp (client/call meth path body)]
+    (-> resp :value)))
 
-(defn get-current-url [server session]
+(defn get-current-url
   "https://www.w3.org/TR/webdriver/#dfn-get-current-url"
-  (client/call server
-               :get
-               [:session (session-id session) :url]))
+  [server session]
+  {:pre [(map? server) (string? session)]
+   :post [(string? %)]}
+  (let [meth :get
+        path [:session session :url]
+        resp (client/call server meth path)]
+    (-> resp :value)))
 
 (defn back [server session]
   "https://www.w3.org/TR/webdriver/#dfn-back"
@@ -345,13 +364,22 @@
       :value))
 
 (defn ^{:chrome false}
-  execute-script [server session script & args]
+  execute-script [{:keys [browser] :as server} session script & args]
   "https://www.w3.org/TR/webdriver/#dfn-execute-script"
-  (-> server
-      (client/call :post
-                   [:session (session-id session) :execute :sync]
-                   {:script script :args args})
-      :value))
+  (let [method :get
+        url [:session session :execute (case (:browser server)
+                                         :firefox :sync
+                                         :chrome :execute
+                                         :phantom :execute
+                                         :sync)]
+        data {:script script :args args}
+        resp (client/call server method url data)]
+    (case (:browser server)
+      :chrome (-> resp :value)
+      (-> resp :value first second)
+      )
+
+    ))
 
 (defn execute-async-script [server session script & args]
   "https://www.w3.org/TR/webdriver/#dfn-execute-async-script"
