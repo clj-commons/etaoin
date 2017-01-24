@@ -14,7 +14,7 @@
    :content-type :json
    :form-params {}
    :throw-exceptions false
-   :debug false})
+   :debug true})
 
 (def default-pool-params
   {:timeout 5
@@ -68,7 +68,10 @@
          (:body resp)
          (throw+ {:type ::http-error
                   :status (:status resp)
-                  :response (-> resp :body (parse-string true))
+                  :response (try
+                              (-> resp :body (parse-string true))
+                              (catch Throwable _
+                                (-> resp :body)))
                   :server server
                   :method method
                   :path path

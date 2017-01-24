@@ -52,4 +52,6 @@
      (try
        ~@body
        (finally
+         ;; (->> ~proc read-out (spit "/Users/ivan/webdriver/chrome-out.txt"))
+         ;; (->> ~proc read-err (spit "/Users/ivan/webdriver/chrome-err.txt"))
          (kill ~proc)))))

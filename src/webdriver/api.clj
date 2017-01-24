@@ -1,4 +1,18 @@
 (ns webdriver.api
+
+  "
+  Documentation? Read the code, Luke!
+
+  Chrome:
+  https://github.com/bayandin/chromedriver/blob/e9a1f55b166ea62ef0f6e78da899d9abf117e88f/client/command_executor.py
+
+  Firefox (Geckodriver):
+  https://github.com/mozilla/webdriver-rust/blob/7ec65451c99b638655c72e7b9718a374ff60de87/src/httpapi.rs
+
+  Phantom.js (Ghostdriver)
+  https://github.com/detro/ghostdriver/tree/873c9d660a80a3faa743e4f352571ce4559fe691/src/request_handlers
+  "
+
   (:require [webdriver.client :as client]
             [clojure.java.io :as io]
             [clojure.data.codec.base64 :as b64]
@@ -29,7 +43,11 @@
     :else (vec text)))
 
 (defn parse-element [data]
-  (-> data first second))
+  (-> data :ELEMENT)
+  ;; (-> data first second)
+  )
+
+
 
 (defn b64-to-file [b64str filename]
   (with-open [out (io/output-stream filename)]
@@ -276,7 +294,9 @@
                    [:session (session-id session) :element element :name])
       :value))
 
-(defn get-element-rect [server session element]
+(defn
+  ^{:chrome false}
+  get-element-rect [server session element]
   "https://www.w3.org/TR/webdriver/#dfn-get-element-rect"
   (-> server
       (client/call :get
@@ -293,9 +313,11 @@
   "https://www.w3.org/TR/webdriver/#dfn-is-element-enabled"
   (-> server
       (client/call :post
-                   [:session (session-id session) :element element :click])))
+                   [:session (session-id session) :element element :click])
+      :value))
 
-(defn element-tap [server session element]
+(defn ^{:chrome false}
+  element-tap [server session element]
   "https://www.w3.org/TR/webdriver/#dfn-is-element-enabled"
   (-> server
       (client/call :post
@@ -312,7 +334,8 @@
   (-> server
       (client/call :post
                    [:session (session-id session) :element element :value]
-                   {:value (text-to-array text)})))
+                   {:value (text-to-array text)})
+      :value))
 
 (defn get-page-source [server session]
   "https://www.w3.org/TR/webdriver/#dfn-get-page-source"
@@ -321,7 +344,8 @@
                    [:session (session-id session) :source])
       :value))
 
-(defn execute-script [server session script & args]
+(defn ^{:chrome false}
+  execute-script [server session script & args]
   "https://www.w3.org/TR/webdriver/#dfn-execute-script"
   (-> server
       (client/call :post

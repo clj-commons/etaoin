@@ -612,20 +612,21 @@
 
 (deftest simple-test
   (let [host "127.0.0.1"
-        port (random-port)
-        args ["geckodriver" "--host" host "--port" port]
+        port 9515 ;; (random-port)
+        ;; args ["geckodriver" "--host" host "--port" port]
+        args ["chromedriver" "--verbose" (str "--port" "=" port)  (str "--log-path" "=" "/Users/ivan/webdriver/chrome.txt")]
         html "<input class=\"input__control input__input\" tabindex=\"2\" autocomplete=\"off\" autocorrect=\"off\" autocapitalize=\"off\" spellcheck=\"false\" aria-autocomplete=\"list\" aria-label=\"Запрос\" id=\"text\" maxlength=\"400\" name=\"text\">"
         input "//input[@id='text']"]
 
     ;; with-start host port
-    (proc/with-proc p [args]
+    (do ;; proc/with-proc p [args]
       (with-server host port
         (wait-running :message "The server did not start.")
         (with-session {} {}
           (client/with-pool {}
             (go-url "http://ya.ru")
             (wait-has-text "Найти" :message "Найти was not found on the page")
-            (js-set-hash "fooooo")
+            ;; (js-set-hash "fooooo")
             ;; (with-url url
             ;;   (is (= url 1)))
             (with-xpath
@@ -667,4 +668,8 @@
           (clear-form "//form")
           ;; (submit-form "//form" {:text "sdfsdfsdfsdfs"})
           ;; (wait 5)
-          )))))
+          ))
+
+
+
+      )))
