@@ -74,8 +74,10 @@
         resp (client/call server meth path body)]
     (:sessionId resp)))
 
-(defn delete-session [server session]
+(defn delete-session
   "https://www.w3.org/TR/webdriver/#dfn-delete-session"
+  [server session]
+  {:pre [(map? server) (string? session)]}
   (let [meth :delete
         path [:session session]
         body {}
@@ -239,14 +241,18 @@
       :value
       parse-element))
 
-(defn find-element [server session locator term]
+(defn find-element
   "https://www.w3.org/TR/webdriver/#dfn-find-element"
-  (-> server
-      (client/call :post
-                   [:session session :element]
-                   {:using locator :value term})
-      :value
-      parse-element))
+  [server session locator term]
+  {:pre [(map? server) (string? session) (string? locator) (string? term)]
+   :post (string? %)}
+  (let [meth :post
+        path [:session session :element]
+        body {:using locator :value term}
+        resp (client/call server meth path body)]
+    (case (:browser server)
+      :firefox (-> resp :value first second)
+      (:chrome :phantom) (-> resp :value :ELEMENT))))
 
 (defn find-elements [server session locator term]
   "https://www.w3.org/TR/webdriver/#dfn-find-elements"
@@ -339,12 +345,14 @@
                    [:session session :element element :enabled])
       :value))
 
-(defn element-click [server session element]
+(defn element-click
   "https://www.w3.org/TR/webdriver/#dfn-is-element-enabled"
-  (-> server
-      (client/call :post
-                   [:session session :element element :click])
-      :value))
+  [server session element]
+  {:pre [(map? server) (string? session) (string? element)]}
+  (let [meth :post
+        path [:session session :element element :click]
+        resp (client/call server meth path)]
+    (-> resp :value)))
 
 (defn ^{:chrome false}
   element-tap [server session element]

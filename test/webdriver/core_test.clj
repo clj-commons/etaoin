@@ -1,5 +1,9 @@
 (ns webdriver.core-test
-  (:require [clojure.test :refer [is deftest use-fixtures testing]]
+  (:require [clojure.java.io :as io]
+            [clojure.test :refer [is
+                                  deftest
+                                  use-fixtures
+                                  testing]]
             [webdriver.dsl :refer [with-server
                                    wait-running
                                    with-session
@@ -11,12 +15,15 @@
                                    get-url
                                    get-title
 
-
                                    with-proc
                                    with-proc-multi
                                    random-port
 
+                                   with-xpath
+                                   click
+
                                    wait
+                                   text
 
                                    back
                                    forward
@@ -30,19 +37,50 @@
 
   (with-proc p [["geckodriver" "-v" "--host" host "--port" port]]
     (testing "firefox"
-      (f)))
+      (with-server {:host host :port port :browser :firefox}
+        (f))))
 
   (with-proc p [["chromedriver" "--verbose" (str "--port=" port)]]
     (testing "chrome"
-      (f)))
+      (with-server {:host host :port port :browser :chrome}
+        (f))))
 
   (with-proc p [["phantomjs" "--webdriver" port]]
     (testing "phantom"
-      (f))))
+      (with-server {:host host :port port :browser :phantom}
+        (f)))))
 
 (use-fixtures
   :each
   fixture-browsers)
+
+(deftest test-local-file
+  (let [url (-> "html/test.html" io/resource str)]
+
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+
+      (go-url url)
+
+      (testing "title"
+        (let [title (get-title)]
+          (is (= title "Webdriver Test Document")))
+        (with-title title
+          (is (= title "Webdriver Test Document"))))
+
+      (testing "click"
+        (let [t (text "//span[@id='baz']")]
+          (is (= t "")))
+        (with-xpath
+          (click "//button[@id='foo']"))
+        (let [t (text "//span[@id='baz']")]
+          (is (= t "clicked"))))
+
+      ;; (let [url (get-url)]
+      ;;   (is (= url "https://ya.ru/")))
+      ;; (with-url url
+      ;;   (is (= url "https://ya.ru/")))
+      )))
 
 (deftest test-url-title
   (with-server host port

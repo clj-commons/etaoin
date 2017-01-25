@@ -562,13 +562,11 @@
 (defn make-server-url [host port]
   (format "http://%s:%d" host port))
 
-(defn make-server [host port]
-  {:host host
-   :port port
-   :url (make-server-url host port)})
+(defn make-server [{:keys [host port] :as params}]
+  (assoc params :url (make-server-url host port)))
 
-(defmacro with-server [host port & body]
-  `(binding [*server* (make-server ~host ~port)]
+(defmacro with-server [params & body]
+  `(binding [*server* (make-server ~params)]
      ~@body))
 
 (defmacro with-proc [proc args & body]

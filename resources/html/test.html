@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Webdriver Test Document</title>
+    </head>
+    <body>
+        <h3>Click test</h3>
+        <script>
+            function fill() {
+                document.getElementById("baz").innerHTML = "clicked";
+            }
+        </script>
+        <button id="foo" onclick="fill()">Click me</button>
+        <span id="baz"></span>
+        <hr>
+
+    </body>
+</html>
