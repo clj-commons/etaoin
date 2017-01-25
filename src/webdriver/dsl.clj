@@ -571,6 +571,18 @@
   `(binding [*server* (make-server ~host ~port)]
      ~@body))
 
+(defmacro with-proc [proc args & body]
+  `(let [~proc (apply proc/run ~args)]
+     (try
+       ~@body
+       (finally
+         (proc/kill ~proc)))))
+
+(defmacro with-proc-multi [proc args-list & body]
+  `(doseq [args# ~args-list]
+     (with-proc ~proc args#
+       ~@body)))
+
 ;;
 ;; element attributes
 ;;

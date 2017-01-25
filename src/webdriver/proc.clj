@@ -46,12 +46,3 @@
   (try
     (-> proc .getErrorStream slurp)
     (catch IOException _)))
-
-(defmacro with-proc [proc args & body]
-  `(let [~proc (apply run ~args)]
-     (try
-       ~@body
-       (finally
-         ;; (->> ~proc read-out (spit "/Users/ivan/webdriver/chrome-out.txt"))
-         ;; (->> ~proc read-err (spit "/Users/ivan/webdriver/chrome-err.txt"))
-         (kill ~proc)))))

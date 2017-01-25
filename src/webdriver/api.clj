@@ -512,7 +512,7 @@
   [server session & {:keys [element xoffset yoffset] :as payload}]
   {:pre [(map? server) (string? session)]}
   (case (:browser server)
-    :firefox (throw+ {:type :webdriver/not-implemented})
+    ;; :firefox (throw+ {:type :webdriver/not-implemented})
     (let [meth :post
           path [:session session :moveto]
           body payload
