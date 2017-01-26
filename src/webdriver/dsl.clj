@@ -479,6 +479,17 @@
        ~@body)))
 
 ;;
+;; tag name
+;;
+
+(defn- get-tag-name-el [el]
+  (api/get-element-tag-name *server* *session* el))
+
+(defn get-tag-name [term]
+  (with-el term el
+    (get-tag-name-el el)))
+
+;;
 ;; keys and input
 ;;
 
@@ -515,10 +526,11 @@
 
 (defn fill-form-el [el-form form]
   (doseq [[field value] form]
-    (let [term (format "//input[@name='%s']" (name field))]
+    (let [term (format "//*[@name='%s']" (name field))
+          text (if (string? value) value (str value))]
       (with-xpath
-        (with-el-from el-form term el-input
-          (fill-el el-input (str value)))))))
+        (with-el-from el-form term el-field
+          (fill-el el-field text))))))
 
 (defn fill-form [term form]
   (with-el term el-form

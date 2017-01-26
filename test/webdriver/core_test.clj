@@ -1,5 +1,6 @@
 (ns webdriver.core-test
-  (:require [clojure.java.io :as io]
+  (:require [clojure.string :as str]
+            [clojure.java.io :as io]
             [clojure.test :refer [is
                                   deftest
                                   use-fixtures
@@ -15,6 +16,7 @@
                                    get-url
                                    get-title
 
+                                   fill
                                    fill-form
                                    submit-form
 
@@ -99,15 +101,50 @@
                  (= background-color "rgba(0, 0, 0, 1)"))))))
 
       (testing "input"
-        (with-xpath
-          (submit-form "//div[@id='submit-test']" {:login "Ivan"
-                                                 :password "lalilulelo"
-                                                 }) ;; todo textarea
+
+
+        (testing "simple input"
+          (with-xpath
+            (fill "//input[@id='simple-input']" "test")
+            (click "//input[@id='simple-submit']"))
           (with-url url
-            (is (= url "test")))
+            (is (str/includes? url "login=test"))))
+
+        (testing "form input"
+          (with-xpath
+            (fill-form "//form[@id='submit-test']" {:login "Ivan"
+                                                    :password "lalilulelo"
+                                                    :message "long_text_here"})
+            (click "//input[@id='simple-submit']"))
+          (with-url url
+            (is (str/includes? url "login=Ivan"))
+            (is (str/includes? url "password=lalilulelo"))
+            (is (str/includes? url "message=long_text_here"))))
+
+        ;; (testing "form submit"
+        ;;   (with-xpath
+        ;;     (submit-form "//form[@id='submit-test']" {:login "Ivan"
+        ;;                                             :password "lalilulelo"
+        ;;                                             :message "long_text_here"}))
+        ;;   (with-url url
+        ;;     (is (str/includes? url "login=Ivan"))
+        ;;     (is (str/includes? url "password=lalilulelo"))
+        ;;     (is (str/includes? url "message=long_text_here"))))
 
 
-          )
+
+
+
+
+        ;; (with-xpath
+        ;;   (submit-form "//div[@id='submit-test']" {:login "Ivan"
+        ;;                                            :password "lalilulelo"
+        ;;                                            }) ;; todo textarea
+        ;;   (with-url url
+        ;;     (is (= url "test")))
+
+
+        ;;   )
 
 
         )
