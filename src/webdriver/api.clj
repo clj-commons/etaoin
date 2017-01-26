@@ -263,14 +263,18 @@
       :value
       (->> (mapv parse-element))))
 
-(defn find-element-from-element [server session element locator term]
+(defn find-element-from-element
   "https://www.w3.org/TR/webdriver/#dfn-find-element-from-element"
-  (-> server
-      (client/call :post
-                   [:session session :element element :element]
-                   {:using locator :value term})
-      :value
-      parse-element))
+  [server session element locator term]
+  {:pre [(map? server) (string? session) (string? locator) (string? term)]
+   :post (string? %)}
+  (let [meth :post
+        path [:session session :element element :element]
+        body {:using locator :value term}
+        resp (client/call server meth path body)]
+    (case (:browser server)
+      :firefox (-> resp :value first second)
+      (:chrome :phantom) (-> resp :value :ELEMENT))))
 
 (defn find-elements-from-element [server session element locator term]
   "https://www.w3.org/TR/webdriver/#dfn-find-elements-from-element"
@@ -367,13 +371,15 @@
       (client/call :post
                    [:session session :element element :clear])))
 
-(defn element-send-keys [server session element text]
+(defn element-send-keys
   "https://www.w3.org/TR/webdriver/#dfn-element-send-keys"
-  (-> server
-      (client/call :post
-                   [:session session :element element :value]
-                   {:value (text-to-array text)})
-      :value))
+  [server session element text]
+  {:pre [(map? server) (string? session) (string? element) (string? text)]}
+  (let [method :post
+        url [:session session :element element :value]
+        data {:value (text-to-array text)}
+        resp (client/call server method url data)]
+    (-> resp :value)))
 
 (defn get-page-source [server session]
   "https://www.w3.org/TR/webdriver/#dfn-get-page-source"

@@ -15,12 +15,18 @@
                                    get-url
                                    get-title
 
+                                   fill-form
+                                   submit-form
+
                                    with-proc
                                    with-proc-multi
                                    random-port
 
                                    with-xpath
                                    click
+
+                                   with-css
+                                   with-csss
 
                                    wait
                                    text
@@ -40,10 +46,10 @@
       (with-server {:host host :port port :browser :firefox}
         (f))))
 
-  (with-proc p [["chromedriver" "--verbose" (str "--port=" port)]]
-    (testing "chrome"
-      (with-server {:host host :port port :browser :chrome}
-        (f))))
+  ;; (with-proc p [["chromedriver" "--verbose" (str "--port=" port)]]
+  ;;   (testing "chrome"
+  ;;     (with-server {:host host :port port :browser :chrome}
+  ;;       (f))))
 
   (with-proc p [["phantomjs" "--webdriver" port]]
     (testing "phantom"
@@ -75,6 +81,36 @@
           (click "//button[@id='foo']"))
         (let [t (text "//span[@id='baz']")]
           (is (= t "clicked"))))
+
+      (testing "css test"
+        (with-xpath
+          (with-css "//div[@id='css-test']" width
+            (is (= width "250px")))
+
+          (with-csss "//div[@id='css-test']" [width
+                                              height
+                                              background-color]
+            (is (= width "250px"))
+            (is (= height "150px"))
+            (is (or
+                 ;; firefox
+                 (= background-color "rgb(0, 0, 0)")
+                 ;; chrome, phantom
+                 (= background-color "rgba(0, 0, 0, 1)"))))))
+
+      (testing "input"
+        (with-xpath
+          (submit-form "//div[@id='submit-test']" {:login "Ivan"
+                                                 :password "lalilulelo"
+                                                 }) ;; todo textarea
+          (with-url url
+            (is (= url "test")))
+
+
+          )
+
+
+        )
 
       ;; (let [url (get-url)]
       ;;   (is (= url "https://ya.ru/")))

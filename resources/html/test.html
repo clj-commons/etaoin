@@ -5,7 +5,9 @@
         <title>Webdriver Test Document</title>
     </head>
     <body>
-        <h3>Click test</h3>
+
+
+        <h3>Click section</h3>
         <script>
             function fill() {
                 document.getElementById("baz").innerHTML = "clicked";
@@ -14,6 +16,37 @@
         <button id="foo" onclick="fill()">Click me</button>
         <span id="baz"></span>
         <hr>
+
+        <h3>CSS section</h3>
+        <style>
+            #css-test {
+                width: 250px;
+                background-color: #000;
+                height: 150px;
+            }
+        </style>
+        <div id="css-test"></div>
+        <hr>
+
+        <h3>Input section</h3>
+        <div id="submit-test">
+            <form method="GET">
+                <label>Login</label>
+                <input name="login" type="text"><br>
+                <label>Password</label>
+                <input name="password" type="password"><br>
+                <label>Message</label>
+                <textarea name="message"></textarea><br>
+                <input type="submit" value="Send"><br>
+            </form>
+        </div>
+        <hr>
+
+
+
+
+
+
 
     </body>
 </html>

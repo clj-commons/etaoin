@@ -527,7 +527,7 @@
 (defn submit-form-el [el-form form]
   (fill-form-el el-form form)
   (with-xpath
-    (with-el-from el-form "//submit | //button[@type='submit']" el-submit
+    (with-el-from el-form "//input[@type='submit']" el-submit ;; todo  | //button[@type='submit']
       (click-el el-submit))))
 
 (defn submit-form [term form]
