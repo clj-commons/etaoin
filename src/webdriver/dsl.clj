@@ -237,21 +237,21 @@
 ;; actions
 ;;
 
-(defn click-el [el]
+(defn- click-el [el]
   (api/element-click *server* *session* el))
 
 (defn click [term]
   (with-el term el
     (click-el el)))
 
-(defn clear-el [el]
+(defn- clear-el [el]
   (api/element-clear *server* *session* el))
 
 (defn clear [term]
   (with-el term el
     (clear-el el)))
 
-(defn tap-el [el]
+(defn- tap-el [el]
   (api/element-tap *server* *session* el))
 
 (defn tap [term]
@@ -536,7 +536,7 @@
   (with-el term el-form
     (fill-form-el el-form form)))
 
-(defn submit-form-el [el-form form]
+(defn- submit-form-el [el-form form]
   (fill-form-el el-form form)
   (with-xpath
     (with-el-from el-form "//input[@type='submit']" el-submit ;; todo  | //button[@type='submit']
@@ -546,10 +546,13 @@
   (with-el term el-form
     (submit-form-el el-form form)))
 
-(defn clear-form-el [el-form]
+(defn- clear-form-el [el-form]
   (with-xpath
-    (with-els-from el-form "//input[not(@type='hidden')]" el-input
-      (clear-el el-input))))
+    (doseq [term ["//textarea"
+                  "//input[@type='text']"
+                  "//input[@type='password']"]]
+      (with-els-from el-form term el-input
+        (clear-el el-input)))))
 
 (defn clear-form [term]
   (with-el term el-form

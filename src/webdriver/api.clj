@@ -249,19 +249,25 @@
   (let [meth :post
         path [:session session :element]
         body {:using locator :value term}
-        resp (client/call server meth path body)]
-    (case (:browser server)
-      :firefox (-> resp :value first second)
-      (:chrome :phantom) (-> resp :value :ELEMENT))))
+        resp (client/call server meth path body)
+        parser #(case (:browser server)
+                  (:chrome :phantom) (-> % :ELEMENT)
+                  (-> % first second))]
+    (-> resp :value parser)))
 
-(defn find-elements [server session locator term]
+(defn find-elements
   "https://www.w3.org/TR/webdriver/#dfn-find-elements"
-  (-> server
-      (client/call :post
-                   [:session session :elements]
-                   {:using locator :value term})
-      :value
-      (->> (mapv parse-element))))
+  [server session locator term]
+  {:pre [(map? server) (string? session) (string? locator) (string? term)]
+   :post (vector? %)}
+  (let [meth :post
+        path [:session session :elements]
+        body {:using locator :value term}
+        resp (client/call server meth path body)
+        parser #(case (:browser server)
+                  (:chrome :phantom) (-> % :ELEMENT)
+                  (-> % first second))]
+    (->> resp :value (mapv parser))))
 
 (defn find-element-from-element
   "https://www.w3.org/TR/webdriver/#dfn-find-element-from-element"
@@ -271,19 +277,25 @@
   (let [meth :post
         path [:session session :element element :element]
         body {:using locator :value term}
-        resp (client/call server meth path body)]
-    (case (:browser server)
-      :firefox (-> resp :value first second)
-      (:chrome :phantom) (-> resp :value :ELEMENT))))
+        resp (client/call server meth path body)
+        parser #(case (:browser server)
+                  (:chrome :phantom) (-> % :ELEMENT)
+                  (-> % first second))]
+    (-> resp :value parser)))
 
-(defn find-elements-from-element [server session element locator term]
+(defn find-elements-from-element
   "https://www.w3.org/TR/webdriver/#dfn-find-elements-from-element"
-  (-> server
-      (client/call :post
-                   [:session session :element element :elements]
-                   {:using locator :value term})
-      :value
-      (->> (mapv parse-element))))
+  [server session element locator term]
+  {:pre [(map? server) (string? session) (string? locator) (string? term)]
+   :post (vector? %)}
+  (let [meth :post
+        path [:session session :element element :elements]
+        body {:using locator :value term}
+        resp (client/call server meth path body)
+        parser #(case (:browser server)
+                  (:chrome :phantom) (-> % :ELEMENT)
+                  (-> % first second))]
+    (->> resp :value (mapv parser))))
 
 (defn is-element-displayed [server session element]
   "https://www.w3.org/TR/webdriver/#dfn-is-element-selected"
@@ -365,11 +377,14 @@
       (client/call :post
                    [:session session :element element :tap])))
 
-(defn element-clear [server session element]
+(defn element-clear
   "https://www.w3.org/TR/webdriver/#dfn-element-clear"
-  (-> server
-      (client/call :post
-                   [:session session :element element :clear])))
+  [server session element]
+  {:pre [(map? server) (string? session) (string? element)]}
+  (let [method :post
+        url [:session session :element element :clear]
+        resp (client/call server method url)]
+    (-> resp :value)))
 
 (defn element-send-keys
   "https://www.w3.org/TR/webdriver/#dfn-element-send-keys"

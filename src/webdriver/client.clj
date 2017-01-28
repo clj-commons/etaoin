@@ -13,7 +13,6 @@
    :accept :json
    :content-type :json
    :form-params {}
-   :throw-exceptions true
    :debug true})
 
 (def default-pool-params
@@ -62,17 +61,25 @@
          params (merge *default-api-params*
                        {:url url
                         :method method
-                        :form-params payload})]
-     (let [resp (client/request params)]
-       (if (-> resp :status (= 200))
-         (:body resp)
-         (throw+ {:type ::http-error
-                  :status (:status resp)
-                  :response (try
-                              (-> resp :body (parse-string true))
-                              (catch Throwable _
-                                (-> resp :body)))
-                  :server server
-                  :method method
-                  :path path
-                  :payload payload}))))))
+                        :form-params payload
+                        :throw-exceptions false})
+         resp (client/request params)
+         body (:body resp)
+         error (delay {:type ::http-error
+                       :status (:status resp)
+                       :response (if (string? body)
+                                   (parse-string body true)
+                                   body)
+                       :server server
+                       :method method
+                       :path path
+                       :payload payload})]
+     (cond
+         (-> resp :status (not= 200))
+         (throw+ @error)
+
+         (-> body :status (or 0) (> 0))
+         (throw+ @error)
+
+         :else
+         body))))

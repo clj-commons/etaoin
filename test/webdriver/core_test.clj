@@ -16,6 +16,9 @@
                                    get-url
                                    get-title
 
+                                   clear
+                                   clear-form
+
                                    fill
                                    fill-form
                                    submit-form
@@ -43,20 +46,28 @@
 
 (defn fixture-browsers [f]
 
-  (with-proc p [["geckodriver" "-v" "--host" host "--port" port]]
+  ;; "-v"
+
+  (with-proc p [["geckodriver" "--host" host "--port" port]]
     (testing "firefox"
       (with-server {:host host :port port :browser :firefox}
         (f))))
 
-  ;; (with-proc p [["chromedriver" "--verbose" (str "--port=" port)]]
-  ;;   (testing "chrome"
-  ;;     (with-server {:host host :port port :browser :chrome}
-  ;;       (f))))
+
+  ;; "--log-path=/Users/ivan/webdriver666.txt"
+  ;; "--verbose"
+
+  (with-proc p [["chromedriver"  (str "--port=" port) ]]
+    (testing "chrome"
+      (with-server {:host host :port port :browser :chrome}
+        (f))))
 
   (with-proc p [["phantomjs" "--webdriver" port]]
     (testing "phantom"
       (with-server {:host host :port port :browser :phantom}
-        (f)))))
+        (f))))
+
+  )
 
 (use-fixtures
   :each
@@ -101,8 +112,6 @@
                  (= background-color "rgba(0, 0, 0, 1)"))))))
 
       (testing "input"
-
-
         (testing "simple input"
           (with-xpath
             (fill "//input[@id='simple-input']" "test")
@@ -114,46 +123,50 @@
           (with-xpath
             (fill-form "//form[@id='submit-test']" {:login "Ivan"
                                                     :password "lalilulelo"
-                                                    :message "long_text_here"})
+                                                    :message "long_text_here"
+                                                    })
             (click "//input[@id='simple-submit']"))
           (with-url url
             (is (str/includes? url "login=Ivan"))
             (is (str/includes? url "password=lalilulelo"))
             (is (str/includes? url "message=long_text_here"))))
 
-        ;; (testing "form submit"
-        ;;   (with-xpath
-        ;;     (submit-form "//form[@id='submit-test']" {:login "Ivan"
-        ;;                                             :password "lalilulelo"
-        ;;                                             :message "long_text_here"}))
-        ;;   (with-url url
-        ;;     (is (str/includes? url "login=Ivan"))
-        ;;     (is (str/includes? url "password=lalilulelo"))
-        ;;     (is (str/includes? url "message=long_text_here"))))
-
-
-
-
-
-
-        ;; (with-xpath
-        ;;   (submit-form "//div[@id='submit-test']" {:login "Ivan"
-        ;;                                            :password "lalilulelo"
-        ;;                                            }) ;; todo textarea
-        ;;   (with-url url
-        ;;     (is (= url "test")))
-
-
-        ;;   )
-
+        ;; form submit
+        ;; any button type
 
         )
+
 
       ;; (let [url (get-url)]
       ;;   (is (= url "https://ya.ru/")))
       ;; (with-url url
       ;;   (is (= url "https://ya.ru/")))
       )))
+
+(deftest test-clear
+  (let [url (-> "html/test.html" io/resource str)
+        form "//form[@id='submit-test']"
+        input "//input[@id='simple-input']"
+        submit "//input[@id='simple-submit']"]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go-url url)
+      (testing "simple clear"
+        (with-xpath
+          (fill input "test")
+          (clear input)
+          (click submit)
+          (with-url url
+            (is (str/ends-with? url "?login=&password=&message=")))))
+      (testing "form clear"
+        (with-xpath
+          (fill-form form {:login "Ivan"
+                           :password "lalilulelo"
+                           :message "long_text_here"})
+          (clear-form form)
+          (click submit)
+          (with-url url
+            (is (str/ends-with? url "?login=&password=&message="))))))))
 
 (deftest test-url-title
   (with-server host port
