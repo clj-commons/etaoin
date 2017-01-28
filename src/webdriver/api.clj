@@ -45,7 +45,8 @@
   ;; (-> data first second)
   )
 
-
+(defn bool? [val]
+  (or (true? val) (false? val)))
 
 (defn b64-to-file [b64str filename]
   (with-open [out (io/output-stream filename)]
@@ -300,7 +301,7 @@
 (defn is-element-displayed
   [server session element]
   {:pre [(map? server) (string? session)  (string? element)]
-   :post [(or (true? %) (false? %))]}
+   :post [(bool? %)]}
   (let [meth :get
         path [:session session :element element :displayed]
         resp (client/call server meth path)]
@@ -356,12 +357,15 @@
       (client/call :get
                    [:session session :element element :rect])))
 
-(defn is-element-enabled [server session element]
+(defn is-element-enabled
   "https://www.w3.org/TR/webdriver/#dfn-is-element-enabled"
-  (-> server
-      (client/call :get
-                   [:session session :element element :enabled])
-      :value))
+  [server session element]
+  {:pre [(map? server) (string? session) (string? element)]
+   :post [(bool? %)]}
+  (let [meth :get
+        path [:session session :element element :enabled]
+        resp (client/call server meth path)]
+    (-> resp :value)))
 
 (defn element-click
   "https://www.w3.org/TR/webdriver/#dfn-is-element-enabled"

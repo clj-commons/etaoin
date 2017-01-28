@@ -26,6 +26,9 @@
                                    fill-form
                                    submit-form
 
+                                   enabled
+                                   disabled
+
                                    with-proc
                                    with-proc-multi
                                    random-port
@@ -194,6 +197,20 @@
        (is (thrown? clojure.lang.ExceptionInfo
                     (visible "//test[@id='dunno-foo-bar']"))))
       ;; (is (not (visible "//div[@id='div-covered']")))
+)))
+
+(deftest test-enabled
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go-url url)
+      (is (disabled "//input[@id='input-disabled']"))
+      (is (enabled "//input[@id='input-not-disabled']"))
+      (is (disabled "//textarea[@id='textarea-disabled']"))
+      (try+
+       (is (thrown? clojure.lang.ExceptionInfo
+                    (enabled "//test[@id='dunno-foo-bar']"))))
+
 )))
 
 

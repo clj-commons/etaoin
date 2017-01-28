@@ -367,6 +367,8 @@
   (with-el term el
     (enabled-el el)))
 
+(def disabled (complement enabled))
+
 (defn- visible-el [el]
   (api/is-element-displayed *server* *session* el))
 
