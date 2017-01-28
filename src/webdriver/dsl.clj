@@ -303,7 +303,7 @@
   (api/accept-alert *server* *session*))
 
 (defn get-alert-text []
-  (api/get-alert-text *server* *session*))
+  )
 
 (defmacro with-alert-text [bind & body]
   `(let [~bind (get-alert-text)]
@@ -350,7 +350,7 @@
 ;; predicates
 ;;
 
-(defn exists-el [el]
+(defn- exists-el [el]
   (with-404
     (api/get-element-tag-name *server* *session* el)
     true))
@@ -360,36 +360,30 @@
     (with-el term el
       true)))
 
-(defn enabled-el [el]
+(defn- enabled-el [el]
   (api/is-element-enabled *server* *session* el))
 
 (defn enabled [term]
   (with-el term el
     (enabled-el el)))
 
-(defn visible-el [el]
-  (with-404
-    (api/is-element-displayed *server* *session* el)))
+(defn- visible-el [el]
+  (api/is-element-displayed *server* *session* el))
 
 (defn visible [term]
-  (with-404
-    (with-el term el
-      (visible-el el))))
+  (with-el term el
+    (visible-el el)))
 
 (defn running []
   (with-conn-error
     (api/status *server*)))
 
 (defn has-alert []
-  (with-400
-    (get-alert-text)
-    true))
+  (api/get-alert-text *server* *session*))
 
 (defn has-text [text]
-  (with-xpath
-    (with-404
-      (with-el (format "//*[contains(text(),'%s')]" text) el
-        true))))
+  (with-el (format "//*[contains(text(),'%s')]" text) el
+    true))
 
 ;;
 ;; wait functions

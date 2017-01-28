@@ -1,6 +1,7 @@
 (ns webdriver.core-test
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
+            [slingshot.slingshot :refer [try+]]
             [clojure.test :refer [is
                                   deftest
                                   use-fixtures
@@ -9,6 +10,8 @@
                                    wait-running
                                    with-session
                                    go-url
+
+                                   visible
 
                                    with-url
                                    with-title
@@ -52,7 +55,6 @@
     (testing "firefox"
       (with-server {:host host :port port :browser :firefox}
         (f))))
-
 
   ;; "--log-path=/Users/ivan/webdriver666.txt"
   ;; "--verbose"
@@ -167,6 +169,33 @@
           (click submit)
           (with-url url
             (is (str/ends-with? url "?login=&password=&message="))))))))
+
+;; (deftest test-wait
+;;   (let [url (-> "html/test.html" io/resource str)
+;;         form "//form[@id='submit-test']"
+;;         input "//input[@id='simple-input']"
+;;         submit "//input[@id='simple-submit']"]
+;;     (wait-running :message "The server did not start.")
+;;     (with-session {} {}
+;;       (go-url url)
+;;       (testing "simple clear"
+;; )
+;; )))
+
+(deftest test-visible
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go-url url)
+      (is (visible "//button[@id='button-visible']"))
+      (is (not (visible "//button[@id='button-hidden']")))
+      (is (not (visible "//div[@id='div-hidden']")))
+      (try+
+       (is (thrown? clojure.lang.ExceptionInfo
+                    (visible "//test[@id='dunno-foo-bar']"))))
+      ;; (is (not (visible "//div[@id='div-covered']")))
+)))
+
 
 (deftest test-url-title
   (with-server host port

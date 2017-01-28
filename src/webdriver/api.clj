@@ -297,12 +297,14 @@
                   (-> % first second))]
     (->> resp :value (mapv parser))))
 
-(defn is-element-displayed [server session element]
-  "https://www.w3.org/TR/webdriver/#dfn-is-element-selected"
-  (-> server
-      (client/call :get
-                   [:session session :element element :displayed])
-      :value))
+(defn is-element-displayed
+  [server session element]
+  {:pre [(map? server) (string? session)  (string? element)]
+   :post [(or (true? %) (false? %))]}
+  (let [meth :get
+        path [:session session :element element :displayed]
+        resp (client/call server meth path)]
+    (-> resp :value)))
 
 (defn is-element-selected [server session element]
   "https://www.w3.org/TR/webdriver/#dfn-is-element-selected"
