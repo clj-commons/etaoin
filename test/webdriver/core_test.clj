@@ -227,31 +227,27 @@
             (is (= bar nil))
             (is (= dunno nil))))))))
 
+(deftest test-title
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (testing "empty page"
+        (with-title title
+          (is (= title ""))))
+      (testing "go URL"
+        (go-url url)
+        (with-title title
+          (is (= title "Webdriver Test Document")))))))
 
-
-;; (deftest test-url-title
-;;   (with-server host port
-;;     (wait-running :message "The server did not start.")
-;;     (with-session {} {}
-;;       (go-url "http://ya.ru")
-;;       (let [url (get-url)]
-;;         (is (= url "https://ya.ru/")))
-;;       (with-url url
-;;         (is (= url "https://ya.ru/")))
-;;       (let [title (get-title)]
-;;         (is (= title "Яндекс")))
-;;       (with-title title
-;;         (is (= title "Яндекс"))))))
-
-;; (deftest test-navigation
-;;   (with-server host port
-;;     (wait-running :message "The server did not start.")
-;;     (with-session {} {}
-;;       (go-url "http://ya.ru")
-;;       (go-url "http://mail.ru")
-;;       (back)
-;;       (refresh)
-;;       (forward)
-;;       (refresh)
-;;       (let [url (get-url)]
-;;         (is (= url "https://mail.ru/"))))))
+(deftest test-url
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (testing "empry page"
+        (with-url url
+          (is (or (= url "about:blank")
+                  (= url "data:,")))))
+      (testing "go URL"
+        (go-url url)
+        (with-url url
+          (is (str/ends-with? url "/resources/html/test.html")))))))
