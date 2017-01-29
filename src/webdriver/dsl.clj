@@ -381,8 +381,9 @@
   (api/get-alert-text *server* *session*))
 
 (defn has-text [text]
-  (with-el (format "//*[contains(text(),'%s')]" text) el
-    true))
+  (with-http-error
+    (with-el (format "//*[contains(text(),'%s')]" text) el
+      true)))
 
 ;;
 ;; wait functions

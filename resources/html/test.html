@@ -87,17 +87,16 @@
 
         <hr>
 
-
-
-        <!-- <h3>Wait section</h3> -->
-        <!-- <script> -->
-        <!--     function button_wait() { -->
-        <!--     setTimeout(function() { -->
-        <!--     document.getElementById("baz").innerHTML = "clicked"; -->
-        <!--     }, 5000); -->
-        <!--     } -->
-        <!-- </script> -->
-        <!-- <button id="button-wait" onclick="button_wait()">Test</button> -->
+        <h3>Wait section</h3>
+        <script>
+            function button_wait() {
+            setTimeout(function() {
+            document.getElementById("wait-span").innerHTML = "super" + "-" + "secret" + "-" + "text";
+            }, 5000);
+            }
+        </script>
+        <button id="wait-button" onclick="button_wait()">Test</button>
+        <span id="wait-span"></span>
 
 
 

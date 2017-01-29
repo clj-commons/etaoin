@@ -192,3 +192,16 @@
           (is (= display "block"))
           (is (= width "333px"))
           (is (= height "111px")))))))
+
+(deftest test-wait-text
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go-url url)
+      (testing "wait for text simple"
+        (with-xpath
+          (click "//button[@id='wait-button']"))
+        (wait-has-text "-secret-")
+        (is 1)
+)
+)))
