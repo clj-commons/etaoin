@@ -398,7 +398,6 @@
   (loop [times 0
          time-rest timeout]
     (when (< time-rest 0)
-      (is false message)
       (throw+ {:type :webdriver/timeout
                :message message
                :timeout timeout
@@ -542,9 +541,9 @@
 
 (defn- clear-form-el [el-form]
   (with-xpath
-    (doseq [term ["//textarea"
-                  "//input[@type='text']"
-                  "//input[@type='password']"]]
+    (doseq [term [".//textarea"
+                  ".//input[@type='text']"
+                  ".//input[@type='password']"]]
       (with-els-from el-form term el-input
         (clear-el el-input)))))
 

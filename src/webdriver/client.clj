@@ -13,7 +13,7 @@
    :accept :json
    :content-type :json
    :form-params {}
-   :debug true})
+   :debug false})
 
 (def default-pool-params
   {:timeout 5
