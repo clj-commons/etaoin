@@ -65,10 +65,12 @@
                         :throw-exceptions false})
          resp (client/request params)
          body (:body resp)
-         error (delay {:type ::http-error
+         error (delay {:type :webdriver/http-error
                        :status (:status resp)
                        :response (if (string? body)
-                                   (parse-string body true)
+                                   (try
+                                     (parse-string (str/replace body #"Invalid Command Method -" "") true)
+                                     (catch Throwable _ body))
                                    body)
                        :server server
                        :method method

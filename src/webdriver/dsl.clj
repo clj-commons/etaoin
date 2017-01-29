@@ -36,12 +36,8 @@
     (catch ~catch ~(quote _)
       ~fallback)))
 
-(defmacro with-400 [& body]
-  `(with-exception [:status 400] false
-     ~@body))
-
-(defmacro with-404 [& body]
-  `(with-exception [:status 404] false
+(defmacro with-http-error [& body]
+  `(with-exception [:type :webdriver/http-error] false
      ~@body))
 
 (defmacro with-conn-error [& body]
@@ -303,14 +299,16 @@
   (api/accept-alert *server* *session*))
 
 (defn get-alert-text []
-  )
+  (api/get-alert-text *server* *session*))
 
 (defmacro with-alert-text [bind & body]
   `(let [~bind (get-alert-text)]
      ~@body))
 
-(defn set-prompt-text [text]
-  (api/send-alert-text *server* *session* text))
+(defn alert-open []
+  (with-http-error
+    (api/get-alert-text *server* *session*)
+    true))
 
 ;;
 ;; screenshots
@@ -351,12 +349,12 @@
 ;;
 
 (defn- exists-el [el]
-  (with-404
+  (with-http-error
     (api/get-element-tag-name *server* *session* el)
     true))
 
 (defn exists [term]
-  (with-404
+  (with-http-error
     (with-el term el
       true)))
 

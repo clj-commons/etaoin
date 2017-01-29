@@ -11,6 +11,12 @@
                                    with-session
                                    go-url
 
+                                   get-alert-text
+                                   accept-alert
+                                   dismiss-alert
+                                   alert-open
+
+                                   exists
                                    visible
 
                                    with-url
@@ -67,10 +73,10 @@
       (with-server {:host host :port port :browser :chrome}
         (f))))
 
-  (with-proc p [["phantomjs" "--webdriver" port]]
-    (testing "phantom"
-      (with-server {:host host :port port :browser :phantom}
-        (f))))
+  ;; (with-proc p [["phantomjs" "--webdriver" port]]
+  ;;   (testing "phantom"
+  ;;     (with-server {:host host :port port :browser :phantom}
+  ;;       (f))))
 
   )
 
@@ -209,34 +215,59 @@
       (is (disabled "//textarea[@id='textarea-disabled']"))
       (try+
        (is (thrown? clojure.lang.ExceptionInfo
-                    (enabled "//test[@id='dunno-foo-bar']"))))
+                    (enabled "//test[@id='dunno-foo-bar']")))))))
 
-)))
-
-
-(deftest test-url-title
-  (with-server host port
+(deftest test-exists
+  (let [url (-> "html/test.html" io/resource str)]
     (wait-running :message "The server did not start.")
     (with-session {} {}
-      (go-url "http://ya.ru")
-      (let [url (get-url)]
-        (is (= url "https://ya.ru/")))
-      (with-url url
-        (is (= url "https://ya.ru/")))
-      (let [title (get-title)]
-        (is (= title "Яндекс")))
-      (with-title title
-        (is (= title "Яндекс"))))))
+      (go-url url)
+      (with-xpath
+        (is (exists "//html"))
+        (is (exists "//body"))
+        (is (not (exists "//test[@id='dunno-foo-bar']")))))))
 
-(deftest test-navigation
-  (with-server host port
+(deftest test-alert
+  (let [url (-> "html/test.html" io/resource str)]
     (wait-running :message "The server did not start.")
     (with-session {} {}
-      (go-url "http://ya.ru")
-      (go-url "http://mail.ru")
-      (back)
-      (refresh)
-      (forward)
-      (refresh)
-      (let [url (get-url)]
-        (is (= url "https://mail.ru/"))))))
+      (go-url url)
+      (click "//button[@id='button-alert']")
+      (is (= (get-alert-text) "Hello!"))
+      (is (alert-open))
+      (accept-alert)
+      (is (not (alert-open)))
+      (click "//button[@id='button-alert']")
+      (is (alert-open))
+      (dismiss-alert)
+      (is (not (alert-open))))))
+
+
+
+
+;; (deftest test-url-title
+;;   (with-server host port
+;;     (wait-running :message "The server did not start.")
+;;     (with-session {} {}
+;;       (go-url "http://ya.ru")
+;;       (let [url (get-url)]
+;;         (is (= url "https://ya.ru/")))
+;;       (with-url url
+;;         (is (= url "https://ya.ru/")))
+;;       (let [title (get-title)]
+;;         (is (= title "Яндекс")))
+;;       (with-title title
+;;         (is (= title "Яндекс"))))))
+
+;; (deftest test-navigation
+;;   (with-server host port
+;;     (wait-running :message "The server did not start.")
+;;     (with-session {} {}
+;;       (go-url "http://ya.ru")
+;;       (go-url "http://mail.ru")
+;;       (back)
+;;       (refresh)
+;;       (forward)
+;;       (refresh)
+;;       (let [url (get-url)]
+;;         (is (= url "https://mail.ru/"))))))

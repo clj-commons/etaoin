@@ -492,34 +492,58 @@
                    [:session session :actions])))
 
 (defn
-  ^{:firefox false}
-  dismiss-alert [server session]
+  ^{:phantom false}
+  dismiss-alert
   "https://www.w3.org/TR/webdriver/#dfn-dismiss-alert"
-  (-> server
-      (client/call :post
-                   [:session session :alert :dismiss])))
+  [server session]
+  {:pre [(map? server) (string? session)]}
+  (let [cmd (case (:browser server)
+              :chrome [:dismiss_alert]
+              [:alert :dismiss])
+        meth :post
+        path (into [:session session] cmd)
+        resp (client/call server meth path)]
+    (-> resp :value)))
 
 (defn
-  ^{:firefox false}
-  accept-alert [server session]
+  ^{:phantom false}
+  accept-alert
   "https://www.w3.org/TR/webdriver/#dfn-accept-alert"
-  (-> server
-      (client/call :post
-                   [:session session :alert :accept])))
+  [server session]
+  {:pre [(map? server) (string? session)]}
+  (let [cmd (case (:browser server)
+              :chrome [:accept_alert]
+              [:alert :accept])
+        meth :post
+        path (into [:session session] cmd)
+        resp (client/call server meth path)]
+    (-> resp :value)))
 
-(defn get-alert-text [server session]
+(defn get-alert-text
   "https://www.w3.org/TR/webdriver/#dfn-get-alert-text"
-  (-> server
-      (client/call :get
-                   [:session session :alert :text])
-      :value))
+  [server session]
+  {:pre [(map? server) (string? session)]
+   :post [(string? %)]}
+  (let [cmd (case (:browser server)
+              :chrome [:alert_text]
+              [:alert :text])
+        meth :get
+        path (into [:session session] cmd)
+        resp (client/call server meth path)]
+    (-> resp :value)))
 
-(defn send-alert-text [server session text]
+(defn send-alert-text
   "https://www.w3.org/TR/webdriver/#dfn-send-alert-text"
-  (-> server
-      (client/call :post
-                   [:session session :alert :text]
-                   {:value (text-to-array text)})))
+  [server session text]
+  {:pre [(map? server) (string? session) (string? text)]}
+  (let [cmd (case (:browser server)
+              :chrome [:alert_text]
+              [:alert :text])
+        meth :post
+        path (into [:session session] cmd)
+        body {:value (text-to-array text)}
+        resp (client/call server meth path body)]
+    (-> resp :value)))
 
 (defn take-screenshot [server session filename]
   "https://www.w3.org/TR/webdriver/#dfn-take-screenshot"
