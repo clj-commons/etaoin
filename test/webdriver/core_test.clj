@@ -243,7 +243,7 @@
   (let [url (-> "html/test.html" io/resource str)]
     (wait-running :message "The server did not start.")
     (with-session {} {}
-      (testing "empry page"
+      (testing "empty page"
         (with-url url
           (is (or (= url "about:blank")
                   (= url "data:,")))))
@@ -251,3 +251,26 @@
         (go-url url)
         (with-url url
           (is (str/ends-with? url "/resources/html/test.html")))))))
+
+(deftest test-css-props
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go-url url)
+      (testing "single css"
+        (with-css "//div[@id='div-css-simple']" display
+          (is (= display "block"))))
+      (testing "multiple css"
+        (with-csss "//div[@id='div-css-simple']"
+          [display background-color width height]
+          (is (= display "block"))
+          (is (or (= background-color "rgb(204, 204, 204)")
+                  (= background-color "rgba(204, 204, 204, 1)")))
+          (is (= width "150px"))
+          (is (= height "250px"))))
+      (testing "styled css"
+        (with-csss "//div[@id='div-css-styled']"
+          [display width height]
+          (is (= display "block"))
+          (is (= width "333px"))
+          (is (= height "111px")))))))

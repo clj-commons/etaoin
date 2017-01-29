@@ -3,8 +3,7 @@
             [webdriver.keys :as keys]
             [webdriver.proc :as proc]
             [webdriver.client :as client]
-            [slingshot.slingshot :refer [try+ throw+]]
-            [clojure.test :refer [is deftest]])
+            [slingshot.slingshot :refer [try+ throw+]])
   (:import java.net.ConnectException))
 
 
@@ -519,7 +518,7 @@
 
 (defn fill-form-el [el-form form]
   (doseq [[field value] form]
-    (let [term (format "//*[@name='%s']" (name field))
+    (let [term (format ".//*[@name='%s']" (name field))
           text (if (string? value) value (str value))]
       (with-xpath
         (with-el-from el-form term el-field
@@ -532,7 +531,7 @@
 (defn- submit-form-el [el-form form]
   (fill-form-el el-form form)
   (with-xpath
-    (with-el-from el-form "//input[@type='submit']" el-submit ;; todo  | //button[@type='submit']
+    (with-el-from el-form ".//input[@type='submit']" el-submit ;; todo  | //button[@type='submit']
       (click-el el-submit))))
 
 (defn submit-form [term form]
@@ -552,7 +551,7 @@
     (clear-form-el el-form)))
 
 (defn get-form-el [el-form]
-  (let [term "//input"
+  (let [term ".//input"
         el-inputs (api/find-elements-from-element
                    *server* *session* el-form *locator* term)
         fields (map #(prop-el % "name") el-inputs)
@@ -625,72 +624,3 @@
   `(with-el ~term el#
      (with-attrs-el el# ~names
        ~@body)))
-
-;;
-;; tests
-;;
-
-(deftest simple-test
-  (let [host "127.0.0.1"
-        port 9515 ;; (random-port)
-        ;; args ["geckodriver" "--host" host "--port" port]
-        args ["chromedriver" "--verbose" (str "--port" "=" port)  (str "--log-path" "=" "/Users/ivan/webdriver/chrome.txt")]
-        html "<input class=\"input__control input__input\" tabindex=\"2\" autocomplete=\"off\" autocorrect=\"off\" autocapitalize=\"off\" spellcheck=\"false\" aria-autocomplete=\"list\" aria-label=\"Запрос\" id=\"text\" maxlength=\"400\" name=\"text\">"
-        input "//input[@id='text']"]
-
-    ;; with-start host port
-    (do ;; proc/with-proc p [args]
-      (with-server host port
-        (wait-running :message "The server did not start.")
-        (with-session {} {}
-          (client/with-pool {}
-            (go-url "http://ya.ru")
-            (wait-has-text "Найти" :message "Найти was not found on the page")
-            ;; (js-set-hash "fooooo")
-            ;; (with-url url
-            ;;   (is (= url 1)))
-            (with-xpath
-              (wait-visible input)
-              (with-el input el
-                (fill-el el "test")
-                (with-attr-el el maxlength
-                  (is (= maxlength "400"))))
-              (fill input "test")
-              (with-attr input maxlength
-                (is (= maxlength "400")))
-              (with-attrs input [name class tabindex
-                                 autocomplete maxlength]
-                (is (= name "text"))
-                (is (= class "input__control input__input"))
-                (is (= tabindex "2"))
-                (is (= autocomplete "off"))
-                (is (= maxlength "400")))
-              ;; (with-props input [outerHTML innerHTML]
-              ;;   (is (= outerHTML html))
-              ;;   (is (= innerHTML "")))
-              (with-csss input [display height border-right-width border-collapse]
-                (is (= display "inline-block"))
-                (is (= height "46px"))
-                (is (= border-right-width "40px"))
-                (is (= border-collapse "collapse")))
-              ;; (fill-form "//form" {:text "sdfsdfsdfsdfs"})
-              ;; (let [form (get-form "//form")]
-              ;;   (is (= (-> form (dissoc :msid))
-              ;;          {:text "testtestsdfsdfsdfsdfs"})))
-              ;; (fill-human input "I dunno why I do that.")
-              ;; (with-el-rect input {:keys [x y width height]}
-              ;;   (is (= x 222.0))
-              ;;   (is (= y 295.0))
-              ;;   (is (= width 692.0))
-              ;;   (is (= height 46.0)))
-              ))
-          (screenshot "page.png")
-          ;; (screenshot input "element.png")
-          (clear-form "//form")
-          ;; (submit-form "//form" {:text "sdfsdfsdfsdfs"})
-          ;; (wait 5)
-          ))
-
-
-
-      )))
