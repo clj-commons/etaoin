@@ -39,76 +39,6 @@
   :each
   fixture-browsers)
 
-(deftest test-local-file
-  (let [url (-> "html/test.html" io/resource str)]
-
-    (wait-running :message "The server did not start.")
-    (with-session {} {}
-
-      (go-url url)
-
-      (testing "title"
-        (let [title (get-title)]
-          (is (= title "Webdriver Test Document")))
-        (with-title title
-          (is (= title "Webdriver Test Document"))))
-
-      (testing "click"
-        (let [t (text "//span[@id='baz']")]
-          (is (= t "")))
-        (with-xpath
-          (click "//button[@id='foo']"))
-        (let [t (text "//span[@id='baz']")]
-          (is (= t "clicked"))))
-
-      (testing "css test"
-        (with-xpath
-          (with-css "//div[@id='css-test']" width
-            (is (= width "250px")))
-
-          (with-csss "//div[@id='css-test']" [width
-                                              height
-                                              background-color]
-            (is (= width "250px"))
-            (is (= height "150px"))
-            (is (or
-                 ;; firefox
-                 (= background-color "rgb(0, 0, 0)")
-                 ;; chrome, phantom
-                 (= background-color "rgba(0, 0, 0, 1)"))))))
-
-      (testing "input"
-        (testing "simple input"
-          (with-xpath
-            (fill "//input[@id='simple-input']" "test")
-            (click "//input[@id='simple-submit']"))
-          (with-url url
-            (is (str/includes? url "login=test"))))
-
-        (testing "form input"
-          (with-xpath
-            (fill-form "//form[@id='submit-test']" {:login "Ivan"
-                                                    :password "lalilulelo"
-                                                    :message "long_text_here"
-                                                    })
-            (click "//input[@id='simple-submit']"))
-          (with-url url
-            (is (str/includes? url "login=Ivan"))
-            (is (str/includes? url "password=lalilulelo"))
-            (is (str/includes? url "message=long_text_here"))))
-
-        ;; form submit
-        ;; any button type
-
-        )
-
-
-      ;; (let [url (get-url)]
-      ;;   (is (= url "https://ya.ru/")))
-      ;; (with-url url
-      ;;   (is (= url "https://ya.ru/")))
-      )))
-
 (deftest test-clear
   (let [url (-> "html/test.html" io/resource str)
         form "//form[@id='submit-test']"
@@ -133,18 +63,6 @@
           (click submit)
           (with-url url
             (is (str/ends-with? url "?login=&password=&message="))))))))
-
-;; (deftest test-wait
-;;   (let [url (-> "html/test.html" io/resource str)
-;;         form "//form[@id='submit-test']"
-;;         input "//input[@id='simple-input']"
-;;         submit "//input[@id='simple-submit']"]
-;;     (wait-running :message "The server did not start.")
-;;     (with-session {} {}
-;;       (go-url url)
-;;       (testing "simple clear"
-;; )
-;; )))
 
 (deftest test-visible
   (let [url (-> "html/test.html" io/resource str)]
