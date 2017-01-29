@@ -594,14 +594,15 @@
 ;; element attributes
 ;;
 
-(defn attr-el [el name]
+(defn attr-el [el name] ;; todo private
   (api/get-element-attribute *server* *session* el name))
 
 (defn attr [term name]
   (with-el term el
     (attr-el el name)))
 
-(defmacro with-attr-el [el name & body]
+(defmacro ^:private
+  with-attr-el [el name & body]
   `(let [~name (attr-el ~el ~(str name))]
      ~@body))
 
@@ -610,7 +611,8 @@
      (with-attr-el el# ~name
        ~@body)))
 
-(defmacro with-attrs-el [el names & body]
+(defmacro ;; ^:private
+  with-attrs-el [el names & body]
   (let [func (fn [name] `(attr-el ~el ~(str name)))
         forms (map func names)
         binds (-> names

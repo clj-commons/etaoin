@@ -314,12 +314,15 @@
                    [:session session :element element :selected])
       :value))
 
-(defn get-element-attribute [server session element attribute]
+(defn get-element-attribute
   "https://www.w3.org/TR/webdriver/#dfn-get-element-attribute"
-  (-> server
-      (client/call :get
-                   [:session session :element element :attribute attribute])
-      :value))
+  [server session element attribute]
+  {:pre [(map? server) (string? session) (string? element) (string? attribute)]
+   :post [(or (string? %) (nil? %))]}
+  (let [meth :get
+        path [:session session :element element :attribute attribute]
+        resp (client/call server meth path)]
+    (-> resp :value)))
 
 (defn get-element-property [server session element property]
   "https://www.w3.org/TR/webdriver/#dfn-get-element-property"

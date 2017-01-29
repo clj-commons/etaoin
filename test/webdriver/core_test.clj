@@ -6,52 +6,7 @@
                                   deftest
                                   use-fixtures
                                   testing]]
-            [webdriver.dsl :refer [with-server
-                                   wait-running
-                                   with-session
-                                   go-url
-
-                                   get-alert-text
-                                   accept-alert
-                                   dismiss-alert
-                                   alert-open
-
-                                   exists
-                                   visible
-
-                                   with-url
-                                   with-title
-
-                                   get-url
-                                   get-title
-
-                                   clear
-                                   clear-form
-
-                                   fill
-                                   fill-form
-                                   submit-form
-
-                                   enabled
-                                   disabled
-
-                                   with-proc
-                                   with-proc-multi
-                                   random-port
-
-                                   with-xpath
-                                   click
-
-                                   with-css
-                                   with-csss
-
-                                   wait
-                                   text
-
-                                   back
-                                   forward
-                                   refresh
-                                   ]]))
+            [webdriver.dsl :refer :all]))
 
 (def host "127.0.0.1")
 (def port 6666)
@@ -73,10 +28,10 @@
       (with-server {:host host :port port :browser :chrome}
         (f))))
 
-  ;; (with-proc p [["phantomjs" "--webdriver" port]]
-  ;;   (testing "phantom"
-  ;;     (with-server {:host host :port port :browser :phantom}
-  ;;       (f))))
+  (with-proc p [["phantomjs" "--webdriver" port]]
+    (testing "phantom"
+      (with-server {:host host :port port :browser :phantom}
+        (f))))
 
   )
 
@@ -228,6 +183,7 @@
         (is (not (exists "//test[@id='dunno-foo-bar']")))))))
 
 (deftest test-alert
+  ;; todo skip decorators
   (let [url (-> "html/test.html" io/resource str)]
     (wait-running :message "The server did not start.")
     (with-session {} {}
@@ -242,6 +198,34 @@
       (dismiss-alert)
       (is (not (alert-open))))))
 
+(deftest test-attributes
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go-url url)
+      (testing "common attributes"
+        (with-xpath
+          (with-attrs "//input[@id='input-attr']"
+            [id type value name style
+             disabled data-foo data-bar]
+            (is (= id "input-attr"))
+            (is (= type "text"))
+            (is (= value "hello"))
+            (is (= style "border: 5px; width: 150px;"))
+            (is (= disabled "true"))
+            (is (= data-foo "foo"))
+            (is (= data-bar "bar")))))
+      (testing "event attributes"
+        (with-xpath
+          (with-attrs "//input[@id='input-attr']" [onclick]
+            (is (= onclick "alert(123)")))))
+      (testing "missing attributes"
+        (with-xpath
+          (with-attrs "//input[@id='input-attr']" [foo bar baz dunno]
+            (is (= foo nil))
+            (is (= baz nil))
+            (is (= bar nil))
+            (is (= dunno nil))))))))
 
 
 
