@@ -198,10 +198,40 @@
     (wait-running :message "The server did not start.")
     (with-session {} {}
       (go-url url)
+
       (testing "wait for text simple"
+        (refresh)
         (with-xpath
           (click "//button[@id='wait-button']"))
         (wait-has-text "-secret-")
-        (is 1)
-)
-)))
+        (is true "text found"))
+
+      (testing "wait for text timeout"
+        (refresh)
+        (with-xpath
+          (click "//button[@id='wait-button']"))
+        (try+
+         (wait-has-text "-secret-" :timeout 1 :message "No -secret- text on the page.")
+         (is false "should not be executed")
+         (catch [:type :webdriver/timeout] data
+           (is (= (-> data (dissoc :predicate))
+                  {:type :webdriver/timeout
+                   :message "No -secret- text on the page."
+                   :timeout 1
+                   :poll 0.5
+                   :times 3}))
+           (is true "exception was caught"))))
+
+      (testing "wait non-existing text"
+        (refresh)
+        (try+
+         (wait-has-text "whatever-foo-bar-")
+         (is false "should not be executed")
+         (catch [:type :webdriver/timeout] data
+           (is (= (-> data (dissoc :predicate))
+                  {:type :webdriver/timeout
+                   :message nil
+                   :timeout 10
+                   :poll 0.5
+                   :times 21}))
+           (is true "exception was caught")))))))
