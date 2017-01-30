@@ -181,22 +181,35 @@
       (client/call :get [:session session :window :handles])
       :value))
 
-(defn switch-to-frame [server session frame]
-  "https://www.w3.org/TR/webdriver/#dfn-switch-to-frame"
-  (-> server
-      (client/call
-       :post [:session session :frame]
-       {:id frame})))
+(defn get-window-size
+  "todo"
+  [server session handle]
+  {:pre [(map? server) (string? session) (string? handle)]
+   :post [(map? %)]}
+  (let [meth :get
+        path [:session session :window handle :size]
+        resp (client/call server meth path)]
+    (-> resp :value)))
 
-(defn switch-to-parent-frame [server session]
-  "https://www.w3.org/TR/webdriver/#dfn-switch-to-parent-frame"
-  (-> server
-      (client/call
-       :post [:session session :frame :parent])))
+(defn get-current-window-handle
+  "todo"
+  [server session]
+  {:pre [(map? server) (string? session)]
+   :post [(string? %)]}
+  (let [meth :get
+        path [:session session :window_handle]
+        resp (client/call server meth path)]
+    (-> resp :value)))
 
-(defn get-window-size [server session]
-  (-> server
-      (client/call :get [:session session :window :size])))
+(defn get-window-size-FF
+  "todo"
+  [server session]
+  {:pre [(map? server) (string? session) ]
+   }
+  (let [meth :get
+        path [:session session :window :size]
+        resp (client/call server meth path)]
+    (-> resp :value)))
 
 (defn set-window-size [server session width height]
   (-> server
@@ -207,19 +220,6 @@
   (-> server
       (client/call :post [:session session :window :position]
                    {:x x :y y})))
-
-(defn ^:not-implemented
-  get-window-rect [server session]
-  "https://www.w3.org/TR/webdriver/#dfn-get-window-rect"
-  (-> server
-      (client/call :get [:session session :window :rect])))
-
-(defn ^:not-implemented
-  set-window-rect [server session x y width height]
-  "https://www.w3.org/TR/webdriver/#dfn-set-window-rect"
-  (client/call :post
-               [:session session :window :rect]
-               {:x x :y y :width width :height height}))
 
 (defn maximize-window [server session]
   "https://www.w3.org/TR/webdriver/#dfn-maximize-window"
@@ -352,14 +352,6 @@
       (client/call :get
                    [:session session :element element :name])
       :value))
-
-(defn
-  ^{:chrome false}
-  get-element-rect [server session element]
-  "https://www.w3.org/TR/webdriver/#dfn-get-element-rect"
-  (-> server
-      (client/call :get
-                   [:session session :element element :rect])))
 
 (defn is-element-enabled
   "https://www.w3.org/TR/webdriver/#dfn-is-element-enabled"
@@ -605,17 +597,19 @@
 (defn get-element-location
   "todo"
   [server session element]
-  {:pre [(map? server) (string? session) (string? element)]}
+  {:pre [(map? server) (string? session) (string? element)]
+   :post [(map? %)]}
   (let [meth :get
         path [:session session :element element :location]
         resp (client/call server meth path)]
-    (-> resp :value)))
+    (-> resp :value (select-keys [:x :y]))))
 
 (defn get-element-size
   "todo"
   [server session element]
-  {:pre [(map? server) (string? session) (string? element)]}
+  {:pre [(map? server) (string? session) (string? element)]
+   :post [(map? %)]}
   (let [meth :get
         path [:session session :element element :size]
         resp (client/call server meth path)]
-    (-> resp :value)))
+    (-> resp :value (select-keys [:width :height]))))

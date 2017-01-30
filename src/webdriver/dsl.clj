@@ -134,6 +134,13 @@
 ;; windows
 ;;
 
+(defn- w-handler []
+  (api/get-current-window-handle *server* *session*))
+
+(defn w-size []
+  (let [h (w-handler)]
+    (api/get-window-size *server* *session* h)))
+
 (defn close []
   (api/close-window *server* *session*))
 
@@ -682,7 +689,7 @@
 
 
 ;;
-;; element size
+;; element size and box
 ;;
 
 (defn- el-size-el [el]
@@ -691,3 +698,43 @@
 (defn el-size [term]
   (with-el term el
     (el-size-el el)))
+
+(defn- el-pos-el [el]
+  (api/get-element-location *server* *session* el))
+
+(defn el-pos [term]
+  (with-el term el
+    (el-pos-el el)))
+
+(defn- el-box-el [el]
+  (let [{:keys [x y]} (el-pos-el el)
+        {:keys [width height]} (el-size-el el)]
+    {:x x
+     :y y
+     :w width
+     :h height
+     :x1 x
+     :y1 y
+     :x2 (+ x width)
+     :y2 (+ y height)}))
+
+(defn el-box [term]
+  (with-el term el
+    (el-box-el el)))
+
+(defmacro with-box [term bind & body]
+  `(let [~bind (el-box ~term)]
+     ~@body))
+
+(defn- intersects-el [el1 el2]
+  (let [a (el-box-el el1)
+        b (el-box-el el2)]
+    (or (< (a :y1) (b :y2))
+        (> (a :y2) (b :y1))
+        (< (a :x2) (b :x1))
+        (> (a :x1) (b :x2)))))
+
+(defn intersects [term1 term2]
+  (with-el term1 el1
+    (with-el term2 el2
+      (intersects-el el1 el2))))

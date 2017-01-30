@@ -1,3 +1,31 @@
+
+;; (defn ^:not-implemented
+;;   get-window-rect [server session]
+;;   "https://www.w3.org/TR/webdriver/#dfn-get-window-rect"
+;;   (-> server
+;;       (client/call :get [:session session :window :rect])))
+
+;; (defn ^:not-implemented
+;;   set-window-rect [server session x y width height]
+;;   "https://www.w3.org/TR/webdriver/#dfn-set-window-rect"
+;;   (client/call :post
+;;                [:session session :window :rect]
+;;                {:x x :y y :width width :height height}))
+
+;; (defn switch-to-frame [server session frame]
+;;   "https://www.w3.org/TR/webdriver/#dfn-switch-to-frame"
+;;   (-> server
+;;       (client/call
+;;        :post [:session session :frame]
+;;        {:id frame})))
+
+;; (defn switch-to-parent-frame [server session]
+;;   "https://www.w3.org/TR/webdriver/#dfn-switch-to-parent-frame"
+;;   (-> server
+;;       (client/call
+;;        :post [:session session :frame :parent])))
+
+
 ;;
 ;; todos
 ;;

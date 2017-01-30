@@ -326,6 +326,16 @@
     (with-session {} {}
       (go-url url)
 
+
+      ;; (is (= (w-handler) 1))
+      ;; (is (= (w-size) 1))
+
+
+      ;; (with-box "//*[@id='wait-add-class-trigger']" {:keys [x y]}
+      ;;   (is (= x 1)))
+
+      ;; (is (= (el-box "//*[@id='wait-add-class-trigger']") 1))
+
       ;; (is (= (el-size "//*[@id='wait-add-class-trigger']") 1))
       ;; (is (= (location "//*[@id='wait-add-class-trigger']") 1))
 
