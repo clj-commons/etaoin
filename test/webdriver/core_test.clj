@@ -235,3 +235,18 @@
                    :poll 0.5
                    :times 21}))
            (is true "exception was caught")))))))
+
+(deftest test-wait-has-class
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go-url url)
+
+      (testing "wait for has class"
+        (refresh)
+        (with-xpath
+          (click "//*[@id='wait-add-class-trigger']"))
+        (wait-for-has-class "//*[@id='wait-add-class-target']" "new-one")
+        (is true "has class"))
+
+)))

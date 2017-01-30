@@ -1,5 +1,6 @@
 (ns webdriver.dsl
-  (:require [webdriver.api :as api]
+  (:require [clojure.string :as str]
+            [webdriver.api :as api]
             [webdriver.keys :as keys]
             [webdriver.proc :as proc]
             [webdriver.client :as client]
@@ -380,6 +381,20 @@
 (defn has-alert []
   (api/get-alert-text *server* *session*))
 
+(defn- has-class-el [el class-name]
+  (let [classes (api/get-element-attribute *server* *session* el "class")]
+    (cond
+      (nil? classes) false
+      (string? classes)
+      (-> classes
+          (str/split #"\s+")
+          set
+          (get class-name)))))
+
+(defn has-class [term class-name]
+  (with-el term el
+    (has-class-el el class-name)))
+
 (defn has-text [text]
   (with-http-error
     (with-el (format "//*[contains(text(),'%s')]" text) el
@@ -435,6 +450,9 @@
 
 (defn wait-has-text [text & args]
   (apply wait-for-predicate #(has-text text) args))
+
+(defn wait-for-has-class [term class & args]
+  (apply wait-for-predicate #(has-class term class) args))
 
 ;;
 ;; element properties

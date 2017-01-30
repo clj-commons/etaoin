@@ -87,7 +87,7 @@
 
         <hr>
 
-        <h3>Wait section</h3>
+        <h3>Wait text section</h3>
         <script>
             function button_wait() {
             setTimeout(function() {
@@ -98,7 +98,17 @@
         <button id="wait-button" onclick="button_wait()">Test</button>
         <span id="wait-span"></span>
 
-
+        <h3>Wait for has class section</h3>
+        <script>
+            function button_add_class() {
+            setTimeout(function() {
+            var element = document.getElementById("wait-add-class-target");
+            element.classList.add("new-one");
+            }, 5000);
+            }
+        </script>
+        <button id="wait-add-class-trigger" onclick="button_add_class()">Test</button>
+        <span id="wait-add-class-target" class="some-old another-old"></span>
 
     </body>
 </html>
