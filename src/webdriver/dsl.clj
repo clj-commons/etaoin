@@ -345,6 +345,27 @@
   (js-execute "window.location.hash = arguments[0];" hash))
 
 ;;
+;; mouse
+;;
+
+(defn mouse-to [term]
+  (with-el term el
+    (api/mouse-move-to *server* *session* :element el)))
+
+(defmacro with-mouse-btn [& body]
+  `(do
+     (api/mouse-button-down *server* *session*)
+     (try
+       ~@body
+       (finally
+         (api/mouse-button-up *server* *session*)))))
+
+(defn drag-and-drop [from to]
+  (mouse-to from)
+  (with-mouse-btn
+    (mouse-to to)))
+
+;;
 ;; predicates
 ;;
 

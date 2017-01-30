@@ -15,10 +15,10 @@
 
   ;; "-v"
 
-  (with-proc p [["geckodriver" "--host" host "--port" port]]
-    (testing "firefox"
-      (with-server {:host host :port port :browser :firefox}
-        (f))))
+  ;; (with-proc p [["geckodriver" "--host" host "--port" port]]
+  ;;   (testing "firefox"
+  ;;     (with-server {:host host :port port :browser :firefox}
+  ;;       (f))))
 
   ;; "--log-path=/Users/ivan/webdriver666.txt"
   ;; "--verbose"
@@ -247,6 +247,23 @@
         (with-xpath
           (click "//*[@id='wait-add-class-trigger']"))
         (wait-for-has-class "//*[@id='wait-add-class-target']" "new-one")
-        (is true "has class"))
+        (is true "has class")))))
 
-)))
+(deftest test-drag-and-drop
+  (let [url "http://marcojakob.github.io/dart-dnd/basic/web/"
+        doc "//*[@class='document']"
+        trash "//div[contains(@class, 'trash')]"]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go-url url)
+      (testing "wait for has class"
+        (with-xpath
+          (drag-and-drop doc trash)
+          (wait 1)
+          (drag-and-drop doc trash)
+          (wait 1)
+          (drag-and-drop doc trash)
+          (wait 1)
+          (drag-and-drop doc trash)
+          (wait 1))
+        (is true)))))

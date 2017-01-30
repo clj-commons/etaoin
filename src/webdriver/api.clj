@@ -569,8 +569,10 @@
                          :filename filename})
       (b64-to-file filename)))
 
+;; the functions below don't work in FF
+
 (defn mouse-move-to
-  "Moves virtual mouse."
+  "Moves virtual mouse to an element or by offset."
   [server session & {:keys [element xoffset yoffset] :as payload}]
   {:pre [(map? server) (string? session)]}
   (case (:browser server)
@@ -580,3 +582,21 @@
           body payload
           resp (client/call server meth path body)]
       (-> resp :value))))
+
+(defn mouse-button-down
+  "Set mouse button pressed during the next API calls."
+  [server session]
+  {:pre [(map? server) (string? session)]}
+  (let [meth :post
+          path [:session session :buttondown]
+          resp (client/call server meth path)]
+      (-> resp :value)))
+
+(defn mouse-button-up
+  "Releases the mouse button."
+  [server session]
+  {:pre [(map? server) (string? session)]}
+  (let [meth :post
+          path [:session session :buttonup]
+          resp (client/call server meth path)]
+      (-> resp :value)))
