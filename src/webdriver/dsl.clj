@@ -279,6 +279,10 @@
   `(let [~bind (get-cookie ~name)]
      ~@body))
 
+(defmacro with-cookies [bind & body]
+  `(let [~bind (get-cookies)]
+     ~@body))
+
 (defn set-cookie [cookie]
   (api/add-cookie *server* *session* cookie))
 
@@ -664,3 +668,26 @@
   `(with-el ~term el#
      (with-attrs-el el# ~names
        ~@body)))
+
+;;
+;; location
+;;
+
+(defn- location-el [el]
+  (api/get-element-location *server* *session* el))
+
+(defn location [term]
+  (with-el term el
+    (location-el el)))
+
+
+;;
+;; element size
+;;
+
+(defn- el-size-el [el]
+  (api/get-element-size *server* *session* el))
+
+(defn el-size [term]
+  (with-el term el
+    (el-size-el el)))

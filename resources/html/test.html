@@ -85,8 +85,6 @@
         </style>
         <div id="div-css-styled"></div>
 
-        <hr>
-
         <h3>Wait text section</h3>
         <script>
             function button_wait() {
@@ -109,6 +107,12 @@
         </script>
         <button id="wait-add-class-trigger" onclick="button_add_class()">Test</button>
         <span id="wait-add-class-target" class="some-old another-old"></span>
+
+        <h3>Cookies section</h3>
+        <script>
+            document.cookie = 'cookie1=test1; path=/';
+            document.cookie = 'cookie2=test2; path=/';
+        </script>
 
     </body>
 </html>

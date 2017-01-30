@@ -9,7 +9,8 @@
   https://github.com/mozilla/webdriver-rust/blob/7ec65451c99b638655c72e7b9718a374ff60de87/src/httpapi.rs
 
   Phantom.js (Ghostdriver)
-  https://github.com/detro/ghostdriver/tree/873c9d660a80a3faa743e4f352571ce4559fe691/src/request_handlers
+  https://github.com/detro/ghostdriver/blob/873c9d660a80a3faa743e4f352571ce4559fe691/src/request_handlers/session_request_handler.js
+  https://github.com/detro/ghostdriver/blob/873c9d660a80a3faa743e4f352571ce4559fe691/src/request_handlers/webelement_request_handler.js
   "
   (:require [webdriver.client :as client]
             [clojure.java.io :as io]
@@ -31,9 +32,6 @@
 ;;
 ;; helpers
 ;;
-
-(defn session-id [session]
-  (-> session :sessionId))
 
 (defn text-to-array [text]
   (cond
@@ -331,12 +329,15 @@
                    [:session session :element element :property property])
       :value))
 
-(defn get-element-css-value [server session element property]
+(defn get-element-css-value
   "https://www.w3.org/TR/webdriver/#dfn-get-element-css-value"
-  (-> server
-      (client/call :get
-                   [:session session :element element :css property])
-      :value))
+  [server session element property]
+  {:pre [(map? server) (string? session) (string? element) (string? property)]
+   :post [(or (string? %) (nil? %))]}
+  (let [meth :get
+        path [:session session :element element :css property]
+        resp (client/call server meth path)]
+    (-> resp :value not-empty)))
 
 (defn get-element-text [server session element]
   "https://www.w3.org/TR/webdriver/#dfn-get-element-text"
@@ -600,3 +601,21 @@
           path [:session session :buttonup]
           resp (client/call server meth path)]
       (-> resp :value)))
+
+(defn get-element-location
+  "todo"
+  [server session element]
+  {:pre [(map? server) (string? session) (string? element)]}
+  (let [meth :get
+        path [:session session :element element :location]
+        resp (client/call server meth path)]
+    (-> resp :value)))
+
+(defn get-element-size
+  "todo"
+  [server session element]
+  {:pre [(map? server) (string? session) (string? element)]}
+  (let [meth :get
+        path [:session session :element element :size]
+        resp (client/call server meth path)]
+    (-> resp :value)))

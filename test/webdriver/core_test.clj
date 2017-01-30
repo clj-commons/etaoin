@@ -15,7 +15,7 @@
 
   ;; "-v"
 
-  ;; (with-proc p [["geckodriver" "--host" host "--port" port]]
+  ;; (with-proc p [["geckodriver" "--host" host "--port" port "--log" "fatal"]]
   ;;   (testing "firefox"
   ;;     (with-server {:host host :port port :browser :firefox}
   ;;       (f))))
@@ -191,7 +191,13 @@
           [display width height]
           (is (= display "block"))
           (is (= width "333px"))
-          (is (= height "111px")))))))
+          (is (= height "111px"))))
+      (testing "missing css"
+        (with-csss "//div[@id='div-css-styled']"
+          [foo bar baz]
+          (is (nil? foo))
+          (is (nil? bar))
+          (is (nil? baz)))))))
 
 (deftest test-wait-text
   (let [url (-> "html/test.html" io/resource str)]
@@ -249,6 +255,18 @@
         (wait-for-has-class "//*[@id='wait-add-class-target']" "new-one")
         (is true "has class")))))
 
+(deftest test-close-window
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go-url url)
+      (close)
+      (try+
+       (with-url url
+         (is false))
+        (catch [:type :webdriver/http-error] _
+          (is true))))))
+
 (deftest test-drag-and-drop
   (let [url "http://marcojakob.github.io/dart-dnd/basic/web/"
         doc "//*[@class='document']"
@@ -267,3 +285,48 @@
           (drag-and-drop doc trash)
           (wait 1))
         (is true)))))
+
+;; (deftest test-get-cookies
+;;   (let [url (-> "html/test.html" io/resource str)]
+;;     (wait-running :message "The server did not start.")
+;;     (with-session {} {}
+;;       (go-url url)
+;;       (testing "get all cookies"
+;;         (with-cookies cookies
+;;           (is (= (->> cookies (sort-by :name) vec)
+;;                  [{:domain "",
+;;     :httponly false,
+;;     :name "cookie1",
+;;     :path "/",
+;;     :secure false,
+;;     :value "test1"}
+;;    {:domain "",
+;;     :httponly false,
+;;     :name "cookie2",
+;;     :path "/",
+;;     :secure false,
+;;     :value "test2"}]
+
+
+;; ))))
+;;       ;; (testing "get named cookie"
+;;       ;;   (with-cookie "cookie1" cookie
+;;       ;;     (is (= cookie
+;;       ;;            {:domain ""
+;;       ;;             :httponly false
+;;       ;;             :name "cookie1"
+;;       ;;             :path "/"
+;;       ;;             :secure false
+;;       ;;             :value "test1"}))))
+;;       )))
+
+(deftest test-foo
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go-url url)
+
+      ;; (is (= (el-size "//*[@id='wait-add-class-trigger']") 1))
+      ;; (is (= (location "//*[@id='wait-add-class-trigger']") 1))
+
+      )))
