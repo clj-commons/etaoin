@@ -269,6 +269,15 @@
         body {:x x :y y}
         resp (client/call server meth path body)]))
 
+(defn maximize-window
+  "todo"
+  [server session handler]
+  {:pre [(map? server) (string? session) (string? handler)]
+   :post [(nil? %)]}
+  (let [meth :post
+        path [:session session :window handler :maximize]
+        resp (client/call server meth path)]))
+
 (defn maximize-window-FF
   "https://www.w3.org/TR/webdriver/#dfn-maximize-window"
   [server session]
