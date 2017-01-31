@@ -1,3 +1,20 @@
+;; (defn get-timeout [server session]
+;;   "https://www.w3.org/TR/webdriver/#dfn-get-timeout"
+;;   (client/call server :get
+;;                [:session session :timeouts]))
+
+;; (defn execute-async-script [server session script & args]
+;;   "https://www.w3.org/TR/webdriver/#dfn-execute-async-script"
+;;   (-> server
+;;       (client/call :post
+;;                    [:session session :execute :async]
+;;                    {:script script :args args})))
+
+;; (defn set-timeout [server session type msec]
+;;   "https://www.w3.org/TR/webdriver/#dfn-set-timeouts"
+;;   (client/call server :post
+;;                [:session session :timeouts]
+;;                {:type type :ms msec}))
 
 ;; (defn ^:not-implemented
 ;;   get-window-rect [server session]

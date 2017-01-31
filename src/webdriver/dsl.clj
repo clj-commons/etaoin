@@ -137,9 +137,21 @@
 (defn- w-handler []
   (api/get-current-window-handle *server* *session*))
 
+(defn get-window-position []
+  (let [h (w-handler)]
+    (api/get-window-position *server* *session* h)))
+
+(defn set-window-position [x y]
+  (let [h (w-handler)]
+    (api/set-window-position *server* *session* h x y)))
+
 (defn w-size []
   (let [h (w-handler)]
     (api/get-window-size *server* *session* h)))
+
+(defn set-window-size [width height]
+  (let[window (w-handler)]
+    (api/set-window-size *server* *session* window width height)))
 
 (defn close []
   (api/close-window *server* *session*))

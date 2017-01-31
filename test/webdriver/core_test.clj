@@ -326,6 +326,16 @@
     (with-session {} {}
       (go-url url)
 
+      ;; (is (= (get-window-position) 1))
+
+      ;;(set-window-position 100 100)
+      ;; (wait 4)
+      (is 1)
+
+
+      ;; (set-window-size 100 200)
+      ;; (is 1)
+      ;; (wait 4)
 
       ;; (is (= (w-handler) 1))
       ;; (is (= (w-size) 1))
