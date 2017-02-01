@@ -134,8 +134,11 @@
 ;; windows
 ;;
 
+(defn browser-dispatch [& _]
+  (:browser *server*))
+
 (defn- w-handler []
-  (api/get-current-window-handle *server* *session*))
+  (api/get-window-handle *server* *session*))
 
 (defn get-window-position []
   (let [h (w-handler)]
@@ -144,6 +147,29 @@
 (defn set-window-position [x y]
   (let [h (w-handler)]
     (api/set-window-position *server* *session* h x y)))
+
+;; get window size
+
+(defmulti get-window-size browser-dispatch)
+
+(defmethod get-window-size :firefox []
+  (api/get-window-size-firefox *server* *session*))
+
+(defmethod get-window-size :default []
+  (let [h (api/get-window-handle *server* *session*)]
+    (api/get-window-size *server* *session* h)))
+
+;; set window size
+(defmulti set-window-size browser-dispatch)
+
+(defmethod set-window-size :firefox
+  [width height]
+  (api/set-window-size-FF *server* *session* width height))
+
+(defmethod set-window-size :default
+  [width height]
+  (let [h (api/get-window-handle *server* *session*)]
+    (api/set-window-size *server* *session* h width height)))
 
 (defn w-size []
   (let [h (w-handler)]
@@ -160,7 +186,7 @@
   (api/maximize-window *server* *session*))
 
 (defn fullscreen []
-  (api/fullscreen-window *server* *session*))
+  (api/fullscreen-window-FF *server* *session*))
 
 (defmacro with-window [handler & body]
   `(let [h# (api/get-window-handle *server* *session*)]
@@ -174,26 +200,6 @@
   `(doseq [h# (api/get-window-handles *server* *session*)]
      (with-window h#
        ~@body)))
-
-;;
-;; geometry
-;;
-
-(defn get-el-rect-el [el]
-  (api/get-element-rect *server* *session* el))
-
-(defn get-el-rect [term]
-  (with-el term el
-    (get-el-rect-el el)))
-
-(defmacro with-el-rect-el [el bind-form & body]
-  `(let [~bind-form (get-el-rect-el ~el)]
-     ~@body))
-
-(defmacro with-el-rect [term bind-form & body]
-  `(with-el ~term el#
-     (let [~bind-form (get-el-rect-el el#)]
-     ~@body)))
 
 ;;
 ;; css stuff
@@ -267,7 +273,7 @@
     (clear-el el)))
 
 (defn- tap-el [el]
-  (api/element-tap *server* *session* el))
+  (api/element-tap-FF *server* *session* el))
 
 (defn tap [term]
   (with-el term el
@@ -289,7 +295,7 @@
 ;;
 
 (defn get-cookie [name]
-  (api/get-named-cookie *server* *session* name))
+  (api/get-named-cookie-FF *server* *session* name))
 
 (defn get-cookies []
   (api/get-all-cookies *server* *session*))

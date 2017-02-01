@@ -239,15 +239,15 @@
         resp (client/call server meth path)]
     (-> resp :value)))
 
-(defn get-window-size-FF
+(defn get-window-size-firefox
   "todo"
   [server session]
-  {:pre [(map? server) (string? session) ]
-   }
+  {:pre [(map? server) (string? session)]
+   :post [(map? %)]}
   (let [meth :get
         path [:session session :window :size]
         resp (client/call server meth path)]
-    (-> resp :value)))
+    resp))
 
 (defn set-window-size-FF
   "todo"

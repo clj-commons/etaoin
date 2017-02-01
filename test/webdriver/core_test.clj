@@ -15,10 +15,10 @@
 
   ;; "-v"
 
-  ;; (with-proc p [["geckodriver" "--host" host "--port" port "--log" "fatal"]]
-  ;;   (testing "firefox"
-  ;;     (with-server {:host host :port port :browser :firefox}
-  ;;       (f))))
+  (with-proc p [["geckodriver" "--host" host "--port" port "--log" "fatal"]]
+    (testing "firefox"
+      (with-server {:host host :port port :browser :firefox}
+        (f))))
 
   ;; "--log-path=/Users/ivan/webdriver666.txt"
   ;; "--verbose"
@@ -325,6 +325,9 @@
     (wait-running :message "The server did not start.")
     (with-session {} {}
       (go-url url)
+
+
+      (is (= (get-window-size) 1))
 
       ;; (is (= (get-window-position) 1))
 
