@@ -38,6 +38,24 @@
   `(doseq [dispatch-val# ~dispatch-vals]
      (defmethod ~multifn dispatch-val# ~@fn-tail)))
 
+;;
+;; exceptions
+;;
+
+(defmacro with-exception [catch fallback & body]
+  `(try+
+    ~@body
+    (catch ~catch ~(quote _)
+      ~fallback)))
+
+(defmacro with-http-error [& body]
+  `(with-exception [:type :webdriver/http-error] false
+     ~@body))
+
+(defmacro with-conn-error [& body]
+  `(with-exception ConnectException false
+     ~@body))
+
 ;; api
 
 (defmacro with-css-selector [& body]
@@ -142,12 +160,15 @@
   `(let [~bind (get-url)]
      ~@body))
 
+(defn- tag-el [el]
+  (with-http-get
+    [:session *session* :element el :name]
+    resp
+    (:value resp)))
+
 (defn tag [q]
   (with-el q el
-    (with-http-get
-      [:session *session* :element el :name]
-      resp
-      (:value resp))))
+    (tag-el el)))
 
 (defn new-session []
   (with-http :post [:session]
@@ -465,7 +486,7 @@
           (with-el-from el-form q-field el-field
             (fill-el el-field text)))))))
 
-(defn clear-el [el]
+(defn- clear-el [el]
   (with-http :post
     [:session *session* :element el :clear]
     nil _))
@@ -474,7 +495,7 @@
   (with-el q el
     (clear-el el)))
 
-(defn clear-form-el [el-form]
+(defn- clear-form-el [el-form]
   (with-xpath
     (doseq [q [".//textarea"
                ".//input[@type='text']"
@@ -486,5 +507,193 @@
   (with-el q el-form
     (clear-form-el el-form)))
 
+;;
+;; element attributes
+;;
 
-;; tests
+(defn- attr-el [el name]
+  (with-http :get
+    [:session *session* :element el :attribute name]
+    nil resp
+    (:value resp)))
+
+(defn attr [q name]
+  (with-el q el
+    (attr-el el name)))
+
+(defmacro ^:private
+  with-attr-el [el name & body]
+  `(let [~name (attr-el ~el ~(str name))]
+     ~@body))
+
+(defmacro with-attr [term name & body]
+  `(with-el ~term el#
+     (with-attr-el el# ~name
+       ~@body)))
+
+(defmacro ;; ^:private
+  with-attrs-el [el names & body]
+  (let [func (fn [name] `(attr-el ~el ~(str name)))
+        forms (map func names)
+        binds (-> names
+                  (interleave forms)
+                  vec
+                  vector)]
+    `(let ~@binds
+       ~@body)))
+
+(defmacro with-attrs [term names & body]
+  `(with-el ~term el#
+     (with-attrs-el el# ~names
+       ~@body)))
+
+;;
+;; wait functions
+;;
+
+(defn wait [sec]
+  (Thread/sleep (* sec 1000)))
+
+(defn wait-for-predicate
+  [predicate & {:keys [timeout poll message]
+                :or {timeout 10 poll 0.5}}]
+  (loop [times 0
+         time-rest timeout]
+    (when (< time-rest 0)
+      (throw+ {:type :webdriver/timeout
+               :message message
+               :timeout timeout
+               :poll poll
+               :times times
+               :predicate predicate}))
+    (when-not (predicate)
+      (wait poll)
+      (recur (inc times)
+             (- time-rest poll)))))
+
+(defn wait-enabled [q & args]
+  (apply wait-for-predicate #(enabled q) args))
+
+(defn wait-exists [q & args]
+  (apply wait-for-predicate #(exists q) args))
+
+(defn wait-visible [q & args]
+  (apply wait-for-predicate #(visible q) args))
+
+;; (defn wait-has-alert [& args]
+;;   (apply wait-for-predicate has-alert args))
+
+(defn wait-running [& args]
+  (apply wait-for-predicate running args))
+
+(defn wait-has-text [text & args]
+  (apply wait-for-predicate #(has-text text) args))
+
+(defn wait-for-has-class [q class & args]
+  (apply wait-for-predicate #(has-class q class) args))
+
+;;
+;; alerts
+;;
+
+(defmulti dismiss-alert browser-dispatch)
+
+(defmethod dismiss-alert :chrome []
+  (with-http :post
+    [:session *session* :dismiss_alert] nil _))
+
+(defmethod dismiss-alert :firefox []
+  (with-http :post
+    [:session *session* :alert :dismiss] nil _))
+
+(defmulti accept-alert browser-dispatch)
+
+(defmethod accept-alert :chrome []
+  (with-http :post
+    [:session *session* :accept_alert] nil _))
+
+(defmethod accept-alert :firefox []
+  (with-http :post
+    [:session *session* :alert :accept] nil _))
+
+(defmulti get-alert-text browser-dispatch)
+
+(defmethod get-alert-text :chrome []
+  (with-http :get
+    [:session *session* :alert_text] nil resp
+    (:value resp)))
+
+(defmethod get-alert-text :firefox []
+  (with-http :get
+    [:session *session* :alert :text] nil resp
+    (:value resp)))
+
+(defmacro with-alert-text [bind & body]
+  `(let [~bind (get-alert-text)]
+     ~@body))
+
+;;
+;; predicates
+;;
+
+(defn- visible-el [el]
+  (with-http :get
+    [:session *session* :element el :displayed]
+    nil resp
+    (:value resp)))
+
+(defn visible [q]
+  (with-el q el
+    (visible-el el)))
+
+(defn running []
+  (with-conn-error
+    (status)))
+
+(defn- enabled-el [el]
+  (with-http :get
+    [:session *session* :element el :enabled]
+    nil resp
+    (:value resp)))
+
+(defn enabled [q]
+  (with-el q el
+    (enabled-el el)))
+
+(def disabled (complement enabled))
+
+(defn- exists-el [el]
+  (with-http-error
+    (tag-el el)
+    true))
+
+(defn exists [q]
+  (with-http-error
+    (with-el q el
+      true)))
+
+(defn has-text [text]
+  (with-http-error
+    (let [q (format "//*[contains(text(),'%s')]" text)]
+      (with-el q el
+        true))))
+
+(defn- has-class-el [el class-name]
+  (let [class-str (attr-el el class-name)]
+    (cond
+      (nil? class-str) false
+      (empty? class-str) false
+      (string? class-str)
+      (-> class-str
+          (str/split #"\s+")
+          set
+          (get class-name)))))
+
+(defn has-class [q class-name]
+  (with-el q el
+    (has-class-el el class-name)))
+
+(defn alert-open []
+  (with-http-error
+    (get-alert-text)
+    true))
