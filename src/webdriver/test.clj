@@ -38,42 +38,6 @@
   `(doseq [dispatch-val# ~dispatch-vals]
      (defmethod ~multifn dispatch-val# ~@fn-tail)))
 
-(defmulti get-el browser-dispatch)
-
-(defmethod get-el :firefox [q]
-  (with-http
-    :post
-    [:session *session* :element]
-    {:using *locator* :value q}
-    resp
-    (-> resp first second)))
-
-(defmethods get-el [:chrome :phantom] [q]
-  (with-http
-    :post
-    [:session *session* :element]
-    {:using *locator* :value q}
-    resp
-    (-> resp :ELEMENT)))
-
-(defmacro with-el [q bind & body]
-  `(let [~bind (get-el ~q)]
-     ~@body))
-
-(defmulti get-window-handle browser-dispatch)
-
-(defmethod get-window-handle :firefox []
-  (with-http-get [:session *session* :window] resp
-    (-> resp :value)))
-
-(defmethod get-window-handle :default []
-  (with-http-get [:session *session* :window_handle] resp
-    (:value resp)))
-
-(defmacro with-window-handle [bind & body]
-  `(let [~bind (get-window-handle)]
-     ~@body))
-
 ;; api
 
 (defmacro with-css-selector [& body]
@@ -96,12 +60,47 @@
   `(with-locator "xpath"
      ~@body))
 
+(defn status []
+  (with-http :get [:status] nil resp
+    (:value resp)))
+
+(defmulti get-el browser-dispatch)
+
+(defmethod get-el :firefox [q]
+  (with-http
+    :post
+    [:session *session* :element]
+    {:using *locator* :value q}
+    resp
+    (-> resp first second)))
+
+(defmethods get-el [:chrome :phantom] [q]
+  (with-http
+    :post
+    [:session *session* :element]
+    {:using *locator* :value q}
+    resp
+    (-> resp :ELEMENT)))
+
+(defmacro with-el [q bind & body]
+  `(let [~bind (get-el ~q)]
+     ~@body))
+
 (defn go [url]
   (with-http :post [:session *session* :url] {:url url} _))
 
 (defn click [q]
   (with-el q el
-    (with-http-post [:session *session* :element el :click] nil _)))
+    (with-http :post
+      [:session *session* :element el :click] nil _)))
+
+(defn get-url []
+  (with-http :get [:session *session* :url] nil resp
+    (:value resp)))
+
+(defmacro with-url [bind & body]
+  `(let [~bind (get-url)]
+     ~@body))
 
 (defn tag [q]
   (with-el q el
@@ -153,11 +152,12 @@
 
 (defmethod maximize :firefox []
   (with-http :post
-    [:session *session* :window :maximize] {} _))
+    [:session *session* :window :maximize] nil _))
 
 (defmethod maximize :chrome []
   (with-window-handle h
-    (with-http :post [:session *session* :window h :maximize] {} _)))
+    (with-http :post
+      [:session *session* :window h :maximize] nil _)))
 
 (defmulti mouse-button-down browser-dispatch)
 
@@ -188,6 +188,11 @@
     #(= (:browser *server*) :phantom)
     ~@body))
 
+(defmacro skip-firefox [& body]
+  `(skip-predicate
+    #(= (:browser *server*) :firefox)
+    ~@body))
+
 (defmethods mouse-move-to [:chrome :phantom]
   ([q] (with-el q el
          (with-http :post
@@ -204,6 +209,161 @@
 
 (defn wait [sec]
   (Thread/sleep (* sec 1000)))
+
+(defn back []
+  (with-http :post [:session *session* :back] nil _))
+
+(defn forward []
+  (with-http :post [:session *session* :forward] nil _))
+
+(defn refresh []
+  (with-http :post [:session *session* :refresh] nil _))
+
+(defn close []
+  (with-http :delete [:session *session* :window] nil _))
+
+(defn switch-window [handle]
+  (with-http :post
+    [:session *session* :window]
+    {:handle handle} _))
+
+(defmulti get-window-handle browser-dispatch)
+
+(defmethod get-window-handle :firefox []
+  (with-http-get [:session *session* :window] resp
+    (-> resp :value)))
+
+(defmethods get-window-handle [:chrome :phantom] []
+  (with-http-get [:session *session* :window_handle] resp
+    (:value resp)))
+
+(defmulti window-handles browser-dispatch)
+
+(defmethod window-handles :firefox []
+  (with-http :get
+    [:session *session* :window :handles]
+    nil resp
+    (:value resp)))
+
+(defmethods window-handles [:chrome :phantom] []
+  (with-http :get
+    [:session *session* :window :window_handles]
+    nil resp
+    (:value resp)))
+
+(defmacro with-window [handler & body]
+  `(let [current# (get-window-handle)]
+     (try
+       (switch-window ~handler)
+       ~@body
+       (finally
+         (switch-window current#)))))
+
+(defn get-title []
+  (with-http :get [:session *session* :title] nil resp
+    (:value resp)))
+
+(defmacro with-title [bind & body]
+  `(let [~bind (get-title)]
+     ~@body))
+
+(defmulti el-location browser-dispatch)
+
+(defmethods el-location [:chrome :phantom] [q]
+  (with-el q el
+    (with-http :get
+      [:session *session* :element el :location]
+      nil resp
+      (-> resp :value (select-keys [:x :y])))))
+
+(defmethod el-location :firefox [q]
+  (with-el q el
+    (with-http :get
+      [:session *session* :element el :rect]
+      nil resp
+      (-> resp :value (select-keys [:x :y])))))
+
+(defmacro with-el-location [q bind & body]
+  `(let [~bind (el-location ~q)]
+     ~@body))
+
+(defmulti el-size browser-dispatch)
+
+(defmethods el-size [:chrome :phantom] [q]
+  (with-el q el
+    (with-http :get
+      [:session *session* :element el :size]
+      nil resp
+      (-> resp :value (select-keys [:width :height])))))
+
+(defmethod el-size :firefox [q]
+  (with-el q el
+    (with-http :get
+      [:session *session* :element el :rect]
+      nil resp
+      (-> resp :value (select-keys [:width :height])))))
+
+(defmacro with-el-size [q bind & body]
+  `(let [~bind (el-size ~q)]
+     ~@body))
+
+(defn el-box [q]
+  (let [{:keys [x y]} (el-location q)
+        {:keys [width height]} (el-size)]
+    {:x1 x
+     :x2 (+ x width)
+     :y1 y
+     :y2 (+ y height)
+     :width width
+     :height height}))
+
+(defmacro with-el-box [q bind & body]
+  `(let [~bind (el-box ~q)]
+     ~@body))
+
+(defn intersects? [q1 q2]
+  (let [a (el-box q1)
+        b (el-box q2)]
+    (or (< (a :y1) (b :y2))
+        (> (a :y2) (b :y1))
+        (< (a :x2) (b :x1))
+        (> (a :x1) (b :x2)))))
+
+(defmulti touch-tap browser-dispatch)
+
+(defmethod touch-tap :chrome []
+  (with-http :post [:session *session* :touch :click] nil _))
+
+(defmulti touch-move browser-dispatch)
+
+(defmethod touch-move :chrome [q]
+  (with-el-location q {:keys [x y]}
+    (with-http :post
+      [:session *session* :touch :move]
+      {:x x :y y} _)))
+
+(defmulti touch-down browser-dispatch)
+
+(defmethod touch-down :chrome []
+  (with-http :post [:session *session* :touch :down] nil _))
+
+(defmulti touch-up browser-dispatch)
+
+(defmethod touch-up :chrome []
+  (with-http :post [:session *session* :touch :up] nil _))
+
+(defmacro with-touch [& body]
+  `(try
+     (touch-down)
+     ~@body
+     (finally
+       (touch-up))))
+
+(defmacro swipe [q-from q-to]
+  `(do
+     (touch-move q-from)
+     (with-touch
+       (touch-move q-to))))
 
 ;; tests
 

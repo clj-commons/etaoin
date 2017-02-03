@@ -54,14 +54,14 @@
 
 (defn call
   ([server method path-args]
-   (call server method path-args {}))
+   (call server method path-args nil))
   ([server method path-args payload]
    (let [path (get-url-path path-args)
          url (-> server :url (str "/" path))
          params (merge *default-api-params*
                        {:url url
                         :method method
-                        :form-params payload
+                        :form-params (-> payload (or {}))
                         :throw-exceptions false})
          resp (client/request params)
          body (:body resp)
