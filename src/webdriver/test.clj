@@ -72,7 +72,7 @@
     [:session *session* :element]
     {:using *locator* :value q}
     resp
-    (-> resp first second)))
+    (-> resp :value first second)))
 
 (defmethods get-el [:chrome :phantom] [q]
   (with-http
@@ -80,10 +80,50 @@
     [:session *session* :element]
     {:using *locator* :value q}
     resp
-    (-> resp :ELEMENT)))
+    (-> resp :value :ELEMENT)))
 
 (defmacro with-el [q bind & body]
   `(let [~bind (get-el ~q)]
+     ~@body))
+
+(defmulti get-el-from browser-dispatch)
+
+(defmethods get-el-from [:chrome :phantom] [el-parent q]
+  (with-http :post
+    [:session *session* :element el-parent :element]
+    {:using *locator* :value q}
+    resp
+    (-> resp :value :ELEMENT)))
+
+(defmethod get-el-from :firefox [el-parent q]
+  (with-http :post
+    [:session *session* :element el-parent :element]
+    {:using *locator* :value q}
+    resp
+    (-> resp :value first second)))
+
+(defmulti get-els-from browser-dispatch)
+
+(defmethods get-els-from [:chrome :phantom] [el-parent q]
+  (with-http :post
+    [:session *session* :element el-parent :elements]
+    {:using *locator* :value q}
+    resp
+    (->> resp :value (mapv :ELEMENT))))
+
+(defmethod get-els-from :firefox [el-parent q]
+  (with-http :post
+    [:session *session* :element el-parent :elements]
+    {:using *locator* :value q}
+    resp
+    (->> resp :value (mapv (comp second first)))))
+
+(defmacro with-el-from [el-parent q bind & body]
+  `(let [~bind (get-el-from ~el-parent ~q)]
+     ~@body))
+
+(defmacro with-els-from [el-parent q bind & body]
+  `(doseq [~bind (get-els-from ~el-parent ~q)]
      ~@body))
 
 (defn go [url]
@@ -154,8 +194,22 @@
   (with-http :post
     [:session *session* :window :maximize] nil _))
 
+(defmacro with-current-handle [bind & body]
+  `(let [~bind (get-window-handle)]
+     ~@body))
+
+(defmulti get-window-handle browser-dispatch)
+
+(defmethod get-window-handle :firefox []
+  (with-http-get [:session *session* :window] resp
+    (-> resp :value)))
+
+(defmethods get-window-handle [:chrome :phantom] []
+  (with-http-get [:session *session* :window_handle] resp
+    (:value resp)))
+
 (defmethod maximize :chrome []
-  (with-window-handle h
+  (with-current-handle h
     (with-http :post
       [:session *session* :window h :maximize] nil _)))
 
@@ -226,20 +280,6 @@
   (with-http :post
     [:session *session* :window]
     {:handle handle} _))
-
-(defmulti get-window-handle browser-dispatch)
-
-(defmethod get-window-handle :firefox []
-  (with-http-get [:session *session* :window] resp
-    (-> resp :value)))
-
-(defmethods get-window-handle [:chrome :phantom] []
-  (with-http-get [:session *session* :window_handle] resp
-    (:value resp)))
-
-(defmacro with-current-handle [bind & body]
-  `(let [~bind (get-window-handle)]
-     ~@body))
 
 (defmulti window-handles browser-dispatch)
 
@@ -401,68 +441,50 @@
      (with-touch
        (touch-move q-to))))
 
+(defn fill [q text]
+  (with-el q el
+    (with-http :post
+      [:session *session* :element el :value]
+      {:value (vec text)} _)))
+
+(defn fill-el [el text]
+  (with-http :post
+    [:session *session* :element el :value]
+    {:value (vec text)} _))
+
+(defn fill [q text]
+  (with-el q el
+    (fill-el el text)))
+
+(defn fill-form [q form]
+  (with-el q el-form
+    (doseq [[field value] form]
+      (let [q-field (format ".//*[@name='%s']" (name field))
+            text (str value)]
+        (with-xpath
+          (with-el-from el-form q-field el-field
+            (fill-el el-field text)))))))
+
+(defn clear-el [el]
+  (with-http :post
+    [:session *session* :element el :clear]
+    nil _))
+
+(defn clear [q]
+  (with-el q el
+    (clear-el el)))
+
+(defn clear-form-el [el-form]
+  (with-xpath
+    (doseq [q [".//textarea"
+               ".//input[@type='text']"
+               ".//input[@type='password']"]]
+      (with-els-from el-form q el-input
+        (clear-el el-input)))))
+
+(defn clear-form [q]
+  (with-el q el-form
+    (clear-form-el el-form)))
+
+
 ;; tests
-
-(def host "127.0.0.1")
-(def port 6666)
-
-(defn fixture-browsers [f]
-
-  ;; "-v"
-
-  (with-proc p [["geckodriver" "--host" host "--port" port "--log" "fatal"]]
-    (testing "firefox"
-      (with-server {:host host :port port :browser :firefox}
-        (f))))
-
-  ;; "--log-path=/Users/ivan/webdriver666.txt"
-  ;; "--verbose"
-
-  (with-proc p [["chromedriver"  (str "--port=" port) ]]
-    (testing "chrome"
-      (with-server {:host host :port port :browser :chrome}
-        (f))))
-
-  (with-proc p [["phantomjs" "--webdriver" port]]
-    (testing "phantom"
-      (with-server {:host host :port port :browser :phantom}
-        (f))))
-
-  )
-
-(use-fixtures
-  :each
-  fixture-browsers)
-
-(deftest test-clear
-  (let [url (-> "html/test.html" io/resource str)
-        form "//form[@id='submit-test']"
-        input "//input[@id='simple-input']"
-        submit "//input[@id='simple-submit']"]
-    (wait 3)
-    ;; (wait-running :message "The server did not start.")
-    (with-session
-      (go url)
-      (wait 1)
-      (skip-phantom
-       (maximize))
-
-      (wait 1)
-      (is 1)
-      ;; (testing "simple clear"
-      ;;   (with-xpath
-      ;;     (fill input "test")
-      ;;     (clear input)
-      ;;     (click submit)
-      ;;     (with-url url
-      ;;       (is (str/ends-with? url "?login=&password=&message=")))))
-      ;; (testing "form clear"
-      ;;   (with-xpath
-      ;;     (fill-form form {:login "Ivan"
-      ;;                      :password "lalilulelo"
-      ;;                      :message "long_text_here"})
-      ;;     (clear-form form)
-      ;;     (click submit)
-      ;;     (with-url url
-      ;;       (is (str/ends-with? url "?login=&password=&message=")))))
-      )))
