@@ -188,6 +188,16 @@
         resp (client/call server meth path)]
     (-> resp :value)))
 
+(defn get-window-size-firefox
+  "todo"
+  [server session]
+  {:pre [(map? server) (string? session)]
+   :post [(map? %)]}
+  (let [meth :get
+        path [:session session :window :size]
+        resp (client/call server meth path)]
+    resp))
+
 (defn get-window-position
   "todo"
   [server session handle]
@@ -238,26 +248,6 @@
         path [:session session :window_handles]
         resp (client/call server meth path)]
     (-> resp :value)))
-
-(defn get-window-size-firefox
-  "todo"
-  [server session]
-  {:pre [(map? server) (string? session)]
-   :post [(map? %)]}
-  (let [meth :get
-        path [:session session :window :size]
-        resp (client/call server meth path)]
-    resp))
-
-(defn set-window-size-FF
-  "todo"
-  [server session width height]
-  {:pre [(map? server) (string? session)]
-   :post [(nil? %)]}
-  (let [meth :post
-        path [:session session :window :position]
-        body {:width width :height height}
-        resp (client/call server meth path body)]))
 
 (defn set-window-position-FF
   "todo"

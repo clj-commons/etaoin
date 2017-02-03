@@ -237,6 +237,10 @@
   (with-http-get [:session *session* :window_handle] resp
     (:value resp)))
 
+(defmacro with-current-handle [bind & body]
+  `(let [~bind (get-window-handle)]
+     ~@body))
+
 (defmulti window-handles browser-dispatch)
 
 (defmethod window-handles :firefox []
@@ -266,6 +270,38 @@
 (defmacro with-title [bind & body]
   `(let [~bind (get-title)]
      ~@body))
+
+(defmulti get-window-size browser-dispatch)
+
+(defmethod get-window-size :firefox []
+  (with-http :get [:session *session* :window :size] nil resp
+    (:value resp)))
+
+(defmethods get-window-size [:chrome :phantom] []
+  (with-current-handle h
+    (with-http :get [:session *session* :window h :size]
+      nil resp
+      (:value resp))))
+
+(defmulti set-window-size browser-dispatch)
+
+(defmethods set-window-size [:chrome :phantom] [width height]
+  (with-current-handle h
+    (with-http :post [:session *session* :window h :size]
+      {:width width :height height} _)))
+
+(defmethod set-window-size :firefox [width height]
+  (with-http :post [:session *session* :window :size]
+    {:width width :height height} _))
+
+(defmacro with-window-size [width height & body]
+  `(let [prev# (get-window-size)]
+     (set-window-size ~width ~height)
+     (try
+       ~@body
+       (finally
+         (set-window-size (:width prev#)
+                          (:height prev#))))))
 
 (defmulti el-location browser-dispatch)
 
