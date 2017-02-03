@@ -511,7 +511,7 @@
 ;; element attributes
 ;;
 
-(defn- attr-el [el name]
+(defn attr-el [el name]
   (with-http :get
     [:session *session* :element el :attribute name]
     nil resp
@@ -545,6 +545,44 @@
 (defmacro with-attrs [term names & body]
   `(with-el ~term el#
      (with-attrs-el el# ~names
+       ~@body)))
+
+;;
+;; css stuff
+;;
+
+(defn css-el [el name]
+  (with-http :get
+    [:session *session* :element el :css name]
+    nil resp
+    (-> resp :value not-empty)))
+
+(defn css [q name]
+  (with-el q el
+    (css-el el name)))
+
+(defmacro with-css-el [el name & body]
+  `(let [~name (css-el ~el ~(str name))]
+     ~@body))
+
+(defmacro with-css [q name & body]
+  `(with-el ~q el#
+     (with-css-el el# ~name
+       ~@body)))
+
+(defmacro with-csss-el [el names & body]
+  (let [func (fn [name] `(css-el ~el ~(str name)))
+        forms (map func names)
+        binds (-> names
+                  (interleave forms)
+                  vec
+                  vector)]
+    `(let ~@binds
+       ~@body)))
+
+(defmacro with-csss [q names & body]
+  `(with-el ~q el#
+     (with-csss-el el# ~names
        ~@body)))
 
 ;;
