@@ -268,6 +268,11 @@
     #(= (:browser *server*) :firefox)
     ~@body))
 
+(defmacro skip-firefox [& body]
+  `(skip-predicate
+    #(= (:browser *server*) :firefox)
+    ~@body))
+
 (defmethods mouse-move-to [:chrome :phantom]
   ([q] (with-el q el
          (with-http :post
@@ -717,12 +722,11 @@
         true))))
 
 (defn- has-class-el [el class-name]
-  (let [class-str (attr-el el class-name)]
+  (let [classes (attr-el el class-name)]
     (cond
-      (nil? class-str) false
-      (empty? class-str) false
-      (string? class-str)
-      (-> class-str
+      (nil? classes) false
+      (string? classes)
+      (-> classes
           (str/split #"\s+")
           set
           (get class-name)))))

@@ -243,3 +243,49 @@
                    :poll 0.5
                    :times 21}))
            (is true "exception was caught")))))))
+
+;; (deftest test-wait-has-class
+;;   (let [url (-> "html/test.html" io/resource str)]
+;;     (wait-running :message "The server did not start.")
+;;     (with-session {} {}
+;;       (go url)
+
+;;       (testing "wait for has class"
+;;         (refresh)
+;;         (with-xpath
+;;           (click "//*[@id='wait-add-class-trigger']"))
+;;         (wait-for-has-class "//*[@id='wait-add-class-target']" "new-one")
+;;         (is true "has class")))))
+
+(deftest test-close-window
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go url)
+      (skip-firefox
+       (close)
+       (try+
+        (with-url url
+          (is false))
+        (catch [:type :webdriver/http-error] _
+          (is true)))))))
+
+(deftest test-drag-and-drop
+  (let [url "http://marcojakob.github.io/dart-dnd/basic/web/"
+        doc "//*[@class='document']"
+        trash "//div[contains(@class, 'trash')]"]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go url)
+      (skip-firefox
+       (testing "wait for has class"
+         (with-xpath
+           (drag-and-drop doc trash)
+           (wait 1)
+           (drag-and-drop doc trash)
+           (wait 1)
+           (drag-and-drop doc trash)
+           (wait 1)
+           (drag-and-drop doc trash)
+           (wait 1)) ;; todo check docs
+         (is true))))))
