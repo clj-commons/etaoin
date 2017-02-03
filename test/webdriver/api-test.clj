@@ -244,18 +244,18 @@
                    :times 21}))
            (is true "exception was caught")))))))
 
-;; (deftest test-wait-has-class
-;;   (let [url (-> "html/test.html" io/resource str)]
-;;     (wait-running :message "The server did not start.")
-;;     (with-session {} {}
-;;       (go url)
-
-;;       (testing "wait for has class"
-;;         (refresh)
-;;         (with-xpath
-;;           (click "//*[@id='wait-add-class-trigger']"))
-;;         (wait-for-has-class "//*[@id='wait-add-class-target']" "new-one")
-;;         (is true "has class")))))
+(deftest test-wait-has-class
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go url)
+      (testing "wait for has class"
+        (refresh)
+        (click "//*[@id='wait-add-class-trigger']")
+        (wait-for-has-class
+         "//*[@id='wait-add-class-target']"
+         "new-one")
+        (is true)))))
 
 (deftest test-close-window
   (let [url (-> "html/test.html" io/resource str)]

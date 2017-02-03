@@ -722,7 +722,7 @@
         true))))
 
 (defn- has-class-el [el class-name]
-  (let [classes (attr-el el class-name)]
+  (let [classes (attr-el el "class")]
     (cond
       (nil? classes) false
       (string? classes)
