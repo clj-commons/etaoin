@@ -8,6 +8,10 @@
                                   testing]]
             [webdriver.test :refer :all]))
 
+(defn numeric? [val]
+  (or (instance? Double val)
+      (instance? Integer val)))
+
 (def host "127.0.0.1")
 (def port 6666)
 
@@ -289,3 +293,27 @@
            (drag-and-drop doc trash)
            (wait 1)) ;; todo check docs
          (is true))))))
+
+(deftest test-element-location
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go url)
+      (with-el-location "//*[@id='el-location-input']"
+        {:keys [x y]}
+        (is (numeric? x))
+        (is (numeric? y))))))
+
+(deftest test-window-position
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go url)
+      (testing "getting position"
+        (let-window-position {:keys [x y]}
+          (is (numeric? x))
+          (is (numeric? y))))
+      (testing "setting position"
+
+)
+      )))

@@ -383,10 +383,33 @@
     (with-http :get
       [:session *session* :element el :rect]
       nil resp
-      (-> resp :value (select-keys [:x :y])))))
+      (-> resp (select-keys [:x :y])))))
 
 (defmacro with-el-location [q bind & body]
   `(let [~bind (el-location ~q)]
+     ~@body))
+
+;;
+;; window position
+;;
+
+(defmulti get-window-position browser-dispatch)
+
+(defmethods get-window-position [:chrome :phantom] []
+  (with-current-handle h
+    (with-http :get
+      [:session *session* :window h :position]
+      nil resp
+      (-> resp :value (select-keys [:x :y])))))
+
+(defmethod get-window-position :firefox []
+  (with-http :get
+    [:session *session* :window :position]
+    nil resp
+    (-> resp (select-keys [:x :y]))))
+
+(defmacro let-window-position [bind & body]
+  `(let [~bind (get-window-position)]
      ~@body))
 
 (defmulti el-size browser-dispatch)
