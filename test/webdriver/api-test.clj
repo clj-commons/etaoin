@@ -314,6 +314,12 @@
           (is (numeric? x))
           (is (numeric? y))))
       (testing "setting position"
-
-)
-      )))
+        (skip-phantom
+         (set-window-position 50 50)
+         (with-window-position {:x 222 :y 333}
+           (let-window-position {:keys [x y]}
+             (is (= x 222))
+             (is (= y 333))))
+         (let-window-position {:keys [x y]}
+             (is (= x 50))
+             (is (= y 50))))))))

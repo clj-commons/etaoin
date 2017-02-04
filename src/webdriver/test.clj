@@ -412,6 +412,31 @@
   `(let [~bind (get-window-position)]
      ~@body))
 
+(defmulti set-window-position browser-dispatch)
+
+(defmethods set-window-position [:chrome :phantom]
+  ([{:keys [x y]}]
+   (set-window-position x y))
+  ([x y]
+   (with-current-handle h
+     (with-http :post
+       [:session *session* :window h :position]
+       {:x x :y y} _))))
+
+(defmethod set-window-position :firefox
+  ([{:keys [x y]}]
+   (set-window-position x y))
+  ([x y]
+   (with-http :post
+     [:session *session* :window :position]
+     {:x x :y y} _)))
+
+(defmacro with-window-position [pos & body]
+  `(let [old# (get-window-position)]
+     (set-window-position ~pos)
+     ~@body
+     (set-window-position old#)))
+
 (defmulti el-size browser-dispatch)
 
 (defmethods el-size [:chrome :phantom] [q]
