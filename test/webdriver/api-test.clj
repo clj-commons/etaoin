@@ -323,3 +323,18 @@
          (let-window-position {:keys [x y]}
              (is (= x 50))
              (is (= y 50))))))))
+
+(deftest test-window-size
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go url)
+      (testing "getting size"
+        (let-window-size {:keys [width height]}
+          (is (numeric? width))
+          (is (numeric? height))))
+      (testing "setting size"
+        (with-window-size 555 666
+          (let-window-size {:keys [width height]}
+            (is (= width 555))
+            (is (= height 666))))))))

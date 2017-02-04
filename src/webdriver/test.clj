@@ -340,34 +340,44 @@
 (defmulti get-window-size browser-dispatch)
 
 (defmethod get-window-size :firefox []
-  (with-http :get [:session *session* :window :size] nil resp
-    (:value resp)))
+  (with-http :get [:session *session* :window :size]
+    nil resp
+    (-> resp (select-keys [:width :height]))))
 
 (defmethods get-window-size [:chrome :phantom] []
   (with-current-handle h
     (with-http :get [:session *session* :window h :size]
       nil resp
-      (:value resp))))
+      (-> resp :value (select-keys [:width :height])))))
 
 (defmulti set-window-size browser-dispatch)
 
-(defmethods set-window-size [:chrome :phantom] [width height]
-  (with-current-handle h
-    (with-http :post [:session *session* :window h :size]
-      {:width width :height height} _)))
+(defmethods set-window-size [:chrome :phantom]
+  ([{:keys [width height]}]
+   (set-window-size width height))
+  ([width height]
+   (with-current-handle h
+     (with-http :post [:session *session* :window h :size]
+       {:width width :height height} _))))
 
-(defmethod set-window-size :firefox [width height]
-  (with-http :post [:session *session* :window :size]
-    {:width width :height height} _))
+(defmethod set-window-size :firefox
+  ([{:keys [width height]}]
+   (set-window-size width height))
+  ([width height]
+   (with-http :post [:session *session* :window :size]
+     {:width width :height height} _)))
 
 (defmacro with-window-size [width height & body]
-  `(let [prev# (get-window-size)]
+  `(let [old# (get-window-size)]
      (set-window-size ~width ~height)
      (try
        ~@body
        (finally
-         (set-window-size (:width prev#)
-                          (:height prev#))))))
+         (set-window-size old#)))))
+
+(defmacro let-window-size [bind & body]
+  `(let [~bind (get-window-size)]
+     ~@body))
 
 (defmulti el-location browser-dispatch)
 
@@ -639,51 +649,6 @@
        ~@body)))
 
 ;;
-;; wait functions
-;;
-
-(defn wait [sec]
-  (Thread/sleep (* sec 1000)))
-
-(defn wait-for-predicate
-  [predicate & {:keys [timeout poll message]
-                :or {timeout 10 poll 0.5}}]
-  (loop [times 0
-         time-rest timeout]
-    (when (< time-rest 0)
-      (throw+ {:type :webdriver/timeout
-               :message message
-               :timeout timeout
-               :poll poll
-               :times times
-               :predicate predicate}))
-    (when-not (predicate)
-      (wait poll)
-      (recur (inc times)
-             (- time-rest poll)))))
-
-(defn wait-enabled [q & args]
-  (apply wait-for-predicate #(enabled q) args))
-
-(defn wait-exists [q & args]
-  (apply wait-for-predicate #(exists q) args))
-
-(defn wait-visible [q & args]
-  (apply wait-for-predicate #(visible q) args))
-
-;; (defn wait-has-alert [& args]
-;;   (apply wait-for-predicate has-alert args))
-
-(defn wait-running [& args]
-  (apply wait-for-predicate running args))
-
-(defn wait-has-text [text & args]
-  (apply wait-for-predicate #(has-text text) args))
-
-(defn wait-for-has-class [q class & args]
-  (apply wait-for-predicate #(has-class q class) args))
-
-;;
 ;; alerts
 ;;
 
@@ -787,3 +752,48 @@
   (with-http-error
     (get-alert-text)
     true))
+
+;;
+;; wait functions
+;;
+
+(defn wait [sec]
+  (Thread/sleep (* sec 1000)))
+
+(defn wait-for-predicate
+  [predicate & {:keys [timeout poll message]
+                :or {timeout 10 poll 0.5}}]
+  (loop [times 0
+         time-rest timeout]
+    (when (< time-rest 0)
+      (throw+ {:type :webdriver/timeout
+               :message message
+               :timeout timeout
+               :poll poll
+               :times times
+               :predicate predicate}))
+    (when-not (predicate)
+      (wait poll)
+      (recur (inc times)
+             (- time-rest poll)))))
+
+(defn wait-enabled [q & args]
+  (apply wait-for-predicate #(enabled q) args))
+
+(defn wait-exists [q & args]
+  (apply wait-for-predicate #(exists q) args))
+
+(defn wait-visible [q & args]
+  (apply wait-for-predicate #(visible q) args))
+
+;; (defn wait-has-alert [& args]
+;;   (apply wait-for-predicate has-alert args))
+
+(defn wait-running [& args]
+  (apply wait-for-predicate running args))
+
+(defn wait-has-text [text & args]
+  (apply wait-for-predicate #(has-text text) args))
+
+(defn wait-for-has-class [q class & args]
+  (apply wait-for-predicate #(has-class q class) args))
