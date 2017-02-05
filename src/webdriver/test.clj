@@ -268,9 +268,9 @@
     #(= (:browser *server*) :firefox)
     ~@body))
 
-(defmacro skip-firefox [& body]
+(defmacro skip-browsers [browsers & body]
   `(skip-predicate
-    #(= (:browser *server*) :firefox)
+    #((set ~browsers) (:browser *server*))
     ~@body))
 
 (defmethods mouse-move-to [:chrome :phantom]
@@ -833,4 +833,24 @@
 
 (defmacro with-text [q bind & body]
   `(let [~bind (text ~q)]
+     ~@body))
+
+;;
+;; element value
+;;
+
+(defmulti value-el browser-dispatch)
+
+(defmethod value-el :default [el]
+  (with-http :get
+    [:session *session* :element el :value]
+    nil resp
+    (:value resp)))
+
+(defn value [q]
+  (with-el q el
+    (value-el el)))
+
+(defmacro with-value [q bind & body]
+  `(let [~bind (value ~q)]
      ~@body))

@@ -356,3 +356,12 @@
       (go url)
       (with-text "//*[@id='element-text']" text
         (is (= text "Element text goes here."))))))
+
+(deftest test-element-value
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go url)
+      (skip-browsers [:firefox :phantom]
+        (with-value "//*[@id='element-value']" value
+          (is (= value "value text")))))))
