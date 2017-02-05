@@ -338,3 +338,13 @@
           (let-window-size {:keys [width height]}
             (is (= width 555))
             (is (= height 666))))))))
+
+(deftest test-active-element
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go url)
+      (click "//*[@id='set-active-el']")
+      (let-active-el el
+        (with-attr-el el id
+          (is (= id "active-el-input")))))))

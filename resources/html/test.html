@@ -117,6 +117,15 @@
         <h3>Element location section</h3>
         <input type="text" id="el-location-input"></input>
 
+        <h3>Active element section</h3>
+        <script>
+            function set_active_el() {
+            document.getElementById("active-el-input").focus();
+            }
+        </script>
+        <button id="set-active-el" onclick="set_active_el()">Set active element</button>
+        <input type="text" id="active-el-input">
+
 
     </body>
 </html>

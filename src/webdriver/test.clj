@@ -160,7 +160,7 @@
   `(let [~bind (get-url)]
      ~@body))
 
-(defn- tag-el [el]
+(defn tag-el [el]
   (with-http-get
     [:session *session* :element el :name]
     resp
@@ -584,7 +584,7 @@
   (with-el q el
     (attr-el el name)))
 
-(defmacro ^:private
+(defmacro
   with-attr-el [el name & body]
   `(let [~name (attr-el ~el ~(str name))]
      ~@body))
@@ -797,3 +797,23 @@
 
 (defn wait-for-has-class [q class & args]
   (apply wait-for-predicate #(has-class q class) args))
+
+;;
+;; active element
+;;
+
+(defmulti get-active-el browser-dispatch)
+
+(defmethods get-active-el [:chrome :phantom] []
+  (with-http :post [:session *session* :element :active]
+    nil resp
+    (-> resp :value :ELEMENT)))
+
+(defmethod get-active-el :firefox []
+  (with-http :get [:session *session* :element :active]
+    nil resp
+    (-> resp :value first second)))
+
+(defmacro let-active-el [bind & body]
+  `(let [~bind (get-active-el)]
+     ~@body))
