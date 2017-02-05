@@ -348,3 +348,11 @@
       (let-active-el el
         (with-attr-el el id
           (is (= id "active-el-input")))))))
+
+(deftest test-element-text
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go url)
+      (with-text "//*[@id='element-text']" text
+        (is (= text "Element text goes here."))))))

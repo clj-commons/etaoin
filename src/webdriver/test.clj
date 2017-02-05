@@ -817,3 +817,20 @@
 (defmacro let-active-el [bind & body]
   `(let [~bind (get-active-el)]
      ~@body))
+
+;;
+;; element text
+;;
+
+(defn text-el [el]
+  (with-http :get
+    [:session *session* :element el :text] nil resp
+    (:value resp)))
+
+(defn text [q]
+  (with-el q el
+    (text-el el)))
+
+(defmacro with-text [q bind & body]
+  `(let [~bind (text ~q)]
+     ~@body))
