@@ -80,7 +80,7 @@
        (is (thrown? clojure.lang.ExceptionInfo
                     (visible "//test[@id='dunno-foo-bar']"))))
       ;; (is (not (visible "//div[@id='div-covered']")))
-)))
+      )))
 
 (deftest test-enabled
   (let [url (-> "html/test.html" io/resource str)]
@@ -321,8 +321,8 @@
              (is (= x 222))
              (is (= y 333))))
          (let-window-position {:keys [x y]}
-             (is (= x 50))
-             (is (= y 50))))))))
+           (is (= x 50))
+           (is (= y 50))))))))
 
 (deftest test-window-size
   (let [url (-> "html/test.html" io/resource str)]
@@ -363,5 +363,45 @@
     (with-session {} {}
       (go url)
       (skip-browsers [:firefox :phantom]
-        (with-value "//*[@id='element-value']" value
-          (is (= value "value text")))))))
+                     (with-value "//*[@id='element-value']" value
+                       (is (= value "value text")))))))
+
+(deftest test-cookies
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go url)
+      (testing "getting all cookies"
+        (with-cookies cookies
+          (when-chrome
+              (is (= cookies [])))
+          (when-firefox
+              (is (= cookies [{:name "cookie1",
+                               :value "test1",
+                               :path "/",
+                               :domain "",
+                               :expiry nil,
+                               :secure false,
+                               :httpOnly false}
+                              {:name "cookie2",
+                               :value "test2",
+                               :path "/",
+                               :domain "",
+                               :expiry nil,
+                               :secure false,
+                               :httpOnly false}])))
+          (when-phantom
+              (is (= cookies [{:domain "",
+                               :httponly false,
+                               :name "cookie2",
+                               :path "/",
+                               :secure false,
+                               :value "test2"}
+                              {:domain "",
+                               :httponly false,
+                               :name "cookie1",
+                               :path "/",
+                               :secure false,
+                               :value "test1"}])))))
+
+      )))

@@ -258,20 +258,43 @@
   `(when-not (~predicate)
      ~@body))
 
-(defmacro skip-phantom [& body]
-  `(skip-predicate
-    #(= (:browser *server*) :phantom)
-    ~@body))
-
-(defmacro skip-firefox [& body]
-  `(skip-predicate
-    #(= (:browser *server*) :firefox)
-    ~@body))
-
 (defmacro skip-browsers [browsers & body]
   `(skip-predicate
     #((set ~browsers) (:browser *server*))
     ~@body))
+
+(defmacro skip-phantom [& body]
+  `(skip-browsers [:phantom]
+                  ~@body))
+
+(defmacro skip-firefox [& body]
+  `(skip-browsers [:firefox]
+                  ~@body))
+
+(defmacro skip-chrome [& body]
+  `(skip-browsers [:chrome]
+                  ~@body))
+
+(defmacro when-predicate [predicate & body]
+  `(when (~predicate)
+     ~@body))
+
+(defmacro when-browsers [browsers & body]
+  `(when-predicate
+       #((set ~browsers) (:browser *server*))
+     ~@body))
+
+(defmacro when-firefox [& body]
+  `(when-browsers [:firefox]
+     ~@body))
+
+(defmacro when-chrome [& body]
+  `(when-browsers [:chrome]
+     ~@body))
+
+(defmacro when-phantom [& body]
+  `(when-browsers [:phantom]
+     ~@body))
 
 (defmethods mouse-move-to [:chrome :phantom]
   ([q] (with-el q el
@@ -853,4 +876,20 @@
 
 (defmacro with-value [q bind & body]
   `(let [~bind (value ~q)]
+     ~@body))
+
+;;
+;; cookies
+;;
+
+(defmulti get-cookies browser-dispatch)
+
+(defmethod get-cookies :default []
+  (with-http :get
+    [:session *session* :cookie]
+    nil resp
+    (:value resp)))
+
+(defmacro with-cookies [bind & body]
+  `(let [~bind (get-cookies)]
      ~@body))
