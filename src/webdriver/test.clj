@@ -890,6 +890,47 @@
     nil resp
     (:value resp)))
 
+(defmulti get-named-cookies browser-dispatch)
+
 (defmacro with-cookies [bind & body]
   `(let [~bind (get-cookies)]
      ~@body))
+
+(defmethod get-named-cookies :firefox [name]
+  (with-http :get
+    [:session *session* :cookie name]
+    nil resp
+    (:value resp)))
+
+(defmethod get-named-cookies :chrome [name]
+  (with-cookies [cookies]
+    (filterv #(-> % :name (= name)) cookies)))
+
+(defmethod get-named-cookies :phantom [name]
+  (with-cookies [cookies]
+    (filterv #(-> % :name (= name)) [cookies])))
+
+(defmacro with-named-cookies [name bind & body]
+  `(let [~bind (get-named-cookies ~name)]
+     ~@body))
+
+(defmulti set-cookie browser-dispatch)
+
+(defmethod set-cookie :default [cookie]
+  (with-http :post
+    [:session *session* :cookie]
+    {:cookie cookie} _))
+
+(defmulti delete-cookie browser-dispatch)
+
+(defmethod delete-cookie :default [name]
+  (with-http :delete
+    [:session *session* :cookie name]
+    nil _))
+
+(defmulti delete-cookies browser-dispatch)
+
+(defmethod delete-cookies :default []
+  (with-http :delete
+    [:session *session* :cookie]
+    nil _))

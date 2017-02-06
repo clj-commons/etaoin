@@ -404,4 +404,70 @@
                                :secure false,
                                :value "test1"}])))))
 
-      )))
+      (testing "getting named cookie"
+        (with-named-cookies "cookie2" cookies
+          (when-chrome
+              (is (= cookies [])))
+          (when-firefox
+              (is (= cookies [{:name "cookie2"
+                               :value "test2"
+                               :path "/"
+                               :domain ""
+                               :expiry nil
+                               :secure false
+                               :httpOnly false}])))
+          (when-phantom
+              (is (= cookies
+                     [{:domain ""
+                       :httponly false
+                       :name "cookie2"
+                       :path "/"
+                       :secure false
+                       :value "test2"}])))))
+
+      (testing "setting a cookie"
+        (skip-phantom
+         (set-cookie {:httponly false
+                      :name "cookie3"
+                      :domain ""
+                      :secure false
+                      :value "test3"}
+                     )
+         (with-named-cookies "cookie3" cookies
+           (when-firefox
+               (is (= cookies
+                      [{:name "cookie3"
+                        :value "test3"
+                        :path ""
+                        :domain ""
+                        :expiry nil
+                        :secure false
+                        :httpOnly false}]))))))
+
+      (testing "deleting a named cookie"
+        (skip-phantom
+         (set-cookie {:httponly false
+                      :name "cookie3"
+                      :domain ""
+                      :secure false
+                      :value "test3"})
+         (with-named-cookies "cookie3" cookies
+           (when-firefox
+               (is (= cookies
+                      [{:name "cookie3"
+                        :value "test3"
+                        :path ""
+                        :domain ""
+                        :expiry nil
+                        :secure false
+                        :httpOnly false}]))))))
+
+      (testing "deleting a named cookie"
+        (delete-cookie "cookie3")
+        (with-named-cookies "cookie3" cookies
+          (is (= cookies []))))
+
+      (testing "deleting all cookies"
+        (delete-cookies)
+        (with-cookies cookies
+          (is (= cookies [])))))))
