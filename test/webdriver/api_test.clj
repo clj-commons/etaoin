@@ -431,8 +431,7 @@
                       :name "cookie3"
                       :domain ""
                       :secure false
-                      :value "test3"}
-                     )
+                      :value "test3"})
          (with-named-cookies "cookie3" cookies
            (when-firefox
                (is (= cookies
@@ -471,3 +470,14 @@
         (delete-cookies)
         (with-cookies cookies
           (is (= cookies [])))))))
+
+(deftest test-page-source
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go url)
+      (let-source src
+        (when-firefox
+          (is (str/starts-with? src "<html><head>")))
+        (when-not-firefox
+          (is (str/starts-with? src "<!DOCTYPE html>")))))))

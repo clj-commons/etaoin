@@ -271,6 +271,10 @@
   `(skip-browsers [:firefox]
                   ~@body))
 
+(defmacro when-not-firefox [& body]
+  `(skip-browsers [:firefox]
+                  ~@body))
+
 (defmacro skip-chrome [& body]
   `(skip-browsers [:chrome]
                   ~@body))
@@ -934,3 +938,25 @@
   (with-http :delete
     [:session *session* :cookie]
     nil _))
+
+;;
+;; element property
+;;
+
+;; [:session session :element element :property property]
+
+;;
+;; source code
+;;
+
+(defmulti get-source browser-dispatch)
+
+(defmethod get-source :default []
+  (with-http :get
+    [:session *session* :source]
+    nil resp
+    (:value resp)))
+
+(defmacro let-source [bind & body]
+  `(let [~bind (get-source)]
+     ~@body))
