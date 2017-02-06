@@ -1,12 +1,20 @@
 (ns webdriver.test
+  "
+  Chrome:
+  https://github.com/bayandin/chromedriver/blob/e9a1f55b166ea62ef0f6e78da899d9abf117e88f/client/command_executor.py
+
+  Firefox (Geckodriver):
+  https://github.com/mozilla/webdriver-rust/blob/7ec65451c99b638655c72e7b9718a374ff60de87/src/httpapi.rs
+
+  Phantom.js (Ghostdriver)
+  https://github.com/detro/ghostdriver/blob/873c9d660a80a3faa743e4f352571ce4559fe691/src/request_handlers/session_request_handler.js
+  https://github.com/detro/ghostdriver/blob/873c9d660a80a3faa743e4f352571ce4559fe691/src/request_handlers/webelement_request_handler.js
+  "
   (:require [clojure.string :as str]
             [webdriver.proc :as proc]
             [webdriver.client :as client]
+            [clojure.data.codec.base64 :as b64]
             [clojure.java.io :as io]
-            [clojure.test :refer [is
-                                  deftest
-                                  use-fixtures
-                                  testing]]
             [cheshire.core :refer [parse-string]]
             [slingshot.slingshot :refer [try+ throw+]])
   (:import java.net.ConnectException))
@@ -988,5 +996,27 @@
   `(with-el ~q el#
      (let-props-el el# ~names ~@body)))
 
-
 ;;
+;; screenshot
+;;
+
+(defn b64-to-file [b64str filename]
+  (with-open [out (io/output-stream filename)]
+    (.write out (-> b64str
+                    .getBytes
+                    b64/decode))))
+
+(defmulti screenshot browser-dispatch)
+
+(defmethod screenshot :default [filename]
+  (with-http :get
+    [:session *session* :screenshot]
+    nil resp
+    (-> resp
+        :value
+        not-empty
+        (or (throw+ {:type :webdriver/screenshot
+                     :message "Empty screenshot"
+                     :session *session*
+                     :server *server*}))
+        (b64-to-file filename))))

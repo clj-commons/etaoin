@@ -6,7 +6,8 @@
                                   deftest
                                   use-fixtures
                                   testing]]
-            [webdriver.test :refer :all]))
+            [webdriver.test :refer :all])
+  (:import javax.imageio.ImageIO))
 
 (defn numeric? [val]
   (or (instance? Double val)
@@ -493,3 +494,23 @@
         (let-props "//*[@id='element-props']" [innerHTML tagName]
           (is (= innerHTML "<div>Inner HTML</div>"))
           (is (= tagName "DIV")))))))
+
+(defmacro with-tmp-file [prefix suffix bind & body]
+  `(let [tmp# (java.io.File/createTempFile ~prefix ~suffix)
+         ~bind (.getAbsolutePath tmp#)]
+     (try
+       ~@body
+       (finally
+         (.delete tmp#)))))
+
+(deftest test-screenshot
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go url)
+      (with-tmp-file "screenshot" ".png" path
+        (screenshot path)
+        (-> path
+            io/file
+            ImageIO/read
+            is)))))
