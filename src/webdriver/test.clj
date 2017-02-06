@@ -940,12 +940,6 @@
     nil _))
 
 ;;
-;; element property
-;;
-
-;; [:session session :element element :property property]
-
-;;
 ;; source code
 ;;
 
@@ -960,3 +954,39 @@
 (defmacro let-source [bind & body]
   `(let [~bind (get-source)]
      ~@body))
+
+;;
+;; element property
+;;
+
+(defmulti prop-el browser-dispatch)
+
+(defmethod prop-el :firefox [el name]
+  (with-http :get
+    [:session *session* :element el :property name]
+    nil resp
+    (-> resp :value not-empty)))
+
+(defn prop [q name]
+  (with-el q el
+    (prop-el el name)))
+
+(defmacro let-prop [q name & body]
+  `(let [~name (prop ~q ~(str name))]
+     ~@body))
+
+(defmacro let-props-el [el names & body]
+  (let [func (fn [name] `(prop-el ~el ~(str name)))
+        forms (map func names)
+        binds (-> names
+                  (interleave forms)
+                  vec)]
+    `(let [~@binds]
+       ~@body)))
+
+(defmacro let-props [q names & body]
+  `(with-el ~q el#
+     (let-props-el el# ~names ~@body)))
+
+
+;;

@@ -481,3 +481,15 @@
           (is (str/starts-with? src "<html><head>")))
         (when-not-firefox
           (is (str/starts-with? src "<!DOCTYPE html>")))))))
+
+(deftest test-element-properties
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go url)
+      (when-firefox
+        (let-prop "//*[@id='element-props']" innerHTML
+          (is (= innerHTML "<div>Inner HTML</div>")))
+        (let-props "//*[@id='element-props']" [innerHTML tagName]
+          (is (= innerHTML "<div>Inner HTML</div>"))
+          (is (= tagName "DIV")))))))
