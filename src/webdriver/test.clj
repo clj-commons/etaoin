@@ -23,6 +23,32 @@
 (def ^:dynamic *session*)
 (def ^:dynamic *locator* "xpath")
 
+(def default-capabilities
+  {:browserName "*"
+   :browserVersion "*"
+   :platformName "*"
+   :platformVersion "*"
+   :acceptInsecureCerts false
+   :javascriptEnabled true})
+
+;;
+;; tools
+;;
+
+(defn flip [f]
+  (fn [& args]
+    (apply f (reverse args))))
+
+(defn random-port []
+  (let [max-port 65536
+        offset 1024]
+    (+ (rand-int (- max-port offset))
+       offset)))
+
+;;
+;; locators
+;;
+
 (defmacro with-locator [locator & body]
   `(binding [*locator* ~locator]
      ~@body))
@@ -90,6 +116,10 @@
   (with-http :get [:status] nil resp
     (:value resp)))
 
+;;
+;; getting elements
+;;
+
 (defmulti get-el browser-dispatch)
 
 (defmethod get-el :firefox [q]
@@ -152,6 +182,10 @@
   `(doseq [~bind (get-els-from ~el-parent ~q)]
      ~@body))
 
+;;
+;; URL and navigation
+;;
+
 (defn go [url]
   (with-http :post [:session *session* :url] {:url url} _))
 
@@ -199,6 +233,11 @@
        ~@body
        (finally
          (proc/kill ~proc)))))
+
+(defmacro with-proc-multi [proc args-list & body]
+  `(doseq [args# ~args-list]
+     (with-proc ~proc args#
+       ~@body)))
 
 (defmacro with-server [params & body]
   `(binding [*server* (make-server ~params)]
@@ -363,6 +402,11 @@
        ~@body
        (finally
          (switch-window current#)))))
+
+(defmacro with-all-windows [& body]
+  `(doseq [h# (window-handles)]
+     (with-window h#
+       ~@body)))
 
 (defn get-title []
   (with-http :get [:session *session* :title] nil resp
@@ -560,11 +604,9 @@
      (with-touch
        (touch-move q-to))))
 
-(defn fill [q text]
-  (with-el q el
-    (with-http :post
-      [:session *session* :element el :value]
-      {:value (vec text)} _)))
+;;
+;; fill and input
+;;
 
 (defn fill-el [el text]
   (with-http :post
@@ -584,7 +626,26 @@
           (with-el-from el-form q-field el-field
             (fill-el el-field text)))))))
 
-(defn- clear-el [el]
+(defn fill-human-el [el text]
+  (let [mistake-prob 0.1
+        pause-max 0.2
+        rand-char #(-> 26 rand-int (+ 97) char)
+        wait-key #(let [r (rand)]
+                    (wait (if (> r pause-max) pause-max r)))]
+    (doseq [key text]
+      (when (< (rand) mistake-prob)
+        (fill-el el (rand-char))
+        (wait-key)
+        ;; (fill-el el keys/backspace) :: todo
+        (wait-key))
+      (fill-el el key)
+      (wait-key))))
+
+(defn fill-human [q text]
+  (with-el q el
+    (fill-human-el el text)))
+
+(defn clear-el [el]
   (with-http :post
     [:session *session* :element el :clear]
     nil _))
@@ -604,6 +665,29 @@
 (defn clear-form [q]
   (with-el q el-form
     (clear-form-el el-form)))
+
+;;
+;; submiting an element :todo
+;;
+
+;; submit a form
+;; get a form
+
+;; (defn- submit-form-el [el-form form]
+;;   (fill-form-el el-form form)
+;;   (with-xpath
+;;     (with-el-from el-form ".//input[@type='submit']"
+;;       el-submit
+;;       (click-el el-submit))))
+
+;; (defn submit-form [term form]
+;;   (with-el term el-form
+;;     (submit-form-el el-form form)))
+
+;; (defn get-form [term]
+;;   (with-el term el-form
+;;     (get-form-el el-form)))
+
 
 ;;
 ;; element attributes
@@ -727,7 +811,7 @@
 ;; predicates
 ;;
 
-(defn- visible-el [el]
+(defn visible-el [el]
   (with-http :get
     [:session *session* :element el :displayed]
     nil resp
@@ -753,7 +837,7 @@
 
 (def disabled (complement enabled))
 
-(defn- exists-el [el]
+(defn exists-el [el]
   (with-http-error
     (tag-el el)
     true))
@@ -763,13 +847,15 @@
     (with-el q el
       true)))
 
+(def not-exists (complement exists))
+
 (defn has-text [text]
   (with-http-error
     (let [q (format "//*[contains(text(),'%s')]" text)]
       (with-el q el
         true))))
 
-(defn- has-class-el [el class-name]
+(defn has-class-el [el class-name]
   (let [classes (attr-el el "class")]
     (cond
       (nil? classes) false
@@ -783,7 +869,7 @@
   (with-el q el
     (has-class-el el class-name)))
 
-(defn alert-open []
+(defn has-alert []
   (with-http-error
     (get-alert-text)
     true))
@@ -1020,3 +1106,36 @@
                      :session *session*
                      :server *server*}))
         (b64-to-file filename))))
+
+;;
+;; javascript
+;;
+
+(defmulti js-execute browser-dispatch)
+
+(defmethods js-execute [:chrome :phantom] [script & args]
+  (with-http :post
+    [:session *session* :execute]
+    {:script script :args (vec args)}
+    resp
+    (:value resp)))
+
+(defmethod js-execute :firefox [script & args]
+  (with-http :post
+    [:session *session* :sync]
+    {:script script :args (vec args)}
+    resp
+    (:value resp)))
+
+(defn js-add-script [url]
+  (let [script (str "var s = document.createElement('script');"
+                    "s.type = 'text/javascript';"
+                    "s.src = arguments[0];"
+                    "document.head.appendChild(s);")]
+    (js-execute script url)))
+
+(defn js-clear-local-storage []
+  (js-execute "localStorage.clear();"))
+
+(defn js-set-hash [hash]
+  (js-execute "window.location.hash = arguments[0];" hash))

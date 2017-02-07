@@ -2,11 +2,8 @@
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [try+]]
-            [clojure.test :refer [is
-                                  deftest
-                                  use-fixtures
-                                  testing]]
-            [webdriver.test :refer :all])
+            [clojure.test :refer :all]
+            [webdriver.api :refer :all])
   (:import javax.imageio.ImageIO))
 
 (defn numeric? [val]
@@ -114,13 +111,13 @@
       (skip-phantom
        (with-alert-text alert
          (is (= alert "Hello!")))
-       (is (alert-open))
+       (is (has-alert))
        (accept-alert)
-       (is (not (alert-open)))
+       (is (not (has-alert)))
        (click "//button[@id='button-alert']")
-       (is (alert-open))
+       (is (has-alert))
        (dismiss-alert)
-       (is (not (alert-open)))))))
+       (is (not (has-alert)))))))
 
 (deftest test-attributes
   (let [url (-> "html/test.html" io/resource str)]

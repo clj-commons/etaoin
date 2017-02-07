@@ -1,6 +1,10 @@
 (ns webdriver.api
   "
-  Documentation? Read the code, Luke!
+  The API below was written regarding the source code
+  of different Webdriver implementations.
+
+  Sometimes, a feature you found out in W3C official standard
+  really differs from the corresponding implementation in Chrome or Firefox, etc.
 
   Chrome:
   https://github.com/bayandin/chromedriver/blob/e9a1f55b166ea62ef0f6e78da899d9abf117e88f/client/command_executor.py
@@ -12,14 +16,18 @@
   https://github.com/detro/ghostdriver/blob/873c9d660a80a3faa743e4f352571ce4559fe691/src/request_handlers/session_request_handler.js
   https://github.com/detro/ghostdriver/blob/873c9d660a80a3faa743e4f352571ce4559fe691/src/request_handlers/webelement_request_handler.js
   "
-  (:require [webdriver.client :as client]
-            [clojure.java.io :as io]
+  (:require [clojure.string :as str]
+            [webdriver.proc :as proc]
+            [webdriver.client :as client]
             [clojure.data.codec.base64 :as b64]
-            [slingshot.slingshot :refer [throw+]]))
+            [clojure.java.io :as io]
+            [cheshire.core :refer [parse-string]]
+            [slingshot.slingshot :refer [try+ throw+]])
+  (:import java.net.ConnectException))
 
-;;
-;; defaults
-;;
+(def ^:dynamic *server*)
+(def ^:dynamic *session*)
+(def ^:dynamic *locator* "xpath")
 
 (def default-capabilities
   {:browserName "*"
@@ -30,16 +38,1059 @@
    :javascriptEnabled true})
 
 ;;
-;; helpers
+;; tools
 ;;
 
-(defn text-to-array [text]
-  (cond
-    (char? text) [text]
-    :else (vec text)))
+(defn flip [f]
+  (fn [& args]
+    (apply f (reverse args))))
 
-(defn bool? [val]
-  (or (true? val) (false? val)))
+(defn random-port []
+  (let [max-port 65536
+        offset 1024]
+    (+ (rand-int (- max-port offset))
+       offset)))
+
+;;
+;; locators
+;;
+
+(defmacro with-locator [locator & body]
+  `(binding [*locator* ~locator]
+     ~@body))
+
+(defmacro with-http [meth path data bind & body]
+  `(let [~bind (client/call *server* ~meth ~path ~data)]
+     ~@body))
+
+(defmacro with-http-get [path bind & body]
+  `(with-http :get ~path nil ~bind
+     ~@body))
+
+(defmacro with-http-post [path body bind & body]
+  `(with-http :post ~path ~body ~bind
+     ~@body))
+
+(defn- browser-dispatch [& _]
+  (:browser *server*))
+
+(defmacro defmethods [multifn dispatch-vals & fn-tail]
+  `(doseq [dispatch-val# ~dispatch-vals]
+     (defmethod ~multifn dispatch-val# ~@fn-tail)))
+
+;;
+;; exceptions
+;;
+
+(defmacro with-exception [catch fallback & body]
+  `(try+
+    ~@body
+    (catch ~catch ~(quote _)
+      ~fallback)))
+
+(defmacro with-http-error [& body]
+  `(with-exception [:type :webdriver/http-error] false
+     ~@body))
+
+(defmacro with-conn-error [& body]
+  `(with-exception ConnectException false
+     ~@body))
+
+;; api
+
+(defmacro with-css-selector [& body]
+  `(with-locator "css selector"
+     ~@body))
+
+(defmacro with-link-text [& body]
+  `(with-locator "link text"
+     ~@body))
+
+(defmacro with-partial-link-text [& body]
+  `(with-locator "partial link text"
+     ~@body))
+
+(defmacro with-tag-name [& body]
+  `(with-locator "tag name"
+     ~@body))
+
+(defmacro with-xpath [& body]
+  `(with-locator "xpath"
+     ~@body))
+
+(defn status []
+  (with-http :get [:status] nil resp
+    (:value resp)))
+
+;;
+;; getting elements
+;;
+
+(defmulti get-el browser-dispatch)
+
+(defmethod get-el :firefox [q]
+  (with-http
+    :post
+    [:session *session* :element]
+    {:using *locator* :value q}
+    resp
+    (-> resp :value first second)))
+
+(defmethods get-el [:chrome :phantom] [q]
+  (with-http
+    :post
+    [:session *session* :element]
+    {:using *locator* :value q}
+    resp
+    (-> resp :value :ELEMENT)))
+
+(defmacro with-el [q bind & body]
+  `(let [~bind (get-el ~q)]
+     ~@body))
+
+(defmulti get-el-from browser-dispatch)
+
+(defmethods get-el-from [:chrome :phantom] [el-parent q]
+  (with-http :post
+    [:session *session* :element el-parent :element]
+    {:using *locator* :value q}
+    resp
+    (-> resp :value :ELEMENT)))
+
+(defmethod get-el-from :firefox [el-parent q]
+  (with-http :post
+    [:session *session* :element el-parent :element]
+    {:using *locator* :value q}
+    resp
+    (-> resp :value first second)))
+
+(defmulti get-els-from browser-dispatch)
+
+(defmethods get-els-from [:chrome :phantom] [el-parent q]
+  (with-http :post
+    [:session *session* :element el-parent :elements]
+    {:using *locator* :value q}
+    resp
+    (->> resp :value (mapv :ELEMENT))))
+
+(defmethod get-els-from :firefox [el-parent q]
+  (with-http :post
+    [:session *session* :element el-parent :elements]
+    {:using *locator* :value q}
+    resp
+    (->> resp :value (mapv (comp second first)))))
+
+(defmacro with-el-from [el-parent q bind & body]
+  `(let [~bind (get-el-from ~el-parent ~q)]
+     ~@body))
+
+(defmacro with-els-from [el-parent q bind & body]
+  `(doseq [~bind (get-els-from ~el-parent ~q)]
+     ~@body))
+
+;;
+;; URL and navigation
+;;
+
+(defn go [url]
+  (with-http :post [:session *session* :url] {:url url} _))
+
+(defn click [q]
+  (with-el q el
+    (with-http :post
+      [:session *session* :element el :click] nil _)))
+
+(defn get-url []
+  (with-http :get [:session *session* :url] nil resp
+    (:value resp)))
+
+(defmacro with-url [bind & body]
+  `(let [~bind (get-url)]
+     ~@body))
+
+(defn tag-el [el]
+  (with-http-get
+    [:session *session* :element el :name]
+    resp
+    (:value resp)))
+
+(defn tag [q]
+  (with-el q el
+    (tag-el el)))
+
+(defn new-session []
+  (with-http :post [:session]
+    {:desiredCapabilities {} :requiredCapabilities {}}
+    resp
+    (:sessionId resp)))
+
+(defn delete-session []
+  (with-http :delete [:session *session*] nil _))
+
+(defn make-server-url [host port]
+  (format "http://%s:%d" host port))
+
+(defn make-server [{:keys [host port] :as params}]
+  (assoc params :url (make-server-url host port)))
+
+(defmacro with-proc [proc args & body]
+  `(let [~proc (apply proc/run ~args)]
+     (try
+       ~@body
+       (finally
+         (proc/kill ~proc)))))
+
+(defmacro with-proc-multi [proc args-list & body]
+  `(doseq [args# ~args-list]
+     (with-proc ~proc args#
+       ~@body)))
+
+(defmacro with-server [params & body]
+  `(binding [*server* (make-server ~params)]
+     ~@body))
+
+(defmacro with-session [& body]
+  `(binding [*session* (new-session)]
+     (try
+       ~@body
+       (finally
+         (delete-session)))))
+
+(defmulti fullscreen browser-dispatch)
+
+(defmethod fullscreen :firefox []
+  (with-http-post
+    [:session *session* :window :fullscreen] nil _))
+
+(defmulti maximize browser-dispatch)
+
+(defmethod maximize :firefox []
+  (with-http :post
+    [:session *session* :window :maximize] nil _))
+
+(defmacro with-current-handle [bind & body]
+  `(let [~bind (get-window-handle)]
+     ~@body))
+
+(defmulti get-window-handle browser-dispatch)
+
+(defmethod get-window-handle :firefox []
+  (with-http-get [:session *session* :window] resp
+    (-> resp :value)))
+
+(defmethods get-window-handle [:chrome :phantom] []
+  (with-http-get [:session *session* :window_handle] resp
+    (:value resp)))
+
+(defmethod maximize :chrome []
+  (with-current-handle h
+    (with-http :post
+      [:session *session* :window h :maximize] nil _)))
+
+(defmulti mouse-button-down browser-dispatch)
+
+(defmethods mouse-button-down [:chrome :phantom] []
+  (with-http-post [:session *session* :buttondown] nil _))
+
+(defmulti mouse-button-up browser-dispatch)
+
+(defmethods mouse-button-up [:chrome :phantom] []
+  (with-http-post [:session *session* :buttondown] nil _))
+
+(defmacro with-mouse-btn [& body]
+  `(do
+     (mouse-button-down)
+     (try
+       ~@body
+       (finally
+         (mouse-button-up)))))
+
+(defmulti mouse-move-to browser-dispatch)
+
+(defmacro skip-predicate [predicate & body]
+  `(when-not (~predicate)
+     ~@body))
+
+(defmacro skip-browsers [browsers & body]
+  `(skip-predicate
+    #((set ~browsers) (:browser *server*))
+    ~@body))
+
+(defmacro skip-phantom [& body]
+  `(skip-browsers [:phantom]
+                  ~@body))
+
+(defmacro skip-firefox [& body]
+  `(skip-browsers [:firefox]
+                  ~@body))
+
+(defmacro when-not-firefox [& body]
+  `(skip-browsers [:firefox]
+                  ~@body))
+
+(defmacro skip-chrome [& body]
+  `(skip-browsers [:chrome]
+                  ~@body))
+
+(defmacro when-predicate [predicate & body]
+  `(when (~predicate)
+     ~@body))
+
+(defmacro when-browsers [browsers & body]
+  `(when-predicate
+       #((set ~browsers) (:browser *server*))
+     ~@body))
+
+(defmacro when-firefox [& body]
+  `(when-browsers [:firefox]
+     ~@body))
+
+(defmacro when-chrome [& body]
+  `(when-browsers [:chrome]
+     ~@body))
+
+(defmacro when-phantom [& body]
+  `(when-browsers [:phantom]
+     ~@body))
+
+(defmethods mouse-move-to [:chrome :phantom]
+  ([q] (with-el q el
+         (with-http :post
+           [:session *session* :moveto]
+           {:element el} _)))
+  ([x y] (with-http :post
+           [:session *session* :moveto]
+           {:xoffset x :yoffset y} _)))
+
+(defn drag-and-drop [q-from q-to]
+  (mouse-move-to q-from)
+  (with-mouse-btn
+    (mouse-move-to q-to)))
+
+(defn wait [sec]
+  (Thread/sleep (* sec 1000)))
+
+(defn back []
+  (with-http :post [:session *session* :back] nil _))
+
+(defn forward []
+  (with-http :post [:session *session* :forward] nil _))
+
+(defn refresh []
+  (with-http :post [:session *session* :refresh] nil _))
+
+(defn close []
+  (with-http :delete [:session *session* :window] nil _))
+
+(defn switch-window [handle]
+  (with-http :post
+    [:session *session* :window]
+    {:handle handle} _))
+
+(defmulti window-handles browser-dispatch)
+
+(defmethod window-handles :firefox []
+  (with-http :get
+    [:session *session* :window :handles]
+    nil resp
+    (:value resp)))
+
+(defmethods window-handles [:chrome :phantom] []
+  (with-http :get
+    [:session *session* :window :window_handles]
+    nil resp
+    (:value resp)))
+
+(defmacro with-window [handler & body]
+  `(let [current# (get-window-handle)]
+     (try
+       (switch-window ~handler)
+       ~@body
+       (finally
+         (switch-window current#)))))
+
+(defmacro with-all-windows [& body]
+  `(doseq [h# (window-handles)]
+     (with-window h#
+       ~@body)))
+
+(defn get-title []
+  (with-http :get [:session *session* :title] nil resp
+    (:value resp)))
+
+(defmacro with-title [bind & body]
+  `(let [~bind (get-title)]
+     ~@body))
+
+(defmulti get-window-size browser-dispatch)
+
+(defmethod get-window-size :firefox []
+  (with-http :get [:session *session* :window :size]
+    nil resp
+    (-> resp (select-keys [:width :height]))))
+
+(defmethods get-window-size [:chrome :phantom] []
+  (with-current-handle h
+    (with-http :get [:session *session* :window h :size]
+      nil resp
+      (-> resp :value (select-keys [:width :height])))))
+
+(defmulti set-window-size browser-dispatch)
+
+(defmethods set-window-size [:chrome :phantom]
+  ([{:keys [width height]}]
+   (set-window-size width height))
+  ([width height]
+   (with-current-handle h
+     (with-http :post [:session *session* :window h :size]
+       {:width width :height height} _))))
+
+(defmethod set-window-size :firefox
+  ([{:keys [width height]}]
+   (set-window-size width height))
+  ([width height]
+   (with-http :post [:session *session* :window :size]
+     {:width width :height height} _)))
+
+(defmacro with-window-size [width height & body]
+  `(let [old# (get-window-size)]
+     (set-window-size ~width ~height)
+     (try
+       ~@body
+       (finally
+         (set-window-size old#)))))
+
+(defmacro let-window-size [bind & body]
+  `(let [~bind (get-window-size)]
+     ~@body))
+
+(defmulti el-location browser-dispatch)
+
+(defmethods el-location [:chrome :phantom] [q]
+  (with-el q el
+    (with-http :get
+      [:session *session* :element el :location]
+      nil resp
+      (-> resp :value (select-keys [:x :y])))))
+
+(defmethod el-location :firefox [q]
+  (with-el q el
+    (with-http :get
+      [:session *session* :element el :rect]
+      nil resp
+      (-> resp (select-keys [:x :y])))))
+
+(defmacro with-el-location [q bind & body]
+  `(let [~bind (el-location ~q)]
+     ~@body))
+
+;;
+;; window position
+;;
+
+(defmulti get-window-position browser-dispatch)
+
+(defmethods get-window-position [:chrome :phantom] []
+  (with-current-handle h
+    (with-http :get
+      [:session *session* :window h :position]
+      nil resp
+      (-> resp :value (select-keys [:x :y])))))
+
+(defmethod get-window-position :firefox []
+  (with-http :get
+    [:session *session* :window :position]
+    nil resp
+    (-> resp (select-keys [:x :y]))))
+
+(defmacro let-window-position [bind & body]
+  `(let [~bind (get-window-position)]
+     ~@body))
+
+(defmulti set-window-position browser-dispatch)
+
+(defmethods set-window-position [:chrome :phantom]
+  ([{:keys [x y]}]
+   (set-window-position x y))
+  ([x y]
+   (with-current-handle h
+     (with-http :post
+       [:session *session* :window h :position]
+       {:x x :y y} _))))
+
+(defmethod set-window-position :firefox
+  ([{:keys [x y]}]
+   (set-window-position x y))
+  ([x y]
+   (with-http :post
+     [:session *session* :window :position]
+     {:x x :y y} _)))
+
+(defmacro with-window-position [pos & body]
+  `(let [old# (get-window-position)]
+     (set-window-position ~pos)
+     ~@body
+     (set-window-position old#)))
+
+(defmulti el-size browser-dispatch)
+
+(defmethods el-size [:chrome :phantom] [q]
+  (with-el q el
+    (with-http :get
+      [:session *session* :element el :size]
+      nil resp
+      (-> resp :value (select-keys [:width :height])))))
+
+(defmethod el-size :firefox [q]
+  (with-el q el
+    (with-http :get
+      [:session *session* :element el :rect]
+      nil resp
+      (-> resp :value (select-keys [:width :height])))))
+
+(defmacro with-el-size [q bind & body]
+  `(let [~bind (el-size ~q)]
+     ~@body))
+
+(defn el-box [q]
+  (let [{:keys [x y]} (el-location q)
+        {:keys [width height]} (el-size)]
+    {:x1 x
+     :x2 (+ x width)
+     :y1 y
+     :y2 (+ y height)
+     :width width
+     :height height}))
+
+(defmacro with-el-box [q bind & body]
+  `(let [~bind (el-box ~q)]
+     ~@body))
+
+(defn intersects? [q1 q2]
+  (let [a (el-box q1)
+        b (el-box q2)]
+    (or (< (a :y1) (b :y2))
+        (> (a :y2) (b :y1))
+        (< (a :x2) (b :x1))
+        (> (a :x1) (b :x2)))))
+
+(defmulti touch-tap browser-dispatch)
+
+(defmethod touch-tap :chrome []
+  (with-http :post [:session *session* :touch :click] nil _))
+
+(defmulti touch-move browser-dispatch)
+
+(defmethod touch-move :chrome [q]
+  (with-el-location q {:keys [x y]}
+    (with-http :post
+      [:session *session* :touch :move]
+      {:x x :y y} _)))
+
+(defmulti touch-down browser-dispatch)
+
+(defmethod touch-down :chrome []
+  (with-http :post [:session *session* :touch :down] nil _))
+
+(defmulti touch-up browser-dispatch)
+
+(defmethod touch-up :chrome []
+  (with-http :post [:session *session* :touch :up] nil _))
+
+(defmacro with-touch [& body]
+  `(try
+     (touch-down)
+     ~@body
+     (finally
+       (touch-up))))
+
+(defmacro swipe [q-from q-to]
+  `(do
+     (touch-move q-from)
+     (with-touch
+       (touch-move q-to))))
+
+;;
+;; fill and input
+;;
+
+(defn fill-el [el text]
+  (with-http :post
+    [:session *session* :element el :value]
+    {:value (vec text)} _))
+
+(defn fill [q text]
+  (with-el q el
+    (fill-el el text)))
+
+(defn fill-form [q form]
+  (with-el q el-form
+    (doseq [[field value] form]
+      (let [q-field (format ".//*[@name='%s']" (name field))
+            text (str value)]
+        (with-xpath
+          (with-el-from el-form q-field el-field
+            (fill-el el-field text)))))))
+
+(defn fill-human-el [el text]
+  (let [mistake-prob 0.1
+        pause-max 0.2
+        rand-char #(-> 26 rand-int (+ 97) char)
+        wait-key #(let [r (rand)]
+                    (wait (if (> r pause-max) pause-max r)))]
+    (doseq [key text]
+      (when (< (rand) mistake-prob)
+        (fill-el el (rand-char))
+        (wait-key)
+        ;; (fill-el el keys/backspace) :: todo
+        (wait-key))
+      (fill-el el key)
+      (wait-key))))
+
+(defn fill-human [q text]
+  (with-el q el
+    (fill-human-el el text)))
+
+(defn clear-el [el]
+  (with-http :post
+    [:session *session* :element el :clear]
+    nil _))
+
+(defn clear [q]
+  (with-el q el
+    (clear-el el)))
+
+(defn- clear-form-el [el-form]
+  (with-xpath
+    (doseq [q [".//textarea"
+               ".//input[@type='text']"
+               ".//input[@type='password']"]]
+      (with-els-from el-form q el-input
+        (clear-el el-input)))))
+
+(defn clear-form [q]
+  (with-el q el-form
+    (clear-form-el el-form)))
+
+;;
+;; submiting an element :todo
+;;
+
+;; submit a form
+;; get a form
+
+;; (defn- submit-form-el [el-form form]
+;;   (fill-form-el el-form form)
+;;   (with-xpath
+;;     (with-el-from el-form ".//input[@type='submit']"
+;;       el-submit
+;;       (click-el el-submit))))
+
+;; (defn submit-form [term form]
+;;   (with-el term el-form
+;;     (submit-form-el el-form form)))
+
+;; (defn get-form [term]
+;;   (with-el term el-form
+;;     (get-form-el el-form)))
+
+
+;;
+;; element attributes
+;;
+
+(defn attr-el [el name]
+  (with-http :get
+    [:session *session* :element el :attribute name]
+    nil resp
+    (:value resp)))
+
+(defn attr [q name]
+  (with-el q el
+    (attr-el el name)))
+
+(defmacro
+  with-attr-el [el name & body]
+  `(let [~name (attr-el ~el ~(str name))]
+     ~@body))
+
+(defmacro with-attr [term name & body]
+  `(with-el ~term el#
+     (with-attr-el el# ~name
+       ~@body)))
+
+(defmacro ;; ^:private
+  with-attrs-el [el names & body]
+  (let [func (fn [name] `(attr-el ~el ~(str name)))
+        forms (map func names)
+        binds (-> names
+                  (interleave forms)
+                  vec
+                  vector)]
+    `(let ~@binds
+       ~@body)))
+
+(defmacro with-attrs [term names & body]
+  `(with-el ~term el#
+     (with-attrs-el el# ~names
+       ~@body)))
+
+;;
+;; css stuff
+;;
+
+(defn css-el [el name]
+  (with-http :get
+    [:session *session* :element el :css name]
+    nil resp
+    (-> resp :value not-empty)))
+
+(defn css [q name]
+  (with-el q el
+    (css-el el name)))
+
+(defmacro with-css-el [el name & body]
+  `(let [~name (css-el ~el ~(str name))]
+     ~@body))
+
+(defmacro with-css [q name & body]
+  `(with-el ~q el#
+     (with-css-el el# ~name
+       ~@body)))
+
+(defmacro with-csss-el [el names & body]
+  (let [func (fn [name] `(css-el ~el ~(str name)))
+        forms (map func names)
+        binds (-> names
+                  (interleave forms)
+                  vec
+                  vector)]
+    `(let ~@binds
+       ~@body)))
+
+(defmacro with-csss [q names & body]
+  `(with-el ~q el#
+     (with-csss-el el# ~names
+       ~@body)))
+
+;;
+;; alerts
+;;
+
+(defmulti dismiss-alert browser-dispatch)
+
+(defmethod dismiss-alert :chrome []
+  (with-http :post
+    [:session *session* :dismiss_alert] nil _))
+
+(defmethod dismiss-alert :firefox []
+  (with-http :post
+    [:session *session* :alert :dismiss] nil _))
+
+(defmulti accept-alert browser-dispatch)
+
+(defmethod accept-alert :chrome []
+  (with-http :post
+    [:session *session* :accept_alert] nil _))
+
+(defmethod accept-alert :firefox []
+  (with-http :post
+    [:session *session* :alert :accept] nil _))
+
+(defmulti get-alert-text browser-dispatch)
+
+(defmethod get-alert-text :chrome []
+  (with-http :get
+    [:session *session* :alert_text] nil resp
+    (:value resp)))
+
+(defmethod get-alert-text :firefox []
+  (with-http :get
+    [:session *session* :alert :text] nil resp
+    (:value resp)))
+
+(defmacro with-alert-text [bind & body]
+  `(let [~bind (get-alert-text)]
+     ~@body))
+
+;;
+;; predicates
+;;
+
+(defn visible-el [el]
+  (with-http :get
+    [:session *session* :element el :displayed]
+    nil resp
+    (:value resp)))
+
+(defn visible [q]
+  (with-el q el
+    (visible-el el)))
+
+(defn running []
+  (with-conn-error
+    (status)))
+
+(defn- enabled-el [el]
+  (with-http :get
+    [:session *session* :element el :enabled]
+    nil resp
+    (:value resp)))
+
+(defn enabled [q]
+  (with-el q el
+    (enabled-el el)))
+
+(def disabled (complement enabled))
+
+(defn exists-el [el]
+  (with-http-error
+    (tag-el el)
+    true))
+
+(defn exists [q]
+  (with-http-error
+    (with-el q el
+      true)))
+
+(def not-exists (complement exists))
+
+(defn has-text [text]
+  (with-http-error
+    (let [q (format "//*[contains(text(),'%s')]" text)]
+      (with-el q el
+        true))))
+
+(defn has-class-el [el class-name]
+  (let [classes (attr-el el "class")]
+    (cond
+      (nil? classes) false
+      (string? classes)
+      (-> classes
+          (str/split #"\s+")
+          set
+          (get class-name)))))
+
+(defn has-class [q class-name]
+  (with-el q el
+    (has-class-el el class-name)))
+
+(defn has-alert []
+  (with-http-error
+    (get-alert-text)
+    true))
+
+;;
+;; wait functions
+;;
+
+(defn wait [sec]
+  (Thread/sleep (* sec 1000)))
+
+(defn wait-for-predicate
+  [predicate & {:keys [timeout poll message]
+                :or {timeout 10 poll 0.5}}]
+  (loop [times 0
+         time-rest timeout]
+    (when (< time-rest 0)
+      (throw+ {:type :webdriver/timeout
+               :message message
+               :timeout timeout
+               :poll poll
+               :times times
+               :predicate predicate}))
+    (when-not (predicate)
+      (wait poll)
+      (recur (inc times)
+             (- time-rest poll)))))
+
+(defn wait-enabled [q & args]
+  (apply wait-for-predicate #(enabled q) args))
+
+(defn wait-exists [q & args]
+  (apply wait-for-predicate #(exists q) args))
+
+(defn wait-visible [q & args]
+  (apply wait-for-predicate #(visible q) args))
+
+;; (defn wait-has-alert [& args]
+;;   (apply wait-for-predicate has-alert args))
+
+(defn wait-running [& args]
+  (apply wait-for-predicate running args))
+
+(defn wait-has-text [text & args]
+  (apply wait-for-predicate #(has-text text) args))
+
+(defn wait-for-has-class [q class & args]
+  (apply wait-for-predicate #(has-class q class) args))
+
+;;
+;; active element
+;;
+
+(defmulti get-active-el browser-dispatch)
+
+(defmethods get-active-el [:chrome :phantom] []
+  (with-http :post [:session *session* :element :active]
+    nil resp
+    (-> resp :value :ELEMENT)))
+
+(defmethod get-active-el :firefox []
+  (with-http :get [:session *session* :element :active]
+    nil resp
+    (-> resp :value first second)))
+
+(defmacro let-active-el [bind & body]
+  `(let [~bind (get-active-el)]
+     ~@body))
+
+;;
+;; element text
+;;
+
+(defn text-el [el]
+  (with-http :get
+    [:session *session* :element el :text] nil resp
+    (:value resp)))
+
+(defn text [q]
+  (with-el q el
+    (text-el el)))
+
+(defmacro with-text [q bind & body]
+  `(let [~bind (text ~q)]
+     ~@body))
+
+;;
+;; element value
+;;
+
+(defmulti value-el browser-dispatch)
+
+(defmethod value-el :default [el]
+  (with-http :get
+    [:session *session* :element el :value]
+    nil resp
+    (:value resp)))
+
+(defn value [q]
+  (with-el q el
+    (value-el el)))
+
+(defmacro with-value [q bind & body]
+  `(let [~bind (value ~q)]
+     ~@body))
+
+;;
+;; cookies
+;;
+
+(defmulti get-cookies browser-dispatch)
+
+(defmethod get-cookies :default []
+  (with-http :get
+    [:session *session* :cookie]
+    nil resp
+    (:value resp)))
+
+(defmulti get-named-cookies browser-dispatch)
+
+(defmacro with-cookies [bind & body]
+  `(let [~bind (get-cookies)]
+     ~@body))
+
+(defmethod get-named-cookies :firefox [name]
+  (with-http :get
+    [:session *session* :cookie name]
+    nil resp
+    (:value resp)))
+
+(defmethod get-named-cookies :chrome [name]
+  (with-cookies [cookies]
+    (filterv #(-> % :name (= name)) cookies)))
+
+(defmethod get-named-cookies :phantom [name]
+  (with-cookies [cookies]
+    (filterv #(-> % :name (= name)) [cookies])))
+
+(defmacro with-named-cookies [name bind & body]
+  `(let [~bind (get-named-cookies ~name)]
+     ~@body))
+
+(defmulti set-cookie browser-dispatch)
+
+(defmethod set-cookie :default [cookie]
+  (with-http :post
+    [:session *session* :cookie]
+    {:cookie cookie} _))
+
+(defmulti delete-cookie browser-dispatch)
+
+(defmethod delete-cookie :default [name]
+  (with-http :delete
+    [:session *session* :cookie name]
+    nil _))
+
+(defmulti delete-cookies browser-dispatch)
+
+(defmethod delete-cookies :default []
+  (with-http :delete
+    [:session *session* :cookie]
+    nil _))
+
+;;
+;; source code
+;;
+
+(defmulti get-source browser-dispatch)
+
+(defmethod get-source :default []
+  (with-http :get
+    [:session *session* :source]
+    nil resp
+    (:value resp)))
+
+(defmacro let-source [bind & body]
+  `(let [~bind (get-source)]
+     ~@body))
+
+;;
+;; element property
+;;
+
+(defmulti prop-el browser-dispatch)
+
+(defmethod prop-el :firefox [el name]
+  (with-http :get
+    [:session *session* :element el :property name]
+    nil resp
+    (-> resp :value not-empty)))
+
+(defn prop [q name]
+  (with-el q el
+    (prop-el el name)))
+
+(defmacro let-prop [q name & body]
+  `(let [~name (prop ~q ~(str name))]
+     ~@body))
+
+(defmacro let-props-el [el names & body]
+  (let [func (fn [name] `(prop-el ~el ~(str name)))
+        forms (map func names)
+        binds (-> names
+                  (interleave forms)
+                  vec)]
+    `(let [~@binds]
+       ~@body)))
+
+(defmacro let-props [q names & body]
+  `(with-el ~q el#
+     (let-props-el el# ~names ~@body)))
+
+;;
+;; screenshot
+;;
 
 (defn b64-to-file [b64str filename]
   (with-open [out (io/output-stream filename)]
@@ -47,650 +1098,50 @@
                     .getBytes
                     b64/decode))))
 
-(defn check-screenshot [value context]
-  (if (empty? value)
-    (throw+ (assoc context :type :webdriver/empty-screenshot))
-    value))
+(defmulti screenshot browser-dispatch)
 
-;;
-;; api
-;;
-
-(defn new-session
-  "https://www.w3.org/TR/webdriver/#dfn-new-session"
-  [server cap-desired cap-required]
-  {:pre [(map? server) (map? cap-desired) (map? cap-required)]
-   :post [(string? %)]}
-  (let [meth :post
-        path [:session]
-        body {:desiredCapabilities (merge default-capabilities cap-desired)
-              :requiredCapabilities cap-required}
-        resp (client/call server meth path body)]
-    (:sessionId resp)))
-
-(defn delete-session
-  "https://www.w3.org/TR/webdriver/#dfn-delete-session"
-  [server session]
-  {:pre [(map? server) (string? session)]}
-  (let [meth :delete
-        path [:session session]
-        body {}
-        resp (client/call server meth path body)]
-    (-> resp :value)))
-
-(defn status
-  "https://www.w3.org/TR/webdriver/#dfn-status"
-  [server]
-  {:pre [(map? server)]
-   :post [(map? %)]}
-  (let [meth :get
-        path [:status]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn go [server session url]
-  "https://www.w3.org/TR/webdriver/#dfn-go"
-  (let [meth :post
-        path [:session session :url]
-        body {:url url}
-        resp (client/call server meth path body)]
-    (-> resp :value)))
-
-(defn get-current-url
-  "https://www.w3.org/TR/webdriver/#dfn-get-current-url"
-  [server session]
-  {:pre [(map? server) (string? session)]
-   :post [(string? %)]}
-  (let [meth :get
-        path [:session session :url]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn back
-  "https://www.w3.org/TR/webdriver/#dfn-back"
-  [server session]
-  {:pre [(map? server) (string? session)]}
-  (let [meth :post
-        path [:session session :back]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn forward
-  "https://www.w3.org/TR/webdriver/#dfn-forward"
-  [server session]
-  {:pre [(map? server) (string? session)]}
-  (let [meth :post
-        path [:session session :forward]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn refresh
-  "https://www.w3.org/TR/webdriver/#dfn-refresh"
-  [server session]
-  {:pre [(map? server) (string? session)]}
-  (let [meth :post
-        path [:session session :refresh]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn get-title
-  "https://www.w3.org/TR/webdriver/#dfn-get-title"
-  [server session]
-  {:pre [(map? server) (string? session)]
-   :post [(string? %)]}
-  (let [meth :get
-        path [:session session :title]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn get-window-handle-FF [server session]
-  "https://www.w3.org/TR/webdriver/#dfn-get-window-handle"
-  (-> server
-      (client/call :get [:session session :window])
-      :value))
-
-(defn close-window
-  "https://www.w3.org/TR/webdriver/#dfn-get-window-handle"
-  [server session]
-  {:pre [(map? server) (string? session)]}
-  (let [meth :delete
-        path [:session session :window]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn switch-to-window
-  "https://www.w3.org/TR/webdriver/#dfn-switch-to-window"
-  [server session handle]
-  {:pre [(map? server) (string? session) (string? handle)]}
-  (let [meth :post
-        path [:session session :window]
-        body {:handle handle}
-        resp (client/call server meth path body)]
-    (-> resp :value)))
-
-(defn get-window-handles-FF
-  "https://www.w3.org/TR/webdriver/#dfn-get-window-handles"
-  [server session]
-  {:pre [(map? server) (string? session)]
-   :post [(vector %)]}
-  (let [meth :get
-        path [:session session :window :handles]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn get-window-size
-  "todo"
-  [server session handle]
-  {:pre [(map? server) (string? session) (string? handle)]
-   :post [(map? %)]}
-  (let [meth :get
-        path [:session session :window handle :size]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn get-window-size-firefox
-  "todo"
-  [server session]
-  {:pre [(map? server) (string? session)]
-   :post [(map? %)]}
-  (let [meth :get
-        path [:session session :window :size]
-        resp (client/call server meth path)]
-    resp))
-
-(defn get-window-position
-  "todo"
-  [server session handle]
-  {:pre [(map? server) (string? session) (string? handle)]
-   :post [(map? %)]}
-  (let [meth :get
-        path [:session session :window handle :position]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn set-window-position
-  "todo"
-  [server session handle x y]
-  {:pre [(map? server) (string? session) (string? handle)]}
-  (let [meth :post
-        path [:session session :window handle :position]
-        data {:x x :y y}
-        resp (client/call server meth path data)]
-    (-> resp :value)))
-
-(defn set-window-size
-  "todo"
-  [server session handle width height]
-  {:pre [(map? server) (string? session) ]
-}
-  (let [meth :post
-        path [:session session :window handle :size]
-        body {:width width :height height}
-        resp (client/call server meth path body)]
-    (-> resp :value)))
-
-(defn get-window-handle
-  "todo"
-  [server session]
-  {:pre [(map? server) (string? session)]
-   :post [(string? %)]}
-  (let [meth :get
-        path [:session session :window_handle]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn get-window-handles
-  "todo"
-  [server session]
-  {:pre [(map? server) (string? session)]
-   :post [(vector? %)]}
-  (let [meth :get
-        path [:session session :window_handles]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn set-window-position-FF
-  "todo"
-  [server session x y]
-  {:pre [(map? server) (string? session)]
-   :post [(nil? %)]}
-  (let [meth :post
-        path [:session session :window :position]
-        body {:x x :y y}
-        resp (client/call server meth path body)]))
-
-(defn maximize-window
-  "todo"
-  [server session handler]
-  {:pre [(map? server) (string? session) (string? handler)]
-   :post [(nil? %)]}
-  (let [meth :post
-        path [:session session :window handler :maximize]
-        resp (client/call server meth path)]))
-
-(defn maximize-window-FF
-  "https://www.w3.org/TR/webdriver/#dfn-maximize-window"
-  [server session]
-  {:pre [(map? server) (string? session)]
-   :post [(nil? %)]}
-  (let [meth :post
-        path [:session session :window :maximize]
-        resp (client/call server meth path)]))
-
-(defn fullscreen-window-FF
-  "https://www.w3.org/TR/webdriver/#dfn-fullscreen-window"
-  [server session]
-  {:pre [(map? server) (string? session)]
-   :post [(nil? %)]}
-  (let [meth :post
-        path [:session session :window :fullscreen]
-        resp (client/call server meth path)]))
-
-(defn get-active-element
-  "https://www.w3.org/TR/webdriver/#dfn-get-active-element"
-  [server session]
-  {:pre [(map? server) (string? session)]
-   :post [(string? %)]}
-  (let [meth :get
-        path [:session session :element :active]
-        resp (client/call server meth path)
-        parser #(case (:browser server)
-                  (:chrome :phantom) (-> % :ELEMENT)
-                  (-> % first second))]
-    (-> resp :value parser)))
-
-(defn find-element
-  "https://www.w3.org/TR/webdriver/#dfn-find-element"
-  [server session locator term]
-  {:pre [(map? server) (string? session) (string? locator) (string? term)]
-   :post (string? %)}
-  (let [meth :post
-        path [:session session :element]
-        body {:using locator :value term}
-        resp (client/call server meth path body)
-        parser #(case (:browser server)
-                  (:chrome :phantom) (-> % :ELEMENT)
-                  (-> % first second))]
-    (-> resp :value parser)))
-
-(defn find-elements
-  "https://www.w3.org/TR/webdriver/#dfn-find-elements"
-  [server session locator term]
-  {:pre [(map? server) (string? session) (string? locator) (string? term)]
-   :post (vector? %)}
-  (let [meth :post
-        path [:session session :elements]
-        body {:using locator :value term}
-        resp (client/call server meth path body)
-        parser #(case (:browser server)
-                  (:chrome :phantom) (-> % :ELEMENT)
-                  (-> % first second))]
-    (->> resp :value (mapv parser))))
-
-(defn find-element-from-element
-  "https://www.w3.org/TR/webdriver/#dfn-find-element-from-element"
-  [server session element locator term]
-  {:pre [(map? server) (string? session) (string? locator) (string? term)]
-   :post (string? %)}
-  (let [meth :post
-        path [:session session :element element :element]
-        body {:using locator :value term}
-        resp (client/call server meth path body)
-        parser #(case (:browser server)
-                  (:chrome :phantom) (-> % :ELEMENT)
-                  (-> % first second))]
-    (-> resp :value parser)))
-
-(defn find-elements-from-element
-  "https://www.w3.org/TR/webdriver/#dfn-find-elements-from-element"
-  [server session element locator term]
-  {:pre [(map? server) (string? session) (string? locator) (string? term)]
-   :post (vector? %)}
-  (let [meth :post
-        path [:session session :element element :elements]
-        body {:using locator :value term}
-        resp (client/call server meth path body)
-        parser #(case (:browser server)
-                  (:chrome :phantom) (-> % :ELEMENT)
-                  (-> % first second))]
-    (->> resp :value (mapv parser))))
-
-(defn is-element-displayed
-  [server session element]
-  {:pre [(map? server) (string? session) (string? element)]
-   :post [(bool? %)]}
-  (let [meth :get
-        path [:session session :element element :displayed]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn is-element-selected
-  "https://www.w3.org/TR/webdriver/#dfn-is-element-selected"
-  [server session element]
-  {:pre [(map? server) (string? session) (string? element)]
-   :post [(bool? %)]}
-  (let [meth :get
-        path [:session session :element element :selected]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn get-element-attribute
-  "https://www.w3.org/TR/webdriver/#dfn-get-element-attribute"
-  [server session element attribute]
-  {:pre [(map? server) (string? session) (string? element) (string? attribute)]
-   :post [(or (string? %) (nil? %))]}
-  (let [meth :get
-        path [:session session :element element :attribute attribute]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn get-element-property
-  "https://www.w3.org/TR/webdriver/#dfn-get-element-property"
-  [server session element property]
-  {:pre [(map? server) (string? session) (string? element) (string? property)]
-   :post [(or (string? %) (nil? %))]}
-  (let [meth :get
-        path [:session session :element element :property property]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn get-element-css-value
-  "https://www.w3.org/TR/webdriver/#dfn-get-element-css-value"
-  [server session element property]
-  {:pre [(map? server) (string? session) (string? element) (string? property)]
-   :post [(or (string? %) (nil? %))]}
-  (let [meth :get
-        path [:session session :element element :css property]
-        resp (client/call server meth path)]
-    (-> resp :value not-empty)))
-
-(defn get-element-text
-  "https://www.w3.org/TR/webdriver/#dfn-get-element-text"
-  [server session element]
-  {:pre [(map? server) (string? session) (string? element)]
-   :post [(string? %)]}
-  (let [meth :get
-        path [:session session :element element :text]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn get-element-value
-  "todo"
-  [server session element]
-  {:pre [(map? server) (string? session) (string? element)]
-   :post [(string? %)]}
-  (let [meth :get
-        path [:session session :element element :value]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn get-element-tag-name
-  "https://www.w3.org/TR/webdriver/#dfn-get-element-tag-name"
-  [server session element]
-  {:pre [(map? server) (string? session) (string? element)]
-   :post [(string? %)]}
-  (let [meth :get
-        path [:session session :element element :name]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn is-element-enabled
-  "https://www.w3.org/TR/webdriver/#dfn-is-element-enabled"
-  [server session element]
-  {:pre [(map? server) (string? session) (string? element)]
-   :post [(bool? %)]}
-  (let [meth :get
-        path [:session session :element element :enabled]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn element-click
-  "https://www.w3.org/TR/webdriver/#dfn-is-element-enabled"
-  [server session element]
-  {:pre [(map? server) (string? session) (string? element)]}
-  (let [meth :post
-        path [:session session :element element :click]
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn element-tap-FF
-  "https://www.w3.org/TR/webdriver/#dfn-is-element-enabled"
-  [server session element]
-  {:pre [(map? server) (string? session) (string? element)]
-   :post [(nil? %)]}
-  (let [method :post
-        url [:session session :element element :tap]
-        resp (client/call server method url)]))
-
-(defn element-clear
-  "https://www.w3.org/TR/webdriver/#dfn-element-clear"
-  [server session element]
-  {:pre [(map? server) (string? session) (string? element)]}
-  (let [method :post
-        url [:session session :element element :clear]
-        resp (client/call server method url)]
-    (-> resp :value)))
-
-(defn element-send-keys
-  "https://www.w3.org/TR/webdriver/#dfn-element-send-keys"
-  [server session element text]
-  {:pre [(map? server) (string? session) (string? element) (string? text)]
-   :post [(nil? %)]}
-  (let [method :post
-        url [:session session :element element :value]
-        data {:value (text-to-array text)}
-        resp (client/call server method url data)]))
-
-(defn get-page-source
-  "https://www.w3.org/TR/webdriver/#dfn-get-page-source"
-  [server session]
-  {:pre [(map? server) (string? session)]
-   :post [(string? %)]}
-  (let [method :get
-        url [:session session :source]
-        resp (client/call server method url)]
-    (-> resp :value)))
-
-(defn execute-script
-  "https://www.w3.org/TR/webdriver/#dfn-execute-script"
-  [server session script & args]
-  {:pre [(map? server) (string? session) (string? script)]}
-  (let [cmd (case (:browser server)
-              (:chrome :phantom) :execute
-              :sync)
-        method :post
-        url [:session session cmd]
-        data {:script script :args (vec args)}
-        resp (client/call server method url data)]
-    (-> resp :value)))
-
-(defn get-all-cookies
-  "https://www.w3.org/TR/webdriver/#dfn-get-all-cookies"
-  [server session]
-  {:pre [(map? server) (string? session)]
-   :post [(vector? %)]}
-  (let [method :get
-        url [:session session :cookie]
-        resp (client/call server method url)]
-    (-> resp :value)))
-
-(defn get-named-cookie-FF
-  "https://www.w3.org/TR/webdriver/#dfn-get-named-cookie"
-  [server session name]
-  {:pre [(map? server) (string? session) (string? name)]
-   :post [(vector? %)]}
-
-  (case (:browser server)
-
-    (:chrome :phantom)
-    (throw+ {:type :webdriver/not-implemented})
-    ;; (as->
-    ;;   (get-all-cookies server session) $
-    ;;   (filter #(-> % :name (= name)) $)
-    ;;   (vec $))
-
-    (let [method :get
-          url [:session session :cookie name]
-          resp (client/call server method url)]
-      (-> resp :value))))
-
-(defn add-cookie
-  "https://www.w3.org/TR/webdriver/#dfn-add-cookie"
-  [server session cookie]
-  {:pre [(map? server) (string? session) (map? cookie)]
-   :post [(nil? %)]}
-  (let [method :post
-        url [:session session :cookie]
-        data {:cookie cookie}
-        resp (client/call server method url data)]))
-
-(defn delete-cookie
-  "https://www.w3.org/TR/webdriver/#dfn-delete-cookie"
-  [server session name]
-  {:pre [(map? server) (string? session) (string? name)]
-   :post [(nil? %)]}
-  (let [method :delete
-        url [:session session :cookie name]
-        resp (client/call server method url)]))
-
-(defn delete-all-cookies
-  "https://www.w3.org/TR/webdriver/#dfn-delete-all-cookies"
-  [server session]
-  {:pre [(map? server) (string? session)]
-   :post [(nil? %)]}
-  (let [method :delete
-        url [:session session :cookie]
-        resp (client/call server method url)]))
-
-(defn ^{:phantom false}
-  dismiss-alert
-  "https://www.w3.org/TR/webdriver/#dfn-dismiss-alert"
-  [server session]
-  {:pre [(map? server) (string? session)]}
-  (let [cmd (case (:browser server)
-              :chrome [:dismiss_alert]
-              [:alert :dismiss])
-        meth :post
-        path (into [:session session] cmd)
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn
-  ^{:phantom false}
-  accept-alert
-  "https://www.w3.org/TR/webdriver/#dfn-accept-alert"
-  [server session]
-  {:pre [(map? server) (string? session)]}
-  (let [cmd (case (:browser server)
-              :chrome [:accept_alert]
-              [:alert :accept])
-        meth :post
-        path (into [:session session] cmd)
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn get-alert-text
-  "https://www.w3.org/TR/webdriver/#dfn-get-alert-text"
-  [server session]
-  {:pre [(map? server) (string? session)]
-   :post [(string? %)]}
-  (let [cmd (case (:browser server)
-              :chrome [:alert_text]
-              [:alert :text])
-        meth :get
-        path (into [:session session] cmd)
-        resp (client/call server meth path)]
-    (-> resp :value)))
-
-(defn send-alert-text
-  "https://www.w3.org/TR/webdriver/#dfn-send-alert-text"
-  [server session text]
-  {:pre [(map? server) (string? session) (string? text)]}
-  (let [cmd (case (:browser server)
-              :chrome [:alert_text]
-              [:alert :text])
-        meth :post
-        path (into [:session session] cmd)
-        body {:value (text-to-array text)}
-        resp (client/call server meth path body)]
-    (-> resp :value)))
-
-(defn take-screenshot
-  "https://www.w3.org/TR/webdriver/#dfn-take-screenshot"
-  [server session filename]
-  {:pre [(map? server) (string? session) (string? filename)]
-   :post [(nil? %)]}
-  (let [meth :get
-        path [:session session :screenshot]
-        resp (client/call server meth path)]
+(defmethod screenshot :default [filename]
+  (with-http :get
+    [:session *session* :screenshot]
+    nil resp
     (-> resp
         :value
-        (check-screenshot {:server server
-                           :filename filename})
+        not-empty
+        (or (throw+ {:type :webdriver/screenshot
+                     :message "Empty screenshot"
+                     :session *session*
+                     :server *server*}))
         (b64-to-file filename))))
 
-(defn take-element-screenshot
-  "https://www.w3.org/TR/webdriver/#dfn-take-element-screenshot"
-  [server session element filename]
-  {:pre [(map? server) (string? session) (string? element) (string? filename)]
-   :post [(nil? %)]}
-  (let [meth :get
-        path [:session session :element element :screenshot]
-        resp (client/call server meth path)]
-    (-> resp
-        :value
-        (check-screenshot {:server server
-                           :filename filename})
-        (b64-to-file filename))))
+;;
+;; javascript
+;;
 
-;; the functions below don't work in FF
+(defmulti js-execute browser-dispatch)
 
-(defn mouse-move-to
-  "Moves virtual mouse to an element or by offset."
-  [server session & {:keys [element xoffset yoffset] :as payload}]
-  {:pre [(map? server) (string? session)]
-   :post [(nil? %)]}
-  (case (:browser server)
-    ;; :firefox (throw+ {:type :webdriver/not-implemented})
-    (let [meth :post
-          path [:session session :moveto]
-          body payload
-          resp (client/call server meth path body)])))
+(defmethods js-execute [:chrome :phantom] [script & args]
+  (with-http :post
+    [:session *session* :execute]
+    {:script script :args (vec args)}
+    resp
+    (:value resp)))
 
-(defn mouse-button-down
-  "Set mouse button pressed during the next API calls."
-  [server session]
-  {:pre [(map? server) (string? session)]
-   :post [(nil? %)]}
-  (let [meth :post
-          path [:session session :buttondown]
-          resp (client/call server meth path)]))
+(defmethod js-execute :firefox [script & args]
+  (with-http :post
+    [:session *session* :sync]
+    {:script script :args (vec args)}
+    resp
+    (:value resp)))
 
-(defn mouse-button-up
-  "Releases the mouse button."
-  [server session]
-  {:pre [(map? server) (string? session)]
-   :post [(nil? %)]}
-  (let [meth :post
-          path [:session session :buttonup]
-          resp (client/call server meth path)]))
+(defn js-add-script [url]
+  (let [script (str "var s = document.createElement('script');"
+                    "s.type = 'text/javascript';"
+                    "s.src = arguments[0];"
+                    "document.head.appendChild(s);")]
+    (js-execute script url)))
 
-(defn get-element-location
-  "todo"
-  [server session element]
-  {:pre [(map? server) (string? session) (string? element)]
-   :post [(map? %)]}
-  (let [meth :get
-        path [:session session :element element :location]
-        resp (client/call server meth path)]
-    (-> resp :value (select-keys [:x :y]))))
+(defn js-clear-local-storage []
+  (js-execute "localStorage.clear();"))
 
-(defn get-element-size
-  "todo"
-  [server session element]
-  {:pre [(map? server) (string? session) (string? element)]
-   :post [(map? %)]}
-  (let [meth :get
-        path [:session session :element element :size]
-        resp (client/call server meth path)]
-    (-> resp :value (select-keys [:width :height]))))
+(defn js-set-hash [hash]
+  (js-execute "window.location.hash = arguments[0];" hash))
