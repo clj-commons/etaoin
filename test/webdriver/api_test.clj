@@ -511,3 +511,28 @@
             io/file
             ImageIO/read
             is)))))
+
+(deftest test-js-execute
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go url)
+      (testing "simple result"
+        (let [result (js-execute "return 42;")]
+          (is (= result 42))))
+      (testing "with args"
+        (let [script "return {foo: arguments[0], bar: arguments[1]};"
+              result (js-execute script {:test 42} [true, nil, "Hello"])]
+          (is (= result
+                 {:foo {:test 42}
+                  :bar [true nil "Hello"]})))))))
+
+(deftest test-js-inject
+  (let [url (-> "html/test.html" io/resource str)
+        js-url (-> "js/inject.js" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go url)
+      (js-add-script js-url)
+      (let [result (js-execute "return injected_func();")]
+          (is (= result "I was injected"))))))

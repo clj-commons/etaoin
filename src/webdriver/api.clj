@@ -1128,7 +1128,7 @@
 
 (defmethod js-execute :firefox [script & args]
   (with-http :post
-    [:session *session* :sync]
+    [:session *session* :execute :sync]
     {:script script :args (vec args)}
     resp
     (:value resp)))
