@@ -55,130 +55,90 @@
   (is (visible "//button[@id='button-visible']"))
   (is (not (visible "//button[@id='button-hidden']")))
   (is (not (visible "//div[@id='div-hidden']")))
-  (try+
-   (is (thrown? clojure.lang.ExceptionInfo
-                (visible "//test[@id='dunno-foo-bar']")))))
+  (is (thrown? clojure.lang.ExceptionInfo
+               (visible "//test[@id='dunno-foo-bar']"))))
 
 (deftest test-enabled
-  (let [url (-> "html/test.html" io/resource str)]
-    (with-session
-      (go url)
-      (is (disabled "//input[@id='input-disabled']"))
-      (is (enabled "//input[@id='input-not-disabled']"))
-      (is (disabled "//textarea[@id='textarea-disabled']"))
-      (try+
-       (is (thrown? clojure.lang.ExceptionInfo
-                    (enabled "//test[@id='dunno-foo-bar']")))))))
+  (is (disabled "//input[@id='input-disabled']"))
+  (is (enabled "//input[@id='input-not-disabled']"))
+  (is (disabled "//textarea[@id='textarea-disabled']"))
+  (is (thrown? clojure.lang.ExceptionInfo
+               (enabled "//test[@id='dunno-foo-bar']"))))
 
 (deftest test-exists
-  (let [url (-> "html/test.html" io/resource str)]
-    (with-session {} {}
-      (go url)
-      (with-xpath
-        (is (exists "//html"))
-        (is (exists "//body"))
-        (is (not (exists "//test[@id='dunno-foo-bar']")))))))
+  (with-xpath
+    (is (exists "//html"))
+    (is (exists "//body"))
+    (is (not (exists "//test[@id='dunno-foo-bar']")))))
 
 (deftest test-alert
-  (let [url (-> "html/test.html" io/resource str)]
-    (wait-running :message "The server did not start.")
-    (with-session {} {}
-      (go url)
-      (click "//button[@id='button-alert']")
-      (skip-phantom
-       (with-alert-text alert
-         (is (= alert "Hello!")))
-       (is (has-alert))
-       (accept-alert)
-       (is (not (has-alert)))
-       (click "//button[@id='button-alert']")
-       (is (has-alert))
-       (dismiss-alert)
-       (is (not (has-alert)))))))
+  (click "//button[@id='button-alert']")
+  (skip-phantom
+   (with-alert-text alert
+     (is (= alert "Hello!")))
+   (is (has-alert))
+   (accept-alert)
+   (is (not (has-alert)))
+   (click "//button[@id='button-alert']")
+   (is (has-alert))
+   (dismiss-alert)
+   (is (not (has-alert)))))
 
 (deftest test-attributes
-  (let [url (-> "html/test.html" io/resource str)]
-    (wait-running :message "The server did not start.")
-    (with-session {} {}
-      (go url)
-      (testing "common attributes"
-        (with-xpath
-          (with-attrs "//input[@id='input-attr']"
-            [id type value name style
-             disabled data-foo data-bar]
-            (is (= id "input-attr"))
-            (is (= type "text"))
-            (is (= value "hello"))
-            (is (= style "border: 5px; width: 150px;"))
-            (is (= disabled "true"))
-            (is (= data-foo "foo"))
-            (is (= data-bar "bar")))))
-      (testing "event attributes"
-        (with-xpath
-          (with-attrs "//input[@id='input-attr']" [onclick]
-            (is (= onclick "alert(123)")))))
-      (testing "missing attributes"
-        (with-xpath
-          (with-attrs "//input[@id='input-attr']"
-            [foo bar baz dunno]
-            (is (= foo nil))
-            (is (= baz nil))
-            (is (= bar nil))
-            (is (= dunno nil))))))))
+  (testing "common attributes"
+    (with-attrs "//input[@id='input-attr']"
+      [id type value name style
+       disabled data-foo data-bar]
+      (is (= id "input-attr"))
+      (is (= type "text"))
+      (is (= value "hello"))
+      (is (= style "border: 5px; width: 150px;"))
+      (is (= disabled "true"))
+      (is (= data-foo "foo"))
+      (is (= data-bar "bar"))))
+  (testing "event attributes"
+    (with-attrs "//input[@id='input-attr']" [onclick]
+      (is (= onclick "alert(123)"))))
+  (testing "missing attributes"
+    (with-attrs "//input[@id='input-attr']"
+      [foo bar baz dunno]
+      (is (= foo nil))
+      (is (= baz nil))
+      (is (= bar nil))
+      (is (= dunno nil)))))
 
 (deftest test-title
-  (let [url (-> "html/test.html" io/resource str)]
-    (wait-running :message "The server did not start.")
-    (with-session {} {}
-      (testing "empty page"
-        (with-title title
-          (is (= title ""))))
-      (testing "go URL"
-        (go url)
-        (with-title title
-          (is (= title "Webdriver Test Document")))))))
+  (with-title title
+    (is (= title "Webdriver Test Document"))))
 
 (deftest test-url
-  (let [url (-> "html/test.html" io/resource str)]
-    (wait-running :message "The server did not start.")
-    (with-session {} {}
-      (testing "empty page"
-        (with-url url
-          (is (or (= url "about:blank")
-                  (= url "data:,")))))
-      (testing "go URL"
-        (go url)
-        (with-url url
-          (is (str/ends-with? url "/resources/html/test.html")))))))
+  (with-url url
+    (is (str/ends-with? url "/resources/html/test.html"))))
 
 (deftest test-css-props
-  (let [url (-> "html/test.html" io/resource str)]
-    (wait-running :message "The server did not start.")
-    (with-session {} {}
-      (go url)
-      (testing "single css"
-        (with-css "//div[@id='div-css-simple']" display
-          (is (= display "block"))))
-      (testing "multiple css"
-        (with-csss "//div[@id='div-css-simple']"
-          [display background-color width height]
-          (is (= display "block"))
-          (is (or (= background-color "rgb(204, 204, 204)")
-                  (= background-color "rgba(204, 204, 204, 1)")))
-          (is (= width "150px"))
-          (is (= height "250px"))))
-      (testing "styled css"
-        (with-csss "//div[@id='div-css-styled']"
-          [display width height]
-          (is (= display "block"))
-          (is (= width "333px"))
-          (is (= height "111px"))))
-      (testing "missing css"
-        (with-csss "//div[@id='div-css-styled']"
-          [foo bar baz]
-          (is (nil? foo))
-          (is (nil? bar))
-          (is (nil? baz)))))))
+  (testing "single css"
+    (with-css "//div[@id='div-css-simple']" display
+      (is (= display "block"))))
+  (testing "multiple css"
+    (with-csss "//div[@id='div-css-simple']"
+      [display background-color width height]
+      (is (= display "block"))
+      (is (or (= background-color "rgb(204, 204, 204)")
+              (= background-color "rgba(204, 204, 204, 1)")))
+      (is (= width "150px"))
+      (is (= height "250px"))))
+  (testing "styled css"
+    (with-csss "//div[@id='div-css-styled']"
+      [display width height]
+      (is (= display "block"))
+      (is (= width "333px"))
+      (is (= height "111px"))))
+  (testing "missing css"
+    (with-csss "//div[@id='div-css-styled']"
+      [foo bar baz]
+      (is (nil? foo))
+      (is (nil? bar))
+      (is (nil? baz)))))
 
 (deftest test-wait-text
   (let [url (-> "html/test.html" io/resource str)]
