@@ -13,77 +13,55 @@
 (def host "127.0.0.1")
 (def port 6666)
 
+(defmacro with-driver-boot [driver & body]
+  `(with-browser ~driver
+     (with-webdriver port
+       (with-connect host port
+         (with-session
+           (go (-> "html/test.html" io/resource str))
+           ~@body)))))
+
 (defn fixture-browsers [f]
-
-  ;; "-v"
-
-  (with-proc p [["geckodriver" "--host" host "--port" port "--log" "fatal"]]
-    (testing "firefox"
-      (with-server {:host host :port port :browser :firefox}
-        (f))))
-
-  ;; "--log-path=/Users/ivan/webdriver666.txt"
-  ;; "--verbose"
-
-  (with-proc p [["chromedriver"  (str "--port=" port) ]]
-    (testing "chrome"
-      (with-server {:host host :port port :browser :chrome}
-        (f))))
-
-  (with-proc p [["phantomjs" "--webdriver" port]]
-    (testing "phantom"
-      (with-server {:host host :port port :browser :phantom}
-        (f))))
-
-  )
+  (with-driver-boot :firefox (f))
+  (with-driver-boot :chrome (f))
+  (with-driver-boot :phantom (f)))
 
 (use-fixtures
   :each
   fixture-browsers)
 
 (deftest test-clear
-  (let [url (-> "html/test.html" io/resource str)
-        form "//form[@id='submit-test']"
+  (let [form "//form[@id='submit-test']"
         input "//input[@id='simple-input']"
         submit "//input[@id='simple-submit']"]
-    (wait-running :message "The server did not start.")
-    (with-session {} {}
-      (go url)
-      (testing "simple clear"
-        (with-xpath
-          (fill input "test")
-          (clear input)
-          (click submit)
-          (with-url url
-            (is (str/ends-with? url "?login=&password=&message=")))))
-      (testing "form clear"
-        (with-xpath
-          (fill-form form {:login "Ivan"
-                           :password "lalilulelo"
-                           :message "long_text_here"})
-          (clear-form form)
-          (click submit)
-          (with-url url
-            (is (str/ends-with? url "?login=&password=&message="))))))))
+    (testing "simple clear"
+      (with-xpath
+        (fill input "test")
+        (clear input)
+        (click submit)
+        (with-url url
+          (is (str/ends-with? url "?login=&password=&message=")))))
+    (testing "form clear"
+      (with-xpath
+        (fill-form form {:login "Ivan"
+                         :password "lalilulelo"
+                         :message "long_text_here"})
+        (clear-form form)
+        (click submit)
+        (with-url url
+          (is (str/ends-with? url "?login=&password=&message=")))))))
 
 (deftest test-visible
-  (let [url (-> "html/test.html" io/resource str)]
-    (wait-running :message "The server did not start.")
-    (with-session {} {}
-      (go url)
-      (is (visible "//button[@id='button-visible']"))
-      (is (not (visible "//button[@id='button-hidden']")))
-      (is (not (visible "//div[@id='div-hidden']")))
-      (try+
-       (is (thrown? clojure.lang.ExceptionInfo
-                    (visible "//test[@id='dunno-foo-bar']"))))
-      ;; (is (not (visible "//div[@id='div-covered']")))
-      )))
+  (is (visible "//button[@id='button-visible']"))
+  (is (not (visible "//button[@id='button-hidden']")))
+  (is (not (visible "//div[@id='div-hidden']")))
+  (try+
+   (is (thrown? clojure.lang.ExceptionInfo
+                (visible "//test[@id='dunno-foo-bar']")))))
 
 (deftest test-enabled
   (let [url (-> "html/test.html" io/resource str)]
-    (wait-running :message "The server did not start.")
-    (with-session {} {}
+    (with-session
       (go url)
       (is (disabled "//input[@id='input-disabled']"))
       (is (enabled "//input[@id='input-not-disabled']"))
@@ -94,7 +72,6 @@
 
 (deftest test-exists
   (let [url (-> "html/test.html" io/resource str)]
-    (wait-running :message "The server did not start.")
     (with-session {} {}
       (go url)
       (with-xpath
@@ -476,9 +453,9 @@
       (go url)
       (let-source src
         (when-firefox
-          (is (str/starts-with? src "<html><head>")))
+            (is (str/starts-with? src "<html><head>")))
         (when-not-firefox
-          (is (str/starts-with? src "<!DOCTYPE html>")))))))
+            (is (str/starts-with? src "<!DOCTYPE html>")))))))
 
 (deftest test-element-properties
   (let [url (-> "html/test.html" io/resource str)]
@@ -486,11 +463,11 @@
     (with-session {} {}
       (go url)
       (when-firefox
-        (let-prop "//*[@id='element-props']" innerHTML
-          (is (= innerHTML "<div>Inner HTML</div>")))
+          (let-prop "//*[@id='element-props']" innerHTML
+                    (is (= innerHTML "<div>Inner HTML</div>")))
         (let-props "//*[@id='element-props']" [innerHTML tagName]
-          (is (= innerHTML "<div>Inner HTML</div>"))
-          (is (= tagName "DIV")))))))
+                   (is (= innerHTML "<div>Inner HTML</div>"))
+                   (is (= tagName "DIV")))))))
 
 (defmacro with-tmp-file [prefix suffix bind & body]
   `(let [tmp# (java.io.File/createTempFile ~prefix ~suffix)
@@ -535,7 +512,7 @@
       (go url)
       (js-add-script js-url)
       (let [result (js-execute "return injected_func();")]
-          (is (= result "I was injected"))))))
+        (is (= result "I was injected"))))))
 
 (deftest test-set-hash
   (let [url (-> "html/test.html" io/resource str)]

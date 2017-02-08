@@ -25,21 +25,18 @@
             [slingshot.slingshot :refer [try+ throw+]])
   (:import java.net.ConnectException))
 
+(def ^:dynamic *browser*) ;; todo rename to driver
+(def ^:dynamic *host*)
+(def ^:dynamic *port*)
 (def ^:dynamic *server*)
 (def ^:dynamic *session*)
 (def ^:dynamic *locator* "xpath")
 
-(def default-capabilities
-  {:browserName "*"
-   :browserVersion "*"
-   :platformName "*"
-   :platformVersion "*"
-   :acceptInsecureCerts false
-   :javascriptEnabled true})
-
 ;;
 ;; tools
 ;;
+
+(defn- browser-dispatch [& _] *browser*)
 
 (defn flip [f]
   (fn [& args]
@@ -51,16 +48,16 @@
     (+ (rand-int (- max-port offset))
        offset)))
 
-;;
-;; locators
-;;
+(defmacro defmethods [multifn dispatch-vals & fn-tail]
+  `(doseq [dispatch-val# ~dispatch-vals]
+     (defmethod ~multifn dispatch-val# ~@fn-tail)))
 
-(defmacro with-locator [locator & body]
-  `(binding [*locator* ~locator]
-     ~@body))
+;;
+;; http client
+;;
 
 (defmacro with-http [meth path data bind & body]
-  `(let [~bind (client/call *server* ~meth ~path ~data)]
+  `(let [~bind (client/call *host* *port* ~meth ~path ~data)]
      ~@body))
 
 (defmacro with-http-get [path bind & body]
@@ -70,13 +67,6 @@
 (defmacro with-http-post [path body bind & body]
   `(with-http :post ~path ~body ~bind
      ~@body))
-
-(defn- browser-dispatch [& _]
-  (:browser *server*))
-
-(defmacro defmethods [multifn dispatch-vals & fn-tail]
-  `(doseq [dispatch-val# ~dispatch-vals]
-     (defmethod ~multifn dispatch-val# ~@fn-tail)))
 
 ;;
 ;; exceptions
@@ -96,7 +86,17 @@
   `(with-exception ConnectException false
      ~@body))
 
-;; api
+;;
+;; locators
+;;
+
+(defmacro with-locator [locator & body]
+  `(binding [*locator* ~locator]
+     ~@body))
+
+(defmacro with-xpath [& body]
+  `(with-locator "xpath"
+     ~@body))
 
 (defmacro with-css-selector [& body]
   `(with-locator "css selector"
@@ -114,16 +114,8 @@
   `(with-locator "tag name"
      ~@body))
 
-(defmacro with-xpath [& body]
-  `(with-locator "xpath"
-     ~@body))
-
-(defn status []
-  (with-http :get [:status] nil resp
-    (:value resp)))
-
 ;;
-;; getting elements
+;; find elements
 ;;
 
 (defmulti get-el browser-dispatch)
@@ -189,24 +181,8 @@
      ~@body))
 
 ;;
-;; URL and navigation
+;; tag name
 ;;
-
-(defn go [url]
-  (with-http :post [:session *session* :url] {:url url} _))
-
-(defn click [q]
-  (with-el q el
-    (with-http :post
-      [:session *session* :element el :click] nil _)))
-
-(defn get-url []
-  (with-http :get [:session *session* :url] nil resp
-    (:value resp)))
-
-(defmacro with-url [bind & body]
-  `(let [~bind (get-url)]
-     ~@body))
 
 (defn tag-el [el]
   (with-http-get
@@ -218,36 +194,56 @@
   (with-el q el
     (tag-el el)))
 
+
+;;
+;; navigation
+;;
+
+(defn go [url]
+  (with-http :post [:session *session* :url] {:url url} _))
+
+(defn click [q]
+  (with-el q el
+    (with-http :post
+      [:session *session* :element el :click] nil _)))
+
+(defn back []
+  (with-http :post [:session *session* :back] nil _))
+
+(defn forward []
+  (with-http :post [:session *session* :forward] nil _))
+
+(defn refresh []
+  (with-http :post [:session *session* :refresh] nil _))
+
+(defn close []
+  (with-http :delete [:session *session* :window] nil _))
+
+;;
+;; get URL
+;;
+
+(defn get-url []
+  (with-http :get [:session *session* :url] nil resp
+    (:value resp)))
+
+(defmacro with-url [bind & body]
+  `(let [~bind (get-url)]
+     ~@body))
+
+;;
+;; session
+;;
+
 (defn new-session []
   (with-http :post [:session]
-    {:desiredCapabilities {} :requiredCapabilities {}}
+    {:desiredCapabilities {}
+     :requiredCapabilities {}}
     resp
     (:sessionId resp)))
 
 (defn delete-session []
   (with-http :delete [:session *session*] nil _))
-
-(defn make-server-url [host port]
-  (format "http://%s:%d" host port))
-
-(defn make-server [{:keys [host port] :as params}]
-  (assoc params :url (make-server-url host port)))
-
-(defmacro with-proc [proc args & body]
-  `(let [~proc (apply proc/run ~args)]
-     (try
-       ~@body
-       (finally
-         (proc/kill ~proc)))))
-
-(defmacro with-proc-multi [proc args-list & body]
-  `(doseq [args# ~args-list]
-     (with-proc ~proc args#
-       ~@body)))
-
-(defmacro with-server [params & body]
-  `(binding [*server* (make-server ~params)]
-     ~@body))
 
 (defmacro with-session [& body]
   `(binding [*session* (new-session)]
@@ -255,6 +251,47 @@
        ~@body
        (finally
          (delete-session)))))
+
+;;
+;; run webdriver
+;;
+
+(defn status []
+  (with-http :get [:status] nil resp
+    (:value resp)))
+
+(defmacro with-browser [browser & body]
+  `(binding [*browser* ~browser]
+     ~@body))
+
+(defmulti run-webdriver browser-dispatch)
+
+(defmethod run-webdriver :firefox [port]
+  (proc/run ["geckodriver" "--port" port]))
+
+(defmethod run-webdriver :chrome [port]
+  (proc/run ["chromedriver" (str "--port=" port) ]))
+
+(defmethod run-webdriver :phantom [port]
+  (proc/run ["phantomjs" "--webdriver" port]))
+
+(defmacro with-webdriver [port & body]
+  `(let [proc# (run-webdriver ~port)]
+     (try
+       ~@body
+       (finally
+         (proc/kill proc#)))))
+
+(defmacro with-connect [host port & body]
+  `(binding [*host* ~host
+             *port* ~port]
+     (let [msg# "The server did not start on %s:%s."]
+       (wait-running :message (format msg# ~host ~port)))
+     ~@body))
+
+;;
+;; windows
+;;
 
 (defmulti fullscreen browser-dispatch)
 
@@ -286,101 +323,6 @@
   (with-current-handle h
     (with-http :post
       [:session *session* :window h :maximize] nil _)))
-
-(defmulti mouse-button-down browser-dispatch)
-
-(defmethods mouse-button-down [:chrome :phantom] []
-  (with-http-post [:session *session* :buttondown] nil _))
-
-(defmulti mouse-button-up browser-dispatch)
-
-(defmethods mouse-button-up [:chrome :phantom] []
-  (with-http-post [:session *session* :buttondown] nil _))
-
-(defmacro with-mouse-btn [& body]
-  `(do
-     (mouse-button-down)
-     (try
-       ~@body
-       (finally
-         (mouse-button-up)))))
-
-(defmulti mouse-move-to browser-dispatch)
-
-(defmacro skip-predicate [predicate & body]
-  `(when-not (~predicate)
-     ~@body))
-
-(defmacro skip-browsers [browsers & body]
-  `(skip-predicate
-    #((set ~browsers) (:browser *server*))
-    ~@body))
-
-(defmacro skip-phantom [& body]
-  `(skip-browsers [:phantom]
-                  ~@body))
-
-(defmacro skip-firefox [& body]
-  `(skip-browsers [:firefox]
-                  ~@body))
-
-(defmacro when-not-firefox [& body]
-  `(skip-browsers [:firefox]
-                  ~@body))
-
-(defmacro skip-chrome [& body]
-  `(skip-browsers [:chrome]
-                  ~@body))
-
-(defmacro when-predicate [predicate & body]
-  `(when (~predicate)
-     ~@body))
-
-(defmacro when-browsers [browsers & body]
-  `(when-predicate
-       #((set ~browsers) (:browser *server*))
-     ~@body))
-
-(defmacro when-firefox [& body]
-  `(when-browsers [:firefox]
-     ~@body))
-
-(defmacro when-chrome [& body]
-  `(when-browsers [:chrome]
-     ~@body))
-
-(defmacro when-phantom [& body]
-  `(when-browsers [:phantom]
-     ~@body))
-
-(defmethods mouse-move-to [:chrome :phantom]
-  ([q] (with-el q el
-         (with-http :post
-           [:session *session* :moveto]
-           {:element el} _)))
-  ([x y] (with-http :post
-           [:session *session* :moveto]
-           {:xoffset x :yoffset y} _)))
-
-(defn drag-and-drop [q-from q-to]
-  (mouse-move-to q-from)
-  (with-mouse-btn
-    (mouse-move-to q-to)))
-
-(defn wait [sec]
-  (Thread/sleep (* sec 1000)))
-
-(defn back []
-  (with-http :post [:session *session* :back] nil _))
-
-(defn forward []
-  (with-http :post [:session *session* :forward] nil _))
-
-(defn refresh []
-  (with-http :post [:session *session* :refresh] nil _))
-
-(defn close []
-  (with-http :delete [:session *session* :window] nil _))
 
 (defn switch-window [handle]
   (with-http :post
@@ -414,6 +356,98 @@
      (with-window h#
        ~@body)))
 
+;;
+;; mouse
+;;
+
+(defmulti mouse-button-down browser-dispatch)
+
+(defmethods mouse-button-down [:chrome :phantom] []
+  (with-http-post [:session *session* :buttondown] nil _))
+
+(defmulti mouse-button-up browser-dispatch)
+
+(defmethods mouse-button-up [:chrome :phantom] []
+  (with-http-post [:session *session* :buttondown] nil _))
+
+(defmacro with-mouse-btn [& body]
+  `(do
+     (mouse-button-down)
+     (try
+       ~@body
+       (finally
+         (mouse-button-up)))))
+
+(defmulti mouse-move-to browser-dispatch)
+
+(defmethods mouse-move-to [:chrome :phantom]
+  ([q] (with-el q el
+         (with-http :post
+           [:session *session* :moveto]
+           {:element el} _)))
+  ([x y] (with-http :post
+           [:session *session* :moveto]
+           {:xoffset x :yoffset y} _)))
+
+(defn drag-and-drop [q-from q-to]
+  (mouse-move-to q-from)
+  (with-mouse-btn
+    (mouse-move-to q-to)))
+
+;;
+;; skip/only browsers
+;;
+
+(defmacro skip-predicate [predicate & body]
+  `(when-not (~predicate)
+     ~@body))
+
+(defmacro skip-browsers [browsers & body]
+  `(skip-predicate
+    #((set ~browsers) *browser*)
+    ~@body))
+
+(defmacro skip-phantom [& body]
+  `(skip-browsers [:phantom]
+                  ~@body))
+
+(defmacro skip-firefox [& body]
+  `(skip-browsers [:firefox]
+                  ~@body))
+
+(defmacro when-not-firefox [& body]
+  `(skip-browsers [:firefox]
+                  ~@body))
+
+(defmacro skip-chrome [& body]
+  `(skip-browsers [:chrome]
+                  ~@body))
+
+(defmacro when-predicate [predicate & body]
+  `(when (~predicate)
+     ~@body))
+
+(defmacro when-browsers [browsers & body]
+  `(when-predicate
+       #((set ~browsers) *browser*)
+     ~@body))
+
+(defmacro when-firefox [& body]
+  `(when-browsers [:firefox]
+     ~@body))
+
+(defmacro when-chrome [& body]
+  `(when-browsers [:chrome]
+     ~@body))
+
+(defmacro when-phantom [& body]
+  `(when-browsers [:phantom]
+     ~@body))
+
+;;
+;; page title
+;;
+
 (defn get-title []
   (with-http :get [:session *session* :title] nil resp
     (:value resp)))
@@ -421,6 +455,10 @@
 (defmacro with-title [bind & body]
   `(let [~bind (get-title)]
      ~@body))
+
+;;
+;; window size and position
+;;
 
 (defmulti get-window-size browser-dispatch)
 
@@ -463,6 +501,10 @@
 (defmacro let-window-size [bind & body]
   `(let [~bind (get-window-size)]
      ~@body))
+
+;;
+;; element location
+;;
 
 (defmulti el-location browser-dispatch)
 
@@ -532,6 +574,10 @@
      ~@body
      (set-window-position old#)))
 
+;;
+;; element size
+;;
+
 (defmulti el-size browser-dispatch)
 
 (defmethods el-size [:chrome :phantom] [q]
@@ -573,6 +619,10 @@
         (> (a :y2) (b :y1))
         (< (a :x2) (b :x1))
         (> (a :x1) (b :x2)))))
+
+;;
+;; touch api
+;;
 
 (defmulti touch-tap browser-dispatch)
 
@@ -726,14 +776,14 @@
        ~@body)))
 
 ;;
-;; css stuff
+;; element css
 ;;
 
 (defn css-el [el name]
   (with-http :get
     [:session *session* :element el :css name]
     nil resp
-    (:value value)))
+    (:value resp)))
 
 (defn css [q name]
   (with-el q el
@@ -903,8 +953,8 @@
 (defn wait-visible [q & args]
   (apply wait-for-predicate #(visible q) args))
 
-;; (defn wait-has-alert [& args]
-;;   (apply wait-for-predicate has-alert args))
+(defn wait-has-alert [& args]
+  (apply wait-for-predicate has-alert args))
 
 (defn wait-running [& args]
   (apply wait-for-predicate running args))
@@ -1100,7 +1150,8 @@
         (or (throw+ {:type :webdriver/screenshot
                      :message "Empty screenshot"
                      :session *session*
-                     :server *server*}))
+                     :host *host*
+                     :port *port*}))
         (b64-to-file filename))))
 
 ;;

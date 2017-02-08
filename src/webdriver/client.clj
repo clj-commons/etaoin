@@ -59,33 +59,32 @@
       (catch Throwable _ body))))
 
 (defn call
-  ([server method path-args]
-   (call server method path-args nil))
-  ([server method path-args payload]
-   (let [path (get-url-path path-args)
-         url (-> server :url (str "/" path))
-         params (merge *default-api-params*
-                       {:url url
-                        :method method
-                        :form-params (-> payload (or {}))
-                        :throw-exceptions false})
-         resp (client/request params)
-         body (:body resp)
-         error (delay {:type :webdriver/http-error
-                       :status (:status resp)
-                       :response (if (string? body)
-                                   (parse-json body)
-                                   body)
-                       :server server
+  [host port method path-args payload]
+  (let [path (get-url-path path-args)
+        url (format "http://%s:%s/%s" host port path)
+        params (merge *default-api-params*
+                      {:url url
                        :method method
-                       :path path
-                       :payload payload})]
-     (cond
-       (-> resp :status (not= 200))
-       (throw+ @error)
+                       :form-params (-> payload (or {}))
+                       :throw-exceptions false})
+        resp (client/request params)
+        body (:body resp)
+        error (delay {:type :webdriver/http-error
+                      :status (:status resp)
+                      :response (if (string? body)
+                                  (parse-json body)
+                                  body)
+                      :host host
+                      :port port
+                      :method method
+                      :path path
+                      :payload payload})]
+    (cond
+      (-> resp :status (not= 200))
+      (throw+ @error)
 
-       (-> body :status (or 0) (> 0))
-       (throw+ @error)
+      (-> body :status (or 0) (> 0))
+      (throw+ @error)
 
-       :else
-       body))))
+      :else
+      body)))
