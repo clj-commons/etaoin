@@ -1,6 +1,6 @@
 (ns webdriver.api
   "
-  The API below was written regarding the source code
+  The API below was written regarding to the source code
   of different Webdriver implementations.
 
   Sometimes, a feature you found out in W3C official standard
@@ -673,11 +673,8 @@
     (clear-form-el el-form)))
 
 ;;
-;; submiting an element :todo
+;; submiting
 ;;
-
-;; submit a form
-;; get a form
 
 ;; (defn- submit-form-el [el-form form]
 ;;   (fill-form-el el-form form)
@@ -689,11 +686,6 @@
 ;; (defn submit-form [term form]
 ;;   (with-el term el-form
 ;;     (submit-form-el el-form form)))
-
-;; (defn get-form [term]
-;;   (with-el term el-form
-;;     (get-form-el el-form)))
-
 
 ;;
 ;; element attributes
@@ -709,8 +701,7 @@
   (with-el q el
     (attr-el el name)))
 
-(defmacro
-  with-attr-el [el name & body]
+(defmacro with-attr-el [el name & body]
   `(let [~name (attr-el ~el ~(str name))]
      ~@body))
 
@@ -719,8 +710,7 @@
      (with-attr-el el# ~name
        ~@body)))
 
-(defmacro ;; ^:private
-  with-attrs-el [el names & body]
+(defmacro with-attrs-el [el names & body]
   (let [func (fn [name] `(attr-el ~el ~(str name)))
         forms (map func names)
         binds (-> names
@@ -743,7 +733,7 @@
   (with-http :get
     [:session *session* :element el :css name]
     nil resp
-    (-> resp :value not-empty)))
+    (:value value)))
 
 (defn css [q name]
   (with-el q el

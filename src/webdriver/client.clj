@@ -52,6 +52,12 @@
   `(binding [*default-api-params* (merge *default-api-params* ~opt)]
      ~@body))
 
+(defn parse-json [body]
+  (let [body* (str/replace body #"Invalid Command Method -" "")]
+    (try
+      (parse-string body* true)
+      (catch Throwable _ body))))
+
 (defn call
   ([server method path-args]
    (call server method path-args nil))
@@ -68,20 +74,18 @@
          error (delay {:type :webdriver/http-error
                        :status (:status resp)
                        :response (if (string? body)
-                                   (try
-                                     (parse-string (str/replace body #"Invalid Command Method -" "") true)
-                                     (catch Throwable _ body))
+                                   (parse-json body)
                                    body)
                        :server server
                        :method method
                        :path path
                        :payload payload})]
      (cond
-         (-> resp :status (not= 200))
-         (throw+ @error)
+       (-> resp :status (not= 200))
+       (throw+ @error)
 
-         (-> body :status (or 0) (> 0))
-         (throw+ @error)
+       (-> body :status (or 0) (> 0))
+       (throw+ @error)
 
-         :else
-         body))))
+       :else
+       body))))
