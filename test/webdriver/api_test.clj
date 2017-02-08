@@ -536,3 +536,15 @@
       (js-add-script js-url)
       (let [result (js-execute "return injected_func();")]
           (is (= result "I was injected"))))))
+
+(deftest test-set-hash
+  (let [url (-> "html/test.html" io/resource str)]
+    (wait-running :message "The server did not start.")
+    (with-session {} {}
+      (go url)
+      (js-set-hash "hello")
+      (with-url url
+        (is (str/ends-with? url "/test.html#hello")))
+      (js-set-hash "goodbye")
+      (with-url url
+        (is (str/ends-with? url "/test.html#goodbye"))))))
