@@ -15,48 +15,45 @@
    :form-params {}
    :debug false})
 
-(def default-pool-params
-  {:timeout 5
-   :threads 4
-   :insecure? false
-   :default-per-route 10})
-
 ;;
 ;; helpers
 ;;
 
-
-(defn url-item-str [item]
+(defn- url-item-str [item]
   (cond
     (keyword? item) (name item)
     (symbol? item) (name item)
     (string? item) item
     :else (str item)))
 
-(defn get-url-path [items]
+(defn- get-url-path [items]
   (str/join "/" (map url-item-str items)))
 
-(defn status-selector [resp]
+(defn- status-selector [resp]
   (-> resp :status integer?))
 
-;;
-;; client
-;;
-
 (defmacro with-pool [opt & body]
-  `(client/with-connection-pool
-     (merge ~default-pool-params ~opt)
+  `(client/with-connection-pool ~opt
      ~@body))
 
 (defmacro with-params [opt & body]
   `(binding [*default-api-params* (merge *default-api-params* ~opt)]
      ~@body))
 
-(defn parse-json [body]
+(defn- parse-json [body]
   (let [body* (str/replace body #"Invalid Command Method -" "")]
     (try
       (parse-string body* true)
       (catch Throwable _ body))))
+
+(defn- error-response [body]
+  (if (string? body)
+    (parse-json body)
+    body))
+
+;;
+;; client
+;;
 
 (defn call
   [host port method path-args payload]
@@ -71,9 +68,7 @@
         body (:body resp)
         error (delay {:type :webdriver/http-error
                       :status (:status resp)
-                      :response (if (string? body)
-                                  (parse-json body)
-                                  body)
+                      :response (error-response body)
                       :host host
                       :port port
                       :method method

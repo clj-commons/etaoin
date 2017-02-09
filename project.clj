@@ -7,4 +7,4 @@
                  [clj-http "2.3.0"]
                  [cheshire "5.6.3"]
                  [org.clojure/data.codec "0.1.0"]
-                 [org.clojure/tools.nrepl "0.2.12"]])
+                 [org.clojure/tools.logging "0.3.1"]])
