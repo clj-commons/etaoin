@@ -87,6 +87,10 @@
   `(with-exception ConnectException false
      ~@body))
 
+(defmacro when-possible [& body]
+  `(with-exception IllegalArgumentException false
+     ~@body))
+
 ;;
 ;; locators
 ;;
