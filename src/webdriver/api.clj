@@ -19,6 +19,7 @@
   (:require [clojure.string :as str]
             [webdriver.proc :as proc]
             [webdriver.client :as client]
+            [webdriver.keys :as keys]
             [clojure.data.codec.base64 :as b64]
             [clojure.java.io :as io]
             [cheshire.core :refer [parse-string]]
@@ -1142,7 +1143,7 @@
       (when (< (rand) mistake-prob)
         (fill-el el (rand-char))
         (wait-key)
-        ;; (fill-el el keys/backspace) :: todo
+        (fill-el el keys/backspace)
         (wait-key))
       (fill-el el key)
       (wait-key))))

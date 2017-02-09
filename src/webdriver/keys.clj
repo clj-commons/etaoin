@@ -1,6 +1,5 @@
-(ns webdriver.keys)
-
-;; https://www.w3.org/TR/webdriver/#keyboard-actions
+(ns webdriver.keys
+  "https://www.w3.org/TR/webdriver/#keyboard-actions")
 
 (def unidentified       \uE000)
 (def cancel             \uE001)
@@ -26,8 +25,8 @@
 (def arrow-down         \uE015)
 (def insert             \uE016)
 (def delete             \uE017)
-;; (def ;                  \uE018)
-(def =                  \uE019)
+(def semicolon          \uE018)
+(def equal              \uE019)
 (def num-0              \uE01A)
 (def num-1              \uE01B)
 (def num-2              \uE01C)
@@ -40,10 +39,10 @@
 (def num-9              \uE023)
 (def num-*              \uE024)
 (def num-+              \uE025)
-;; (def num-,              \uE026)
+(def num-comma          \uE026)
 (def num--              \uE027)
 (def num-.              \uE028)
-;; (def num-/              \uE029)
+(def num-slash          \uE029)
 (def f1                 \uE031)
 (def f2                 \uE032)
 (def f3                 \uE033)
@@ -57,7 +56,7 @@
 (def f11                \uE03B)
 (def f12                \uE03C)
 (def meta-left          \uE03D)
-(def ZenkakuHankaku     \uE040)
+(def zenkakuhankaku     \uE040)
 (def shift-right        \uE050)
 (def control-right      \uE051)
 (def alt-right          \uE052)
