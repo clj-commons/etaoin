@@ -22,19 +22,13 @@
 (def host "127.0.0.1")
 (def port 6666)
 
-(defmacro with-driver-boot [driver & body]
-  `(with-pool nil
-     (with-browser ~driver
-       (with-webdriver port
-         (with-connect host port
-           (with-session
-             (go (-> "html/test.html" io/resource str))
-             ~@body))))))
-
 (defn fixture-browsers [f]
-  (with-driver-boot :firefox (f))
-  (with-driver-boot :chrome (f))
-  (with-driver-boot :phantom (f)))
+  (let [url (-> "html/test.html" io/resource str)]
+    (doseq [driver [:firefox :chrome :phantom]]
+      (with-boot driver host port
+        (go url)
+        (wait-visible-id :document-end)
+        (f)))))
 
 (use-fixtures
   :each
@@ -62,11 +56,10 @@
           (is (str/ends-with? url "?login=&password=&message=")))))))
 
 (deftest test-visible
-  (is (visible "//button[@id='button-visible']"))
-  (is (not (visible "//button[@id='button-hidden']")))
-  (is (not (visible "//div[@id='div-hidden']")))
-  (is (thrown? clojure.lang.ExceptionInfo
-               (visible "//test[@id='dunno-foo-bar']"))))
+  (is (visible-id :button-visible))
+  (is (not (visible-id :button-hidden)))
+  (is (not (visible-id :div-hidden)))
+  (is (not (visible-id :dunno-foo-bar))))
 
 (deftest test-enabled
   (is (disabled "//input[@id='input-disabled']"))
@@ -162,7 +155,8 @@
     (with-xpath
       (click "//button[@id='wait-button']"))
     (try+
-     (wait-has-text "-secret-" :timeout 1 :message "No -secret- text on the page.")
+     (wait-has-text "-secret-" :timeout 1
+                    :message "No -secret- text on the page.")
      (is false "should not be executed")
      (catch [:type :webdriver/timeout] data
        (is (= (-> data (dissoc :predicate))
@@ -209,7 +203,7 @@
         doc "//*[@class='document']"
         trash "//div[contains(@class, 'trash')]"]
     (skip-firefox
-     (testing "wait for has class"
+     (testing "moving elements"
        (go url)
        (wait 1)
        (drag-and-drop doc trash)

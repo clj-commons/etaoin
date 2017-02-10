@@ -26,10 +26,9 @@
             [slingshot.slingshot :refer [try+ throw+]])
   (:import java.net.ConnectException))
 
-(def ^:dynamic *browser*) ;; todo rename to driver
+(def ^:dynamic *driver*)
 (def ^:dynamic *host*)
 (def ^:dynamic *port*)
-(def ^:dynamic *server*)
 (def ^:dynamic *session*)
 (def ^:dynamic *locator* "xpath")
 
@@ -37,21 +36,28 @@
 ;; tools
 ;;
 
-(defn- browser-dispatch [& _] *browser*)
+(defn- driver-dispatch
+  "Returns the current driver."
+  [& _] *driver*)
 
-(defn flip [f]
-  (fn [& args]
-    (apply f (reverse args))))
-
-(defn random-port []
+(defn random-port
+  "Returns a random port skiping first 1024 ones."
+  []
   (let [max-port 65536
         offset 1024]
     (+ (rand-int (- max-port offset))
        offset)))
 
-(defmacro defmethods [multifn dispatch-vals & fn-tail]
+(defmacro defmethods
+  "Declares multimethods in batch."
+  [multifn dispatch-vals & fn-tail]
   `(doseq [dispatch-val# ~dispatch-vals]
      (defmethod ~multifn dispatch-val# ~@fn-tail)))
+
+(defn x-id
+  "Returns an XPath query to find an element by its ID."
+  [id]
+  (format "//*[@id='%s']" (name id)))
 
 ;;
 ;; http client
@@ -123,7 +129,7 @@
 ;; find elements
 ;;
 
-(defmulti get-el browser-dispatch)
+(defmulti get-el driver-dispatch)
 
 (defmethod get-el :firefox [q]
   (with-http
@@ -145,7 +151,7 @@
   `(let [~bind (get-el ~q)]
      ~@body))
 
-(defmulti get-el-from browser-dispatch)
+(defmulti get-el-from driver-dispatch)
 
 (defmethods get-el-from [:chrome :phantom] [el-parent q]
   (with-http :post
@@ -161,7 +167,7 @@
     resp
     (-> resp :value first second)))
 
-(defmulti get-els-from browser-dispatch)
+(defmulti get-els-from driver-dispatch)
 
 (defmethods get-els-from [:chrome :phantom] [el-parent q]
   (with-http :post
@@ -212,6 +218,11 @@
     (with-http :post
       [:session *session* :element el :click] nil _)))
 
+(defn click-id [id]
+  (with-xpath
+    (let [q (x-id id)]
+      (click q))))
+
 (defn back []
   (with-http :post [:session *session* :back] nil _))
 
@@ -229,7 +240,9 @@
 ;;
 
 (defn get-url []
-  (with-http :get [:session *session* :url] nil resp
+  (with-http-get
+    [:session *session* :url]
+    resp
     (:value resp)))
 
 (defmacro with-url [bind & body]
@@ -239,6 +252,12 @@
 ;;
 ;; session
 ;;
+
+(defn status []
+  (with-http-get
+    [:status]
+    resp
+    (:value resp)))
 
 (defn new-session []
   (with-http :post [:session]
@@ -261,15 +280,11 @@
 ;; run webdriver
 ;;
 
-(defn status []
-  (with-http :get [:status] nil resp
-    (:value resp)))
-
-(defmacro with-browser [browser & body]
-  `(binding [*browser* ~browser]
+(defmacro with-driver [driver & body]
+  `(binding [*driver* ~driver]
      ~@body))
 
-(defmulti run-webdriver browser-dispatch)
+(defmulti run-webdriver driver-dispatch)
 
 (defmethod run-webdriver :firefox [port]
   (proc/run ["geckodriver" "--port" port]))
@@ -294,27 +309,34 @@
        (wait-running :message (format msg# ~host ~port)))
      ~@body))
 
+(defmacro with-boot [driver host port & body]
+  `(client/with-pool nil
+     (with-browser ~driver
+       (with-webdriver ~port
+         (with-connect ~host ~port
+           (with-session
+             ~@body))))))
 ;;
 ;; windows
 ;;
 
-(defmulti fullscreen browser-dispatch)
+(defmulti fullscreen driver-dispatch)
 
 (defmethod fullscreen :firefox []
   (with-http-post
     [:session *session* :window :fullscreen] nil _))
 
-(defmulti maximize browser-dispatch)
+(defmulti maximize driver-dispatch)
 
 (defmethod maximize :firefox []
   (with-http :post
     [:session *session* :window :maximize] nil _))
 
-(defmacro with-current-handle [bind & body]
+(defmacro with-window-handle [bind & body]
   `(let [~bind (get-window-handle)]
      ~@body))
 
-(defmulti get-window-handle browser-dispatch)
+(defmulti get-window-handle driver-dispatch)
 
 (defmethod get-window-handle :firefox []
   (with-http-get [:session *session* :window] resp
@@ -325,7 +347,7 @@
     (:value resp)))
 
 (defmethod maximize :chrome []
-  (with-current-handle h
+  (with-window-handle h
     (with-http :post
       [:session *session* :window h :maximize] nil _)))
 
@@ -334,18 +356,18 @@
     [:session *session* :window]
     {:handle handle} _))
 
-(defmulti window-handles browser-dispatch)
+(defmulti window-handles driver-dispatch)
 
 (defmethod window-handles :firefox []
-  (with-http :get
+  (with-http-get
     [:session *session* :window :handles]
-    nil resp
+    resp
     (:value resp)))
 
 (defmethods window-handles [:chrome :phantom] []
-  (with-http :get
+  (with-http-get
     [:session *session* :window :window_handles]
-    nil resp
+    resp
     (:value resp)))
 
 (defmacro with-window [handler & body]
@@ -365,12 +387,12 @@
 ;; mouse
 ;;
 
-(defmulti mouse-button-down browser-dispatch)
+(defmulti mouse-button-down driver-dispatch)
 
 (defmethods mouse-button-down [:chrome :phantom] []
   (with-http-post [:session *session* :buttondown] nil _))
 
-(defmulti mouse-button-up browser-dispatch)
+(defmulti mouse-button-up driver-dispatch)
 
 (defmethods mouse-button-up [:chrome :phantom] []
   (with-http-post [:session *session* :buttondown] nil _))
@@ -383,7 +405,7 @@
        (finally
          (mouse-button-up)))))
 
-(defmulti mouse-move-to browser-dispatch)
+(defmulti mouse-move-to driver-dispatch)
 
 (defmethods mouse-move-to [:chrome :phantom]
   ([q] (with-el q el
@@ -409,7 +431,7 @@
 
 (defmacro skip-browsers [browsers & body]
   `(skip-predicate
-    #((set ~browsers) *browser*)
+    #((set ~browsers) *driver*)
     ~@body))
 
 (defmacro skip-phantom [& body]
@@ -434,7 +456,7 @@
 
 (defmacro when-browsers [browsers & body]
   `(when-predicate
-       #((set ~browsers) *browser*)
+       #((set ~browsers) *driver*)
      ~@body))
 
 (defmacro when-firefox [& body]
@@ -454,7 +476,9 @@
 ;;
 
 (defn get-title []
-  (with-http :get [:session *session* :title] nil resp
+  (with-http-get
+    [:session *session* :title]
+    resp
     (:value resp)))
 
 (defmacro with-title [bind & body]
@@ -465,26 +489,28 @@
 ;; window size and position
 ;;
 
-(defmulti get-window-size browser-dispatch)
+(defmulti get-window-size driver-dispatch)
 
 (defmethod get-window-size :firefox []
-  (with-http :get [:session *session* :window :size]
-    nil resp
+  (with-http-get
+    [:session *session* :window :size]
+    resp
     (-> resp (select-keys [:width :height]))))
 
 (defmethods get-window-size [:chrome :phantom] []
-  (with-current-handle h
-    (with-http :get [:session *session* :window h :size]
-      nil resp
+  (with-window-handle h
+    (with-http-get
+      [:session *session* :window h :size]
+      resp
       (-> resp :value (select-keys [:width :height])))))
 
-(defmulti set-window-size browser-dispatch)
+(defmulti set-window-size driver-dispatch)
 
 (defmethods set-window-size [:chrome :phantom]
   ([{:keys [width height]}]
    (set-window-size width height))
   ([width height]
-   (with-current-handle h
+   (with-window-handle h
      (with-http :post [:session *session* :window h :size]
        {:width width :height height} _))))
 
@@ -511,20 +537,20 @@
 ;; element location
 ;;
 
-(defmulti el-location browser-dispatch)
+(defmulti el-location driver-dispatch)
 
 (defmethods el-location [:chrome :phantom] [q]
   (with-el q el
-    (with-http :get
+    (with-http-get
       [:session *session* :element el :location]
-      nil resp
+      resp
       (-> resp :value (select-keys [:x :y])))))
 
 (defmethod el-location :firefox [q]
   (with-el q el
-    (with-http :get
+    (with-http-get
       [:session *session* :element el :rect]
-      nil resp
+      resp
       (-> resp (select-keys [:x :y])))))
 
 (defmacro with-el-location [q bind & body]
@@ -535,32 +561,32 @@
 ;; window position
 ;;
 
-(defmulti get-window-position browser-dispatch)
+(defmulti get-window-position driver-dispatch)
 
 (defmethods get-window-position [:chrome :phantom] []
-  (with-current-handle h
-    (with-http :get
+  (with-window-handle h
+    (with-http-get
       [:session *session* :window h :position]
-      nil resp
+      resp
       (-> resp :value (select-keys [:x :y])))))
 
 (defmethod get-window-position :firefox []
-  (with-http :get
+  (with-http-get
     [:session *session* :window :position]
-    nil resp
+    resp
     (-> resp (select-keys [:x :y]))))
 
-(defmacro let-window-position [bind & body]
+(defmacro let-window-position [bind & body] ;; todo
   `(let [~bind (get-window-position)]
      ~@body))
 
-(defmulti set-window-position browser-dispatch)
+(defmulti set-window-position driver-dispatch)
 
 (defmethods set-window-position [:chrome :phantom]
   ([{:keys [x y]}]
    (set-window-position x y))
   ([x y]
-   (with-current-handle h
+   (with-window-handle h
      (with-http :post
        [:session *session* :window h :position]
        {:x x :y y} _))))
@@ -583,20 +609,20 @@
 ;; element size
 ;;
 
-(defmulti el-size browser-dispatch)
+(defmulti el-size driver-dispatch)
 
 (defmethods el-size [:chrome :phantom] [q]
   (with-el q el
-    (with-http :get
+    (with-http-get
       [:session *session* :element el :size]
-      nil resp
+      resp
       (-> resp :value (select-keys [:width :height])))))
 
 (defmethod el-size :firefox [q]
   (with-el q el
-    (with-http :get
+    (with-http-get
       [:session *session* :element el :rect]
-      nil resp
+      resp
       (-> resp :value (select-keys [:width :height])))))
 
 (defmacro with-el-size [q bind & body]
@@ -629,12 +655,12 @@
 ;; touch api
 ;;
 
-(defmulti touch-tap browser-dispatch)
+(defmulti touch-tap driver-dispatch)
 
 (defmethod touch-tap :chrome []
   (with-http :post [:session *session* :touch :click] nil _))
 
-(defmulti touch-move browser-dispatch)
+(defmulti touch-move driver-dispatch)
 
 (defmethod touch-move :chrome [q]
   (with-el-location q {:keys [x y]}
@@ -642,12 +668,12 @@
       [:session *session* :touch :move]
       {:x x :y y} _)))
 
-(defmulti touch-down browser-dispatch)
+(defmulti touch-down driver-dispatch)
 
 (defmethod touch-down :chrome []
   (with-http :post [:session *session* :touch :down] nil _))
 
-(defmulti touch-up browser-dispatch)
+(defmulti touch-up driver-dispatch)
 
 (defmethod touch-up :chrome []
   (with-http :post [:session *session* :touch :up] nil _))
@@ -670,9 +696,9 @@
 ;;
 
 (defn attr-el [el name]
-  (with-http :get
+  (with-http-get
     [:session *session* :element el :attribute name]
-    nil resp
+    resp
     (:value resp)))
 
 (defn attr [q name]
@@ -708,9 +734,9 @@
 ;;
 
 (defn css-el [el name]
-  (with-http :get
+  (with-http-get
     [:session *session* :element el :css name]
-    nil resp
+    resp
     (-> resp :value not-empty)))
 
 (defn css [q name]
@@ -745,7 +771,7 @@
 ;; alerts
 ;;
 
-(defmulti dismiss-alert browser-dispatch)
+(defmulti dismiss-alert driver-dispatch)
 
 (defmethod dismiss-alert :chrome []
   (with-http :post
@@ -755,7 +781,7 @@
   (with-http :post
     [:session *session* :alert :dismiss] nil _))
 
-(defmulti accept-alert browser-dispatch)
+(defmulti accept-alert driver-dispatch)
 
 (defmethod accept-alert :chrome []
   (with-http :post
@@ -765,16 +791,14 @@
   (with-http :post
     [:session *session* :alert :accept] nil _))
 
-(defmulti get-alert-text browser-dispatch)
+(defmulti get-alert-text driver-dispatch)
 
 (defmethod get-alert-text :chrome []
-  (with-http :get
-    [:session *session* :alert_text] nil resp
+  (with-http-get [:session *session* :alert_text] resp
     (:value resp)))
 
 (defmethod get-alert-text :firefox []
-  (with-http :get
-    [:session *session* :alert :text] nil resp
+  (with-http-get [:session *session* :alert :text] resp
     (:value resp)))
 
 (defmacro with-alert-text [bind & body]
@@ -785,7 +809,7 @@
 ;; active element
 ;;
 
-(defmulti get-active-el browser-dispatch)
+(defmulti get-active-el driver-dispatch)
 
 (defmethods get-active-el [:chrome :phantom] []
   (with-http :post [:session *session* :element :active]
@@ -793,8 +817,9 @@
     (-> resp :value :ELEMENT)))
 
 (defmethod get-active-el :firefox []
-  (with-http :get [:session *session* :element :active]
-    nil resp
+  (with-http-get
+    [:session *session* :element :active]
+    resp
     (-> resp :value first second)))
 
 (defmacro let-active-el [bind & body]
@@ -806,8 +831,9 @@
 ;;
 
 (defn text-el [el]
-  (with-http :get
-    [:session *session* :element el :text] nil resp
+  (with-http-get
+    [:session *session* :element el :text]
+    resp
     (:value resp)))
 
 (defn text [q]
@@ -822,12 +848,12 @@
 ;; element value
 ;;
 
-(defmulti value-el browser-dispatch)
+(defmulti value-el driver-dispatch)
 
 (defmethod value-el :default [el]
-  (with-http :get
+  (with-http-get
     [:session *session* :element el :value]
-    nil resp
+    resp
     (:value resp)))
 
 (defn value [q]
@@ -842,24 +868,24 @@
 ;; cookies
 ;;
 
-(defmulti get-cookies browser-dispatch)
+(defmulti get-cookies driver-dispatch)
 
 (defmethod get-cookies :default []
-  (with-http :get
+  (with-http-get
     [:session *session* :cookie]
-    nil resp
+    resp
     (:value resp)))
 
-(defmulti get-named-cookies browser-dispatch)
+(defmulti get-named-cookies driver-dispatch)
 
 (defmacro with-cookies [bind & body]
   `(let [~bind (get-cookies)]
      ~@body))
 
 (defmethod get-named-cookies :firefox [name]
-  (with-http :get
+  (with-http-get
     [:session *session* :cookie name]
-    nil resp
+    resp
     (:value resp)))
 
 (defmethod get-named-cookies :chrome [name]
@@ -874,21 +900,21 @@
   `(let [~bind (get-named-cookies ~name)]
      ~@body))
 
-(defmulti set-cookie browser-dispatch)
+(defmulti set-cookie driver-dispatch)
 
 (defmethod set-cookie :default [cookie]
   (with-http :post
     [:session *session* :cookie]
     {:cookie cookie} _))
 
-(defmulti delete-cookie browser-dispatch)
+(defmulti delete-cookie driver-dispatch)
 
 (defmethod delete-cookie :default [name]
   (with-http :delete
     [:session *session* :cookie name]
     nil _))
 
-(defmulti delete-cookies browser-dispatch)
+(defmulti delete-cookies driver-dispatch)
 
 (defmethod delete-cookies :default []
   (with-http :delete
@@ -899,12 +925,12 @@
 ;; source code
 ;;
 
-(defmulti get-source browser-dispatch)
+(defmulti get-source driver-dispatch)
 
 (defmethod get-source :default []
-  (with-http :get
+  (with-http-get
     [:session *session* :source]
-    nil resp
+    resp
     (:value resp)))
 
 (defmacro let-source [bind & body]
@@ -915,12 +941,12 @@
 ;; element property
 ;;
 
-(defmulti prop-el browser-dispatch)
+(defmulti prop-el driver-dispatch)
 
 (defmethod prop-el :firefox [el name]
-  (with-http :get
+  (with-http-get
     [:session *session* :element el :property name]
-    nil resp
+    resp
     (-> resp :value not-empty)))
 
 (defn prop [q name]
@@ -954,12 +980,12 @@
                     .getBytes
                     b64/decode))))
 
-(defmulti screenshot browser-dispatch)
+(defmulti screenshot driver-dispatch)
 
 (defmethod screenshot :default [filename]
-  (with-http :get
+  (with-http-get
     [:session *session* :screenshot]
-    nil resp
+    resp
     (-> resp
         :value
         not-empty
@@ -974,7 +1000,7 @@
 ;; javascript
 ;;
 
-(defmulti js-execute browser-dispatch)
+(defmulti js-execute driver-dispatch)
 
 (defmethods js-execute [:chrome :phantom] [script & args]
   (with-http :post
@@ -1003,35 +1029,14 @@
 (defn js-set-hash [hash]
   (js-execute "window.location.hash = arguments[0];" hash))
 
+(defn get-hash []
+  (let [url (get-url)]
+    (second
+     (str/split url #"#" 2))))
+
 ;;
 ;; predicates
 ;;
-
-(defn visible-el [el]
-  (with-http :get
-    [:session *session* :element el :displayed]
-    nil resp
-    (:value resp)))
-
-(defn visible [q]
-  (with-el q el
-    (visible-el el)))
-
-(defn running []
-  (with-conn-error
-    (status)))
-
-(defn- enabled-el [el]
-  (with-http :get
-    [:session *session* :element el :enabled]
-    nil resp
-    (:value resp)))
-
-(defn enabled [q]
-  (with-el q el
-    (enabled-el el)))
-
-(def disabled (complement enabled))
 
 (defn exists-el [el]
   (with-http-error
@@ -1044,6 +1049,37 @@
       true)))
 
 (def not-exists (complement exists))
+
+(defn visible-el [el]
+  (with-http-get
+    [:session *session* :element el :displayed]
+    resp
+    (:value resp)))
+
+(defn visible [q]
+  (and (exists q)
+       (with-el q el
+         (visible-el el))))
+
+(defn visible-id [id]
+  (with-xpath
+    (visible (x-id id))))
+
+(defn running []
+  (with-conn-error
+    (status)))
+
+(defn- enabled-el [el]
+  (with-http-get
+    [:session *session* :element el :enabled]
+    resp
+    (:value resp)))
+
+(defn enabled [q]
+  (with-el q el
+    (enabled-el el)))
+
+(def disabled (complement enabled))
 
 (defn has-text [text]
   (with-http-error
@@ -1103,6 +1139,9 @@
 (defn wait-visible [q & args]
   (apply wait-for-predicate #(visible q) args))
 
+(defn wait-visible-id [id & args]
+  (apply wait-for-predicate #(visible-id id) args))
+
 (defn wait-has-alert [& args]
   (apply wait-for-predicate has-alert args))
 
@@ -1127,6 +1166,11 @@
 (defn fill [q text]
   (with-el q el
     (fill-el el text)))
+
+(defn fill-id [id text]
+  (with-xpath
+    (let [q (x-id id)]
+      (fill q text))))
 
 (defn fill-form [q form]
   (with-el q el-form
@@ -1176,18 +1220,3 @@
 (defn clear-form [q]
   (with-el q el-form
     (clear-form-el el-form)))
-
-;;
-;; submiting
-;;
-
-;; (defn- submit-form-el [el-form form]
-;;   (fill-form-el el-form form)
-;;   (with-xpath
-;;     (with-el-from el-form ".//input[@type='submit']"
-;;       el-submit
-;;       (click-el el-submit))))
-
-;; (defn submit-form [term form]
-;;   (with-el term el-form
-;;     (submit-form-el el-form form)))
