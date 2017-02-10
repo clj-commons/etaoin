@@ -43,7 +43,7 @@
         (fill input "test")
         (clear input)
         (click submit)
-        (with-url url
+        (let [url (get-url)]
           (is (str/ends-with? url "?login=&password=&message=")))))
     (testing "form clear"
       (with-xpath
@@ -52,7 +52,7 @@
                          :message "long_text_here"})
         (clear-form form)
         (click submit)
-        (with-url url
+        (let [url (get-url)]
           (is (str/ends-with? url "?login=&password=&message=")))))))
 
 (deftest test-visible
@@ -115,7 +115,7 @@
     (is (= title "Webdriver Test Document"))))
 
 (deftest test-url
-  (with-url url
+  (let [url (get-url)]
     (is (str/ends-with? url "/resources/html/test.html"))))
 
 (deftest test-css-props
@@ -193,7 +193,7 @@
   (skip-firefox
    (close)
    (try+
-    (with-url url
+    (let [url (get-url)]
       (is false))
     (catch [:type :webdriver/http-error] _
       (is true)))))
@@ -362,7 +362,7 @@
   (let-source src
     (when-firefox
         (is (str/starts-with? src "<html><head>")))
-    (when-not-firefox
+    (skip-firefox
         (is (str/starts-with? src "<!DOCTYPE html>")))))
 
 (deftest test-element-properties
@@ -396,15 +396,15 @@
   (let [url (-> "html/test.html" io/resource str)
         js-url (-> "js/inject.js" io/resource str)]
     (testing "adding a script"
-      (js-add-script js-url)
+      (add-script js-url)
       (let [result (js-execute "return injected_func();")]
         (is (= result "I was injected"))))))
 
 (deftest test-set-hash
   (testing "set hash"
-    (js-set-hash "hello")
-    (with-url url
+    (set-hash "hello")
+    (let [url (get-url)]
       (is (str/ends-with? url "/test.html#hello")))
-    (js-set-hash "goodbye")
-    (with-url url
+    (set-hash "goodbye")
+    (let [url (get-url)]
       (is (str/ends-with? url "/test.html#goodbye")))))
