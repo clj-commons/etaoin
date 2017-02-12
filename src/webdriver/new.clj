@@ -279,6 +279,61 @@
      names)))
 
 ;;
+;; active element
+;;
+
+(defmulti get-active-el dispatch-driver)
+
+(defmethods get-active-el [:chrome :phantom :safari]
+  [driver]
+  (with-resp driver :get
+    [:session (:session @driver) :element :active]
+    nil resp
+    (-> resp :value :ELEMENT)))
+
+(defmethod get-active-el :firefox
+  [driver]
+  (with-resp driver :get
+    [:session (:session @driver) :element :active]
+    nil resp
+    (-> resp :value first second)))
+
+;;
+;; element text and value
+;;
+
+(defn get-element-text-el [driver el]
+  (with-resp driver :get
+    [:session (:session @driver) :element el :text]
+    nil
+    resp
+    (:value resp)))
+
+(defn get-element-text [driver q]
+  (get-element-text-el driver (find driver q)))
+
+(defn get-element-value-el [driver el]
+  (with-resp driver :get
+    [:session (:session @driver) :element el :value]
+    nil
+    resp
+    (:value resp)))
+
+(defn get-element-value [driver q]
+  (get-element-value-el driver (find driver q)))
+
+;;
+;; cookes
+;;
+
+(defn get-cookies [driver]
+  (with-resp driver :get
+    [:session (:session @driver) :cookie]
+    nil
+    resp
+    (:value resp)))
+
+;;
 ;; wait functions
 ;;
 
