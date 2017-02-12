@@ -216,6 +216,69 @@
   (get-element-location-el driver (find driver q)))
 
 ;;
+;; element box
+;;
+
+(defn get-element-box [driver q]
+  (let [el (find driver q)
+        {:keys [width height]} (get-element-size-el driver el)
+        {:keys [x y]} (get-element-location-el driver el)]
+    {:x1 x
+     :x2 (+ x width)
+     :y1 y
+     :y2 (+ y height)
+     :width width
+     :height height}))
+
+(defn intersects? [driver q1 q2]
+  (let [a (get-element-box driver q1)
+        b (get-element-box driver q2)]
+    (or (< (a :y1) (b :y2))
+        (> (a :y2) (b :y1))
+        (< (a :x2) (b :x1))
+        (> (a :x1) (b :x2)))))
+
+;;
+;; attributes
+;;
+
+(defn get-element-attr-el [driver el name]
+  (with-resp driver :get
+    [:session (:session @driver) :element el :attribute name]
+    nil
+    resp
+    (:value resp)))
+
+(defn get-element-attr [driver q name]
+  (get-element-attr-el driver (find driver q) name))
+
+(defn get-element-attrs [driver q & names]
+  (let [el (find driver q)]
+    (mapv
+     #(get-element-attr-el driver el %)
+     names)))
+
+;;
+;; css
+;;
+
+(defn get-element-css-el [driver el name]
+  (with-resp driver :get
+    [:session (:session @driver) :element el :css name]
+    nil
+    resp
+    (-> resp :value not-empty)))
+
+(defn get-element-css [driver q name]
+  (get-element-css-el driver (find driver q) name))
+
+(defn get-element-csss [driver q & names]
+  (let [el (find driver q)]
+    (mapv
+     #(get-element-css-el driver el %)
+     names)))
+
+;;
 ;; wait functions
 ;;
 
