@@ -615,7 +615,7 @@
     (with-http-get
       [:session *session* :element el :rect]
       resp
-      (-> resp :value (select-keys [:width :height])))))
+      (-> resp (select-keys [:width :height])))))
 
 (defmacro with-el-size [q bind & body]
   `(let [~bind (el-size ~q)]

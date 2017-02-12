@@ -64,7 +64,7 @@
 ;; api
 ;;
 
-(defmacro with-api [driver method path data result & body]
+(defmacro with-resp [driver method path data result & body]
   `(let [~result (client/call
                   (-> ~driver deref :host)
                   (-> ~driver deref :port)
@@ -74,7 +74,7 @@
      ~@body))
 
 (defn create-session [driver]
-  (with-api driver
+  (with-resp driver
     :post
     [:session]
     {:desiredCapabilities {}}
@@ -82,36 +82,138 @@
     (:sessionId result)))
 
 (defn delete-session [driver]
-  (with-api driver
+  (with-resp driver
     :delete
     [:session (:session @driver)]
     nil
     _))
 
+;;
+;; navigation
+;;
+
+(defn go [driver url]
+  (with-resp driver :post
+    [:session (:session @driver) :url]
+    {:url url} _))
+
+(defn back [driver]
+  (with-resp driver :post
+    [:session (:session @driver) :back]
+    nil _))
+
+(defn refresh [driver]
+  (with-resp driver :post
+    [:session (:session @driver) :refresh]
+    nil _))
+
+(defn forward [driver]
+  (with-resp driver :post
+    [:session (:session @driver) :forward]
+    nil _))
+
+;;
+;; URL and title
+;;
+
+(defn get-url [driver]
+  (with-resp driver :get
+    [:session (:session @driver) :url]
+    nil resp
+    (:value resp)))
+
+(defn get-title [driver]
+  (with-resp driver :get
+    [:session (:session @driver) :title]
+    nil resp
+    (:value resp)))
+
+;;
+;; find element(s)
+;;
+
+(defn by [driver locator]
+  (swap! driver assoc :locator locator)
+  driver)
+
+(defmulti find dispatch-driver)
+
+(defmethod find :firefox [driver q]
+  (with-resp driver :post
+    [:session (:session @driver) :element]
+    {:using (:locator @driver) :value q}
+    resp
+    (-> resp :value first second)))
+
+(defmethod find :default [driver q]
+  (with-resp driver :post
+    [:session (:session @driver) :element]
+    {:using (:locator @driver) :value q}
+    resp
+    (-> resp :value :ELEMENT)))
+
+;;
 ;; click
+;;
 
-
-(defmulti click-el dispatch-driver)
-
-(defmethod click-el :firefox [driver el]
-  (with-api driver :post
+(defn click-el [driver el]
+  (with-resp driver :post
     [:session (:session @driver) :element el :click]
     nil _))
 
 (defn click [driver q]
-  (click-el driver (find-el driver q)))
+  (click-el driver (find driver q)))
 
-;; find element(s)
+;;
+;; element size
+;;
 
-(defn by [driver locator]
-  (swap! driver assoc :locator locator))
+(defmulti get-element-size-el dispatch-driver)
 
-(defn find-el [driver q]
-  (with-api driver :get
-    [:session (:session @driver) :element]
-    {:locator (:locator @driver) :value q}
-    response
-    (:value response)))
+(defmethods get-element-size-el [:chrome :phantom :safari]
+  [driver el]
+  (with-resp driver :get
+    [:session (:session @driver) :element el :size]
+    nil
+    resp
+    (-> resp :value (select-keys [:width :height]))))
+
+(defmethod get-element-size-el :firefox
+  [driver el]
+  (with-resp driver :get
+    [:session (:session @driver) :element el :rect]
+    nil
+    resp
+    (-> resp (select-keys [:width :height]))))
+
+(defn get-element-size [driver q]
+  (get-element-size-el driver (find driver q)))
+
+;;
+;; element location
+;;
+
+(defmulti get-element-location-el dispatch-driver)
+
+(defmethods get-element-location-el
+  [:chrome :phantom :safari]
+  [driver el]
+  (with-resp driver :get
+    [:session (:session @driver) :element el :location]
+    nil
+    resp
+    (-> resp :value (select-keys [:x :y]))))
+
+(defmethod get-element-location-el :firefox
+  [driver el]
+  (with-resp driver :get
+    [:session (:session @driver) :element el :rect]
+    nil
+    resp
+    (-> resp (select-keys [:x :y]))))
+
+(defn get-element-location [driver q]
+  (get-element-location-el driver (find driver q)))
 
 ;;
 ;; wait functions
@@ -196,7 +298,3 @@
 (def chrome (partial boot-driver :chrome))
 (def phantom (partial boot-driver :phantom))
 (def safari (partial boot-driver :safari))
-
-;;
-;;
-;;
