@@ -571,8 +571,51 @@
 ;; wait functions
 ;;
 
+(def default-timeout 10)
+(def default-interval 0.1)
+
 (defn wait [sec]
   (Thread/sleep (* sec 1000)))
+
+(defn wait-predicate
+  ([pred]
+   (wait-predicate pred {}))
+  ([pred opt]
+   (let [timeout (get opt :timeout default-timeout)
+         interval (get opt :interval default-interval)
+         times (get opt :times 0)
+         message (get opt :message)]
+     (when (< timeout 0)
+       (throw+ {:type :webdriver/timeout
+                :message message
+                :timeout timeout
+                :interval interval
+                :times times
+                :predicate pred}))
+     (when-not (pred)
+       (wait interval)
+       (recur pred (assoc
+                    opt
+                    :timeout (- timeout interval)
+                    :times (inc times)))))))
+
+(defn wait-exists [driver q & [opt]]
+  (wait-predicate #(exists? driver q) opt))
+
+(defn wait-visible [driver q & [opt]]
+  (wait-predicate #(visible? driver q) opt))
+
+(defn wait-enabled [driver q & [opt]]
+  (wait-predicate #(enabled? driver q) opt))
+
+(defn wait-has-alert [driver & [opt]]
+  (wait-predicate #(has-alert? driver) opt))
+
+(defn wait-has-text [driver text & [opt]]
+  (wait-predicate #(has-text? driver text) opt))
+
+(defn wait-has-class [driver q class & [opt]]
+  (wait-predicate #(has-class? driver q class) opt))
 
 ;;
 ;; driver management
