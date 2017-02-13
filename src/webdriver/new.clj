@@ -299,8 +299,18 @@
     (-> resp :value first second)))
 
 ;;
-;; element text and value
+;; element text, name and value
 ;;
+
+(defn get-element-tag-el [driver el]
+  (with-resp driver :get
+    [:session (:session @driver) :element el :name]
+    nil
+    resp
+    (:value resp)))
+
+(defn get-element-tag [driver q]
+  (get-element-tag-el driver (find driver q)))
 
 (defn get-element-text-el [driver el]
   (with-resp driver :get
@@ -332,6 +342,230 @@
     nil
     resp
     (:value resp)))
+
+(defn get-named-cookie [driver name]
+  (->> driver
+       get-cookies
+       (filter #(= (:name %) name))
+       first))
+
+(defn set-cookie [driver cookie]
+  (with-resp driver :post
+    [:session (:session @driver) :cookie]
+    {:cookie cookie}
+    _))
+
+(defn delete-cookies [driver]
+  (with-resp driver :delete
+    [:session (:session @driver) :cookie]
+    nil _))
+
+;;
+;; source code
+;;
+
+(defn get-source [driver]
+  (with-resp driver :get
+    [:session (:session @driver) :source]
+    nil
+    resp
+    (:value resp)))
+
+;;
+;; execute js
+;;
+
+(defmulti js-execute dispatch-driver)
+
+(defmethods js-execute [:default]
+  [driver script & args]
+  (with-resp driver :post
+    [:session (:session @driver) :execute]
+    {:script script :args (vec args)}
+    resp
+    (:value resp)))
+
+(defmethod js-execute :firefox [driver script & args]
+  (with-resp driver :post
+    [:session (:session @driver) :execute :sync]
+    {:script script :args (vec args)}
+    resp
+    (:value resp)))
+
+(defn add-script [driver url]
+  (let [script
+        (str "var s = document.createElement('script');"
+             "s.type = 'text/javascript';"
+             "s.src = arguments[0];"
+             "document.head.appendChild(s);")]
+    (js-execute driver script url)))
+
+;;
+;; get/set hash
+;;
+
+(defn- split-hash [url]
+  (str/split url #"#" 2))
+
+(defn set-hash [driver hash]
+  (let [[url _] (split-hash (get-url driver))
+        new (format "%s#%s" url hash)]
+    (go driver new)))
+
+(defn get-hash [driver]
+  (let [[_ hash] (split-hash (get-url driver))]
+    hash))
+
+;;
+;; exceptions
+;;
+
+;;
+;; exceptions
+;;
+
+(defmacro with-exception [catch fallback & body]
+  `(try+
+    ~@body
+    (catch ~catch ~(quote _)
+      ~fallback)))
+
+(defmacro with-http-error [& body]
+  `(with-exception [:type :webdriver/http-error] false
+     ~@body))
+
+(defmacro with-conn-error [& body]
+  `(with-exception ConnectException false
+     ~@body))
+
+;;
+;; locators
+;;
+
+(defmacro with-locator [driver locator & body]
+  `(let [old# (-> ~driver deref :locator)]
+     (swap! ~driver assoc :locator ~locator)
+     (try
+       ~@body
+       (finally
+         (swap! ~driver assoc :locator old#)))))
+
+(defmacro with-xpath [driver & body]
+  `(with-locator ~driver "xpath"
+     ~@body))
+
+;;
+;; alerts
+;;
+
+(defmulti get-alert-text dispatch-driver)
+
+(defmethod get-alert-text :firefox
+  [driver]
+  (with-resp driver :get
+    [:session (:session @driver) :alert :text]
+    nil
+    resp
+    (:value resp)))
+
+(defmethods get-alert-text [:chrome :safari]
+  [driver]
+  (with-resp driver :get
+    [:session (:session @driver) :alert_text]
+    nil
+    resp
+    (:value resp)))
+
+(defmulti dismiss-alert dispatch-driver)
+
+(defmethod dismiss-alert :firefox
+  [driver]
+  (with-resp driver :post
+    [:session (:session @driver) :alert :dismiss]
+    nil _))
+
+(defmethods dismiss-alert [:chrome :safari]
+  [driver]
+  (with-resp driver :post
+    [:session (:session @driver) :dismiss_alert]
+    nil _))
+
+(defmulti accept-alert dispatch-driver)
+
+(defmethod accept-alert :firefox
+  [driver]
+  (with-resp driver :post
+    [:session (:session @driver) :alert :accept]
+    nil _))
+
+(defmethods accept-alert [:chrome :safari]
+  [driver]
+  (with-resp driver :post
+    [:session (:session @driver) :accept_alert]
+    nil _))
+
+;;
+;; predicates
+;;
+
+(defn exists? [driver q]
+  (with-http-error
+    (get-element-text driver q)
+    true))
+
+(defn visible-el [driver el]
+  (with-resp driver :get
+    [:session (:session @driver) :element el :displayed]
+    nil
+    resp
+    (:value resp)))
+
+(defn displayed? [driver q]
+  (visible-el driver (find driver q)))
+
+(defn visible? [driver q]
+  (and (exists? driver q)
+       (displayed? driver q)))
+
+(def invisible? (complement visible?))
+
+(defn enabled-el [driver el]
+  (with-resp driver :get
+    [:session (:session @driver) :element el :enabled]
+    nil
+    resp
+    (:value resp)))
+
+(defn enabled? [driver q]
+  (enabled-el driver (find driver q)))
+
+(def disabled? (complement enabled?))
+
+(defn has-text? [driver text]
+  (with-http-error
+    (let [q (format "//*[contains(text(),'%s')]" text)]
+      (with-xpath driver
+        (find driver q)
+        true))))
+
+(defn has-class-el [driver el class]
+  (let [classes (get-element-attr-el driver el "class")]
+    (cond
+      (nil? classes) false
+      (string? classes)
+      (str/includes? classes class))))
+
+(defn has-class? [driver q class]
+  (has-class-el driver (find driver q) class))
+
+(def has-no-class? (complement has-class?))
+
+(defn has-alert? [driver]
+  (with-http-error
+    (get-alert-text driver)
+    true))
+
+(def has-no-alert? (complement has-alert?))
 
 ;;
 ;; wait functions
