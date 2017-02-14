@@ -635,6 +635,16 @@
 ;; predicates
 ;;
 
+(defn running? [driver]
+  (with-exception Throwable false
+    (let [{:keys [host port]} @driver
+          socket (java.net.Socket. host port)]
+      (if (.isConnected socket)
+        (do
+          (.close socket)
+          true)
+        false))))
+
 (defn driver? [driver type]
   (= (dispatch-driver driver) type))
 
@@ -758,6 +768,9 @@
 
 (defn wait-has-class [driver q class & [opt]]
   (wait-predicate #(has-class? driver q class) opt))
+
+(defn wait-running [driver & [opt]]
+  (wait-predicate #(running? driver) opt))
 
 ;;
 ;; touch
@@ -942,7 +955,7 @@
     driver))
 
 (defn connect-driver [driver & [opt]]
-  (wait 2)
+  (wait-running driver)
   (let [session (create-session driver)]
     (swap! driver assoc :session session)
     driver))
