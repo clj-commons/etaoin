@@ -73,6 +73,17 @@
                   ~data)]
      ~@body))
 
+;;
+;; session and status
+;;
+
+(defn get-status [driver]
+  (with-resp driver :get
+    [:status]
+    nil
+    resp
+    (:value resp)))
+
 (defn create-session [driver]
   (with-resp driver
     :post
@@ -87,6 +98,94 @@
     [:session (:session @driver)]
     nil
     _))
+
+;;
+;; windows
+;;
+
+(defmulti get-window-handle dispatch-driver)
+
+(defmethod get-window-handle :default
+  [driver]
+  (with-resp driver :get
+    [:session (:session @driver) :window_handle]
+    nil
+    resp
+    (:value resp)))
+
+(defmethod get-window-handle :firefox
+  [driver]
+  (with-resp driver :get
+    [:session (:session @driver) :window]
+    nil
+    resp
+    (-> resp :value)))
+
+(defmulti get-window-handles dispatch-driver)
+
+(defmethod get-window-handles :firefox
+  [driver]
+  (with-resp driver :get
+    [:session (:session @driver) :window :handles]
+    nil resp
+    (:value resp)))
+
+(defmethods get-window-handles [:chrome :phantom]
+  [driver]
+  (with-resp driver :get
+    [:session (:session @driver) :window :window_handles]
+    nil resp
+    (:value resp)))
+
+(defn switch-window [driver handle]
+  (with-resp driver :post
+    [:session (:session @driver) :window]
+    {:handle handle} _))
+
+(defmulti maximize dispatch-driver)
+
+(defmethod maximize :firefox
+  [driver]
+  (with-resp driver :post
+    [:session (:session @driver) :window :maximize]
+    nil _))
+
+(defmethods maximize [:chrome :safari]
+  [driver]
+  (let [h (get-window-handle driver)]
+    (with-resp driver :post
+      [:session (:session @driver) :window h :maximize]
+      nil _)))
+
+;; size and pos
+
+;;
+;; mouse
+;;
+
+;;
+;; touch
+;;
+
+;;
+;; skip/only driver
+;;
+
+;;
+;; input and submit
+;;
+
+;;
+;; forms
+;;
+
+;;
+;; screenshot
+;;
+
+;;
+;; human actions
+;;
 
 ;;
 ;; navigation
