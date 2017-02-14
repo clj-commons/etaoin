@@ -7,14 +7,15 @@
   really differs from the corresponding implementation in Chrome or Firefox, etc.
 
   Chrome:
-  https://github.com/bayandin/chromedriver/blob/e9a1f55b166ea62ef0f6e78da899d9abf117e88f/client/command_executor.py
+  https://github.com/bayandin/chromedriver/blob/master/client/command_executor.py
+  https://github.com/bayandin/chromedriver/blob/master/client/webelement.py
 
   Firefox (Geckodriver):
-  https://github.com/mozilla/webdriver-rust/blob/7ec65451c99b638655c72e7b9718a374ff60de87/src/httpapi.rs
+  https://github.com/mozilla/webdriver-rust/blob/master/src/httpapi.rs
 
   Phantom.js (Ghostdriver)
-  https://github.com/detro/ghostdriver/blob/873c9d660a80a3faa743e4f352571ce4559fe691/src/request_handlers/session_request_handler.js
-  https://github.com/detro/ghostdriver/blob/873c9d660a80a3faa743e4f352571ce4559fe691/src/request_handlers/webelement_request_handler.js
+  https://github.com/detro/ghostdriver/blob/master/src/request_handlers/session_request_handler.js
+  https://github.com/detro/ghostdriver/blob/master/src/request_handlers/webelement_request_handler.js
   "
   (:require [clojure.string :as str]
             [webdriver.proc :as proc]
@@ -49,9 +50,6 @@
   `(doseq [dispatch-val# ~dispatch-vals]
      (defmethod ~multifn dispatch-val# ~@fn-tail)))
 
-(defn dispatch-driver [driver & _]
-  (:type @driver))
-
 (defn random-port
   "Returns a random port skiping first 1024 ones."
   []
@@ -59,6 +57,9 @@
         offset 1024]
     (+ (rand-int (- max-port offset))
        offset)))
+
+(defn dispatch-driver [driver & _]
+  (:type @driver))
 
 ;;
 ;; api
@@ -158,30 +159,6 @@
       nil _)))
 
 ;; size and pos
-
-;;
-;; touch
-;;
-
-;;
-;; skip/only driver
-;;
-
-;;
-;; input and submit
-;;
-
-;;
-;; forms
-;;
-
-;;
-;; screenshot
-;;
-
-;;
-;; human actions
-;;
 
 ;;
 ;; navigation
@@ -658,6 +635,21 @@
 ;; predicates
 ;;
 
+(defn driver? [driver type]
+  (= (dispatch-driver driver) type))
+
+(defn chrome? [driver]
+  (driver? driver :chrome))
+
+(defn firefox? [driver]
+  (driver? driver :firefox))
+
+(defn phantom? [driver]
+  (driver? driver :phantom))
+
+(defn safari? [driver]
+  (driver? driver :safari))
+
 (defn exists? [driver q]
   (with-http-error
     (get-element-text driver q)
@@ -766,6 +758,138 @@
 
 (defn wait-has-class [driver q class & [opt]]
   (wait-predicate #(has-class? driver q class) opt))
+
+;;
+;; touch
+;;
+
+(defmulti touch-tap dispatch-driver)
+
+(defmethod touch-tap :chrome
+  [driver q]
+  (with-resp driver :post
+    [:session (:session @driver) :touch :click]
+    {:element (find driver q)} _))
+
+(defmulti touch-down dispatch-driver)
+
+(defmethod touch-down :chrome
+  ([driver q]
+   (let [{:keys [x y]}
+         (get-element-location driver q)]
+     (touch-down driver x y)))
+  ([driver x y]
+   (with-resp driver :post
+     [:session (:session @driver) :touch :down]
+     {:x (int x) :y (int y)} _)))
+
+(defmulti touch-up dispatch-driver)
+
+(defmethod touch-up :chrome
+  ([driver q]
+   (let [{:keys [x y]}
+         (get-element-location driver q)]
+     (touch-down driver x y)))
+  ([driver x y]
+   (with-resp driver :post
+     [:session (:session @driver) :touch :up]
+     {:x (int x) :y (int y)} _)))
+
+(defmulti touch-move dispatch-driver)
+
+(defmethod touch-move :chrome
+  ([driver q]
+   (let [{:keys [x y]}
+         (get-element-location driver q)]
+     (touch-move driver x y)))
+  ([driver x y]
+   (with-resp driver :post
+     [:session (:session @driver) :touch :move]
+     {:x (int x) :y (int y)} _)))
+
+;;
+;; skip/when driver
+;;
+
+(defmacro skip-predicate [predicate & body]
+  `(when-not (~predicate)
+     ~@body))
+
+(defmacro skip-chrome [driver & body]
+  `(skip-predicate #(chrome? ~driver) ~@body))
+
+(defmacro skip-phantom [driver & body]
+  `(skip-predicate #(phantom? ~driver) ~@body))
+
+(defmacro skip-firefox [driver & body]
+  `(skip-predicate #(firefox? ~driver) ~@body))
+
+(defmacro skip-safari [driver & body]
+  `(skip-predicate #(safari? ~driver) ~@body))
+
+(defmacro when-predicate [predicate & body]
+  `(when (~predicate)
+     ~@body))
+
+(defmacro when-chrome [driver & body]
+  `(when-predicate #(chrome? ~driver) ~@body))
+
+(defmacro when-phantom [driver & body]
+  `(when-predicate #(phantom? ~driver) ~@body))
+
+(defmacro when-firefox [driver & body]
+  `(when-predicate #(firefox? ~driver) ~@body))
+
+(defmacro when-safari [driver & body]
+  `(when-predicate #(safari? ~driver) ~@body))
+
+;;
+;; input
+;;
+
+(defn fill-el [driver el text]
+  (with-resp driver :post
+    [:session (:session @driver) :element el :value]
+    {:value (vec text)} _))
+
+(defn fill [driver q text]
+  (fill-el driver (find driver q) text))
+
+;;
+;; submit
+;;
+
+;;
+;; forms
+;;
+
+;;
+;; human actions
+;;
+
+;;
+;; screenshot
+;;
+
+(defn b64-to-file [b64str filename]
+  (with-open [out (io/output-stream filename)]
+    (.write out (-> b64str .getBytes b64/decode))))
+
+(defmulti screenshot dispatch-driver)
+
+(defmethod screenshot :default
+  [driver filename]
+  (with-resp driver :get
+    [:session (:session @driver) :screenshot]
+    nil
+    resp
+    (-> resp
+        :value
+        not-empty
+        (or (throw+ {:type :webdriver/screenshot
+                     :message "Empty screenshot"
+                     :driver @driver}))
+        (b64-to-file filename))))
 
 ;;
 ;; driver management
