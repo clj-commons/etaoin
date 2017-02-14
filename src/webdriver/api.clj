@@ -391,7 +391,7 @@
 (defmulti mouse-button-up dispatch-driver)
 
 (defmethods mouse-button-up [:chrome :phantom] []
-  (with-http-post [:session *session* :buttondown] nil _))
+  (with-http-post [:session *session* :buttonup] nil _))
 
 (defmacro with-mouse-btn [& body]
   `(do

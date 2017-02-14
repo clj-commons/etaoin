@@ -160,10 +160,6 @@
 ;; size and pos
 
 ;;
-;; mouse
-;;
-
-;;
 ;; touch
 ;;
 
@@ -252,6 +248,51 @@
     (-> resp :value :ELEMENT)))
 
 ;;
+;; mouse
+;;
+
+(defmulti mouse-btn-down dispatch-driver)
+
+(defmethods mouse-btn-down [:chrome :phantom :safari]
+  [driver]
+  (with-resp driver :post
+    [:session (:session @driver) :buttondown]
+    nil _))
+
+(defmulti mouse-btn-up dispatch-driver)
+
+(defmethods mouse-btn-up [:chrome :phantom :safari]
+  [driver]
+  (with-resp driver :post
+    [:session (:session @driver) :buttonup]
+    nil _))
+
+(defmulti mouse-move-to dispatch-driver)
+
+(defmethods mouse-move-to [:chrome :phantom :safari]
+  ([driver q]
+   (with-resp driver :post
+     [:session (:session @driver) :moveto]
+     {:element (find driver q)} _))
+  ([driver x y]
+   (with-resp driver :post
+     [:session (:session @driver) :moveto]
+     {:xoffset x :yoffset y} _)))
+
+(defmacro with-mouse-btn [driver & body]
+  `(do
+     (mouse-btn-down ~driver)
+     (try
+       ~@body
+       (finally
+         (mouse-btn-up ~driver)))))
+
+(defn drag-and-drop [driver q-from q-to]
+  (mouse-move-to driver q-from)
+  (with-mouse-btn driver
+    (mouse-move-to driver q-to)))
+
+;;
 ;; xpath/css finders
 ;;
 
@@ -266,6 +307,17 @@
 
 (defn click [driver q]
   (click-el driver (find driver q)))
+
+(defmulti double-click-el dispatch-driver)
+
+(defmethods double-click-el [:chrome :phantom]
+  [driver el]
+  (with-resp driver :post
+    [:session (:session @driver) :element el :doubleclick]
+    nil _))
+
+(defn double-click [driver q]
+  (double-click-el driver (find driver q)))
 
 ;;
 ;; element size
@@ -518,11 +570,6 @@
 (defn get-hash [driver]
   (let [[_ hash] (split-hash (get-url driver))]
     hash))
-
-;;
-;; exceptions
-;;
-
 ;;
 ;; exceptions
 ;;
