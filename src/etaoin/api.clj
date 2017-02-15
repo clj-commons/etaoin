@@ -778,6 +778,8 @@
     (get-element-text driver q)
     true))
 
+(def absent? (complement exists?))
+
 (defn visible* [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :displayed]

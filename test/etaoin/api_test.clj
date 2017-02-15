@@ -70,24 +70,25 @@
        clojure.lang.ExceptionInfo
        (enabled? *driver* {:id :dunno-foo-bar}))))
 
-;; (deftest test-exists
-;;   (with-xpath
-;;     (is (exists "//html"))
-;;     (is (exists "//body"))
-;;     (is (not (exists "//test[@id='dunno-foo-bar']")))))
+(deftest test-exists
+  (doto *driver*
+    (-> (exists? {:tag :html}) is)
+    (-> (exists? {:tag :body}) is)
+    (-> (absent? {:id :dunno-foo-bar}) is)))
 
-;; (deftest test-alert
-;;   (click "//button[@id='button-alert']")
-;;   (skip-phantom
-;;    (with-alert-text alert
-;;      (is (= alert "Hello!")))
-;;    (is (has-alert))
-;;    (accept-alert)
-;;    (is (not (has-alert)))
-;;    (click "//button[@id='button-alert']")
-;;    (is (has-alert))
-;;    (dismiss-alert)
-;;    (is (not (has-alert)))))
+(deftest test-alert
+  (skip-phantom
+   *driver*
+   (doto *driver*
+     (click {:id :button-alert})
+     (-> get-alert-text (= "Hello!") is)
+     (-> has-alert? is)
+     (accept-alert)
+     (-> has-alert? not is)
+     (click {:id :button-alert})
+     (-> has-alert? is)
+     (dismiss-alert)
+     (-> has-alert? not is))))
 
 ;; (deftest test-attributes
 ;;   (testing "common attributes"
