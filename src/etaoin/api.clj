@@ -482,9 +482,9 @@
 ;; attributes
 ;;
 
-(defn get-element-attr* [driver el name]
+(defn get-element-attr* [driver el attr]
   (with-resp driver :get
-    [:session (:session @driver) :element el :attribute name]
+    [:session (:session @driver) :element el :attribute (name attr)]
     nil
     resp
     (:value resp)))

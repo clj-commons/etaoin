@@ -90,36 +90,46 @@
      (dismiss-alert)
      (-> has-alert? not is))))
 
-;; (deftest test-attributes
-;;   (testing "common attributes"
-;;     (with-attrs "//input[@id='input-attr']"
-;;       [id type value name style
-;;        disabled data-foo data-bar]
-;;       (is (= id "input-attr"))
-;;       (is (= type "text"))
-;;       (is (= value "hello"))
-;;       (is (= style "border: 5px; width: 150px;"))
-;;       (is (= disabled "true"))
-;;       (is (= data-foo "foo"))
-;;       (is (= data-bar "bar"))))
-;;   (testing "event attributes"
-;;     (with-attrs "//input[@id='input-attr']" [onclick]
-;;       (is (= onclick "alert(123)"))))
-;;   (testing "missing attributes"
-;;     (with-attrs "//input[@id='input-attr']"
-;;       [foo bar baz dunno]
-;;       (is (= foo nil))
-;;       (is (= baz nil))
-;;       (is (= bar nil))
-;;       (is (= dunno nil)))))
+(deftest test-attributes
+  (testing "common attributes"
+    (doto *driver*
+      (-> (get-element-attrs
+           {:id :input-attr}
+           :id :type :value :name :style
+           "disabled" "data-foo" "data-bar")
+          (= ["input-attr"
+              "text"
+              "hello"
+              "test"
+              "border: 5px; width: 150px;"
+              "true"
+              "foo"
+              "bar"])
+          is)))
+  (testing "event attributes"
+    (doto *driver*
+      (-> (get-element-attr
+           {:id :input-attr}
+           :onclick)
+          (= "alert(123)")
+          is)))
+  (testing "missing attributes"
+    (doto *driver*
+      (-> (get-element-attrs
+           {:id :input-attr}
+           :foo "bar" :baz "dunno")
+          (= [nil nil nil nil])
+          is))))
 
-;; (deftest test-title
-;;   (with-title title
-;;     (is (= title "Webdriver Test Document"))))
+(deftest test-title
+  (doto *driver*
+    (-> get-title (= "Webdriver Test Document") is)))
 
-;; (deftest test-url
-;;   (let [url (get-url)]
-;;     (is (str/ends-with? url "/resources/html/test.html"))))
+(deftest test-url
+  (doto *driver*
+    (-> get-url
+        (str/ends-with? "/resources/html/test.html")
+        is)))
 
 ;; (deftest test-css-props
 ;;   (testing "single css"
