@@ -6,13 +6,13 @@
             [etaoin.api :refer :all])
   (:import javax.imageio.ImageIO))
 
-;; (defmacro with-tmp-file [prefix suffix bind & body]
-;;   `(let [tmp# (java.io.File/createTempFile ~prefix ~suffix)
-;;          ~bind (.getAbsolutePath tmp#)]
-;;      (try
-;;        ~@body
-;;        (finally
-;;          (.delete tmp#)))))
+(defmacro with-tmp-file [prefix suffix bind & body]
+  `(let [tmp# (java.io.File/createTempFile ~prefix ~suffix)
+         ~bind (.getAbsolutePath tmp#)]
+     (try
+       ~@body
+       (finally
+         (.delete tmp#)))))
 
 (defn numeric? [val]
   (or (instance? Double val)
@@ -266,14 +266,9 @@
           (= "active-el-input")
           is))))
 
-;; (deftest test-element-text
-;;   (with-text "//*[@id='element-text']" text
-;;     (is (= text "Element text goes here."))))
-
-;; (deftest test-element-value
-;;   (when-chrome
-;;       (with-value "//*[@id='element-value']" value
-;;         (is (= value "value text")))))
+(deftest test-element-text
+  (let [text (get-element-text *driver* {:id :element-text})]
+    (is (= text "Element text goes here."))))
 
 ;; (deftest test-cookies
 ;;   (testing "getting all cookies"
@@ -372,12 +367,12 @@
 ;;     (with-cookies cookies
 ;;       (is (= cookies [])))))
 
-;; (deftest test-page-source
-;;   (let-source src
-;;     (when-firefox
-;;         (is (str/starts-with? src "<html><head>")))
-;;     (skip-firefox
-;;         (is (str/starts-with? src "<!DOCTYPE html>")))))
+(deftest test-page-source
+  (let [src (get-source *driver*)]
+    (when-firefox *driver*
+      (is (str/starts-with? src "<html><head>")))
+    (skip-firefox *driver*
+     (is (str/starts-with? src "<!DOCTYPE html>")))))
 
 ;; (deftest test-element-properties
 ;;   (when-firefox
@@ -387,13 +382,13 @@
 ;;                (is (= innerHTML "<div>Inner HTML</div>"))
 ;;                (is (= tagName "DIV")))))
 
-;; (deftest test-screenshot
-;;   (with-tmp-file "screenshot" ".png" path
-;;     (screenshot path)
-;;     (-> path
-;;         io/file
-;;         ImageIO/read
-;;         is)))
+(deftest test-screenshot
+  (with-tmp-file "screenshot" ".png" path
+    (screenshot *driver* path)
+    (-> path
+        io/file
+        ImageIO/read
+        is)))
 
 ;; (deftest test-js-execute
 ;;   (testing "simple result"
