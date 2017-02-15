@@ -158,7 +158,85 @@
       [:session (:session @driver) :window h :maximize]
       nil _)))
 
-;; size and pos
+(defmulti get-window-size dispatch-driver)
+
+(defmethod get-window-size :firefox
+  [driver]
+  (with-resp driver :get
+    [:session (:session @driver) :window :size]
+    nil
+    resp
+    (-> resp (select-keys [:width :height]))))
+
+(defmethod get-window-size :default
+  [driver]
+  (let [h (get-window-handle driver)]
+    (with-resp driver :get
+      [:session (:session @driver) :window h :size]
+      nil
+      resp
+      (-> resp :value (select-keys [:width :height])))))
+
+(defmulti get-window-position dispatch-driver)
+
+(defmethod get-window-position :firefox
+  [driver]
+  (with-resp driver :get
+    [:session (:session @driver) :window :position]
+    nil
+    resp
+    (-> resp (select-keys [:x :y]))))
+
+(defmethod get-window-position :default
+  [driver]
+  (let [h (get-window-handle driver)]
+    (with-resp driver :get
+      [:session (:session @driver) :window h :position]
+      nil
+      resp
+      (-> resp :value (select-keys [:x :y])))))
+
+(defmulti set-window-size-api dispatch-driver)
+
+(defmethod set-window-size-api :firefox
+  [driver width height]
+  (with-resp driver :post
+    [:session (:session @driver) :window :size]
+    {:width width :height height} _))
+
+(defmethod set-window-size-api :default
+  [driver width height]
+  (let [h (get-window-handle driver)]
+    (with-resp driver :post
+      [:session (:session @driver) :window h :size]
+      {:width width :height height} _)))
+
+(defn set-window-size
+  ([driver {:keys [width height]}]
+   (set-window-size driver width height))
+  ([driver width height]
+   (set-window-size-api driver width height)))
+
+(defmulti set-window-position-api dispatch-driver)
+
+(defmethod set-window-position-api :firefox
+  ([driver x y]
+   (with-resp driver :post
+     [:session (:session @driver) :window :position]
+     {:x x :y y} _)))
+
+(defmethod set-window-position-api :default
+  ([driver x y]
+   (let [h (get-window-handle driver)]
+     (with-resp driver :post
+       [:session (:session @driver) :window h :position]
+       {:x x :y y} _))))
+
+(defn set-window-position
+  ([driver {:keys [x y]}]
+   (set-window-position driver x y))
+  ([driver x y]
+   (set-window-position-api driver x y)))
 
 ;;
 ;; navigation
