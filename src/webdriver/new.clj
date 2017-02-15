@@ -317,16 +317,16 @@
     (map? q)
     ["xpath" (q-xpath q)]))
 
-(defmulti find-el dispatch-driver)
+(defmulti find* dispatch-driver)
 
-(defmethod find-el :firefox [driver locator term]
+(defmethod find* :firefox [driver locator term]
   (with-resp driver :post
     [:session (:session @driver) :element]
     {:using locator :value term}
     resp
     (-> resp :value first second)))
 
-(defmethod find-el :default [driver locator term]
+(defmethod find* :default [driver locator term]
   (with-resp driver :post
     [:session (:session @driver) :element]
     {:using locator :value term}
@@ -336,7 +336,7 @@
 (defn find [driver q]
   (let [[locator term] (q-discover q)
         locator (or locator (:locator @driver))]
-    (find-el driver locator term)))
+    (find* driver locator term)))
 
 ;;
 ;; mouse
@@ -387,32 +387,32 @@
 ;; click
 ;;
 
-(defn click-el [driver el]
+(defn click* [driver el]
   (with-resp driver :post
     [:session (:session @driver) :element el :click]
     nil _))
 
 (defn click [driver q]
-  (click-el driver (find driver q)))
+  (click* driver (find driver q)))
 
-(defmulti double-click-el dispatch-driver)
+(defmulti double-click* dispatch-driver)
 
-(defmethods double-click-el [:chrome :phantom]
+(defmethods double-click* [:chrome :phantom]
   [driver el]
   (with-resp driver :post
     [:session (:session @driver) :element el :doubleclick]
     nil _))
 
 (defn double-click [driver q]
-  (double-click-el driver (find driver q)))
+  (double-click* driver (find driver q)))
 
 ;;
 ;; element size
 ;;
 
-(defmulti get-element-size-el dispatch-driver)
+(defmulti get-element-size* dispatch-driver)
 
-(defmethods get-element-size-el [:chrome :phantom :safari]
+(defmethods get-element-size* [:chrome :phantom :safari]
   [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :size]
@@ -420,7 +420,7 @@
     resp
     (-> resp :value (select-keys [:width :height]))))
 
-(defmethod get-element-size-el :firefox
+(defmethod get-element-size* :firefox
   [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :rect]
@@ -429,13 +429,13 @@
     (-> resp (select-keys [:width :height]))))
 
 (defn get-element-size [driver q]
-  (get-element-size-el driver (find driver q)))
+  (get-element-size* driver (find driver q)))
 
 ;;
 ;; element location
 ;;
 
-(defmulti get-element-location-el dispatch-driver)
+(defmulti get-element-location* dispatch-driver)
 
 (defmethods get-element-location-el
   [:chrome :phantom :safari]
@@ -446,7 +446,7 @@
     resp
     (-> resp :value (select-keys [:x :y]))))
 
-(defmethod get-element-location-el :firefox
+(defmethod get-element-location* :firefox
   [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :rect]
@@ -455,7 +455,7 @@
     (-> resp (select-keys [:x :y]))))
 
 (defn get-element-location [driver q]
-  (get-element-location-el driver (find driver q)))
+  (get-element-location* driver (find driver q)))
 
 ;;
 ;; element box
@@ -463,8 +463,8 @@
 
 (defn get-element-box [driver q]
   (let [el (find driver q)
-        {:keys [width height]} (get-element-size-el driver el)
-        {:keys [x y]} (get-element-location-el driver el)]
+        {:keys [width height]} (get-element-size* driver el)
+        {:keys [x y]} (get-element-location* driver el)]
     {:x1 x
      :x2 (+ x width)
      :y1 y
@@ -484,7 +484,7 @@
 ;; attributes
 ;;
 
-(defn get-element-attr-el [driver el name]
+(defn get-element-attr* [driver el name]
   (with-resp driver :get
     [:session (:session @driver) :element el :attribute name]
     nil
@@ -492,19 +492,19 @@
     (:value resp)))
 
 (defn get-element-attr [driver q name]
-  (get-element-attr-el driver (find driver q) name))
+  (get-element-attr* driver (find driver q) name))
 
 (defn get-element-attrs [driver q & names]
   (let [el (find driver q)]
     (mapv
-     #(get-element-attr-el driver el %)
+     #(get-element-attr* driver el %)
      names)))
 
 ;;
 ;; css
 ;;
 
-(defn get-element-css-el [driver el name]
+(defn get-element-css* [driver el name]
   (with-resp driver :get
     [:session (:session @driver) :element el :css name]
     nil
@@ -512,28 +512,28 @@
     (-> resp :value not-empty)))
 
 (defn get-element-css [driver q name]
-  (get-element-css-el driver (find driver q) name))
+  (get-element-css* driver (find driver q) name))
 
 (defn get-element-csss [driver q & names]
   (let [el (find driver q)]
     (mapv
-     #(get-element-css-el driver el %)
+     #(get-element-css* driver el %)
      names)))
 
 ;;
 ;; active element
 ;;
 
-(defmulti get-active-el dispatch-driver)
+(defmulti get-active* dispatch-driver)
 
-(defmethods get-active-el [:chrome :phantom :safari]
+(defmethods get-active* [:chrome :phantom :safari]
   [driver]
   (with-resp driver :get
     [:session (:session @driver) :element :active]
     nil resp
     (-> resp :value :ELEMENT)))
 
-(defmethod get-active-el :firefox
+(defmethod get-active* :firefox
   [driver]
   (with-resp driver :get
     [:session (:session @driver) :element :active]
@@ -544,7 +544,7 @@
 ;; element text, name and value
 ;;
 
-(defn get-element-tag-el [driver el]
+(defn get-element-tag* [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :name]
     nil
@@ -552,9 +552,9 @@
     (:value resp)))
 
 (defn get-element-tag [driver q]
-  (get-element-tag-el driver (find driver q)))
+  (get-element-tag* driver (find driver q)))
 
-(defn get-element-text-el [driver el]
+(defn get-element-text* [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :text]
     nil
@@ -562,9 +562,9 @@
     (:value resp)))
 
 (defn get-element-text [driver q]
-  (get-element-text-el driver (find driver q)))
+  (get-element-text* driver (find driver q)))
 
-(defn get-element-value-el [driver el]
+(defn get-element-value* [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :value]
     nil
@@ -572,7 +572,7 @@
     (:value resp)))
 
 (defn get-element-value [driver q]
-  (get-element-value-el driver (find driver q)))
+  (get-element-value* driver (find driver q)))
 
 ;;
 ;; cookes
@@ -784,7 +784,7 @@
     (get-element-text driver q)
     true))
 
-(defn visible-el [driver el]
+(defn visible* [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :displayed]
     nil
@@ -792,7 +792,7 @@
     (:value resp)))
 
 (defn displayed? [driver q]
-  (visible-el driver (find driver q)))
+  (visible* driver (find driver q)))
 
 (defn visible? [driver q]
   (and (exists? driver q)
@@ -800,7 +800,7 @@
 
 (def invisible? (complement visible?))
 
-(defn enabled-el [driver el]
+(defn enabled* [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :enabled]
     nil
@@ -808,7 +808,7 @@
     (:value resp)))
 
 (defn enabled? [driver q]
-  (enabled-el driver (find driver q)))
+  (enabled* driver (find driver q)))
 
 (def disabled? (complement enabled?))
 
@@ -819,15 +819,15 @@
         (find driver q)
         true))))
 
-(defn has-class-el [driver el class]
-  (let [classes (get-element-attr-el driver el "class")]
+(defn has-class* [driver el class]
+  (let [classes (get-element-attr* driver el "class")]
     (cond
       (nil? classes) false
       (string? classes)
       (str/includes? classes class))))
 
 (defn has-class? [driver q class]
-  (has-class-el driver (find driver q) class))
+  (has-class* driver (find driver q) class))
 
 (def has-no-class? (complement has-class?))
 
@@ -979,13 +979,13 @@
 ;; input
 ;;
 
-(defn fill-el [driver el text]
+(defn fill* [driver el text]
   (with-resp driver :post
     [:session (:session @driver) :element el :value]
     {:value (vec text)} _))
 
 (defn fill [driver q text]
-  (fill-el driver (find driver q) text))
+  (fill* driver (find driver q) text))
 
 ;;
 ;; submit
