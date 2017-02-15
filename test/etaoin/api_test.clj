@@ -248,16 +248,15 @@
 ;;          (is (numeric? x))
 ;;          (is (numeric? y)))))))
 
-;; (deftest test-window-size
-;;   (testing "getting size"
-;;     (let-window-size {:keys [width height]}
-;;       (is (numeric? width))
-;;       (is (numeric? height))))
-;;   (testing "setting size"
-;;     (with-window-size 555 666
-;;       (let-window-size {:keys [width height]}
-;;         (is (numeric? width))
-;;         (is (numeric? height))))))
+(deftest test-window-size
+  (testing "getting size"
+    (let [{:keys [width height]} (get-window-size *driver*)]
+      (is (numeric? width))
+      (is (numeric? height))
+      (set-window-size *driver* (+ width 10) (+ height 10))
+      (let [{:keys [width' height']} (get-window-size *driver*)]
+        (not= width width')
+        (not= height height')))))
 
 ;; (deftest test-active-element
 ;;   (testing "active element"
