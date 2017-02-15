@@ -1,6 +1,6 @@
-(defproject webdriver "0.1.0-SNAPSHOT"
-  :description "Pure Clojure Webdriver protocol implementation."
-  :url "https://github.com/igrishaev/webdriver"
+(defproject etaoin "0.1.0-SNAPSHOT"
+  :description "Pure Clojure Etaoin protocol implementation."
+  :url "https://github.com/igrishaev/etaoin"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
