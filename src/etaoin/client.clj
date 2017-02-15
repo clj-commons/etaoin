@@ -1,4 +1,4 @@
-(ns webdriver.client
+(ns etaoin.client
   (:require [clojure.string :as str]
             [clj-http.client :as client]
             [cheshire.core :refer [parse-string]]
@@ -66,7 +66,7 @@
                        :throw-exceptions false})
         resp (client/request params)
         body (:body resp)
-        error (delay {:type :webdriver/http-error
+        error (delay {:type :etaoin/http-error
                       :status (:status resp)
                       :response (error-response body)
                       :host host

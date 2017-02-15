@@ -1,4 +1,4 @@
-(ns webdriver.new
+(ns etaoin.api
   "
   The API below was written regarding to the source code
   of different Webdriver implementations.
@@ -17,15 +17,13 @@
   https://github.com/detro/ghostdriver/blob/master/src/request_handlers/session_request_handler.js
   https://github.com/detro/ghostdriver/blob/master/src/request_handlers/webelement_request_handler.js
   "
-  (:require [clojure.string :as str]
-            [webdriver.proc :as proc]
-            [webdriver.client :as client]
-            [webdriver.keys :as keys]
+  (:require [etaoin.proc :as proc]
+            [etaoin.client :as client]
+            [etaoin.keys :as keys]
             [clojure.data.codec.base64 :as b64]
             [clojure.java.io :as io]
-            [cheshire.core :refer [parse-string]]
-            [slingshot.slingshot :refer [try+ throw+]])
-  (:import java.net.ConnectException))
+            [clojure.string :as str]
+            [slingshot.slingshot :refer [try+ throw+]]))
 
 ;;
 ;; defaults
@@ -668,11 +666,7 @@
       ~fallback)))
 
 (defmacro with-http-error [& body]
-  `(with-exception [:type :webdriver/http-error] false
-     ~@body))
-
-(defmacro with-conn-error [& body]
-  `(with-exception ConnectException false
+  `(with-exception [:type :etaoin/http-error] false
      ~@body))
 
 ;;
@@ -857,7 +851,7 @@
          times (get opt :times 0)
          message (get opt :message)]
      (when (< timeout 0)
-       (throw+ {:type :webdriver/timeout
+       (throw+ {:type :etaoin/timeout
                 :message message
                 :timeout timeout
                 :interval interval
@@ -1042,7 +1036,7 @@
     (-> resp
         :value
         not-empty
-        (or (throw+ {:type :webdriver/screenshot
+        (or (throw+ {:type :etaoin/screenshot
                      :message "Empty screenshot"
                      :driver @driver}))
         (b64-to-file filename))))

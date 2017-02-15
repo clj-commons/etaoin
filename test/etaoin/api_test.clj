@@ -1,4 +1,4 @@
-(ns webdriver.api-test
+(ns etaoin.api-test
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [try+]]
@@ -158,9 +158,9 @@
      (wait-has-text "-secret-" :timeout 1
                     :message "No -secret- text on the page.")
      (is false "should not be executed")
-     (catch [:type :webdriver/timeout] data
+     (catch [:type :etaoin/timeout] data
        (is (= (-> data (dissoc :predicate))
-              {:type :webdriver/timeout
+              {:type :etaoin/timeout
                :message "No -secret- text on the page."
                :timeout 1
                :poll 0.5
@@ -171,9 +171,9 @@
     (try+
      (wait-has-text "whatever-foo-bar-")
      (is false "should not be executed")
-     (catch [:type :webdriver/timeout] data
+     (catch [:type :etaoin/timeout] data
        (is (= (-> data (dissoc :predicate))
-              {:type :webdriver/timeout
+              {:type :etaoin/timeout
                :message nil
                :timeout 10
                :poll 0.5
@@ -195,7 +195,7 @@
    (try+
     (let [url (get-url)]
       (is false))
-    (catch [:type :webdriver/http-error] _
+    (catch [:type :etaoin/http-error] _
       (is true)))))
 
 (deftest test-drag-and-drop

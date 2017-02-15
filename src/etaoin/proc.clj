@@ -1,4 +1,4 @@
-(ns webdriver.proc
+(ns etaoin.proc
   (:require [clojure.java.io :as io])
   (:import java.lang.Runtime
            java.lang.IllegalThreadStateException

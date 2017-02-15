@@ -1,4 +1,4 @@
-(ns webdriver.keys
+(ns etaoin.keys
   "https://www.w3.org/TR/webdriver/#keyboard-actions")
 
 (def unidentified       \uE000)
