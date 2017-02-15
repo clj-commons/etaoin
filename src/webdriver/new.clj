@@ -204,25 +204,61 @@
 ;; find element(s)
 ;;
 
-(defn by [driver locator]
-  (swap! driver assoc :locator locator)
-  driver)
+(defn q-xpath
+  "Turns a map into xpath clause.
+   {:tag :div :id :content :class :test :index 2}
+   //div[@id='content'][@class='test'][2]"
+  [q]
+  (let [tag (or (:tag q) :*)
+        idx (:index q)
+        attrs (dissoc q :tag :index)
+        get-val (fn [val] (if (keyword? val)
+                            (name val)
+                            (str val)))
+        pair (fn [[key val]] (format "[@%s='%s']"
+                                     (name key)
+                                     (get-val val)))
+        parts (map pair attrs)
+        xpath (apply str "//" (name tag) parts)
+        xpath (str xpath (if idx (format "[%s]" idx) ""))]
+    xpath))
 
-(defmulti find dispatch-driver)
+(defn q-discover [q]
+  (cond
+    (string? q)
+    [nil q]
 
-(defmethod find :firefox [driver q]
+    (and (map? q)
+         (:xpath q))
+    ["xpath" (:xpath q)]
+
+    (and (map? q)
+         (:css q))
+    ["css selector" (:css q)]
+
+    (map? q)
+    ["xpath" (q-xpath q)]))
+
+(defmulti find-el dispatch-driver)
+
+(defmethod find-el :firefox [driver locator term]
   (with-resp driver :post
     [:session (:session @driver) :element]
-    {:using (:locator @driver) :value q}
+    {:using locator :value term}
     resp
     (-> resp :value first second)))
 
-(defmethod find :default [driver q]
+(defmethod find-el :default [driver locator term]
   (with-resp driver :post
     [:session (:session @driver) :element]
-    {:using (:locator @driver) :value q}
+    {:using locator :value term}
     resp
     (-> resp :value :ELEMENT)))
+
+(defn find [driver q]
+  (let [[locator term] (q-discover q)
+        locator (or locator (:locator @driver))]
+    (find-el driver locator term)))
 
 ;;
 ;; mouse
@@ -268,10 +304,6 @@
   (mouse-move-to driver q-from)
   (with-mouse-btn driver
     (mouse-move-to driver q-to)))
-
-;;
-;; xpath/css finders
-;;
 
 ;;
 ;; click
@@ -569,6 +601,11 @@
 ;; locators
 ;;
 
+
+(defn by [driver locator]
+  (swap! driver assoc :locator locator)
+  driver)
+
 (defmacro with-locator [driver locator & body]
   `(let [old# (-> ~driver deref :locator)]
      (swap! ~driver assoc :locator ~locator)
@@ -579,6 +616,10 @@
 
 (defmacro with-xpath [driver & body]
   `(with-locator ~driver "xpath"
+     ~@body))
+
+(defmacro with-xpath [driver & body]
+  `(with-locator ~driver "css selector"
      ~@body))
 
 ;;
