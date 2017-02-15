@@ -14,9 +14,9 @@
 ;;        (finally
 ;;          (.delete tmp#)))))
 
-;; (defn numeric? [val]
-;;   (or (instance? Double val)
-;;       (instance? Integer val)))
+(defn numeric? [val]
+  (or (instance? Double val)
+      (instance? Integer val)))
 
 (def ^:dynamic *driver*)
 
@@ -228,11 +228,12 @@
 ;;        (drag-and-drop doc trash)
 ;;        (is true)))))
 
-;; (deftest test-element-location
-;;   (with-el-location "//*[@id='el-location-input']"
-;;     {:keys [x y]}
-;;     (is (numeric? x))
-;;     (is (numeric? y))))
+(deftest test-element-location
+  (let [q {:id :el-location-input}
+        loc (get-element-location *driver* q)
+        {:keys [x y]} loc]
+    (is (numeric? x))
+    (is (numeric? y))))
 
 ;; (deftest test-window-position
 ;;   (testing "getting position"
