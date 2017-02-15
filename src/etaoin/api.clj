@@ -332,9 +332,13 @@
     (-> resp :value :ELEMENT)))
 
 (defn query [driver q]
-  (let [[locator term] (q-discover q)
-        locator (or locator (:locator @driver))]
-    (query* driver locator term)))
+  (cond
+    (= q :active)
+    (get-active-element driver)
+    :else
+    (let [[locator term] (q-discover q)
+          locator (or locator (:locator @driver))]
+      (query* driver locator term))))
 
 ;;
 ;; mouse
@@ -743,6 +747,26 @@
   (with-resp driver :post
     [:session (:session @driver) :accept_alert]
     nil _))
+
+;;
+;; actice element
+;;
+
+(defmulti get-active-element dispatch-driver)
+
+(defmethod get-active-element :firefox
+  [driver]
+  (with-resp driver :get
+    [:session (:session @driver) :element :active]
+    nil resp
+    (-> resp :value first second)))
+
+(defmethods get-active-element [:chrome :phantom :safari]
+  [driver]
+  (with-resp driver :post
+    [:session (:session @driver) :element :active]
+    nil resp
+    (-> resp :value :ELEMENT)))
 
 ;;
 ;; predicates

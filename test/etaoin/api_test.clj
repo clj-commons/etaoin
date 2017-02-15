@@ -258,12 +258,13 @@
         (not= width width')
         (not= height height')))))
 
-;; (deftest test-active-element
-;;   (testing "active element"
-;;     (click "//*[@id='set-active-el']")
-;;     (let-active-el el
-;;       (with-attr-el el id
-;;         (is (= id "active-el-input"))))))
+(deftest test-active-element
+  (testing "active element"
+    (doto *driver*
+      (click {:id :set-active-el})
+      (-> (get-element-attr :active :id)
+          (= "active-el-input")
+          is))))
 
 ;; (deftest test-element-text
 ;;   (with-text "//*[@id='element-text']" text
