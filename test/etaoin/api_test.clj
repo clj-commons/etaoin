@@ -409,11 +409,11 @@
 ;;       (let [result (js-execute "return injected_func();")]
 ;;         (is (= result "I was injected"))))))
 
-;; (deftest test-set-hash
-;;   (testing "set hash"
-;;     (set-hash "hello")
-;;     (let [url (get-url)]
-;;       (is (str/ends-with? url "/test.html#hello")))
-;;     (set-hash "goodbye")
-;;     (let [url (get-url)]
-;;       (is (str/ends-with? url "/test.html#goodbye")))))
+(deftest test-set-hash
+  (testing "set hash"
+    (doto *driver*
+      (set-hash "hello")
+      (-> get-hash (= "hello") is)
+      (-> get-url (str/ends-with? "/test.html#hello") is)
+      (set-hash "goodbye")
+      (-> get-url (str/ends-with? "/test.html#goodbye") is))))
