@@ -437,7 +437,7 @@
 
 (defmulti get-element-location* dispatch-driver)
 
-(defmethods get-element-location-el
+(defmethods get-element-location*
   [:chrome :phantom :safari]
   [driver el]
   (with-resp driver :get
@@ -980,9 +980,12 @@
 ;;
 
 (defn fill* [driver el text]
-  (with-resp driver :post
-    [:session (:session @driver) :element el :value]
-    {:value (vec text)} _))
+  (let [keys (if (char? text)
+               (str text)
+               text)]
+    (with-resp driver :post
+      [:session (:session @driver) :element el :value]
+      {:value (vec keys)} _)))
 
 (defn fill [driver q text]
   (fill* driver (find driver q) text))
@@ -991,6 +994,9 @@
 ;; submit
 ;;
 
+(defn submit [driver q]
+  (fill driver q keys/enter))
+
 ;;
 ;; forms
 ;;
@@ -998,6 +1004,24 @@
 ;;
 ;; human actions
 ;;
+
+(defn fill-human* [driver el text]
+  (let [mistake-prob 0.1
+        pause-max 0.2
+        rand-char #(-> 26 rand-int (+ 97) char)
+        wait-key #(let [r (rand)]
+                    (wait (if (> r pause-max) pause-max r)))]
+    (doseq [key text]
+      (when (< (rand) mistake-prob)
+        (fill* driver el (rand-char))
+        (wait-key)
+        (fill* driver el keys/backspace)
+        (wait-key))
+      (fill* driver el key)
+      (wait-key))))
+
+(defn fill-human [driver q text]
+  (fill-human* driver (find driver q) text))
 
 ;;
 ;; screenshot
