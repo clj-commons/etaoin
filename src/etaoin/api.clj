@@ -690,7 +690,7 @@
   `(with-locator ~driver "xpath"
      ~@body))
 
-(defmacro with-xpath [driver & body]
+(defmacro with-css [driver & body]
   `(with-locator ~driver "css selector"
      ~@body))
 
@@ -809,9 +809,8 @@
 (defn has-text? [driver text]
   (with-http-error
     (let [q (format "//*[contains(text(),'%s')]" text)]
-      (with-xpath driver
-        (query driver q)
-        true))))
+      (query driver {:xpath q})
+      true)))
 
 (defn has-class* [driver el class]
   (let [classes (get-element-attr* driver el "class")]

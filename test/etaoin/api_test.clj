@@ -34,10 +34,11 @@
   fixture-browsers)
 
 (deftest test-visible
-  (is (visible? *driver* {:id :button-visible}))
-  (is (invisible? *driver* {:id :button-hidden}))
-  (is (invisible? *driver* {:id :div-hidden}))
-  (is (invisible? *driver* {:id :dunno-foo-bar})))
+  (doto *driver*
+    (-> (visible? {:id :button-visible}) is)
+    (-> (invisible? {:id :button-hidden}) is)
+    (-> (invisible? {:id :div-hidden}) is)
+    (-> (invisible? {:id :dunno-foo-bar}) is)))
 
 ;; (deftest test-clear
 ;;   (let [form "//form[@id='submit-test']"
@@ -60,13 +61,14 @@
 ;;         (let [url (get-url)]
 ;;           (is (str/ends-with? url "?login=&password=&message=")))))))
 
-
-;; (deftest test-enabled
-;;   (is (disabled "//input[@id='input-disabled']"))
-;;   (is (enabled "//input[@id='input-not-disabled']"))
-;;   (is (disabled "//textarea[@id='textarea-disabled']"))
-;;   (is (thrown? clojure.lang.ExceptionInfo
-;;                (enabled "//test[@id='dunno-foo-bar']"))))
+(deftest test-enabled
+  (doto *driver*
+    (-> (disabled? {:id :input-disabled}) is)
+    (-> (enabled? {:id :input-not-disabled}) is)
+    (-> (disabled? {:id :textarea-disabled}) is))
+  (is (thrown?
+       clojure.lang.ExceptionInfo
+       (enabled? *driver* {:id :dunno-foo-bar}))))
 
 ;; (deftest test-exists
 ;;   (with-xpath
