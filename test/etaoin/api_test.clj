@@ -164,42 +164,44 @@
                   :foo :bar "baz")]
       (is (every? nil? result)))))
 
-;; (deftest test-wait-text
-;;   (testing "wait for text simple"
-;;     (refresh)
-;;     (with-xpath
-;;       (click "//button[@id='wait-button']"))
-;;     (wait-has-text "-secret-")
-;;     (is true "text found"))
-;;   (testing "wait for text timeout"
-;;     (refresh)
-;;     (with-xpath
-;;       (click "//button[@id='wait-button']"))
-;;     (try+
-;;      (wait-has-text "-secret-" :timeout 1
-;;                     :message "No -secret- text on the page.")
-;;      (is false "should not be executed")
-;;      (catch [:type :etaoin/timeout] data
-;;        (is (= (-> data (dissoc :predicate))
-;;               {:type :etaoin/timeout
-;;                :message "No -secret- text on the page."
-;;                :timeout 1
-;;                :poll 0.5
-;;                :times 3}))
-;;        (is true "exception was caught"))))
-;;   (testing "wait non-existing text"
-;;     (refresh)
-;;     (try+
-;;      (wait-has-text "whatever-foo-bar-")
-;;      (is false "should not be executed")
-;;      (catch [:type :etaoin/timeout] data
-;;        (is (= (-> data (dissoc :predicate))
-;;               {:type :etaoin/timeout
-;;                :message nil
-;;                :timeout 10
-;;                :poll 0.5
-;;                :times 21}))
-;;        (is true "exception was caught")))))
+(deftest test-wait-text
+  (testing "wait for text simple"
+    (doto *driver*
+      (refresh)
+      (click {:id :wait-button})
+      (wait-has-text "-secret-"))
+    (is true "text found"))
+  (testing "wait for text timeout"
+    (doto *driver*
+      (refresh)
+      (click {:id :wait-button}))
+    (try+
+     (wait-has-text *driver*
+                    "-secret-"
+                    {:timeout 0.5
+                     :message "No -secret- text on the page"})
+     (is false "should not be executd")
+     (catch [:type :etaoin/timeout] data
+       (is (= (-> data (dissoc :predicate :time-rest))
+              {:type :etaoin/timeout
+               :message "No -secret- text on the page"
+               :timeout 0.5
+               :interval 0.1
+               :times 6})))))
+  (testing "wait for non-existing text"
+    (refresh *driver*)
+    (try+
+     (wait-has-text *driver*
+                    "-dunno-whatever-foo-bar-"
+                    {:timeout 1})
+     (is false "should not be executed")
+     (catch [:type :etaoin/timeout] data
+       (is (= (-> data (dissoc :predicate :time-rest))
+              {:type :etaoin/timeout
+               :message nil
+               :timeout 1
+               :interval 0.1
+               :times 11}))))))
 
 (deftest test-wait-has-class
   (is 1)

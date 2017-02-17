@@ -880,10 +880,11 @@
    (wait-predicate pred {}))
   ([pred opt]
    (let [timeout (get opt :timeout default-timeout)
+         time-rest (get opt :time-rest timeout)
          interval (get opt :interval default-interval)
          times (get opt :times 0)
          message (get opt :message)]
-     (when (< timeout 0)
+     (when (< time-rest 0)
        (throw+ {:type :etaoin/timeout
                 :message message
                 :timeout timeout
@@ -894,7 +895,7 @@
        (wait interval)
        (recur pred (assoc
                     opt
-                    :timeout (- timeout interval)
+                    :time-rest (- time-rest interval)
                     :times (inc times)))))))
 
 (defn wait-exists [driver q & [opt]]
