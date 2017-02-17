@@ -27,7 +27,8 @@
         (go driver url)
         (wait-visible driver {:id :document-end})
         (binding [*driver* driver]
-          (f))))))
+          (testing (name type)
+            (f)))))))
 
 (use-fixtures
   :each
@@ -258,109 +259,98 @@
   (let [text (get-element-text *driver* {:id :element-text})]
     (is (= text "Element text goes here."))))
 
-;; (deftest test-cookies
-;;   (testing "getting all cookies"
-;;     (with-cookies cookies
-;;       (when-chrome
-;;           (is (= cookies [])))
-;;       (when-firefox
-;;           (is (= cookies [{:name "cookie1",
-;;                            :value "test1",
-;;                            :path "/",
-;;                            :domain "",
-;;                            :expiry nil,
-;;                            :secure false,
-;;                            :httpOnly false}
-;;                           {:name "cookie2",
-;;                            :value "test2",
-;;                            :path "/",
-;;                            :domain "",
-;;                            :expiry nil,
-;;                            :secure false,
-;;                            :httpOnly false}])))
-;;       (when-phantom
-;;           (is (= cookies [{:domain "",
-;;                            :httponly false,
-;;                            :name "cookie2",
-;;                            :path "/",
-;;                            :secure false,
-;;                            :value "test2"}
-;;                           {:domain "",
-;;                            :httponly false,
-;;                            :name "cookie1",
-;;                            :path "/",
-;;                            :secure false,
-;;                            :value "test1"}])))))
-;;   (testing "getting named cookie"
-;;     (with-named-cookies "cookie2" cookies
-;;       (when-chrome
-;;           (is (= cookies [])))
-;;       (when-firefox
-;;           (is (= cookies [{:name "cookie2"
-;;                            :value "test2"
-;;                            :path "/"
-;;                            :domain ""
-;;                            :expiry nil
-;;                            :secure false
-;;                            :httpOnly false}])))
-;;       (when-phantom
-;;           (is (= cookies
-;;                  [{:domain ""
-;;                    :httponly false
-;;                    :name "cookie2"
-;;                    :path "/"
-;;                    :secure false
-;;                    :value "test2"}])))))
-;;   (testing "setting a cookie"
-;;     (skip-phantom
-;;      (set-cookie {:httponly false
-;;                   :name "cookie3"
-;;                   :domain ""
-;;                   :secure false
-;;                   :value "test3"})
-;;      (with-named-cookies "cookie3" cookies
-;;        (when-firefox
-;;            (is (= cookies
-;;                   [{:name "cookie3"
-;;                     :value "test3"
-;;                     :path ""
-;;                     :domain ""
-;;                     :expiry nil
-;;                     :secure false
-;;                     :httpOnly false}]))))))
 
-;;   (testing "deleting a named cookie"
-;;     (skip-phantom
-;;      (set-cookie {:httponly false
-;;                   :name "cookie3"
-;;                   :domain ""
-;;                   :secure false
-;;                   :value "test3"})
-;;      (with-named-cookies "cookie3" cookies
-;;        (when-firefox
-;;            (is (= cookies
-;;                   [{:name "cookie3"
-;;                     :value "test3"
-;;                     :path ""
-;;                     :domain ""
-;;                     :expiry nil
-;;                     :secure false
-;;                     :httpOnly false}]))))))
-;;   (testing "deleting a named cookie"
-;;     (delete-cookie "cookie3")
-;;     (with-named-cookies "cookie3" cookies
-;;       (is (= cookies []))))
-;;   (testing "deleting all cookies"
-;;     (delete-cookies)
-;;     (with-cookies cookies
-;;       (is (= cookies [])))))
+(deftest test-cookies
+  (testing "getting all cookies"
+    (let [cookies (get-cookies *driver*)]
+      (when-chrome *driver*
+        (is (= cookies [])))
+      (when-firefox *driver*
+        (is (= cookies [{:name "cookie1",
+                         :value "test1",
+                         :path "/",
+                         :domain "",
+                         :expiry nil,
+                         :secure false,
+                         :httpOnly false}
+                        {:name "cookie2",
+                         :value "test2",
+                         :path "/",
+                         :domain "",
+                         :expiry nil,
+                         :secure false,
+                         :httpOnly false}])))
+      (when-phantom *driver*
+        (is (= cookies [{:domain "",
+                         :httponly false,
+                         :name "cookie2",
+                         :path "/",
+                         :secure false,
+                         :value "test2"}
+                        {:domain "",
+                         :httponly false,
+                         :name "cookie1",
+                         :path "/",
+                         :secure false,
+                         :value "test1"}])))))
+  (testing "getting a cookie"
+    (let [cookie (get-cookie *driver* :cookie2)]
+      (when-chrome *driver*
+        (is (nil? cookie)))
+      (when-firefox *driver*
+        (is (= cookie
+               {:name "cookie2"
+                :value "test2"
+                :path "/"
+                :domain ""
+                :expiry nil
+                :secure false
+                :httpOnly false})))
+      (when-phantom *driver*
+        (is (= cookie
+               {:domain ""
+                :httponly false
+                :name "cookie2"
+                :path "/"
+                :secure false
+                :value "test2"})))))
+  (testing "setting a cookie"
+    (skip-phantom
+     *driver*
+     (set-cookie *driver* {:httponly false
+                           :name "cookie3"
+                           :domain ""
+                           :secure false
+                           :value "test3"})
+     (when-firefox *driver*
+       (let [cookie (get-cookie *driver* :cookie3)]
+         (is (= cookie)
+             {:name "cookie3"
+              :value "test3"
+              :path ""
+              :domain ""
+              :expiry nil
+              :secure false
+              :httpOnly false}))))
+    (testing "deleting a cookie"
+      (skip-phantom
+       *driver*
+       (delete-cookie *driver* :cookie3)
+       (let [cookie (get-cookie *driver* :cookie3)]
+         (is (nil? cookie)))))
+    (testing "deleting all cookies"
+      (doto *driver*
+        delete-cookies
+        (-> get-cookies
+            (= [])
+            is)))))
 
 (deftest test-page-source
   (let [src (get-source *driver*)]
     (when-firefox *driver*
       (is (str/starts-with? src "<html><head>")))
     (skip-firefox *driver*
-     (is (str/starts-with? src "<!DOCTYPE html>")))))
+                  (is (str/starts-with? src "<!DOCTYPE html>")))))
 
 (deftest test-screenshot
   (with-tmp-file "screenshot" ".png" path

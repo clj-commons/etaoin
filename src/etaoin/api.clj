@@ -595,10 +595,10 @@
     resp
     (:value resp)))
 
-(defn get-named-cookie [driver name]
+(defn get-cookie [driver cookie-name]
   (->> driver
        get-cookies
-       (filter #(= (:name %) name))
+       (filter #(= (:name %) (name cookie-name)))
        first))
 
 (defn set-cookie [driver cookie]
@@ -610,6 +610,11 @@
 (defn delete-cookies [driver]
   (with-resp driver :delete
     [:session (:session @driver) :cookie]
+    nil _))
+
+(defn delete-cookie [driver cookie-name]
+  (with-resp driver :delete
+    [:session (:session @driver) :cookie (name cookie-name)]
     nil _))
 
 ;;
