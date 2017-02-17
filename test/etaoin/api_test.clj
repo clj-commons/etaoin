@@ -131,30 +131,38 @@
         (str/ends-with? "/resources/html/test.html")
         is)))
 
-;; (deftest test-css-props
-;;   (testing "single css"
-;;     (with-css "//div[@id='div-css-simple']" display
-;;       (is (= display "block"))))
-;;   (testing "multiple css"
-;;     (with-csss "//div[@id='div-css-simple']"
-;;       [display background-color width height]
-;;       (is (= display "block"))
-;;       (is (or (= background-color "rgb(204, 204, 204)")
-;;               (= background-color "rgba(204, 204, 204, 1)")))
-;;       (is (= width "150px"))
-;;       (is (= height "250px"))))
-;;   (testing "styled css"
-;;     (with-csss "//div[@id='div-css-styled']"
-;;       [display width height]
-;;       (is (= display "block"))
-;;       (is (= width "333px"))
-;;       (is (= height "111px"))))
-;;   (testing "missing css"
-;;     (with-csss "//div[@id='div-css-styled']"
-;;       [foo bar baz]
-;;       (is (nil? foo))
-;;       (is (nil? bar))
-;;       (is (nil? baz)))))
+(deftest test-css-props
+  (testing "single css"
+    (doto *driver*
+      (-> (get-element-css {:id :div-css-simple} :display)
+          (= "block")
+          is)))
+  (testing "multiple css"
+    (let [result (get-element-csss
+                  *driver*
+                  {:id :div-css-simple}
+                  :display :background-color "width" "height")
+          [display background-color width height] result]
+      (is (= display "block"))
+      (is (or (= background-color "rgb(204, 204, 204)")
+              (= background-color "rgba(204, 204, 204, 1)")))
+      (is (= width "150px"))
+      (is (= height "250px"))))
+  (testing "styled css"
+    (let [result (get-element-csss
+                  *driver*
+                  {:id :div-css-styled}
+                  :display :width :height)
+          [display width height] result]
+      (is (= display "block"))
+      (is (= width "333px"))
+      (is (= height "111px"))))
+  (testing "missing css"
+    (let [result (get-element-csss
+                  *driver*
+                  {:id :div-css-styled}
+                  :foo :bar "baz")]
+      (is (every? nil? result)))))
 
 ;; (deftest test-wait-text
 ;;   (testing "wait for text simple"
@@ -193,23 +201,18 @@
 ;;                :times 21}))
 ;;        (is true "exception was caught")))))
 
-;; (deftest test-wait-has-class
-;;   (testing "wait for has class"
-;;     (refresh)
-;;     (click "//*[@id='wait-add-class-trigger']")
-;;     (wait-for-has-class
-;;      "//*[@id='wait-add-class-target']"
-;;      "new-one")
-;;     (is true)))
+(deftest test-wait-has-class
+  (is 1)
+  (testing "wait for an element has class"
+    (doto *driver*
+      (refresh)
+      (click {:id :wait-add-class-trigger})
+      (wait-has-class {:id :wait-add-class-target} :new-one))))
 
-;; (deftest test-close-window
-;;   (skip-firefox
-;;    (close)
-;;    (try+
-;;     (let [url (get-url)]
-;;       (is false))
-;;     (catch [:type :etaoin/http-error] _
-;;       (is true)))))
+(deftest test-close-window
+  (is 1)
+  (doto *driver*
+    (close-window)))
 
 ;; (deftest test-drag-and-drop
 ;;   (let [url "http://marcojakob.github.io/dart-dnd/basic/web/"

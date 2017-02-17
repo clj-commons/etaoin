@@ -141,6 +141,14 @@
     [:session (:session @driver) :window]
     {:handle handle} _))
 
+(defmulti close-window dispatch-driver)
+
+(defmethod close-window :default
+  [driver]
+  (with-resp driver :delete
+    [:session (:session @driver) :window]
+    nil _))
+
 (defmulti maximize dispatch-driver)
 
 (defmethod maximize :firefox
@@ -506,9 +514,9 @@
 ;; css
 ;;
 
-(defn get-element-css* [driver el name]
+(defn get-element-css* [driver el name*]
   (with-resp driver :get
-    [:session (:session @driver) :element el :css name]
+    [:session (:session @driver) :element el :css (name name*)]
     nil
     resp
     (-> resp :value not-empty)))
@@ -843,7 +851,7 @@
     (cond
       (nil? classes) false
       (string? classes)
-      (str/includes? classes class))))
+      (str/includes? classes (name class)))))
 
 (defn has-class? [driver q class]
   (has-class* driver (query driver q) class))
