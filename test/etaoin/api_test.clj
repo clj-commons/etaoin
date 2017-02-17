@@ -40,26 +40,15 @@
     (-> (invisible? {:id :div-hidden}) is)
     (-> (invisible? {:id :dunno-foo-bar}) is)))
 
-;; (deftest test-clear
-;;   (let [form "//form[@id='submit-test']"
-;;         input "//input[@id='simple-input']"
-;;         submit "//input[@id='simple-submit']"]
-;;     (testing "simple clear"
-;;       (with-xpath
-;;         (fill input "test")
-;;         (clear input)
-;;         (click submit)
-;;         (let [url (get-url)]
-;;           (is (str/ends-with? url "?login=&password=&message=")))))
-;;     (testing "form clear"
-;;       (with-xpath
-;;         (fill-form form {:login "Ivan"
-;;                          :password "lalilulelo"
-;;                          :message "long_text_here"})
-;;         (clear-form form)
-;;         (click submit)
-;;         (let [url (get-url)]
-;;           (is (str/ends-with? url "?login=&password=&message=")))))))
+(deftest test-clear
+  (testing "simple clear"
+    (doto *driver*
+      (fill {:id :simple-input} "test")
+      (clear {:id :simple-input})
+      (click {:id :simple-submit})
+      (-> get-url
+          (str/ends-with? "?login=&password=&message=")
+          is))))
 
 (deftest test-enabled
   (doto *driver*

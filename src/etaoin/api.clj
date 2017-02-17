@@ -1018,6 +1018,14 @@
 (defn fill [driver q text]
   (fill* driver (query driver q) text))
 
+(defn clear* [driver el]
+  (with-resp driver :post
+    [:session (:session @driver) :element el :clear]
+    nil _))
+
+(defn clear [driver q]
+  (clear* driver (query driver q)))
+
 ;;
 ;; submit
 ;;
