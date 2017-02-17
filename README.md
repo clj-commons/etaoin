@@ -1,48 +1,94 @@
 
-Pure Clojure implementation of Webdriver protocol.
+[url-webdriver]: https://www.w3.org/TR/webdriver/
+[url-wiki]: https://en.wikipedia.org/wiki/Etaoin_shrdlu#Literature
+[url-tests]: https://github.com/igrishaev/etaoin/blob/master/test/etaoin/api_test.clj
+[url-chromedriver]: https://sites.google.com/a/chromium.org/chromedriver/
+[url-chromedriver-dl]: https://sites.google.com/a/chromium.org/chromedriver/downloads
+[url-geckodriver-dl]: https://github.com/mozilla/geckodriver/releases
+[url-phantom-dl]: http://phantomjs.org/download.html
 
-Use that library to automate browser actions
+Pure Clojure implementation of [Webdriver][url-webdriver] protocol.
+
+Use that library to automate a browser, test your frontend behaviour, simulate
+human actions or whatever you want.
+
+It's named after [Etaoin Shrdlu][url-wiki] a typing machine that became alive
+after a mysteries note was produced on it.
 
 ## Benefits
-- Selenium-free: no long dependencies in your project, no tonns of jars, etc.
+
+- Selenium-free: no long dependencies, no tons of downloaded jars, etc.
 - Lightweight, fast. Simple, easy to understand.
 - Compact: just one main module with a couple of helpers.
-- Extremely declarative: the code is just a list of actions.
+- Declarative: the code is just a list of actions.
 
 ## Capabilities
-- Currenlty supports Chrome, Firefox and Phantom.js.
-- May either connect to a remote driver or run it on your local machine. You
-  have to install the drivers by your own first with `brew`, `apt-get`, etc.
-- Run your tests directly from Emacs pressing `C-t t` in Cider mode as usual.
+
+- Currently supports Chrome, Firefox, Phantom.js and Safari (partially).
+- May either connect to a remote driver or run it on your local machine.
+- Run your unit tests directly from Emacs pressing `C-t t` as usual.
 - Can imitate human-like behaviour (delays, typos, etc).
 
+## Installation
+
+Add the following into `:dependencies` vector in your `project.clj` file:
+
+```
+[etaoin "0.1.0"]
+```
 ## Usage
-- todo: api description here.
+
+This section is in progress, see [unit tests][url-tests] for details.
 
 ## Run tests
-- Install Chrome and Firefox browsers as usual, e.g. downloading installation
-  backages from the official sites.
-- Install Chrome driver:
-  `brew install chromedriver`
+
+- Install Chrome and Firefox browsers downloading them from the official sites.
+- Install Google [Chrome driver][url-chromedriver]:
+
+  - `brew install chromedriver` for Mac users
+  - or download compiled binaries from the [official site][url-chromedriver-dl].
+
 - Install Geckodriver, a driver for Firefox:
-  `brew install geckodriver`
+
+  - `brew install geckodriver` for Mac users
+  - or download it from the [Mozilla site][url-geckodriver-dl].
+
 - Install Phantom.js browser:
-  `brew install phantomjs`
-- Check your installation with commands by launching the commands:
+
+  - `brew install phantomjs` For Mac users
+  - or download it from the [official site][url-phantom-dl].
+
+- Now, check your installation launching any of these commands. For each
+  command, an endless process with a local HTTP server should start.
+
   ```bash
   chromedriver
   geckodriver
   phantomjs --wd
   ```
+
 - If they work, you are ready to lunch the tests:
-  `lein test`
+
+  ```bash
+  lein test
+  ```
+
 - You'll see browser windows open and close in series. The tests use a local
   HTML file with a special layout to validate the most of the cases.
 
-## Todo
-- Add more browsers: Safari, MS Edge, iOS.
-- Implement missing methods.
-- Add more detailed unit tests.
+## Contributing
+
+The project is open for your improvements and ideas. If any of unit tests fall
+on your machine please submit an issue giving your OS version, browser and
+console output.
+
+## Roadmoap
+
+- Add Safari checks into unit tests.
+- Add MS Edge support.
+- Add touch API tests.
+- Add mobile support.
+- Make unit tests more detailed.
 
 ## License
 
