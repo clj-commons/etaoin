@@ -235,18 +235,14 @@
     (is (numeric? x))
     (is (numeric? y))))
 
-;; (deftest test-window-position
-;;   (testing "getting position"
-;;     (let-window-position {:keys [x y]}
-;;       (is (numeric? x))
-;;       (is (numeric? y))))
-;;   (testing "setting position"
-;;     (skip-phantom
-;;      (set-window-position 500 500)
-;;      (with-window-position {:x 222 :y 333}
-;;        (let-window-position {:keys [x y]}
-;;          (is (numeric? x))
-;;          (is (numeric? y)))))))
+(deftest test-window-position
+  (let [{:keys [x y]} (get-window-position *driver*)]
+    (is (numeric? x))
+    (is (numeric? y))
+    (set-window-position *driver* (+ x 10) (+ y 10))
+    (let [{:keys [x' y']} (get-window-position *driver*)]
+      (is (not= x x'))
+      (is (not= y y')))))
 
 (deftest test-window-size
   (testing "getting size"
@@ -374,14 +370,6 @@
     (skip-firefox *driver*
      (is (str/starts-with? src "<!DOCTYPE html>")))))
 
-;; (deftest test-element-properties
-;;   (when-firefox
-;;       (let-prop "//*[@id='element-props']" innerHTML
-;;                 (is (= innerHTML "<div>Inner HTML</div>")))
-;;     (let-props "//*[@id='element-props']" [innerHTML tagName]
-;;                (is (= innerHTML "<div>Inner HTML</div>"))
-;;                (is (= tagName "DIV")))))
-
 (deftest test-screenshot
   (with-tmp-file "screenshot" ".png" path
     (screenshot *driver* path)
@@ -390,24 +378,23 @@
         ImageIO/read
         is)))
 
-;; (deftest test-js-execute
-;;   (testing "simple result"
-;;     (let [result (js-execute "return 42;")]
-;;       (is (= result 42))))
-;;   (testing "with args"
-;;     (let [script "return {foo: arguments[0], bar: arguments[1]};"
-;;           result (js-execute script {:test 42} [true, nil, "Hello"])]
-;;       (is (= result
-;;              {:foo {:test 42}
-;;               :bar [true nil "Hello"]})))))
+(deftest test-js-execute
+  (testing "simple result"
+    (let [result (js-execute *driver* "return 42;")]
+      (is (= result 42))))
+  (testing "with args"
+    (let [script "return {foo: arguments[0], bar: arguments[1]};"
+          result (js-execute *driver* script {:test 42} [true, nil, "Hello"])]
+      (is (= result
+             {:foo {:test 42}
+              :bar [true nil "Hello"]})))))
 
-;; (deftest test-js-inject
-;;   (let [url (-> "html/test.html" io/resource str)
-;;         js-url (-> "js/inject.js" io/resource str)]
-;;     (testing "adding a script"
-;;       (add-script js-url)
-;;       (let [result (js-execute "return injected_func();")]
-;;         (is (= result "I was injected"))))))
+(deftest test-add-script
+  (let [js-url (-> "js/inject.js" io/resource str)]
+    (testing "adding a script"
+      (add-script *driver* js-url)
+      (let [result (js-execute *driver* "return injected_func();")]
+        (is (= result "I was injected"))))))
 
 (deftest test-set-hash
   (testing "set hash"
