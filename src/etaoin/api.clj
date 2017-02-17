@@ -100,16 +100,16 @@
 ;; actice element
 ;;
 
-(defmulti get-active-element dispatch-driver)
+(defmulti get-active-element* dispatch-driver)
 
-(defmethod get-active-element :firefox
+(defmethod get-active-element* :firefox
   [driver]
   (with-resp driver :get
     [:session (:session @driver) :element :active]
     nil resp
     (-> resp :value first second)))
 
-(defmethods get-active-element [:chrome :phantom :safari]
+(defmethods get-active-element* [:chrome :phantom :safari]
   [driver]
   (with-resp driver :post
     [:session (:session @driver) :element :active]
@@ -321,14 +321,14 @@
                                      (name key)
                                      (get-val val)))
         parts (map pair attrs)
-        xpath (apply str "//" (name tag) parts)
+        xpath (apply str ".//" (name tag) parts)
         xpath (str xpath (if idx (format "[%s]" idx) ""))]
     xpath))
 
-(defn q-discover [q]
+(defn q-expand [driver q]
   (cond
     (string? q)
-    [nil q]
+    [(:locator @driver) q]
 
     (and (map? q)
          (:xpath q))
@@ -341,18 +341,38 @@
     (map? q)
     ["xpath" (q-xpath q)]))
 
-(defmulti query* dispatch-driver)
+(defmulti find-element* dispatch-driver)
 
-(defmethod query* :firefox [driver locator term]
+(defmethod find-element* :firefox
+  [driver locator term]
   (with-resp driver :post
     [:session (:session @driver) :element]
     {:using locator :value term}
     resp
     (-> resp :value first second)))
 
-(defmethod query* :default [driver locator term]
+(defmethod find-element* :default
+  [driver locator term]
   (with-resp driver :post
     [:session (:session @driver) :element]
+    {:using locator :value term}
+    resp
+    (-> resp :value :ELEMENT)))
+
+(defmulti find-element-from* dispatch-driver)
+
+(defmethod find-element-from* :firefox
+  [driver el locator term]
+  (with-resp driver :post
+    [:session (:session @driver) :element el :element]
+    {:using locator :value term}
+    resp
+    (-> resp :value first second)))
+
+(defmethod find-element-from* :default
+  [driver el locator term]
+  (with-resp driver :post
+    [:session (:session @driver) :element el :element]
     {:using locator :value term}
     resp
     (-> resp :value :ELEMENT)))
@@ -360,11 +380,21 @@
 (defn query [driver q]
   (cond
     (= q :active)
-    (get-active-element driver)
+    (get-active-element* driver)
+
+    (vector? q)
+    (loop [el (query driver (first q))
+           q-rest (rest q)]
+      (if (empty? q-rest)
+        el
+        (let [q (first q-rest)
+              [loc term] (q-expand driver q)]
+          (recur (find-element-from* driver el loc term)
+                 (rest q-rest)))))
+
     :else
-    (let [[locator term] (q-discover q)
-          locator (or locator (:locator @driver))]
-      (query* driver locator term))))
+    (let [[loc term] (q-expand driver q)]
+      (find-element* driver loc term))))
 
 ;;
 ;; mouse
@@ -1158,10 +1188,11 @@
       (run-driver opt)
       (connect-driver opt)))
 
-(def firefox (partial boot-driver :firefox))
-(def chrome (partial boot-driver :chrome))
-(def phantom (partial boot-driver :phantom))
-(def safari (partial boot-driver :safari))
+(defn quit [driver]
+  (try
+    (disconnect-driver driver)
+    (finally
+      (stop-driver driver))))
 
 (defmacro with-driver [type opt bind & body]
   `(client/with-pool {}
@@ -1169,5 +1200,25 @@
        (try
          ~@body
          (finally
-           (disconnect-driver ~bind)
-           (stop-driver ~bind))))))
+           (quit ~bind))))))
+
+(def firefox (partial boot-driver :firefox))
+(def chrome (partial boot-driver :chrome))
+(def phantom (partial boot-driver :phantom))
+(def safari (partial boot-driver :safari))
+
+(defmacro with-firefox [opt bind & body]
+  `(with-driver :firefox ~opt ~bind
+     ~@body))
+
+(defmacro with-chrome [opt bind & body]
+  `(with-driver :chrome ~opt ~bind
+     ~@body))
+
+(defmacro with-phantom [opt bind & body]
+  `(with-driver :phantom ~opt ~bind
+     ~@body))
+
+(defmacro with-safari [opt bind & body]
+  `(with-driver :safari ~opt ~bind
+     ~@body))
