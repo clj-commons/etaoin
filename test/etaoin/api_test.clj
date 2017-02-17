@@ -216,22 +216,20 @@
   (doto *driver*
     (close-window)))
 
-;; (deftest test-drag-and-drop
-;;   (let [url "http://marcojakob.github.io/dart-dnd/basic/web/"
-;;         doc "//*[@class='document']"
-;;         trash "//div[contains(@class, 'trash')]"]
-;;     (skip-firefox
-;;      (testing "moving elements"
-;;        (go url)
-;;        (wait 1)
-;;        (drag-and-drop doc trash)
-;;        (wait 1)
-;;        (drag-and-drop doc trash)
-;;        (wait 1)
-;;        (drag-and-drop doc trash)
-;;        (wait 1)
-;;        (drag-and-drop doc trash)
-;;        (is true)))))
+(deftest test-drag-n-drop
+  (let [url "http://marcojakob.github.io/dart-dnd/basic/web/"
+        doc {:class :document}
+        trash {:xpath "//div[contains(@class, 'trash')]"}]
+    (skip-firefox
+     *driver*
+     (doto *driver*
+       (go url)
+       (drag-and-drop doc trash)
+       (drag-and-drop doc trash)
+       (drag-and-drop doc trash)
+       (drag-and-drop doc trash)
+       (-> (absent? doc)
+           is)))))
 
 (deftest test-element-location
   (let [q {:id :el-location-input}
