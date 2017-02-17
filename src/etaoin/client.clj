@@ -8,7 +8,7 @@
 ;; defaults
 ;;
 
-(def ^:dynamic *default-api-params*
+(def default-api-params
   {:as :json
    :accept :json
    :content-type :json
@@ -36,10 +36,6 @@
   `(client/with-connection-pool ~opt
      ~@body))
 
-(defmacro with-params [opt & body]
-  `(binding [*default-api-params* (merge *default-api-params* ~opt)]
-     ~@body))
-
 (defn- parse-json [body]
   (let [body* (str/replace body #"Invalid Command Method -" "")]
     (try
@@ -56,10 +52,12 @@
 ;;
 
 (defn call
-  [host port method path-args payload]
-  (let [path (get-url-path path-args)
+  [driver method path-args payload]
+  (let [host (:host @driver)
+        port (:port @driver)
+        path (get-url-path path-args)
         url (format "http://%s:%s/%s" host port path)
-        params (merge *default-api-params*
+        params (merge default-api-params
                       {:url url
                        :method method
                        :form-params (-> payload (or {}))
@@ -68,6 +66,7 @@
         body (:body resp)
         error (delay {:type :etaoin/http-error
                       :status (:status resp)
+                      :driver @driver
                       :response (error-response body)
                       :host host
                       :port port

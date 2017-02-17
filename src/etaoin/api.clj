@@ -64,12 +64,10 @@
 ;;
 
 (defmacro with-resp [driver method path data result & body]
-  `(let [~result (client/call
-                  (-> ~driver deref :host)
-                  (-> ~driver deref :port)
-                  ~method
-                  ~path
-                  ~data)]
+  `(let [~result (client/call ~driver
+                              ~method
+                              ~path
+                              ~data)]
      ~@body))
 
 ;;
