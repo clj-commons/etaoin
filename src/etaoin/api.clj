@@ -97,6 +97,26 @@
     _))
 
 ;;
+;; actice element
+;;
+
+(defmulti get-active-element dispatch-driver)
+
+(defmethod get-active-element :firefox
+  [driver]
+  (with-resp driver :get
+    [:session (:session @driver) :element :active]
+    nil resp
+    (-> resp :value first second)))
+
+(defmethods get-active-element [:chrome :phantom :safari]
+  [driver]
+  (with-resp driver :post
+    [:session (:session @driver) :element :active]
+    nil resp
+    (-> resp :value :ELEMENT)))
+
+;;
 ;; windows
 ;;
 
@@ -758,26 +778,6 @@
   (with-resp driver :post
     [:session (:session @driver) :accept_alert]
     nil _))
-
-;;
-;; actice element
-;;
-
-(defmulti get-active-element dispatch-driver)
-
-(defmethod get-active-element :firefox
-  [driver]
-  (with-resp driver :get
-    [:session (:session @driver) :element :active]
-    nil resp
-    (-> resp :value first second)))
-
-(defmethods get-active-element [:chrome :phantom :safari]
-  [driver]
-  (with-resp driver :post
-    [:session (:session @driver) :element :active]
-    nil resp
-    (-> resp :value :ELEMENT)))
 
 ;;
 ;; predicates
