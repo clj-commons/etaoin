@@ -386,3 +386,18 @@
       (-> get-url (str/ends-with? "/test.html#hello") is)
       (set-hash "goodbye")
       (-> get-url (str/ends-with? "/test.html#goodbye") is))))
+
+(deftest test-find-element
+  (let [text (get-element-text *driver* {:class :target})]
+    (is (= text "target-1")))
+  (let [text (get-element-text *driver* [{:class :foo}
+                                         {:class :target}])]
+    (is (= text "target-2")))
+  (with-xpath *driver*
+    (let [text (get-element-text *driver* ".//div[@class='target'][1]")]
+      (is (= text "target-1"))))
+  (let [text (get-element-text *driver* {:css ".target"})]
+    (is (= text "target-1")))
+  (let [q [{:css ".bar"} ".//div[@class='inside']" {:tag :span}]
+        text (get-element-text *driver* q)]
+    (is (= text "target-3"))))
