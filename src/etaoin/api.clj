@@ -905,8 +905,11 @@
 (def default-timeout 10)
 (def default-interval 0.1)
 
-(defn wait [sec]
-  (Thread/sleep (* sec 1000)))
+(defn wait
+  ([driver sec]
+   (wait sec))
+  ([sec]
+   (Thread/sleep (* sec 1000))))
 
 (defn wait-predicate
   ([pred]
