@@ -1,5 +1,6 @@
 (ns etaoin.client
   (:require [clojure.string :as str]
+            [clojure.tools.logging :as log]
             [clj-http.client :as client]
             [cheshire.core :refer [parse-string]]
             [slingshot.slingshot :refer [throw+]]))
@@ -62,6 +63,15 @@
                        :method method
                        :form-params (-> payload (or {}))
                        :throw-exceptions false})
+
+        _ (log/debugf "%s %s:%s %6s %s %s"
+                      (-> @driver :type name)
+                      (-> @driver :host)
+                      (-> @driver :port)
+                      (-> method name str/upper-case)
+                      path
+                      (-> payload (or "")))
+
         resp (client/request params)
         body (:body resp)
         error (delay {:type :etaoin/http-error
