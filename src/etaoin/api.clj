@@ -906,10 +906,8 @@
 (def default-interval 0.1)
 
 (defn wait
-  ([driver sec]
-   (wait sec))
-  ([sec]
-   (Thread/sleep (* sec 1000))))
+  [sec]
+  (Thread/sleep (* sec 1000)))
 
 (defn wait-predicate
   ([pred]
@@ -937,11 +935,20 @@
 (defn wait-exists [driver q & [opt]]
   (wait-predicate #(exists? driver q) opt))
 
+(defn wait-absent [driver q & [opt]]
+  (wait-predicate #(absent? driver q) opt))
+
 (defn wait-visible [driver q & [opt]]
   (wait-predicate #(visible? driver q) opt))
 
+(defn wait-invisible [driver q & [opt]]
+  (wait-predicate #(invisible? driver q) opt))
+
 (defn wait-enabled [driver q & [opt]]
   (wait-predicate #(enabled? driver q) opt))
+
+(defn wait-disabled [driver q & [opt]]
+  (wait-predicate #(disabled? driver q) opt))
 
 (defn wait-has-alert [driver & [opt]]
   (wait-predicate #(has-alert? driver) opt))
