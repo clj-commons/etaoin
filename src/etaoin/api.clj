@@ -349,7 +349,13 @@
     ["css selector" (:css q)]
 
     (map? q)
-    ["xpath" (q-xpath q)]))
+    ["xpath" (q-xpath q)]
+
+    :else
+    (throw+ {:type :etaoin/query
+             :q q
+             :driver @driver
+             :message "Unsupported query clause"})))
 
 (defmulti find-element* dispatch-driver)
 
@@ -388,7 +394,22 @@
     (-> resp :value :ELEMENT)))
 
 (defn query
-  "Finds an element on a page."
+  "Finds an element on a page.
+
+   A query might be:
+
+   - a string, so the current browser's locator will be used. Examples:
+   //div[@id='content'] for XPath,
+   div.article for CSS selector
+
+   - a map with either :xpath or :css keys with a string term, e.g:
+   {:xpath \"//div[@id='content']\"} or
+   {:css \"div.article\"}
+
+   - a map that will turn into an XPath expression:
+   {:tag :div} => .//div
+   {:id :container} => .//*[@id='container']
+   {:tag :a :class :external :index 2} => .//a[@class='external'][2]"
   [driver q]
   (cond
     (= q :active)
