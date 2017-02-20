@@ -38,7 +38,94 @@ Add the following into `:dependencies` vector in your `project.clj` file:
 ```
 ## Usage
 
-This section is in progress, see [unit tests][url-tests] for details.
+### From REPL
+
+The good news you may automate your browser directly from the REPL:
+
+```clojure
+(use 'etaoin.api)
+(require '[etaoin.keys :as k])
+(def driver (firefox)) ;; here, a Firefox window should appear
+
+;; let's perform a quick Wiki session
+(go driver "https://en.wikipedia.org/")
+(wait-visible driver [{:id :simpleSearch} {:tag :input :name :search}])
+
+;; search for something
+(fill driver {:tag :input :name :search} "Clojure programming language")
+(fill driver {:tag :input :name :search} k/enter)
+(wait-visible driver {:class :mw-search-results})
+
+;; I'm sure the first link is what I'm looking for
+(click driver [{:class :mw-search-results} {:class :mw-search-result-heading} {:tag :a}])
+(wait-visible driver {:id :firstHeading})
+
+;; let's ensure
+(get-url driver)
+"https://en.wikipedia.org/wiki/Clojure"
+(get-title driver)
+"Clojure - Wikipedia"
+(has-text? driver "Clojure")
+true
+
+;; navigate on history
+(back driver)
+(forward driver)
+(refresh driver)
+(get-title driver)
+"Clojure - Wikipedia"
+
+;; stops Firefox and HTTP server
+(quit driver)
+```
+
+You see, any function requires a driver instance as the first argument. So you
+may simplify it using `doto` macros:
+
+```clojure
+(def driver (firefox))
+(doto driver
+  (go "https://en.wikipedia.org/")
+  (wait-visible [{:id :simpleSearch} {:tag :input :name :search}])
+  ...
+  (fill {:tag :input :name :search} k/enter)
+  (wait-visible {:class :mw-search-results})
+  ...
+  (wait-visible {:id :firstHeading})
+  (get-url)
+  "https://en.wikipedia.org/wiki/Clojure"
+  ...
+
+  (quit))
+```
+
+In that case, your code looks like a DSL designed just for such purposes.
+
+If any exception occurs during a browser session, the external process might
+hang forever until you kill it manually. To prevent it, use `with-<browser>`
+macros as follows:
+
+```clojure
+(with-firefox {} ff ;; additional options, bind name
+  (doto ff
+    (go ff ""https://google.com)
+    ...))
+```
+
+Whatever happens during a session, the process will be stopped anyway.
+
+### Be patient
+
+The main difference between a program and a human is that the first one
+operates very fast. It means so fast, that sometimes a browser cannot render new
+HTML in time. So after each action you need to put `wait-<something>` function
+that just polls a browser checking for a predicate. O just `(wait <seconds>)` if
+you don't care about optimization.
+
+### Further reading
+
+Please check our [unit tests][url-tests] to find out other functions that were
+not described here.
 
 ## Run tests
 

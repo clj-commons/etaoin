@@ -402,6 +402,8 @@
    //div[@id='content'] for XPath,
    div.article for CSS selector
 
+   - a keyword :active that means the current active element
+
    - a map with either :xpath or :css keys with a string term, e.g:
    {:xpath \"//div[@id='content']\"} or
    {:css \"div.article\"}
@@ -409,7 +411,12 @@
    - a map that will turn into an XPath expression:
    {:tag :div} => .//div
    {:id :container} => .//*[@id='container']
-   {:tag :a :class :external :index 2} => .//a[@class='external'][2]"
+   {:tag :a :class :external :index 2} => .//a[@class='external'][2]
+
+   - a vector of any clause mentioned above. In that case,
+   every next term is searched inside the previous one. Example:
+   [{:id :footer} {:tag :a}] => finds the first hyperlink
+   inside a div with id 'footer'."
   [driver q]
   (cond
     (= q :active)
@@ -942,8 +949,11 @@
 (def default-interval 0.1)
 
 (defn wait
-  [sec]
-  (Thread/sleep (* sec 1000)))
+  "Does nothing for N seconds."
+  ([driver sec]
+   (wait sec))
+  ([sec]
+   (Thread/sleep (* sec 1000))))
 
 (defn wait-predicate
   ([pred]
