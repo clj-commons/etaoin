@@ -1,10 +1,8 @@
 (ns etaoin.api
   "
   The API below was written regarding to the source code
-  of different Webdriver implementations.
-
-  Sometimes, a feature you found out in W3C official standard
-  really differs from the corresponding implementation in Chrome or Firefox, etc.
+  of different Webdriver implementations. All of them partially differ
+  from the official W3C specification.
 
   Chrome:
   https://github.com/bayandin/chromedriver/blob/master/client/command_executor.py
@@ -77,8 +75,7 @@
 (defn get-status [driver]
   (with-resp driver :get
     [:status]
-    nil
-    resp
+    nil resp
     (:value resp)))
 
 (defn create-session [driver]
@@ -93,8 +90,7 @@
   (with-resp driver
     :delete
     [:session (:session @driver)]
-    nil
-    _))
+    nil _))
 
 ;;
 ;; actice element
@@ -271,17 +267,23 @@
     [:session (:session @driver) :url]
     {:url url} _))
 
-(defn back [driver]
+(defn back
+  "Move backwards in a browser's history."
+  [driver]
   (with-resp driver :post
     [:session (:session @driver) :back]
     nil _))
 
-(defn refresh [driver]
+(defn refresh
+  "Reload the current window."
+  [driver]
   (with-resp driver :post
     [:session (:session @driver) :refresh]
     nil _))
 
-(defn forward [driver]
+(defn forward
+  "Move forwards in a browser's history."
+  [driver]
   (with-resp driver :post
     [:session (:session @driver) :forward]
     nil _))
@@ -290,13 +292,17 @@
 ;; URL and title
 ;;
 
-(defn get-url [driver]
+(defn get-url
+  "Returns the current URL string."
+  [driver]
   (with-resp driver :get
     [:session (:session @driver) :url]
     nil resp
     (:value resp)))
 
-(defn get-title [driver]
+(defn get-title
+  "Returns the current window's title."
+  [driver]
   (with-resp driver :get
     [:session (:session @driver) :title]
     nil resp
@@ -307,7 +313,8 @@
 ;;
 
 (defn q-xpath
-  "Turns a map into xpath clause.
+  "Turns a map into an XPath clause.
+
    {:tag :div :id :content :class :test :index 2}
    //div[@id='content'][@class='test'][2]"
   [q]
@@ -325,7 +332,10 @@
         xpath (str xpath (if idx (format "[%s]" idx) ""))]
     xpath))
 
-(defn q-expand [driver q]
+(defn q-expand
+  "Expands a query expression into a pair of
+   [locator, term] values to pass them into low-level HTTP API."
+  [driver q]
   (cond
     (string? q)
     [(:locator @driver) q]
@@ -377,7 +387,9 @@
     resp
     (-> resp :value :ELEMENT)))
 
-(defn query [driver q]
+(defn query
+  "Finds an element on a page."
+  [driver q]
   (cond
     (= q :active)
     (get-active-element* driver)
@@ -486,7 +498,9 @@
     resp
     (-> resp (select-keys [:width :height]))))
 
-(defn get-element-size [driver q]
+(defn get-element-size
+  "Returns an element size as a map with :width and :height keys."
+  [driver q]
   (get-element-size* driver (query driver q)))
 
 ;;
@@ -513,6 +527,7 @@
     (-> resp (select-keys [:x :y]))))
 
 (defn get-element-location [driver q]
+  "Returns an element location on a page as a map with :x and :x keys."
   (get-element-location* driver (query driver q)))
 
 ;;
