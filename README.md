@@ -34,7 +34,7 @@ after a mysteries note was produced on it.
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.1.0"]
+[etaoin "0.1.1"]
 ```
 ## Usage
 
