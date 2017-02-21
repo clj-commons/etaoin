@@ -22,8 +22,7 @@
 
 (defn fixture-browsers [f]
   (let [url (-> "html/test.html" io/resource str)]
-    (doseq [type [;; :firefox :chrome :phantom
-                  :safari]]
+    (doseq [type [:firefox :chrome :phantom :safari]]
       (with-driver type {} driver
         (go driver url)
         (wait-visible driver {:id :document-end})

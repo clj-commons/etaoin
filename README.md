@@ -1,4 +1,3 @@
-
 [url-webdriver]: https://www.w3.org/TR/webdriver/
 [url-wiki]: https://en.wikipedia.org/wiki/Etaoin_shrdlu#Literature
 [url-tests]: https://github.com/igrishaev/etaoin/blob/master/test/etaoin/api_test.clj
@@ -6,6 +5,7 @@
 [url-chromedriver-dl]: https://sites.google.com/a/chromium.org/chromedriver/downloads
 [url-geckodriver-dl]: https://github.com/mozilla/geckodriver/releases
 [url-phantom-dl]: http://phantomjs.org/download.html
+[url-webkit]: https://webkit.org/blog/6900/webdriver-support-in-safari-10/
 
 Pure Clojure implementation of [Webdriver][url-webdriver] protocol.
 
@@ -145,6 +145,12 @@ not described here.
   - `brew install phantomjs` For Mac users
   - or download it from the [official site][url-phantom-dl].
 
+- Install Safari Driver (for Mac users):
+
+  - update your Mac OS to El Captain using App Store;
+  - set up Safari options as the [Webkit page][url-webkit] says (scroll down to
+    "Running the Example in Safari" section).
+
 - Now, check your installation launching any of these commands. For each
   command, an endless process with a local HTTP server should start.
 
@@ -152,6 +158,7 @@ not described here.
   chromedriver
   geckodriver
   phantomjs --wd
+  safaridriver -p 0
   ```
 
 - If they work, you are ready to lunch the tests:
@@ -171,7 +178,6 @@ console output.
 
 ## Roadmoap
 
-- Add Safari checks into unit tests.
 - Add MS Edge support.
 - Add touch API tests.
 - Add mobile support.
