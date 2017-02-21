@@ -22,7 +22,8 @@
 
 (defn fixture-browsers [f]
   (let [url (-> "html/test.html" io/resource str)]
-    (doseq [type [:firefox :chrome :phantom :safari]]
+    (doseq [type [;; :firefox :chrome :phantom
+                  :safari]]
       (with-driver type {} driver
         (go driver url)
         (wait-visible driver {:id :document-end})
@@ -47,7 +48,7 @@
       (fill {:id :simple-input} "test")
       (clear {:id :simple-input})
       (click {:id :simple-submit})
-      (wait 1)
+      (when-safari (wait 1))
       (-> get-url
           (str/ends-with? "?login=&password=&message=")
           is))))
@@ -67,22 +68,23 @@
     (-> (exists? {:tag :body}) is)
     (-> (absent? {:id :dunno-foo-bar}) is)))
 
+;; In Safari, alerts work quite slow, so we add some delays.
 (deftest test-alert
   (when-not-phantom
       *driver*
     (doto *driver*
       (click {:id :button-alert})
-      (wait 0.1)
+      (when-safari (wait 0.1))
       (-> get-alert-text (= "Hello!") is)
       (-> has-alert? is)
       (accept-alert)
-      (wait 0.5)
+      (when-safari (wait 0.5))
       (-> has-alert? not is)
       (click {:id :button-alert})
-      (wait 0.1)
+      (when-safari (wait 0.1))
       (-> has-alert? is)
       (dismiss-alert)
-      (wait 0.5)
+      (when-safari (wait 0.5))
       (-> has-alert? not is))))
 
 (deftest test-attributes
@@ -234,7 +236,12 @@
     (is (numeric? x))
     (is (numeric? y))))
 
-(deftest test-window-position ;;
+;; Here and below: when running a Safari driver,
+;; you need to unplug your second monitor. That sounds crazy,
+;; I know. Bun nevertheless, if a Safari window appears on the second
+;; monitor, the next two test will fail due to window error.
+
+(deftest test-window-position
   (let [{:keys [x y]} (get-window-position *driver*)]
     (is (numeric? x))
     (is (numeric? y))
@@ -260,7 +267,9 @@
         (click {:id :set-active-el})
         (-> (get-element-attr :active :id)
             (= "active-el-input")
-            is)))))
+            is)))
+    (when-safari *driver*
+      (is 1))))
 
 (deftest test-element-text
   (let [text (get-element-text *driver* {:id :element-text})]
@@ -269,6 +278,22 @@
 (deftest test-cookies
   (testing "getting all cookies"
     (let [cookies (get-cookies *driver*)]
+      (when-safari *driver*
+        (is (= cookies
+               [{:domain ".^filecookies^"
+                 :secure false
+                 :expiry 0
+                 :httpOnly false
+                 :value "test1"
+                 :path "/"
+                 :name "cookie1"}
+                {:domain ".^filecookies^"
+                 :secure false
+                 :expiry 0
+                 :httpOnly false
+                 :value "test2"
+                 :path "/"
+                 :name "cookie2"}])))
       (when-chrome *driver*
         (is (= cookies [])))
       (when-firefox *driver*
@@ -301,6 +326,15 @@
                          :value "test1"}])))))
   (testing "getting a cookie"
     (let [cookie (get-cookie *driver* :cookie2)]
+      (when-safari *driver*
+        (is (= cookie
+               {:domain ".^filecookies^"
+                :secure false
+                :expiry 0
+                :httpOnly false
+                :value "test2"
+                :path "/"
+                :name "cookie2"})))
       (when-chrome *driver*
         (is (nil? cookie)))
       (when-firefox *driver*
@@ -321,8 +355,8 @@
                 :secure false
                 :value "test2"})))))
   (testing "setting a cookie"
-    (when-not-phantom
-        *driver*
+    (when-not (or (phantom? *driver*)
+                  (safari? *driver*))
       (set-cookie *driver* {:httponly false
                             :name "cookie3"
                             :domain ""
@@ -337,19 +371,19 @@
                :domain ""
                :expiry nil
                :secure false
-               :httpOnly false}))))
-    (testing "deleting a cookie"
-      (when-not-phantom
-          *driver*
-        (delete-cookie *driver* :cookie3)
-        (let [cookie (get-cookie *driver* :cookie3)]
-          (is (nil? cookie)))))
-    (testing "deleting all cookies"
-      (doto *driver*
-        delete-cookies
-        (-> get-cookies
-            (= [])
-            is)))))
+               :httpOnly false})))))
+  (testing "deleting a cookie"
+    (when-not-phantom
+        *driver*
+      (delete-cookie *driver* :cookie3)
+      (let [cookie (get-cookie *driver* :cookie3)]
+        (is (nil? cookie)))))
+  (testing "deleting all cookies"
+    (doto *driver*
+      delete-cookies
+      (-> get-cookies
+          (= [])
+          is))))
 
 (deftest test-page-source
   (let [src (get-source *driver*)]

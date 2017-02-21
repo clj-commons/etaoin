@@ -698,15 +698,25 @@
     {:cookie cookie}
     _))
 
-(defn delete-cookies [driver]
-  (with-resp driver :delete
-    [:session (:session @driver) :cookie]
-    nil _))
-
 (defn delete-cookie [driver cookie-name]
   (with-resp driver :delete
     [:session (:session @driver) :cookie (name cookie-name)]
     nil _))
+
+(defmulti delete-cookies dispatch-driver)
+
+(defmethod delete-cookies :default
+  [driver]
+  (with-resp driver :delete
+    [:session (:session @driver) :cookie]
+    nil _))
+
+;; For unknown reason, Safari hangs forever when trying to delete
+;; all cookies. Currently, we delete them in cycle.
+(defmethod delete-cookies :safari
+  [driver]
+  (doseq [cookie (get-cookies driver)]
+    (delete-cookie driver (:name cookie))))
 
 ;;
 ;; source code
