@@ -22,7 +22,7 @@
 
 (defn fixture-browsers [f]
   (let [url (-> "html/test.html" io/resource str)]
-    (doseq [type [:firefox :chrome :phantom]]
+    (doseq [type [:firefox :chrome :phantom :safari]]
       (with-driver type {} driver
         (go driver url)
         (wait-visible driver {:id :document-end})
@@ -47,6 +47,7 @@
       (fill {:id :simple-input} "test")
       (clear {:id :simple-input})
       (click {:id :simple-submit})
+      (wait 1)
       (-> get-url
           (str/ends-with? "?login=&password=&message=")
           is))))
@@ -67,18 +68,22 @@
     (-> (absent? {:id :dunno-foo-bar}) is)))
 
 (deftest test-alert
-  (skip-phantom
-   *driver*
-   (doto *driver*
-     (click {:id :button-alert})
-     (-> get-alert-text (= "Hello!") is)
-     (-> has-alert? is)
-     (accept-alert)
-     (-> has-alert? not is)
-     (click {:id :button-alert})
-     (-> has-alert? is)
-     (dismiss-alert)
-     (-> has-alert? not is))))
+  (when-not-phantom
+      *driver*
+    (doto *driver*
+      (click {:id :button-alert})
+      (wait 0.1)
+      (-> get-alert-text (= "Hello!") is)
+      (-> has-alert? is)
+      (accept-alert)
+      (wait 0.5)
+      (-> has-alert? not is)
+      (click {:id :button-alert})
+      (wait 0.1)
+      (-> has-alert? is)
+      (dismiss-alert)
+      (wait 0.5)
+      (-> has-alert? not is))))
 
 (deftest test-attributes
   (testing "common attributes"
@@ -97,12 +102,13 @@
               "bar"])
           is)))
   (testing "event attributes"
-    (doto *driver*
-      (-> (get-element-attr
-           {:id :input-attr}
-           :onclick)
-          (= "alert(123)")
-          is)))
+    (let [safari-val "function onclick(event) {\nalert(123)\n}"
+          val (get-element-attr *driver*
+                                {:id :input-attr}
+                                :onclick)]
+      (if (safari? *driver*)
+        (is (= val safari-val))
+        (is (= val "alert(123)")))))
   (testing "missing attributes"
     (doto *driver*
       (-> (get-element-attrs
@@ -207,19 +213,19 @@
     (close-window)))
 
 (deftest test-drag-n-drop
+  (is 1)
   (let [url "http://marcojakob.github.io/dart-dnd/basic/web/"
         doc {:class :document}
         trash {:xpath "//div[contains(@class, 'trash')]"}]
-    (skip-firefox
-     *driver*
-     (doto *driver*
-       (go url)
-       (drag-and-drop doc trash)
-       (drag-and-drop doc trash)
-       (drag-and-drop doc trash)
-       (drag-and-drop doc trash)
-       (-> (absent? doc)
-           is)))))
+    (when-not (or (firefox? *driver*)
+                  (safari? *driver*))
+      (doto *driver*
+        (go url)
+        (drag-and-drop doc trash)
+        (drag-and-drop doc trash)
+        (drag-and-drop doc trash)
+        (drag-and-drop doc trash)
+        (-> (absent? doc) is)))))
 
 (deftest test-element-location
   (let [q {:id :el-location-input}
@@ -228,7 +234,7 @@
     (is (numeric? x))
     (is (numeric? y))))
 
-(deftest test-window-position
+(deftest test-window-position ;;
   (let [{:keys [x y]} (get-window-position *driver*)]
     (is (numeric? x))
     (is (numeric? y))
@@ -249,16 +255,16 @@
 
 (deftest test-active-element
   (testing "active element"
-    (doto *driver*
-      (click {:id :set-active-el})
-      (-> (get-element-attr :active :id)
-          (= "active-el-input")
-          is))))
+    (when-not-safari *driver*
+      (doto *driver*
+        (click {:id :set-active-el})
+        (-> (get-element-attr :active :id)
+            (= "active-el-input")
+            is)))))
 
 (deftest test-element-text
   (let [text (get-element-text *driver* {:id :element-text})]
     (is (= text "Element text goes here."))))
-
 
 (deftest test-cookies
   (testing "getting all cookies"
@@ -315,29 +321,29 @@
                 :secure false
                 :value "test2"})))))
   (testing "setting a cookie"
-    (skip-phantom
-     *driver*
-     (set-cookie *driver* {:httponly false
-                           :name "cookie3"
-                           :domain ""
-                           :secure false
-                           :value "test3"})
-     (when-firefox *driver*
-       (let [cookie (get-cookie *driver* :cookie3)]
-         (is (= cookie)
-             {:name "cookie3"
-              :value "test3"
-              :path ""
-              :domain ""
-              :expiry nil
-              :secure false
-              :httpOnly false}))))
+    (when-not-phantom
+        *driver*
+      (set-cookie *driver* {:httponly false
+                            :name "cookie3"
+                            :domain ""
+                            :secure false
+                            :value "test3"})
+      (when-firefox *driver*
+        (let [cookie (get-cookie *driver* :cookie3)]
+          (is (= cookie)
+              {:name "cookie3"
+               :value "test3"
+               :path ""
+               :domain ""
+               :expiry nil
+               :secure false
+               :httpOnly false}))))
     (testing "deleting a cookie"
-      (skip-phantom
-       *driver*
-       (delete-cookie *driver* :cookie3)
-       (let [cookie (get-cookie *driver* :cookie3)]
-         (is (nil? cookie)))))
+      (when-not-phantom
+          *driver*
+        (delete-cookie *driver* :cookie3)
+        (let [cookie (get-cookie *driver* :cookie3)]
+          (is (nil? cookie)))))
     (testing "deleting all cookies"
       (doto *driver*
         delete-cookies
@@ -347,10 +353,10 @@
 
 (deftest test-page-source
   (let [src (get-source *driver*)]
-    (when-firefox *driver*
-      (is (str/starts-with? src "<html><head>")))
-    (skip-firefox *driver*
-                  (is (str/starts-with? src "<!DOCTYPE html>")))))
+    (if (or (firefox? *driver*)
+            (safari? *driver*))
+      (is (str/starts-with? src "<html><head>"))
+      (is (str/starts-with? src "<!DOCTYPE html>")))))
 
 (deftest test-screenshot
   (with-tmp-file "screenshot" ".png" path

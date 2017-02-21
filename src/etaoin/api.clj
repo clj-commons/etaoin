@@ -888,15 +888,29 @@
 
 (def absent? (complement exists?))
 
-(defn visible* [driver el]
+(defmulti displayed* dispatch-driver)
+
+(defmethod displayed* :default
+  [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :displayed]
     nil
     resp
     (:value resp)))
 
+(defmethod displayed* :safari
+  [driver el]
+  (cond
+    (= (get-element-css* driver el :display)
+       "none")
+    false
+    (= (get-element-css* driver el :visibility)
+       "hidden")
+    false
+    :else true))
+
 (defn displayed? [driver q]
-  (visible* driver (query driver q)))
+  (displayed* driver (query driver q)))
 
 (defn visible? [driver q]
   (and (exists? driver q)
@@ -1060,21 +1074,21 @@
 ;; skip/when driver
 ;;
 
-(defmacro skip-predicate [predicate & body]
+(defmacro when-not-predicate [predicate & body]
   `(when-not (~predicate)
      ~@body))
 
-(defmacro skip-chrome [driver & body]
-  `(skip-predicate #(chrome? ~driver) ~@body))
+(defmacro when-not-chrome [driver & body]
+  `(when-not-predicate #(chrome? ~driver) ~@body))
 
-(defmacro skip-phantom [driver & body]
-  `(skip-predicate #(phantom? ~driver) ~@body))
+(defmacro when-not-phantom [driver & body]
+  `(when-not-predicate #(phantom? ~driver) ~@body))
 
-(defmacro skip-firefox [driver & body]
-  `(skip-predicate #(firefox? ~driver) ~@body))
+(defmacro when-not-firefox [driver & body]
+  `(when-not-predicate #(firefox? ~driver) ~@body))
 
-(defmacro skip-safari [driver & body]
-  `(skip-predicate #(safari? ~driver) ~@body))
+(defmacro when-not-safari [driver & body]
+  `(when-not-predicate #(safari? ~driver) ~@body))
 
 (defmacro when-predicate [predicate & body]
   `(when (~predicate)
