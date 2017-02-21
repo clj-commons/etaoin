@@ -165,12 +165,14 @@
   (testing "wait for text simple"
     (doto *driver*
       (refresh)
+      (wait-visible {:id :document-end})
       (click {:id :wait-button})
       (wait-has-text "-secret-"))
     (is true "text found"))
   (testing "wait for text timeout"
     (doto *driver*
       (refresh)
+      (wait-visible {:id :document-end})
       (click {:id :wait-button}))
     (try+
      (wait-has-text *driver*
@@ -186,7 +188,9 @@
                :interval 0.1
                :times 6})))))
   (testing "wait for non-existing text"
-    (refresh *driver*)
+    (doto *driver*
+      (refresh)
+      (wait-visible {:id :document-end}))
     (try+
      (wait-has-text *driver*
                     "-dunno-whatever-foo-bar-"
@@ -204,7 +208,6 @@
   (is 1)
   (testing "wait for an element has class"
     (doto *driver*
-      (refresh)
       (click {:id :wait-add-class-trigger})
       (wait-has-class {:id :wait-add-class-target} :new-one))))
 
