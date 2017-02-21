@@ -209,7 +209,11 @@
   (testing "wait for an element has class"
     (doto *driver*
       (click {:id :wait-add-class-trigger})
-      (wait-has-class {:id :wait-add-class-target} :new-one))))
+      (wait-has-class {:id :wait-add-class-target}
+                      :new-one
+                      {:timeout 20
+                       :interval 1
+                       :message "No 'new-one' class found."}))))
 
 (deftest test-close-window
   (is 1)
