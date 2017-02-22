@@ -64,8 +64,10 @@ The good news you may automate your browser directly from the REPL:
 ;; let's ensure
 (get-url driver)
 "https://en.wikipedia.org/wiki/Clojure"
+
 (get-title driver)
 "Clojure - Wikipedia"
+
 (has-text? driver "Clojure")
 true
 
@@ -109,7 +111,7 @@ macros as follows:
 ```clojure
 (with-firefox {} ff ;; additional options, bind name
   (doto ff
-    (go ff ""https://google.com)
+    (go ff "https://google.com")
     ...))
 ```
 
