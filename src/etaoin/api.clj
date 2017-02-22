@@ -1,10 +1,8 @@
 (ns etaoin.api
   "
   The API below was written regarding to the source code
-  of different Webdriver implementations.
-
-  Sometimes, a feature you found out in W3C official standard
-  really differs from the corresponding implementation in Chrome or Firefox, etc.
+  of different Webdriver implementations. All of them partially differ
+  from the official W3C specification.
 
   Chrome:
   https://github.com/bayandin/chromedriver/blob/master/client/command_executor.py
@@ -77,8 +75,7 @@
 (defn get-status [driver]
   (with-resp driver :get
     [:status]
-    nil
-    resp
+    nil resp
     (:value resp)))
 
 (defn create-session [driver]
@@ -93,23 +90,22 @@
   (with-resp driver
     :delete
     [:session (:session @driver)]
-    nil
-    _))
+    nil _))
 
 ;;
 ;; actice element
 ;;
 
-(defmulti get-active-element dispatch-driver)
+(defmulti get-active-element* dispatch-driver)
 
-(defmethod get-active-element :firefox
+(defmethod get-active-element* :firefox
   [driver]
   (with-resp driver :get
     [:session (:session @driver) :element :active]
     nil resp
     (-> resp :value first second)))
 
-(defmethods get-active-element [:chrome :phantom :safari]
+(defmethods get-active-element* [:chrome :phantom :safari]
   [driver]
   (with-resp driver :post
     [:session (:session @driver) :element :active]
@@ -271,17 +267,23 @@
     [:session (:session @driver) :url]
     {:url url} _))
 
-(defn back [driver]
+(defn back
+  "Move backwards in a browser's history."
+  [driver]
   (with-resp driver :post
     [:session (:session @driver) :back]
     nil _))
 
-(defn refresh [driver]
+(defn refresh
+  "Reload the current window."
+  [driver]
   (with-resp driver :post
     [:session (:session @driver) :refresh]
     nil _))
 
-(defn forward [driver]
+(defn forward
+  "Move forwards in a browser's history."
+  [driver]
   (with-resp driver :post
     [:session (:session @driver) :forward]
     nil _))
@@ -290,13 +292,17 @@
 ;; URL and title
 ;;
 
-(defn get-url [driver]
+(defn get-url
+  "Returns the current URL string."
+  [driver]
   (with-resp driver :get
     [:session (:session @driver) :url]
     nil resp
     (:value resp)))
 
-(defn get-title [driver]
+(defn get-title
+  "Returns the current window's title."
+  [driver]
   (with-resp driver :get
     [:session (:session @driver) :title]
     nil resp
@@ -307,7 +313,8 @@
 ;;
 
 (defn q-xpath
-  "Turns a map into xpath clause.
+  "Turns a map into an XPath clause.
+
    {:tag :div :id :content :class :test :index 2}
    //div[@id='content'][@class='test'][2]"
   [q]
@@ -321,14 +328,17 @@
                                      (name key)
                                      (get-val val)))
         parts (map pair attrs)
-        xpath (apply str "//" (name tag) parts)
+        xpath (apply str ".//" (name tag) parts)
         xpath (str xpath (if idx (format "[%s]" idx) ""))]
     xpath))
 
-(defn q-discover [q]
+(defn q-expand
+  "Expands a query expression into a pair of
+   [locator, term] values to pass them into low-level HTTP API."
+  [driver q]
   (cond
     (string? q)
-    [nil q]
+    [(:locator @driver) q]
 
     (and (map? q)
          (:xpath q))
@@ -339,32 +349,92 @@
     ["css selector" (:css q)]
 
     (map? q)
-    ["xpath" (q-xpath q)]))
+    ["xpath" (q-xpath q)]
 
-(defmulti query* dispatch-driver)
+    :else
+    (throw+ {:type :etaoin/query
+             :q q
+             :driver @driver
+             :message "Unsupported query clause"})))
 
-(defmethod query* :firefox [driver locator term]
+(defmulti find-element* dispatch-driver)
+
+(defmethod find-element* :firefox
+  [driver locator term]
   (with-resp driver :post
     [:session (:session @driver) :element]
     {:using locator :value term}
     resp
     (-> resp :value first second)))
 
-(defmethod query* :default [driver locator term]
+(defmethod find-element* :default
+  [driver locator term]
   (with-resp driver :post
     [:session (:session @driver) :element]
     {:using locator :value term}
     resp
     (-> resp :value :ELEMENT)))
 
-(defn query [driver q]
+(defmulti find-element-from* dispatch-driver)
+
+(defmethod find-element-from* :firefox
+  [driver el locator term]
+  (with-resp driver :post
+    [:session (:session @driver) :element el :element]
+    {:using locator :value term}
+    resp
+    (-> resp :value first second)))
+
+(defmethod find-element-from* :default
+  [driver el locator term]
+  (with-resp driver :post
+    [:session (:session @driver) :element el :element]
+    {:using locator :value term}
+    resp
+    (-> resp :value :ELEMENT)))
+
+(defn query
+  "Finds an element on a page.
+
+   A query might be:
+
+   - a string, so the current browser's locator will be used. Examples:
+   //div[@id='content'] for XPath,
+   div.article for CSS selector
+
+   - a keyword :active that means the current active element
+
+   - a map with either :xpath or :css keys with a string term, e.g:
+   {:xpath \"//div[@id='content']\"} or
+   {:css \"div.article\"}
+
+   - a map that will turn into an XPath expression:
+   {:tag :div} => .//div
+   {:id :container} => .//*[@id='container']
+   {:tag :a :class :external :index 2} => .//a[@class='external'][2]
+
+   - a vector of any clause mentioned above. In that case,
+   every next term is searched inside the previous one. Example:
+   [{:id :footer} {:tag :a}] => finds the first hyperlink
+   inside a div with id 'footer'."
+  [driver q]
   (cond
     (= q :active)
-    (get-active-element driver)
+    (get-active-element* driver)
+
+    (vector? q)
+    (loop [el (query driver (first q))
+           q-rest (rest q)]
+      (if (empty? q-rest)
+        el
+        (let [q (first q-rest)
+              [loc term] (q-expand driver q)]
+          (recur (find-element-from* driver el loc term)
+                 (rest q-rest)))))
+
     :else
-    (let [[locator term] (q-discover q)
-          locator (or locator (:locator @driver))]
-      (query* driver locator term))))
+    (let [[loc term] (q-expand driver q)]
+      (find-element* driver loc term))))
 
 ;;
 ;; mouse
@@ -456,7 +526,9 @@
     resp
     (-> resp (select-keys [:width :height]))))
 
-(defn get-element-size [driver q]
+(defn get-element-size
+  "Returns an element size as a map with :width and :height keys."
+  [driver q]
   (get-element-size* driver (query driver q)))
 
 ;;
@@ -483,6 +555,7 @@
     (-> resp (select-keys [:x :y]))))
 
 (defn get-element-location [driver q]
+  "Returns an element location on a page as a map with :x and :x keys."
   (get-element-location* driver (query driver q)))
 
 ;;
@@ -625,15 +698,25 @@
     {:cookie cookie}
     _))
 
-(defn delete-cookies [driver]
-  (with-resp driver :delete
-    [:session (:session @driver) :cookie]
-    nil _))
-
 (defn delete-cookie [driver cookie-name]
   (with-resp driver :delete
     [:session (:session @driver) :cookie (name cookie-name)]
     nil _))
+
+(defmulti delete-cookies dispatch-driver)
+
+(defmethod delete-cookies :default
+  [driver]
+  (with-resp driver :delete
+    [:session (:session @driver) :cookie]
+    nil _))
+
+;; For unknown reason, Safari hangs forever when trying to delete
+;; all cookies. Currently, we delete them in cycle.
+(defmethod delete-cookies :safari
+  [driver]
+  (doseq [cookie (get-cookies driver)]
+    (delete-cookie driver (:name cookie))))
 
 ;;
 ;; source code
@@ -815,15 +898,29 @@
 
 (def absent? (complement exists?))
 
-(defn visible* [driver el]
+(defmulti displayed* dispatch-driver)
+
+(defmethod displayed* :default
+  [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :displayed]
     nil
     resp
     (:value resp)))
 
+(defmethod displayed* :safari
+  [driver el]
+  (cond
+    (= (get-element-css* driver el :display)
+       "none")
+    false
+    (= (get-element-css* driver el :visibility)
+       "hidden")
+    false
+    :else true))
+
 (defn displayed? [driver q]
-  (visible* driver (query driver q)))
+  (displayed* driver (query driver q)))
 
 (defn visible? [driver q]
   (and (exists? driver q)
@@ -875,8 +972,12 @@
 (def default-timeout 10)
 (def default-interval 0.1)
 
-(defn wait [sec]
-  (Thread/sleep (* sec 1000)))
+(defn wait
+  "Does nothing for N seconds."
+  ([driver sec]
+   (wait sec))
+  ([sec]
+   (Thread/sleep (* sec 1000))))
 
 (defn wait-predicate
   ([pred]
@@ -904,11 +1005,20 @@
 (defn wait-exists [driver q & [opt]]
   (wait-predicate #(exists? driver q) opt))
 
+(defn wait-absent [driver q & [opt]]
+  (wait-predicate #(absent? driver q) opt))
+
 (defn wait-visible [driver q & [opt]]
   (wait-predicate #(visible? driver q) opt))
 
+(defn wait-invisible [driver q & [opt]]
+  (wait-predicate #(invisible? driver q) opt))
+
 (defn wait-enabled [driver q & [opt]]
   (wait-predicate #(enabled? driver q) opt))
+
+(defn wait-disabled [driver q & [opt]]
+  (wait-predicate #(disabled? driver q) opt))
 
 (defn wait-has-alert [driver & [opt]]
   (wait-predicate #(has-alert? driver) opt))
@@ -974,21 +1084,21 @@
 ;; skip/when driver
 ;;
 
-(defmacro skip-predicate [predicate & body]
+(defmacro when-not-predicate [predicate & body]
   `(when-not (~predicate)
      ~@body))
 
-(defmacro skip-chrome [driver & body]
-  `(skip-predicate #(chrome? ~driver) ~@body))
+(defmacro when-not-chrome [driver & body]
+  `(when-not-predicate #(chrome? ~driver) ~@body))
 
-(defmacro skip-phantom [driver & body]
-  `(skip-predicate #(phantom? ~driver) ~@body))
+(defmacro when-not-phantom [driver & body]
+  `(when-not-predicate #(phantom? ~driver) ~@body))
 
-(defmacro skip-firefox [driver & body]
-  `(skip-predicate #(firefox? ~driver) ~@body))
+(defmacro when-not-firefox [driver & body]
+  `(when-not-predicate #(firefox? ~driver) ~@body))
 
-(defmacro skip-safari [driver & body]
-  `(skip-predicate #(safari? ~driver) ~@body))
+(defmacro when-not-safari [driver & body]
+  `(when-not-predicate #(safari? ~driver) ~@body))
 
 (defmacro when-predicate [predicate & body]
   `(when (~predicate)
@@ -1158,10 +1268,11 @@
       (run-driver opt)
       (connect-driver opt)))
 
-(def firefox (partial boot-driver :firefox))
-(def chrome (partial boot-driver :chrome))
-(def phantom (partial boot-driver :phantom))
-(def safari (partial boot-driver :safari))
+(defn quit [driver]
+  (try
+    (disconnect-driver driver)
+    (finally
+      (stop-driver driver))))
 
 (defmacro with-driver [type opt bind & body]
   `(client/with-pool {}
@@ -1169,5 +1280,25 @@
        (try
          ~@body
          (finally
-           (disconnect-driver ~bind)
-           (stop-driver ~bind))))))
+           (quit ~bind))))))
+
+(def firefox (partial boot-driver :firefox))
+(def chrome (partial boot-driver :chrome))
+(def phantom (partial boot-driver :phantom))
+(def safari (partial boot-driver :safari))
+
+(defmacro with-firefox [opt bind & body]
+  `(with-driver :firefox ~opt ~bind
+     ~@body))
+
+(defmacro with-chrome [opt bind & body]
+  `(with-driver :chrome ~opt ~bind
+     ~@body))
+
+(defmacro with-phantom [opt bind & body]
+  `(with-driver :phantom ~opt ~bind
+     ~@body))
+
+(defmacro with-safari [opt bind & body]
+  `(with-driver :safari ~opt ~bind
+     ~@body))

@@ -22,7 +22,7 @@
 
 (defn fixture-browsers [f]
   (let [url (-> "html/test.html" io/resource str)]
-    (doseq [type [:firefox :chrome :phantom]]
+    (doseq [type [:firefox :chrome :phantom :safari]]
       (with-driver type {} driver
         (go driver url)
         (wait-visible driver {:id :document-end})
@@ -47,6 +47,7 @@
       (fill {:id :simple-input} "test")
       (clear {:id :simple-input})
       (click {:id :simple-submit})
+      (when-safari (wait 1))
       (-> get-url
           (str/ends-with? "?login=&password=&message=")
           is))))
@@ -66,19 +67,24 @@
     (-> (exists? {:tag :body}) is)
     (-> (absent? {:id :dunno-foo-bar}) is)))
 
+;; In Safari, alerts work quite slow, so we add some delays.
 (deftest test-alert
-  (skip-phantom
-   *driver*
-   (doto *driver*
-     (click {:id :button-alert})
-     (-> get-alert-text (= "Hello!") is)
-     (-> has-alert? is)
-     (accept-alert)
-     (-> has-alert? not is)
-     (click {:id :button-alert})
-     (-> has-alert? is)
-     (dismiss-alert)
-     (-> has-alert? not is))))
+  (when-not-phantom
+      *driver*
+    (doto *driver*
+      (click {:id :button-alert})
+      (when-safari (wait 0.1))
+      (-> get-alert-text (= "Hello!") is)
+      (-> has-alert? is)
+      (accept-alert)
+      (when-safari (wait 0.5))
+      (-> has-alert? not is)
+      (click {:id :button-alert})
+      (when-safari (wait 0.1))
+      (-> has-alert? is)
+      (dismiss-alert)
+      (when-safari (wait 0.5))
+      (-> has-alert? not is))))
 
 (deftest test-attributes
   (testing "common attributes"
@@ -97,12 +103,13 @@
               "bar"])
           is)))
   (testing "event attributes"
-    (doto *driver*
-      (-> (get-element-attr
-           {:id :input-attr}
-           :onclick)
-          (= "alert(123)")
-          is)))
+    (let [safari-val "function onclick(event) {\nalert(123)\n}"
+          val (get-element-attr *driver*
+                                {:id :input-attr}
+                                :onclick)]
+      (if (safari? *driver*)
+        (is (= val safari-val))
+        (is (= val "alert(123)")))))
   (testing "missing attributes"
     (doto *driver*
       (-> (get-element-attrs
@@ -158,48 +165,56 @@
   (testing "wait for text simple"
     (doto *driver*
       (refresh)
+      (wait-visible {:id :document-end})
       (click {:id :wait-button})
-      (wait-has-text "-secret-"))
+      (wait-has-text "-secret-" {:message "wait simiple"}))
     (is true "text found"))
   (testing "wait for text timeout"
     (doto *driver*
       (refresh)
+      (wait-visible {:id :document-end})
       (click {:id :wait-button}))
     (try+
      (wait-has-text *driver*
                     "-secret-"
-                    {:timeout 0.5
+                    {:timeout 1
                      :message "No -secret- text on the page"})
      (is false "should not be executd")
      (catch [:type :etaoin/timeout] data
        (is (= (-> data (dissoc :predicate :time-rest))
               {:type :etaoin/timeout
                :message "No -secret- text on the page"
-               :timeout 0.5
+               :timeout 1
                :interval 0.1
-               :times 6})))))
+               :times 11})))))
   (testing "wait for non-existing text"
-    (refresh *driver*)
+    (doto *driver*
+      (refresh)
+      (wait-visible {:id :document-end}))
     (try+
      (wait-has-text *driver*
                     "-dunno-whatever-foo-bar-"
-                    {:timeout 1})
+                    {:timeout 2
+                     :message "wait non-existing"})
      (is false "should not be executed")
      (catch [:type :etaoin/timeout] data
        (is (= (-> data (dissoc :predicate :time-rest))
               {:type :etaoin/timeout
-               :message nil
-               :timeout 1
+               :message "wait non-existing"
+               :timeout 2
                :interval 0.1
-               :times 11}))))))
+               :times 20}))))))
 
 (deftest test-wait-has-class
   (is 1)
   (testing "wait for an element has class"
     (doto *driver*
-      (refresh)
       (click {:id :wait-add-class-trigger})
-      (wait-has-class {:id :wait-add-class-target} :new-one))))
+      (wait-has-class {:id :wait-add-class-target}
+                      :new-one
+                      {:timeout 20
+                       :interval 1
+                       :message "No 'new-one' class found."}))))
 
 (deftest test-close-window
   (is 1)
@@ -207,19 +222,19 @@
     (close-window)))
 
 (deftest test-drag-n-drop
+  (is 1)
   (let [url "http://marcojakob.github.io/dart-dnd/basic/web/"
         doc {:class :document}
         trash {:xpath "//div[contains(@class, 'trash')]"}]
-    (skip-firefox
-     *driver*
-     (doto *driver*
-       (go url)
-       (drag-and-drop doc trash)
-       (drag-and-drop doc trash)
-       (drag-and-drop doc trash)
-       (drag-and-drop doc trash)
-       (-> (absent? doc)
-           is)))))
+    (when-not (or (firefox? *driver*)
+                  (safari? *driver*))
+      (doto *driver*
+        (go url)
+        (drag-and-drop doc trash)
+        (drag-and-drop doc trash)
+        (drag-and-drop doc trash)
+        (drag-and-drop doc trash)
+        (-> (absent? doc) is)))))
 
 (deftest test-element-location
   (let [q {:id :el-location-input}
@@ -227,6 +242,11 @@
         {:keys [x y]} loc]
     (is (numeric? x))
     (is (numeric? y))))
+
+;; Here and below: when running a Safari driver,
+;; you need to unplug your second monitor. That sounds crazy,
+;; I know. Bun nevertheless, if a Safari window appears on the second
+;; monitor, the next two test will fail due to window error.
 
 (deftest test-window-position
   (let [{:keys [x y]} (get-window-position *driver*)]
@@ -249,20 +269,38 @@
 
 (deftest test-active-element
   (testing "active element"
-    (doto *driver*
-      (click {:id :set-active-el})
-      (-> (get-element-attr :active :id)
-          (= "active-el-input")
-          is))))
+    (when-not-safari *driver*
+      (doto *driver*
+        (click {:id :set-active-el})
+        (-> (get-element-attr :active :id)
+            (= "active-el-input")
+            is)))
+    (when-safari *driver*
+      (is 1))))
 
 (deftest test-element-text
   (let [text (get-element-text *driver* {:id :element-text})]
     (is (= text "Element text goes here."))))
 
-
 (deftest test-cookies
   (testing "getting all cookies"
     (let [cookies (get-cookies *driver*)]
+      (when-safari *driver*
+        (is (= cookies
+               [{:domain ".^filecookies^"
+                 :secure false
+                 :expiry 0
+                 :httpOnly false
+                 :value "test1"
+                 :path "/"
+                 :name "cookie1"}
+                {:domain ".^filecookies^"
+                 :secure false
+                 :expiry 0
+                 :httpOnly false
+                 :value "test2"
+                 :path "/"
+                 :name "cookie2"}])))
       (when-chrome *driver*
         (is (= cookies [])))
       (when-firefox *driver*
@@ -295,6 +333,15 @@
                          :value "test1"}])))))
   (testing "getting a cookie"
     (let [cookie (get-cookie *driver* :cookie2)]
+      (when-safari *driver*
+        (is (= cookie
+               {:domain ".^filecookies^"
+                :secure false
+                :expiry 0
+                :httpOnly false
+                :value "test2"
+                :path "/"
+                :name "cookie2"})))
       (when-chrome *driver*
         (is (nil? cookie)))
       (when-firefox *driver*
@@ -315,42 +362,42 @@
                 :secure false
                 :value "test2"})))))
   (testing "setting a cookie"
-    (skip-phantom
-     *driver*
-     (set-cookie *driver* {:httponly false
-                           :name "cookie3"
-                           :domain ""
-                           :secure false
-                           :value "test3"})
-     (when-firefox *driver*
-       (let [cookie (get-cookie *driver* :cookie3)]
-         (is (= cookie)
-             {:name "cookie3"
-              :value "test3"
-              :path ""
-              :domain ""
-              :expiry nil
-              :secure false
-              :httpOnly false}))))
-    (testing "deleting a cookie"
-      (skip-phantom
-       *driver*
-       (delete-cookie *driver* :cookie3)
-       (let [cookie (get-cookie *driver* :cookie3)]
-         (is (nil? cookie)))))
-    (testing "deleting all cookies"
-      (doto *driver*
-        delete-cookies
-        (-> get-cookies
-            (= [])
-            is)))))
+    (when-not (or (phantom? *driver*)
+                  (safari? *driver*))
+      (set-cookie *driver* {:httponly false
+                            :name "cookie3"
+                            :domain ""
+                            :secure false
+                            :value "test3"})
+      (when-firefox *driver*
+        (let [cookie (get-cookie *driver* :cookie3)]
+          (is (= cookie)
+              {:name "cookie3"
+               :value "test3"
+               :path ""
+               :domain ""
+               :expiry nil
+               :secure false
+               :httpOnly false})))))
+  (testing "deleting a cookie"
+    (when-not-phantom
+        *driver*
+      (delete-cookie *driver* :cookie3)
+      (let [cookie (get-cookie *driver* :cookie3)]
+        (is (nil? cookie)))))
+  (testing "deleting all cookies"
+    (doto *driver*
+      delete-cookies
+      (-> get-cookies
+          (= [])
+          is))))
 
 (deftest test-page-source
   (let [src (get-source *driver*)]
-    (when-firefox *driver*
-      (is (str/starts-with? src "<html><head>")))
-    (skip-firefox *driver*
-                  (is (str/starts-with? src "<!DOCTYPE html>")))))
+    (if (or (firefox? *driver*)
+            (safari? *driver*))
+      (is (str/starts-with? src "<html><head>"))
+      (is (str/starts-with? src "<!DOCTYPE html>")))))
 
 (deftest test-screenshot
   (with-tmp-file "screenshot" ".png" path
@@ -386,3 +433,18 @@
       (-> get-url (str/ends-with? "/test.html#hello") is)
       (set-hash "goodbye")
       (-> get-url (str/ends-with? "/test.html#goodbye") is))))
+
+(deftest test-find-element
+  (let [text (get-element-text *driver* {:class :target})]
+    (is (= text "target-1")))
+  (let [text (get-element-text *driver* [{:class :foo}
+                                         {:class :target}])]
+    (is (= text "target-2")))
+  (with-xpath *driver*
+    (let [text (get-element-text *driver* ".//div[@class='target'][1]")]
+      (is (= text "target-1"))))
+  (let [text (get-element-text *driver* {:css ".target"})]
+    (is (= text "target-1")))
+  (let [q [{:css ".bar"} ".//div[@class='inside']" {:tag :span}]
+        text (get-element-text *driver* q)]
+    (is (= text "target-3"))))
