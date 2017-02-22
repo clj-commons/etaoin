@@ -167,7 +167,7 @@
       (refresh)
       (wait-visible {:id :document-end})
       (click {:id :wait-button})
-      (wait-has-text "-secret-"))
+      (wait-has-text "-secret-" {:message "wait simiple"}))
     (is true "text found"))
   (testing "wait for text timeout"
     (doto *driver*
@@ -177,16 +177,16 @@
     (try+
      (wait-has-text *driver*
                     "-secret-"
-                    {:timeout 0.5
+                    {:timeout 1
                      :message "No -secret- text on the page"})
      (is false "should not be executd")
      (catch [:type :etaoin/timeout] data
        (is (= (-> data (dissoc :predicate :time-rest))
               {:type :etaoin/timeout
                :message "No -secret- text on the page"
-               :timeout 0.5
+               :timeout 1
                :interval 0.1
-               :times 6})))))
+               :times 11})))))
   (testing "wait for non-existing text"
     (doto *driver*
       (refresh)
@@ -194,15 +194,16 @@
     (try+
      (wait-has-text *driver*
                     "-dunno-whatever-foo-bar-"
-                    {:timeout 1})
+                    {:timeout 2
+                     :message "wait non-existing"})
      (is false "should not be executed")
      (catch [:type :etaoin/timeout] data
        (is (= (-> data (dissoc :predicate :time-rest))
               {:type :etaoin/timeout
-               :message nil
-               :timeout 1
+               :message "wait non-existing"
+               :timeout 2
                :interval 0.1
-               :times 11}))))))
+               :times 20}))))))
 
 (deftest test-wait-has-class
   (is 1)
