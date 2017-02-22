@@ -1,3 +1,4 @@
+
 [url-webdriver]: https://www.w3.org/TR/webdriver/
 [url-wiki]: https://en.wikipedia.org/wiki/Etaoin_shrdlu#Literature
 [url-tests]: https://github.com/igrishaev/etaoin/blob/master/test/etaoin/api_test.clj
@@ -181,7 +182,7 @@ console output.
 - Add MS Edge support.
 - Add touch API tests.
 - Add mobile support.
-- Make unit tests more detailed.
+- Make unit tests to be more detailed.
 
 ## License
 
