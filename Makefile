@@ -1,4 +1,5 @@
 
+.PHONY: autodoc
 autodoc:
 	lein autodoc
 	cd autodoc

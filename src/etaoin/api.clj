@@ -4,6 +4,9 @@
   of different Webdriver implementations. All of them partially differ
   from the official W3C specification.
 
+  The standard:
+  https://www.w3.org/TR/webdriver/
+
   Chrome:
   https://github.com/bayandin/chromedriver/blob/master/client/command_executor.py
   https://github.com/bayandin/chromedriver/blob/master/client/webelement.py
@@ -41,20 +44,24 @@
 ;;
 
 (defmacro defmethods
-  "Declares multimethods in batch."
+  "Declares multimethods in batch. For each dispatch value from
+  dispatch-vals, creates a new method."
   [multifn dispatch-vals & fn-tail]
   `(doseq [dispatch-val# ~dispatch-vals]
      (defmethod ~multifn dispatch-val# ~@fn-tail)))
 
 (defn random-port
-  "Returns a random port skiping first 1024 ones."
+  "Returns a random port skiping the first 1024 ones."
   []
   (let [max-port 65536
         offset 1024]
     (+ (rand-int (- max-port offset))
        offset)))
 
-(defn dispatch-driver [driver & _]
+(defn dispatch-driver
+  "Returns the current driver's type. Used as dispatcher in
+  multimethods."
+  [driver & _]
   (:type @driver))
 
 ;;
@@ -72,13 +79,21 @@
 ;; session and status
 ;;
 
-(defn get-status [driver]
+(defn get-status
+  "Returns the current Webdriver status info. The content depends on
+  specific driver."
+  [driver]
   (with-resp driver :get
     [:status]
     nil resp
     (:value resp)))
 
-(defn create-session [driver]
+(defn create-session
+  "Initiates a new session for a driver. Opens a browser window as a
+  side-effect. All the further requests are made within specific
+  session. Some drivers may work with only one active session. Returns
+  a long string identifier."
+  [driver]
   (with-resp driver
     :post
     [:session]
@@ -87,6 +102,7 @@
     (:sessionId result)))
 
 (defn delete-session [driver]
+  "Deletes a session. Closes a browser window."
   (with-resp driver
     :delete
     [:session (:session @driver)]
@@ -116,7 +132,9 @@
 ;; windows
 ;;
 
-(defmulti get-window-handle dispatch-driver)
+(defmulti get-window-handle
+  "Returns the current active window identifier as a string."
+  dispatch-driver)
 
 (defmethod get-window-handle :default
   [driver]
@@ -134,7 +152,9 @@
     resp
     (-> resp :value)))
 
-(defmulti get-window-handles dispatch-driver)
+(defmulti get-window-handles
+  "Returns a vector of all window identifiers."
+  dispatch-driver)
 
 (defmethod get-window-handles :firefox
   [driver]
@@ -150,7 +170,9 @@
     nil resp
     (:value resp)))
 
-(defn switch-window [driver handle]
+(defn switch-window
+  "Switches a browser to another window."
+  [driver handle]
   (with-resp driver :post
     [:session (:session @driver) :window]
     {:handle handle} _))
@@ -262,7 +284,9 @@
 ;; navigation
 ;;
 
-(defn go [driver url]
+(defn go
+  "Open the URL the current window."
+  [driver url]
   (with-resp driver :post
     [:session (:session @driver) :url]
     {:url url} _))
@@ -399,6 +423,7 @@
    A query might be:
 
    - a string, so the current browser's locator will be used. Examples:
+
    //div[@id='content'] for XPath,
    div.article for CSS selector
 
