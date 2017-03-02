@@ -39,6 +39,8 @@
                     :chrome 5555
                     :phantom 8910})
 
+(def default-locator "xpath")
+
 ;;
 ;; utils
 ;;
@@ -285,7 +287,13 @@
 ;;
 
 (defn go
-  "Open the URL the current window."
+  "Open the URL the current window.
+
+  Example:
+
+  (def ff (firefox))
+  (go ff \"http://google.com\")
+"
   [driver url]
   (with-resp driver :post
     [:session (:session @driver) :url]
@@ -1239,14 +1247,42 @@
 (defmethod port-args :phantom [driver]
   ["--webdriver" (:port @driver)])
 
-(defn create-driver [type & [opt]]
+(defn create-driver
+  "Creates a new driver instance.
+
+  Returns an atom that represents driver's state. Some functions, for
+  example creating or deleting a session may change its state.
+
+  The function does not start a process or open a window. It just
+  creates an atom without side effects.
+
+  Arguments:
+
+  - `type` is a keyword determines what driver to use. The supported
+  browsers are `:firefox`, `:chrome`, `:phantom` and `:safari`.
+
+  - `opt` is a map with additional options for a driver. The supported
+  options are:
+
+  -- `:host` is a string with either IP or hostname. Use it if the
+  server is run not locally but somethere in your network.
+
+  -- `:port` is an integer value what HTTP port to use. It is taken
+  from the `default-ports` global map if is not passed. If there is no
+  port in that map, a random-generated port is used.
+
+  -- `:locator` is a string determs what algorithm to use by default
+  when finding elements on page. `default-locator` variable is used if
+  not passed.
+"
+  [type & [opt]]
   (let [driver (atom {})
         host (or (:host opt) "127.0.0.1")
         port (or (:port opt)
                  (type default-ports)
                  (random-port))
         url (make-url host port)
-        locator (or (:locator opt) "xpath")]
+        locator (or (:locator opt) default-locator)]
     (swap! driver assoc
            :type type
            :host host
@@ -1255,7 +1291,30 @@
            :locator locator)
     driver))
 
-(defn run-driver [driver & [opt]]
+(defn run-driver
+  "Runs a driver process locally.
+
+  Creates a UNIX process with a Webdriver HTTP server. Host and port
+  are taken from a `driver` argument. Updates a driver instance with
+  new fields with process information. Returns modified driver.
+
+  Arguments:
+
+  - `driver` is an atom created with `create-driver` function.
+
+  - `opt` is an optional map with the following possible parameters:
+
+  -- `:path` is a string path to a binary file to
+  launch. `default-paths` global map is used for lookup when not
+  passed.
+
+  -- `:args` is a vector of additional arguments passed when starting
+  a process.
+
+  -- `:env` is a map with system ENV variables. Keys are turned to
+  upper-case strings.
+"
+  [driver & [opt]]
   (let [type (:type @driver)
         path (or (:path opt)
                  (type default-paths))
