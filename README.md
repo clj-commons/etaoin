@@ -7,6 +7,7 @@
 [url-geckodriver-dl]: https://github.com/mozilla/geckodriver/releases
 [url-phantom-dl]: http://phantomjs.org/download.html
 [url-webkit]: https://webkit.org/blog/6900/webdriver-support-in-safari-10/
+[url-doc]: http://grishaev.me/etaoin/
 
 Pure Clojure implementation of [Webdriver][url-webdriver] protocol.
 
@@ -29,6 +30,14 @@ after a mysteries note was produced on it.
 - May either connect to a remote driver or run it on your local machine.
 - Run your unit tests directly from Emacs pressing `C-t t` as usual.
 - Can imitate human-like behaviour (delays, typos, etc).
+
+## Documentation
+
+Please visit [Etaoin site][url-doc] for documentation. These are
+autodoc-generated pages so you may also check the source code.
+
+To see how to compose separated functions into the whole scenarios, check our
+[unit tests][url-tests].
 
 ## Installation
 
@@ -124,11 +133,6 @@ operates very fast. It means so fast, that sometimes a browser cannot render new
 HTML in time. So after each action you need to put `wait-<something>` function
 that just polls a browser checking for a predicate. O just `(wait <seconds>)` if
 you don't care about optimization.
-
-### Further reading
-
-Please check our [unit tests][url-tests] to find out other functions that were
-not described here.
 
 ## Run tests
 
