@@ -1330,13 +1330,25 @@
            :process process)
     driver))
 
-(defn connect-driver [driver & [opt]]
+(defn connect-driver
+  "Connects to a running Webdriver server.
+
+  Creates a new session on Webdriver HTTP server. Sets the session to
+  the driver. Returns the modified driver.
+"
+  [driver & [opt]]
   (wait-running driver)
   (let [session (create-session driver)]
     (swap! driver assoc :session session)
     driver))
 
-(defn disconnect-driver [driver]
+(defn disconnect-driver
+  "Disconnects from a running Webdriver server.
+
+  Closes the current session that is stored in the driver. Removes the
+  session from the driver instance. Returns modified driver.
+"
+  [driver]
   (delete-session driver)
   (swap! driver dissoc :session)
   driver)
@@ -1358,7 +1370,45 @@
     (finally
       (stop-driver driver))))
 
-(defmacro with-driver [type opt bind & body]
+(def firefox
+  "Launches Firefox driver. A shortcut for `boot-driver`."
+  (partial boot-driver :firefox))
+
+(def chrome
+  "Launches Chrome driver. A shortcut for `boot-driver`."
+  (partial boot-driver :chrome))
+
+(def phantom
+  "Launches Phantom.js driver. A shortcut for `boot-driver`."
+  (partial boot-driver :phantom))
+
+(def safari
+  "Launches Safari driver. A shortcut for `boot-driver`."
+  (partial boot-driver :safari))
+
+(defmacro with-driver
+  "Performs the body within a driver session.
+
+  Launches a driver with of a given type. Binds the driver instance to
+  a passed `bind` symbol. Executes the body once the driver has
+  started. Shutdowns the driver finally (even if an exception
+  occurred).
+
+  Arguments:
+
+  - `type` is a keyword what driver type to start.
+
+  - `opt` is a map with driver's options. See `boot-driver` for more
+  details.
+
+  - `bind` is a symbol to bind a driver reference.
+
+  Example:
+
+  (with-driver :firefox {} driver
+    (go driver \"http://example.com\"))
+"
+  [type opt bind & body]
   `(client/with-pool {}
      (let [~bind (boot-driver ~type ~opt)]
        (try
@@ -1366,23 +1416,30 @@
          (finally
            (quit ~bind))))))
 
-(def firefox (partial boot-driver :firefox))
-(def chrome (partial boot-driver :chrome))
-(def phantom (partial boot-driver :phantom))
-(def safari (partial boot-driver :safari))
-
-(defmacro with-firefox [opt bind & body]
+(defmacro with-firefox
+  "Performs the body with Firefox session. A shortcut for
+  `with-driver`."
+  [opt bind & body]
   `(with-driver :firefox ~opt ~bind
      ~@body))
 
-(defmacro with-chrome [opt bind & body]
+(defmacro with-chrome
+  "Performs the body with Chrome session. A shortcut for
+  `with-driver`."
+  [opt bind & body]
   `(with-driver :chrome ~opt ~bind
      ~@body))
 
-(defmacro with-phantom [opt bind & body]
+(defmacro with-phantom
+  "Performs the body with Phantom.js session. A shortcut for
+  `with-driver`."
+  [opt bind & body]
   `(with-driver :phantom ~opt ~bind
      ~@body))
 
-(defmacro with-safari [opt bind & body]
+(defmacro with-safari
+  "Performs the body with Safari session. A shortcut for
+  `with-driver`."
+  [opt bind & body]
   `(with-driver :safari ~opt ~bind
      ~@body))
