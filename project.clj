@@ -11,4 +11,11 @@
   :dependencies [[clj-http "2.3.0"]
                  [cheshire "5.6.3"]
                  [org.clojure/tools.logging "0.3.1"]
-                 [org.clojure/data.codec "0.1.0"]])
+                 [org.clojure/data.codec "0.1.0"]]
+
+  :autodoc {:name "Etaoin"
+            :page-title "Etaoin API Documentation"
+            :description "Pure Clojure Webdriver protocol implementation."
+            :web-src-dir "https://github.com/igrishaev/etaoin/blob/"
+            :web-home "https://igrishaev.github.io/etaoin"
+            :copyright "2017 Ivan Grishaev"})

@@ -1,22 +1,20 @@
 (ns etaoin.api
   "
   The API below was written regarding to the source code
-  of different Webdriver implementations. All of them partially differ
-  from the official W3C specification.
+  of different Webdriver implementations. All of them partially
+  differ from the official W3C specification.
 
   The standard:
   https://www.w3.org/TR/webdriver/
 
   Chrome:
-  https://github.com/bayandin/chromedriver/blob/master/client/command_executor.py
-  https://github.com/bayandin/chromedriver/blob/master/client/webelement.py
+  https://github.com/bayandin/chromedriver/
 
   Firefox (Geckodriver):
-  https://github.com/mozilla/webdriver-rust/blob/master/src/httpapi.rs
+  https://github.com/mozilla/webdriver-rust/
 
   Phantom.js (Ghostdriver)
-  https://github.com/detro/ghostdriver/blob/master/src/request_handlers/session_request_handler.js
-  https://github.com/detro/ghostdriver/blob/master/src/request_handlers/webelement_request_handler.js
+  https://github.com/detro/ghostdriver/blob/
   "
   (:require [etaoin.proc :as proc]
             [etaoin.client :as client]
@@ -1137,23 +1135,38 @@
   `(when (~predicate)
      ~@body))
 
-(defmacro when-chrome [driver & body]
+(defmacro when-chrome
+  "Executes the body only if the driver is Chrome.
+
+  Example:
+
+  (def driver (chrome))
+  (when-chrome driver
+    (println \"It's Chrome!\")
+"
+  [driver & body]
   `(when-predicate #(chrome? ~driver) ~@body))
 
-(defmacro when-phantom [driver & body]
+(defmacro when-phantom
+  "Executes the body only if the driver is Phantom.js."
+  [driver & body]
   `(when-predicate #(phantom? ~driver) ~@body))
 
-(defmacro when-firefox [driver & body]
+(defmacro when-firefox
+  "Executes the body only if the driver is Firefox."
+  [driver & body]
   `(when-predicate #(firefox? ~driver) ~@body))
 
-(defmacro when-safari [driver & body]
+(defmacro when-safari
+  "Executes the body only if the driver is Safari."
+  [driver & body]
   `(when-predicate #(safari? ~driver) ~@body))
 
 ;;
 ;; input
 ;;
 
-(defn fill* [driver el text]
+(defn- fill* [driver el text]
   (let [keys (if (char? text)
                (str text)
                text)]
@@ -1161,22 +1174,28 @@
       [:session (:session @driver) :element el :value]
       {:value (vec keys)} _)))
 
-(defn fill [driver q text]
+(defn fill
+  "Fills an element found with a query with a given text."
+  [driver q text]
   (fill* driver (query driver q) text))
 
-(defn clear* [driver el]
+(defn- clear* [driver el]
   (with-resp driver :post
     [:session (:session @driver) :element el :clear]
     nil _))
 
-(defn clear [driver q]
+(defn clear
+  "Clears an element (input, textarea) found with a query."
+  [driver q]
   (clear* driver (query driver q)))
 
 ;;
 ;; submit
 ;;
 
-(defn submit [driver q]
+(defn submit
+  "Sends Enter button value to an element found with query."
+  [driver q]
   (fill driver q keys/enter))
 
 ;;
@@ -1187,7 +1206,7 @@
 ;; human actions
 ;;
 
-(defn fill-human* [driver el text]
+(defn- fill-human* [driver el text]
   (let [mistake-prob 0.1
         pause-max 0.2
         rand-char #(-> 26 rand-int (+ 97) char)
@@ -1202,7 +1221,17 @@
       (fill* driver el key)
       (wait-key))))
 
-(defn fill-human [driver q text]
+(defn fill-human
+  "Fills text like humans do: with error, corrections and pauses.
+
+  Arguments:
+
+  - `driver`: a driver instance,
+
+  - `q`: a query term, see `query` function for more info,
+
+  - `text`: a string to input."
+  [driver q text]
   (fill-human* driver (query driver q) text))
 
 ;;
@@ -1213,7 +1242,16 @@
   (with-open [out (io/output-stream filename)]
     (.write out (-> b64str .getBytes b64/decode))))
 
-(defmulti screenshot dispatch-driver)
+(defmulti screenshot
+  "Takes a screenshot of the current page. Saves it in a *.png file on disk.
+  Rises exception if a screenshot is empty.
+
+  Arguments:
+
+  - `driver`: driver instance,
+
+  - `filename`: full path to a file."
+  dispatch-driver)
 
 (defmethod screenshot :default
   [driver filename]
@@ -1233,10 +1271,14 @@
 ;; driver management
 ;;
 
-(defn make-url [host port]
+(defn make-url
+  "Makes an Webdriver URL from a host and port."
+  [host port]
   (format "http://%s:%s" host port))
 
-(defmulti port-args dispatch-driver)
+(defmulti port-args
+  "Returns a vector of port arguments specific for each driver type."
+  dispatch-driver)
 
 (defmethods port-args [:firefox :safari] [driver]
   ["--port" (:port @driver)])
@@ -1272,9 +1314,8 @@
   port in that map, a random-generated port is used.
 
   -- `:locator` is a string determs what algorithm to use by default
-  when finding elements on page. `default-locator` variable is used if
-  not passed.
-"
+  when finding elements on a page. `default-locator` variable is used
+  if not passed."
   [type & [opt]]
   (let [driver (atom {})
         host (or (:host opt) "127.0.0.1")
@@ -1312,8 +1353,7 @@
   a process.
 
   -- `:env` is a map with system ENV variables. Keys are turned to
-  upper-case strings.
-"
+  upper-case strings."
   [driver & [opt]]
   (let [type (:type @driver)
         path (or (:path opt)
@@ -1334,8 +1374,7 @@
   "Connects to a running Webdriver server.
 
   Creates a new session on Webdriver HTTP server. Sets the session to
-  the driver. Returns the modified driver.
-"
+  the driver. Returns the modified driver."
   [driver & [opt]]
   (wait-running driver)
   (let [session (create-session driver)]
@@ -1346,25 +1385,40 @@
   "Disconnects from a running Webdriver server.
 
   Closes the current session that is stored in the driver. Removes the
-  session from the driver instance. Returns modified driver.
-"
+  session from the driver instance. Returns modified driver."
   [driver]
   (delete-session driver)
   (swap! driver dissoc :session)
   driver)
 
-(defn stop-driver [driver]
+(defn stop-driver
+  "Stops the driver's process. Removes proces's data from the driver
+  instance. Returns a modified driver."
+  [driver]
   (proc/kill (:process @driver))
   (swap! driver dissoc :process :args :env)
   driver)
 
-(defn boot-driver [type & [opt]]
+(defn boot-driver
+  "Three-in-one: creates a driver, starts a process and creates a new
+  session. Returns the driver instance.
+
+  Arguments:
+
+  - `type` a keyword determines a driver type.
+
+  - `opt` a map of all possible parameters that `create-driver`,
+  `run-driver` and `connect-driver` may accept.
+"
+  [type & [opt]]
   (-> type
       (create-driver opt)
       (run-driver opt)
       (connect-driver opt)))
 
-(defn quit [driver]
+(defn quit
+  "Closes the current session and stops the driver."
+  [driver]
   (try
     (disconnect-driver driver)
     (finally
@@ -1389,8 +1443,8 @@
 (defmacro with-driver
   "Performs the body within a driver session.
 
-  Launches a driver with of a given type. Binds the driver instance to
-  a passed `bind` symbol. Executes the body once the driver has
+  Launches a driver of a given type. Binds the driver instance to a
+  passed `bind` symbol. Executes the body once the driver has
   started. Shutdowns the driver finally (even if an exception
   occurred).
 
