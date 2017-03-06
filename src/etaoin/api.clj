@@ -28,14 +28,18 @@
 ;; defaults
 ;;
 
-(def default-paths {:firefox "geckodriver"
-                    :chrome "chromedriver"
-                    :phantom "phantomjs"
-                    :safari "safaridriver"})
+(def default-paths
+  "Default commands to launch a driver process."
+  {:firefox "geckodriver"
+   :chrome "chromedriver"
+   :phantom "phantomjs"
+   :safari "safaridriver"})
 
-(def default-ports {:firefox 4444
-                    :chrome 5555
-                    :phantom 8910})
+(def default-ports
+  "Default ports to launch a driver process."
+  {:firefox 4444
+   :chrome 5555
+   :phantom 8910})
 
 (def default-locator "xpath")
 
@@ -68,7 +72,41 @@
 ;; api
 ;;
 
-(defmacro with-resp [driver method path data result & body]
+(defmacro with-resp
+  "Executes an HTTP request to a driver's server. Performs the body
+  within result data bound to the `result` clause.
+
+  Arguments:
+
+  - `driver`: a driver instance,
+
+  - `method`: a keyword represents HTTP method, e.g. `:get`, `:post`,
+  `:delete`, etc.
+
+  - sdfsdf  `dsfsd`
+
+  - `path`: a vector of strings/keywords represents a server's
+  path. For example:
+
+  `[:session \"aaaa-bbbb-cccc\" :element \"dddd-eeee\" :find]`
+
+  will turn into \"/session/aaaa-bbbb-cccc/element/dddd-eeee/find\".
+
+  - `data`: any data sctructure to be sent as JSON body. Put `nil` For
+  `GET` requests.
+
+  - `result`: a symbol to bind the data from the HTTP response with
+  `let` form before executing the body.
+
+  Example:
+
+  (def driver (firefox))
+  (with-resp driver :get
+    [:session (:session @driver) :element :active]
+    nil resp
+    (print resp))
+"
+  [driver method path data result & body]
   `(let [~result (client/call ~driver
                               ~method
                               ~path
@@ -112,7 +150,10 @@
 ;; actice element
 ;;
 
-(defmulti get-active-element* dispatch-driver)
+(defmulti ^:private get-active-element*
+  "Returns the currect active element selected by mouse or a
+  keyboard (Tab, arrows)."
+  dispatch-driver)
 
 (defmethod get-active-element* :firefox
   [driver]
@@ -133,7 +174,7 @@
 ;;
 
 (defmulti get-window-handle
-  "Returns the current active window identifier as a string."
+  "Returns the current active window handler as a string."
   dispatch-driver)
 
 (defmethod get-window-handle :default
@@ -153,7 +194,7 @@
     (-> resp :value)))
 
 (defmulti get-window-handles
-  "Returns a vector of all window identifiers."
+  "Returns a vector of all window handlers."
   dispatch-driver)
 
 (defmethod get-window-handles :firefox
@@ -177,7 +218,9 @@
     [:session (:session @driver) :window]
     {:handle handle} _))
 
-(defmulti close-window dispatch-driver)
+(defmulti close-window
+  "Closes the current browser window."
+  dispatch-driver)
 
 (defmethod close-window :default
   [driver]
@@ -185,7 +228,9 @@
     [:session (:session @driver) :window]
     nil _))
 
-(defmulti maximize dispatch-driver)
+(defmulti maximize
+  "Makes the browser window as wide as your screen allows."
+  dispatch-driver)
 
 (defmethod maximize :firefox
   [driver]
@@ -200,7 +245,9 @@
       [:session (:session @driver) :window h :maximize]
       nil _)))
 
-(defmulti get-window-size dispatch-driver)
+(defmulti get-window-size
+  "Returns a window size a map with `:width` and `:height` keys."
+  dispatch-driver)
 
 (defmethod get-window-size :firefox
   [driver]
@@ -219,7 +266,10 @@
       resp
       (-> resp :value (select-keys [:width :height])))))
 
-(defmulti get-window-position dispatch-driver)
+(defmulti get-window-position
+  "Returns a window position relative to your screen as a map with
+  `:x` and `:y` keys."
+  dispatch-driver)
 
 (defmethod get-window-position :firefox
   [driver]
@@ -238,15 +288,15 @@
       resp
       (-> resp :value (select-keys [:x :y])))))
 
-(defmulti set-window-size-api dispatch-driver)
+(defmulti ^:private set-window-size* dispatch-driver)
 
-(defmethod set-window-size-api :firefox
+(defmethod set-window-size* :firefox
   [driver width height]
   (with-resp driver :post
     [:session (:session @driver) :window :size]
     {:width width :height height} _))
 
-(defmethod set-window-size-api :default
+(defmethod set-window-size* :default
   [driver width height]
   (let [h (get-window-handle driver)]
     (with-resp driver :post
@@ -254,20 +304,21 @@
       {:width width :height height} _)))
 
 (defn set-window-size
+  "Sets new size for a window. Absolute precision is not guaranteed."
   ([driver {:keys [width height]}]
    (set-window-size driver width height))
   ([driver width height]
-   (set-window-size-api driver width height)))
+   (set-window-size driver width height)))
 
-(defmulti set-window-position-api dispatch-driver)
+(defmulti ^:private set-window-position* dispatch-driver)
 
-(defmethod set-window-position-api :firefox
+(defmethod set-window-position* :firefox
   ([driver x y]
    (with-resp driver :post
      [:session (:session @driver) :window :position]
      {:x x :y y} _)))
 
-(defmethod set-window-position-api :default
+(defmethod set-window-position* :default
   ([driver x y]
    (let [h (get-window-handle driver)]
      (with-resp driver :post
@@ -275,10 +326,12 @@
        {:x x :y y} _))))
 
 (defn set-window-position
+  "Sets new position for a window. Absolute precision is not
+  guaranteed."
   ([driver {:keys [x y]}]
    (set-window-position driver x y))
   ([driver x y]
-   (set-window-position-api driver x y)))
+   (set-window-position driver x y)))
 
 ;;
 ;; navigation
@@ -305,7 +358,7 @@
     nil _))
 
 (defn refresh
-  "Reload the current window."
+  "Reloads the current window."
   [driver]
   (with-resp driver :post
     [:session (:session @driver) :refresh]
@@ -343,10 +396,23 @@
 ;;
 
 (defn q-xpath
-  "Turns a map into an XPath clause.
+  "Turns a map into an XPath clause. The rules are:
 
-   {:tag :div :id :content :class :test :index 2}
-   //div[@id='content'][@class='test'][2]"
+  - `:tag` value becomes a tag name, otherwise `*` is used;
+
+  - `:index` becomes a `[x]` at the end of expression if passed;
+
+  - any other key-value pair becomes an attribute filter as follows:
+  `{:foo \"one\" :baz \"two\"}` => `\"[@foo='one'][@bar='two']\"`.
+
+  - the final XPath is always relative (started with `.//`) to make it
+  work with nested expressions.
+
+  Example:
+
+  (q-xpath {:tag :a :class :large :index 2 :target :_blank})
+  > \".//a[@class='large'][@target='_blank'][2]\"
+"
   [q]
   (let [tag (or (:tag q) :*)
         idx (:index q)
@@ -363,8 +429,9 @@
     xpath))
 
 (defn q-expand
-  "Expands a query expression into a pair of
-   [locator, term] values to pass them into low-level HTTP API."
+  "Expands a query expression into a pair of `[locator, term]` values
+  to pass them into low-level HTTP API. Throws a Slingshot exception
+  in case of unsupported clause."
   [driver q]
   (cond
     (string? q)
