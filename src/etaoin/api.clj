@@ -538,7 +538,9 @@
 ;; mouse
 ;;
 
-(defmulti mouse-btn-down dispatch-driver)
+(defmulti mouse-btn-down
+  "Puts down a button of a virtual mouse."
+  dispatch-driver)
 
 (defmethods mouse-btn-down [:chrome :phantom :safari]
   [driver]
@@ -546,7 +548,9 @@
     [:session (:session @driver) :buttondown]
     nil _))
 
-(defmulti mouse-btn-up dispatch-driver)
+(defmulti mouse-btn-up
+  "Puts up a button of a virtual mouse."
+  dispatch-driver)
 
 (defmethods mouse-btn-up [:chrome :phantom :safari]
   [driver]
@@ -554,7 +558,10 @@
     [:session (:session @driver) :buttonup]
     nil _))
 
-(defmulti mouse-move-to dispatch-driver)
+(defmulti mouse-move-to
+  "Moves a virtual mouse pointer either to an element
+  or by `x` and `y` offset."
+  dispatch-driver)
 
 (defmethods mouse-move-to [:chrome :phantom :safari]
   ([driver q]
@@ -566,7 +573,9 @@
      [:session (:session @driver) :moveto]
      {:xoffset x :yoffset y} _)))
 
-(defmacro with-mouse-btn [driver & body]
+(defmacro with-mouse-btn
+  "Performs the body keeping mouse botton pressed."
+  [driver & body]
   `(do
      (mouse-btn-down ~driver)
      (try
@@ -574,7 +583,30 @@
        (finally
          (mouse-btn-up ~driver)))))
 
-(defn drag-and-drop [driver q-from q-to]
+(defn drag-and-drop
+  "Performs drag and drop operation as a sequence of the following steps:
+
+  1. moves mouse pointer to an element found with `q-from` query;
+  2. puts down mouse button;
+  3. moves mouse to an element found with `q-to` query;
+  4. puts up mouse button.
+
+  Arguments:
+
+  - `driver`: a driver instance,
+
+  - `q-from`: from what element to start dragging; any expression that
+  `query` function may accept;
+
+  - `q-to`: to what element to drag, a seach term.
+
+  Notes:
+
+  - does not work in Phantom.js since it does not have a virtual mouse API;
+
+  - does not work in Safari.
+"
+  [driver q-from q-to]
   (mouse-move-to driver q-from)
   (with-mouse-btn driver
     (mouse-move-to driver q-to)))
@@ -588,7 +620,9 @@
     [:session (:session @driver) :element el :click]
     nil _))
 
-(defn click [driver q]
+(defn click
+  "Clicks on an element (a link, button, etc)."
+  [driver q]
   (click* driver (query driver q)))
 
 (defmulti double-click* dispatch-driver)
@@ -599,7 +633,16 @@
     [:session (:session @driver) :element el :doubleclick]
     nil _))
 
-(defn double-click [driver q]
+(defn double-click
+  "Performs double click on an element.
+
+  Note:
+
+  the supported browsers are Chrome and Phantom.js. For Firefox and
+  Safari, your may try to simulate it as a `click, wait, click`
+  sequence.
+"
+  [driver q]
   (double-click* driver (query driver q)))
 
 ;;
@@ -660,7 +703,19 @@
 ;; element box
 ;;
 
-(defn get-element-box [driver q]
+(defn get-element-box
+  "Returns a bounding box for an element found with a query term.
+
+  The result is a map with the following keys:
+
+  - `:x1`: top left `x` coordinate;
+  - `:y1`: top left `y` coordinate;
+  - `:x2`: bottom right `x` coordinate;
+  - `:y2`: bottom right `y` coordinate;
+  - `:width`: width as a difference b/w `:x2` and `:x1`;
+  - `:height`: height as a difference b/w `:y2` and `:y1`.
+"
+  [driver q]
   (let [el (query driver q)
         {:keys [width height]} (get-element-size* driver el)
         {:keys [x y]} (get-element-location* driver el)]
@@ -671,7 +726,20 @@
      :width width
      :height height}))
 
-(defn intersects? [driver q1 q2]
+(defn intersects?
+  "Determines whether two elements intersects in geometry meaning.
+
+  The implementation compares bounding boxes for each element
+  analyzing their arrangement.
+
+  Arguments:
+
+  - `q1` and `q2` are query terms to find elements to check for
+  intersection.
+
+  Returns true or false.
+"
+  [driver q1 q2]
   (let [a (get-element-box driver q1)
         b (get-element-box driver q2)]
     (or (< (a :y1) (b :y2))
@@ -690,7 +758,27 @@
     resp
     (:value resp)))
 
-(defn get-element-attr [driver q name]
+(defn get-element-attr
+  "Returns an HTTP attribute of an element (class, id, href, etc).
+
+  Arguments:
+
+  - `driver`: a driver instance,
+
+  - `q`: a query term to find an element,
+
+  - `name`: either a string or a keyword with a name of an attribute.
+
+  Returns: a string with the attribute value, `nil` if no such
+  attribute for that element.
+
+  Example:
+
+  (def driver (firefox))
+  (get-element-attr driver {:tag :a} :class)
+  >> \"link link__external\"
+"
+  [driver q name]
   (get-element-attr* driver (query driver q) name))
 
 (defn get-element-attrs [driver q & names]
