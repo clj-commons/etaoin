@@ -306,9 +306,9 @@
 (defn set-window-size
   "Sets new size for a window. Absolute precision is not guaranteed."
   ([driver {:keys [width height]}]
-   (set-window-size driver width height))
+   (set-window-size* driver width height))
   ([driver width height]
-   (set-window-size driver width height)))
+   (set-window-size* driver width height)))
 
 (defmulti ^:private set-window-position* dispatch-driver)
 
@@ -329,9 +329,9 @@
   "Sets new position for a window. Absolute precision is not
   guaranteed."
   ([driver {:keys [x y]}]
-   (set-window-position driver x y))
+   (set-window-position* driver x y))
   ([driver x y]
-   (set-window-position driver x y)))
+   (set-window-position* driver x y)))
 
 ;;
 ;; navigation
