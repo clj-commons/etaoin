@@ -772,16 +772,22 @@
   Returns: a string with the attribute value, `nil` if no such
   attribute for that element.
 
+  Note: it does not split CSS classes! A single string with spaces is
+  returned.
+
   Example:
 
   (def driver (firefox))
   (get-element-attr driver {:tag :a} :class)
-  >> \"link link__external\"
+  >> \"link link__external link__button\" ;; see note above
 "
   [driver q name]
   (get-element-attr* driver (query driver q) name))
 
-(defn get-element-attrs [driver q & names]
+(defn get-element-attrs
+  "Returns multiple attributes in batch. The result is a vector of
+  corresponding attributes."
+  [driver q & names]
   (let [el (query driver q)]
     (mapv
      #(get-element-attr* driver el %)
@@ -798,10 +804,37 @@
     resp
     (-> resp :value not-empty)))
 
-(defn get-element-css [driver q name]
+(defn get-element-css
+  "Returns a CSS property of an element. The property might be both
+  own or inherited.
+
+  Arguments:
+
+  - `driver`: a driver instance,
+
+  - `q`: a query term,
+
+  - `name`: a string/keyword with a CSS name (:font,
+  \"background-color\", etc).
+
+  Returns a string with a value, `nil` if there is no such property.
+
+  Note: colors, fonts and some other properties may be represented in
+  their own ways depending on a browser.
+
+  Example:
+
+  (def driver (firefox))
+  (get-element-css driver {:id :content} :background-color)
+  >> \"rgb(204, 204, 204)\" ;; or \"rgba(204, 204, 204, 1)\"
+"
+  [driver q name]
   (get-element-css* driver (query driver q) name))
 
-(defn get-element-csss [driver q & names]
+(defn get-element-csss
+  "Returns multiple CSS properties in batch. The result is a vector of
+  corresponding properties."
+  [driver q & names]
   (let [el (query driver q)]
     (mapv
      #(get-element-css* driver el %)
