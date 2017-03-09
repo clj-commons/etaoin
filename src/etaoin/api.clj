@@ -814,8 +814,7 @@
 
   - `q`: a query term,
 
-  - `name`: a string/keyword with a CSS name (:font,
-  \"background-color\", etc).
+  - `name`: a string/keyword with a CSS name (:font, \"background-color\", etc).
 
   Returns a string with a value, `nil` if there is no such property.
 
@@ -871,7 +870,9 @@
     resp
     (:value resp)))
 
-(defn get-element-tag [driver q]
+(defn get-element-tag
+  "Returns element's tag name (\"div\", \"input\", etc)."
+  [driver q]
   (get-element-tag* driver (query driver q)))
 
 (defn get-element-text* [driver el]
@@ -881,7 +882,11 @@
     resp
     (:value resp)))
 
-(defn get-element-text [driver q]
+(defn get-element-text
+  "Returns inner element's text. For `<p class=\"foo\">hello</p>` it
+  will be \"hello\" string.
+"
+  [driver q]
   (get-element-text* driver (query driver q)))
 
 (defn get-element-value* [driver el]
@@ -891,38 +896,76 @@
     resp
     (:value resp)))
 
-(defn get-element-value [driver q]
+(defn get-element-value
+  "Returns element's value set with `value` attribute."
+  [driver q]
   (get-element-value* driver (query driver q)))
 
 ;;
 ;; cookes
 ;;
 
-(defn get-cookies [driver]
+(defn get-cookies
+  "Returns all the cookies browser keeps at the moment.
+
+  Each cookie is a map with structure:
+
+  {:name \"cookie1\",
+   :value \"test1\",
+   :path \"/\",
+   :domain \"\",
+   :expiry nil,
+   :secure false,
+   :httpOnly false}
+"
+  [driver]
   (with-resp driver :get
     [:session (:session @driver) :cookie]
     nil
     resp
     (:value resp)))
 
-(defn get-cookie [driver cookie-name]
+(defn get-cookie
+  "Returns the first cookie with such name.
+
+  Arguments:
+
+  - `driver`: a driver instance,
+
+  - `cookie-name`: a string/keyword witn a cookie name.
+"
+  [driver cookie-name]
   (->> driver
        get-cookies
        (filter #(= (:name %) (name cookie-name)))
        first))
 
-(defn set-cookie [driver cookie]
+(defn set-cookie
+  "Sets a new cookie.
+
+  Arguments:
+
+  - `driver`: a driver instance,
+
+  - `cookie`: a map with structure described in `get-cookies`. At
+  least `:name` and `:value` fields should be populated.
+"
+  [driver cookie]
   (with-resp driver :post
     [:session (:session @driver) :cookie]
     {:cookie cookie}
     _))
 
-(defn delete-cookie [driver cookie-name]
+(defn delete-cookie
+  "Deletes a cookie by its name."
+  [driver cookie-name]
   (with-resp driver :delete
     [:session (:session @driver) :cookie (name cookie-name)]
     nil _))
 
-(defmulti delete-cookies dispatch-driver)
+(defmulti delete-cookies
+  "Deletes all the cookies for all domains."
+  dispatch-driver)
 
 (defmethod delete-cookies :default
   [driver]
@@ -930,9 +973,9 @@
     [:session (:session @driver) :cookie]
     nil _))
 
-;; For unknown reason, Safari hangs forever when trying to delete
-;; all cookies. Currently, we delete them in cycle.
 (defmethod delete-cookies :safari
+  ;; For some reason, Safari hangs forever when trying to delete
+  ;; all cookies. Currently we delete them in cycle.
   [driver]
   (doseq [cookie (get-cookies driver)]
     (delete-cookie driver (:name cookie))))
@@ -941,7 +984,9 @@
 ;; source code
 ;;
 
-(defn get-source [driver]
+(defn get-source
+  "Returns browser's current HTML markup as a string."
+  [driver]
   (with-resp driver :get
     [:session (:session @driver) :source]
     nil
@@ -952,7 +997,39 @@
 ;; execute js
 ;;
 
-(defmulti js-execute dispatch-driver)
+(defmulti js-execute
+  "Executes Javascript code in browser synchronously.
+
+  The code is sent as a string (might be multi-line). Under the hood, a
+  browser wraps your code into a function so avoid `function` clause
+  at on the top level.
+
+  Don't forget to add `return <something>` operator if your are
+  interested in the result value.
+
+  You may access arguments through the built-in `arguments`
+  pseudo-array from your code. You may pass any data structures that
+  are JSON-compatible (scalars, maps, vectors).
+
+  The result value is also returned trough JSON encode/decode
+  pipeline (Js objects turn to Clojure maps, arrays into vectors and
+  so on).
+
+  Arguments:
+
+  - `driver`: a driver instance,
+
+  - `script`: a string with the code to execute.
+
+  - `args`: additinal arguments for your code.
+
+  Example:
+
+  (def driver (chrome))
+  (js-execute driver \"return arguments[0] + 1;\" 42)
+  >> 43
+"
+  dispatch-driver)
 
 (defmethods js-execute [:default]
   [driver script & args]
@@ -962,7 +1039,8 @@
     resp
     (:value resp)))
 
-(defmethod js-execute :firefox [driver script & args]
+(defmethod js-execute :firefox
+  [driver script & args]
   (with-resp driver :post
     [:session (:session @driver) :execute :sync]
     {:script script :args (vec args)}
