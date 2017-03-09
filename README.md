@@ -120,7 +120,7 @@ macros as follows:
 ```clojure
 (with-firefox {} ff ;; additional options, bind name
   (doto ff
-    (go ff "https://google.com")
+    (go "https://google.com")
     ...))
 ```
 
