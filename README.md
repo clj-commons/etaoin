@@ -44,7 +44,7 @@ To see how to compose separated functions into the whole scenarios, check our
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.1.1"]
+[etaoin "0.1.2"]
 ```
 ## Usage
 
@@ -183,7 +183,7 @@ The project is open for your improvements and ideas. If any of unit tests fall
 on your machine please submit an issue giving your OS version, browser and
 console output.
 
-## Roadmoap
+## Roadmap
 
 - Add MS Edge support.
 - Add touch API tests.
