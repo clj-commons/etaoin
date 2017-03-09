@@ -175,6 +175,7 @@
 
 (defmulti get-window-handle
   "Returns the current active window handler as a string."
+  {:arglists '([driver])}
   dispatch-driver)
 
 (defmethod get-window-handle :default
@@ -195,6 +196,7 @@
 
 (defmulti get-window-handles
   "Returns a vector of all window handlers."
+  {:arglists '([driver])}
   dispatch-driver)
 
 (defmethod get-window-handles :firefox
@@ -213,6 +215,7 @@
 
 (defn switch-window
   "Switches a browser to another window."
+  {:arglists '([driver handle])}
   [driver handle]
   (with-resp driver :post
     [:session (:session @driver) :window]
@@ -230,6 +233,7 @@
 
 (defmulti maximize
   "Makes the browser window as wide as your screen allows."
+  {:arglists '([driver])}
   dispatch-driver)
 
 (defmethod maximize :firefox
@@ -247,6 +251,7 @@
 
 (defmulti get-window-size
   "Returns a window size a map with `:width` and `:height` keys."
+  {:arglists '([driver])}
   dispatch-driver)
 
 (defmethod get-window-size :firefox
@@ -269,6 +274,7 @@
 (defmulti get-window-position
   "Returns a window position relative to your screen as a map with
   `:x` and `:y` keys."
+  {:arglists '([driver])}
   dispatch-driver)
 
 (defmethod get-window-position :firefox
@@ -540,6 +546,7 @@
 
 (defmulti mouse-btn-down
   "Puts down a button of a virtual mouse."
+  {:arglists '([driver])}
   dispatch-driver)
 
 (defmethods mouse-btn-down [:chrome :phantom :safari]
@@ -550,6 +557,7 @@
 
 (defmulti mouse-btn-up
   "Puts up a button of a virtual mouse."
+  {:arglists '([driver])}
   dispatch-driver)
 
 (defmethods mouse-btn-up [:chrome :phantom :safari]
@@ -561,6 +569,7 @@
 (defmulti mouse-move-to
   "Moves a virtual mouse pointer either to an element
   or by `x` and `y` offset."
+  {:arglists '([driver q] [driver x y])}
   dispatch-driver)
 
 (defmethods mouse-move-to [:chrome :phantom :safari]
@@ -965,6 +974,7 @@
 
 (defmulti delete-cookies
   "Deletes all the cookies for all domains."
+  {:arglists '([driver])}
   dispatch-driver)
 
 (defmethod delete-cookies :default
@@ -1028,7 +1038,8 @@
   (def driver (chrome))
   (js-execute driver \"return arguments[0] + 1;\" 42)
   >> 43
-"
+  "
+  {:arglists '([driver script & args])}
   dispatch-driver)
 
 (defmethods js-execute [:default]
@@ -1517,6 +1528,7 @@
   - `driver`: driver instance,
 
   - `filename`: full path to a file."
+  {:arglists '([driver filename])}
   dispatch-driver)
 
 (defmethod screenshot :default
@@ -1544,6 +1556,7 @@
 
 (defmulti port-args
   "Returns a vector of port arguments specific for each driver type."
+  {:arglists '([driver])}
   dispatch-driver)
 
 (defmethods port-args [:firefox :safari] [driver]
