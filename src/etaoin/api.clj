@@ -83,8 +83,6 @@
   - `method`: a keyword represents HTTP method, e.g. `:get`, `:post`,
   `:delete`, etc.
 
-  - sdfsdf  `dsfsd`
-
   - `path`: a vector of strings/keywords represents a server's
   path. For example:
 
