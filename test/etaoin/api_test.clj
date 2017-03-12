@@ -448,3 +448,9 @@
   (let [q [{:css ".bar"} ".//div[@class='inside']" {:tag :span}]
         text (get-element-text *driver* q)]
     (is (= text "target-3"))))
+
+(deftest test-find-elements
+  (testing "simple case"
+    (let [q {:class :find-elements-target}
+          elements (query-all *driver* q)]
+      (is (= (count elements) 4)))))
