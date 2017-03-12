@@ -566,6 +566,8 @@
 (defn query-all
   "Finds multiple elements by a single query.
 
+  Currently, supports only one query term (not a vector).
+
   Returns a vector of element identifiers.
 "
   [driver q]
