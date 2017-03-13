@@ -126,9 +126,29 @@ macros as follows:
 
 Whatever happens during a session, the process will be stopped anyway.
 
-### Working with multiple arguments
+### Working with multiple elements
 
-todo
+Most of the functions work with a term that return first single element. For
+example, `(click driver {:tag :div})` will click on the first `div` tag found on
+the page. Therefore it's better to operate on element's IDs rather then classes
+to prevent strange behaviour.
+
+In case your really need to get multiple elements and process them in batch, use
+`query-all` function with other ones that names end with `-el`. These functions
+are to work with machine wise elements represented by long driver-specific
+string values.
+
+Here is a example of how to get all the links from the page:
+
+```clojure
+(def driver (firefox))
+(go driver "http://wikipedia.org")
+(let [els (query-all driver {:tag :a})
+      ;; els is vector of strings smth like "280abeaf-27ec-5544-8634-b2cfe86a58a6"
+      get-link #(get-element-attr-el driver % :href)]
+  (mapv get-link els))
+;; returns ["//ru.wikipedia.org/" "//en.wikipedia.org/" etc ... ]
+```
 
 ### Be patient
 
