@@ -566,13 +566,27 @@
 (defn query-all
   "Finds multiple elements by a single query.
 
-  Currently, supports only one query term (not a vector).
+  If a query is a vector, it finds the first element for all the terms
+  except the last one, then all the elements for the last term from
+  the element got from the previous terms.
+
+  See `query` function for more info.
 
   Returns a vector of element identifiers.
 "
   [driver q]
-  (let [[loc term] (q-expand driver q)]
-    (find-elements* driver loc term)))
+  (cond
+    (vector? q)
+    (let [q-but-last (vec (butlast q))
+          q-last (last q)
+          el (query driver q-but-last)
+          [loc term] (q-expand driver q-last)]
+
+      (find-elements-from* driver el loc term))
+
+    :else
+    (let [[loc term] (q-expand driver q)]
+      (find-elements* driver loc term))))
 
 ;;
 ;; mouse

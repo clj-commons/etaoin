@@ -126,6 +126,10 @@ macros as follows:
 
 Whatever happens during a session, the process will be stopped anyway.
 
+### Working with multiple arguments
+
+todo
+
 ### Be patient
 
 The main difference between a program and a human is that the first one

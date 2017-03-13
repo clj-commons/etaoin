@@ -453,7 +453,16 @@
   (testing "simple case"
     (let [q {:class :find-elements-target}
           elements (query-all *driver* q)]
-      (is (= (count elements) 4)))))
+      (is (= (count elements) 4))))
+  (testing "nested case"
+    (let [q [{:id :find-elements-nested}
+             {:class :nested}
+             {:class :target}]
+          elements (query-all *driver* q)
+          texts (for [el elements]
+                  (get-element-text-el *driver* el))]
+      (is (= (count elements) 2))
+      (is (= texts ["1" "2"])))))
 
 (deftest test-multiple-elements
   (testing "tag names"
