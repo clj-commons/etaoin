@@ -480,7 +480,7 @@
 
 (defmulti find-elements* dispatch-driver)
 
-(defmethod find-elements* :firefox
+(defmethod find-elements* :default
   [driver locator term]
   (with-resp driver :post
     [:session (:session @driver) :elements]

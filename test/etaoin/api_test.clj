@@ -47,7 +47,7 @@
       (fill {:id :simple-input} "test")
       (clear {:id :simple-input})
       (click {:id :simple-submit})
-      (when-safari (wait 1))
+      (when-safari (wait 3))
       (-> get-url
           (str/ends-with? "?login=&password=&message=")
           is))))
@@ -73,17 +73,17 @@
     *driver*
     (doto *driver*
       (click {:id :button-alert})
-      (when-safari (wait 0.1))
+      (when-safari (wait 1))
       (-> get-alert-text (= "Hello!") is)
       (-> has-alert? is)
       (accept-alert)
-      (when-safari (wait 0.5))
+      (when-safari (wait 1))
       (-> has-alert? not is)
       (click {:id :button-alert})
-      (when-safari (wait 0.1))
+      (when-safari (wait 1))
       (-> has-alert? is)
       (dismiss-alert)
-      (when-safari (wait 0.5))
+      (when-safari (wait 1))
       (-> has-alert? not is))))
 
 (deftest test-attributes
