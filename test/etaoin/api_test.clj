@@ -47,7 +47,7 @@
       (fill {:id :simple-input} "test")
       (clear {:id :simple-input})
       (click {:id :simple-submit})
-      (when-safari (wait 1))
+      (when-safari (wait 3))
       (-> get-url
           (str/ends-with? "?login=&password=&message=")
           is))))
@@ -70,20 +70,20 @@
 ;; In Safari, alerts work quite slow, so we add some delays.
 (deftest test-alert
   (when-not-phantom
-      *driver*
+    *driver*
     (doto *driver*
       (click {:id :button-alert})
-      (when-safari (wait 0.1))
+      (when-safari (wait 1))
       (-> get-alert-text (= "Hello!") is)
       (-> has-alert? is)
       (accept-alert)
-      (when-safari (wait 0.5))
+      (when-safari (wait 1))
       (-> has-alert? not is)
       (click {:id :button-alert})
-      (when-safari (wait 0.1))
+      (when-safari (wait 1))
       (-> has-alert? is)
       (dismiss-alert)
-      (when-safari (wait 0.5))
+      (when-safari (wait 1))
       (-> has-alert? not is))))
 
 (deftest test-attributes
@@ -448,3 +448,27 @@
   (let [q [{:css ".bar"} ".//div[@class='inside']" {:tag :span}]
         text (get-element-text *driver* q)]
     (is (= text "target-3"))))
+
+(deftest test-find-elements
+  (testing "simple case"
+    (let [q {:class :find-elements-target}
+          elements (query-all *driver* q)]
+      (is (= (count elements) 4))))
+  (testing "nested case"
+    (let [q [{:id :find-elements-nested}
+             {:class :nested}
+             {:class :target}]
+          elements (query-all *driver* q)
+          texts (for [el elements]
+                  (get-element-text-el *driver* el))]
+      (is (= (count elements) 2))
+      (is (= texts ["1" "2"])))))
+
+(deftest test-multiple-elements
+  (testing "tag names"
+    (let [q {:xpath ".//div[@id='operate-multiple-elements']//*"}
+          elements (query-all *driver* q)
+          tag-names (for [el elements]
+                      (get-element-tag-el *driver* el))]
+      (is (= (vec tag-names)
+             ["div" "b" "p" "span"])))))

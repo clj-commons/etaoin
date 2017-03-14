@@ -476,6 +476,16 @@
     resp
     (-> resp :value :ELEMENT)))
 
+(defmulti find-elements* dispatch-driver)
+
+(defmethod find-elements* :default
+  [driver locator term]
+  (with-resp driver :post
+    [:session (:session @driver) :elements]
+    {:using locator :value term}
+    resp
+    (->> resp :value (mapv (comp second first)))))
+
 (defmulti find-element-from* dispatch-driver)
 
 (defmethod find-element-from* :firefox
@@ -493,6 +503,16 @@
     {:using locator :value term}
     resp
     (-> resp :value :ELEMENT)))
+
+(defmulti find-elements-from* dispatch-driver)
+
+(defmethod find-elements-from* :default
+  [driver el locator term]
+  (with-resp driver :post
+    [:session (:session @driver) :element el :elements]
+    {:using locator :value term}
+    resp
+    (->> resp :value (mapv (comp second first)))))
 
 (defn query
   "Finds an element on a page.
@@ -518,7 +538,10 @@
    - a vector of any clause mentioned above. In that case,
    every next term is searched inside the previous one. Example:
    [{:id :footer} {:tag :a}] => finds the first hyperlink
-   inside a div with id 'footer'."
+   inside a div with id 'footer'.
+
+   Returns an element's unique identifier as a string.
+"
   [driver q]
   (cond
     (= q :active)
@@ -537,6 +560,31 @@
     :else
     (let [[loc term] (q-expand driver q)]
       (find-element* driver loc term))))
+
+(defn query-all
+  "Finds multiple elements by a single query.
+
+  If a query is a vector, it finds the first element for all the terms
+  except the last one, then all the elements for the last term from
+  the element got from the previous terms.
+
+  See `query` function for more info.
+
+  Returns a vector of element identifiers.
+"
+  [driver q]
+  (cond
+    (vector? q)
+    (let [q-but-last (vec (butlast q))
+          q-last (last q)
+          el (query driver q-but-last)
+          [loc term] (q-expand driver q-last)]
+
+      (find-elements-from* driver el loc term))
+
+    :else
+    (let [[loc term] (q-expand driver q)]
+      (find-elements* driver loc term))))
 
 ;;
 ;; mouse
@@ -622,7 +670,7 @@
 ;; click
 ;;
 
-(defn click* [driver el]
+(defn click-el [driver el]
   (with-resp driver :post
     [:session (:session @driver) :element el :click]
     nil _))
@@ -630,11 +678,11 @@
 (defn click
   "Clicks on an element (a link, button, etc)."
   [driver q]
-  (click* driver (query driver q)))
+  (click-el driver (query driver q)))
 
-(defmulti double-click* dispatch-driver)
+(defmulti double-click-el dispatch-driver)
 
-(defmethods double-click* [:chrome :phantom]
+(defmethods double-click-el [:chrome :phantom]
   [driver el]
   (with-resp driver :post
     [:session (:session @driver) :element el :doubleclick]
@@ -650,15 +698,15 @@
   sequence.
 "
   [driver q]
-  (double-click* driver (query driver q)))
+  (double-click-el driver (query driver q)))
 
 ;;
 ;; element size
 ;;
 
-(defmulti get-element-size* dispatch-driver)
+(defmulti get-element-size-el dispatch-driver)
 
-(defmethods get-element-size* [:chrome :phantom :safari]
+(defmethods get-element-size-el [:chrome :phantom :safari]
   [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :size]
@@ -666,7 +714,7 @@
     resp
     (-> resp :value (select-keys [:width :height]))))
 
-(defmethod get-element-size* :firefox
+(defmethod get-element-size-el :firefox
   [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :rect]
@@ -677,15 +725,15 @@
 (defn get-element-size
   "Returns an element size as a map with :width and :height keys."
   [driver q]
-  (get-element-size* driver (query driver q)))
+  (get-element-size-el driver (query driver q)))
 
 ;;
 ;; element location
 ;;
 
-(defmulti get-element-location* dispatch-driver)
+(defmulti get-element-location-el dispatch-driver)
 
-(defmethods get-element-location*
+(defmethods get-element-location-el
   [:chrome :phantom :safari]
   [driver el]
   (with-resp driver :get
@@ -694,7 +742,7 @@
     resp
     (-> resp :value (select-keys [:x :y]))))
 
-(defmethod get-element-location* :firefox
+(defmethod get-element-location-el :firefox
   [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :rect]
@@ -704,7 +752,7 @@
 
 (defn get-element-location [driver q]
   "Returns an element location on a page as a map with :x and :x keys."
-  (get-element-location* driver (query driver q)))
+  (get-element-location-el driver (query driver q)))
 
 ;;
 ;; element box
@@ -724,8 +772,8 @@
 "
   [driver q]
   (let [el (query driver q)
-        {:keys [width height]} (get-element-size* driver el)
-        {:keys [x y]} (get-element-location* driver el)]
+        {:keys [width height]} (get-element-size-el driver el)
+        {:keys [x y]} (get-element-location-el driver el)]
     {:x1 x
      :x2 (+ x width)
      :y1 y
@@ -758,7 +806,8 @@
 ;; attributes
 ;;
 
-(defn get-element-attr* [driver el attr]
+(defn get-element-attr-el
+  [driver el attr]
   (with-resp driver :get
     [:session (:session @driver) :element el :attribute (name attr)]
     nil
@@ -789,22 +838,28 @@
   >> \"link link__external link__button\" ;; see note above
 "
   [driver q name]
-  (get-element-attr* driver (query driver q) name))
+  (get-element-attr-el driver (query driver q) name))
+
+(defn get-element-attrs-el
+  [driver el & names]
+  (mapv
+   #(get-element-attr-el driver el %)
+   names))
 
 (defn get-element-attrs
   "Returns multiple attributes in batch. The result is a vector of
   corresponding attributes."
   [driver q & names]
-  (let [el (query driver q)]
-    (mapv
-     #(get-element-attr* driver el %)
-     names)))
+  (apply get-element-attrs-el
+         driver
+         (query driver q)
+         names))
 
 ;;
 ;; css
 ;;
 
-(defn get-element-css* [driver el name*]
+(defn get-element-css-el [driver el name*]
   (with-resp driver :get
     [:session (:session @driver) :element el :css (name name*)]
     nil
@@ -835,16 +890,19 @@
   >> \"rgb(204, 204, 204)\" ;; or \"rgba(204, 204, 204, 1)\"
 "
   [driver q name]
-  (get-element-css* driver (query driver q) name))
+  (get-element-css-el driver (query driver q) name))
+
+(defn get-element-csss-el
+  [driver el & names]
+  (mapv
+   #(get-element-css-el driver el %)
+   names))
 
 (defn get-element-csss
   "Returns multiple CSS properties in batch. The result is a vector of
   corresponding properties."
   [driver q & names]
-  (let [el (query driver q)]
-    (mapv
-     #(get-element-css* driver el %)
-     names)))
+  (apply get-element-csss-el driver (query driver q) names))
 
 ;;
 ;; active element
@@ -870,7 +928,9 @@
 ;; element text, name and value
 ;;
 
-(defn get-element-tag* [driver el]
+(defn get-element-tag-el
+  "Returns element's tag name by its identifier."
+  [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :name]
     nil
@@ -880,9 +940,11 @@
 (defn get-element-tag
   "Returns element's tag name (\"div\", \"input\", etc)."
   [driver q]
-  (get-element-tag* driver (query driver q)))
+  (get-element-tag-el driver (query driver q)))
 
-(defn get-element-text* [driver el]
+(defn get-element-text-el
+  "Retuns element's inner text by its identifier."
+  [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :text]
     nil
@@ -890,13 +952,16 @@
     (:value resp)))
 
 (defn get-element-text
-  "Returns inner element's text. For `<p class=\"foo\">hello</p>` it
-  will be \"hello\" string.
+  "Returns inner element's text.
+
+  For `<p class=\"foo\">hello</p>` it will be \"hello\" string.
 "
   [driver q]
-  (get-element-text* driver (query driver q)))
+  (get-element-text-el driver (query driver q)))
 
-(defn get-element-value* [driver el]
+(defn get-element-value-el
+  "Returns element's value by its identifier."
+  [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :value]
     nil
@@ -906,7 +971,7 @@
 (defn get-element-value
   "Returns element's value set with `value` attribute."
   [driver q]
-  (get-element-value* driver (query driver q)))
+  (get-element-value-el driver (query driver q)))
 
 ;;
 ;; cookes
@@ -1204,9 +1269,18 @@
 
 (def absent? (complement exists?))
 
-(defmulti displayed* dispatch-driver)
+(defmulti displayed-el?
+  "Checks whether an element is displayed by its identifier.
 
-(defmethod displayed* :default
+  Note: Safari does not have native `displayed` implementation, we
+  have to check some common cases manually (CSS display, visibility,
+  etc).
+
+  Returns true or false.
+"
+  dispatch-driver)
+
+(defmethod displayed-el? :default
   [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :displayed]
@@ -1214,19 +1288,21 @@
     resp
     (:value resp)))
 
-(defmethod displayed* :safari
+(defmethod displayed-el? :safari
   [driver el]
   (cond
-    (= (get-element-css* driver el :display)
+    (= (get-element-css-el driver el :display)
        "none")
     false
-    (= (get-element-css* driver el :visibility)
+    (= (get-element-css-el driver el :visibility)
        "hidden")
     false
     :else true))
 
-(defn displayed? [driver q]
-  (displayed* driver (query driver q)))
+(defn displayed?
+  "Checks whether an element is displayed an screen."
+  [driver q]
+  (displayed-el? driver (query driver q)))
 
 (defn visible? [driver q]
   (and (exists? driver q)
@@ -1234,15 +1310,17 @@
 
 (def invisible? (complement visible?))
 
-(defn enabled* [driver el]
+(defn enabled-el? [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :enabled]
     nil
     resp
     (:value resp)))
 
-(defn enabled? [driver q]
-  (enabled* driver (query driver q)))
+(defn enabled?
+  "Checks whether an element is enabled."
+  [driver q]
+  (enabled-el? driver (query driver q)))
 
 (def disabled? (complement enabled?))
 
@@ -1252,15 +1330,15 @@
       (query driver {:xpath q})
       true)))
 
-(defn has-class* [driver el class]
-  (let [classes (get-element-attr* driver el "class")]
+(defn has-class-el? [driver el class]
+  (let [classes (get-element-attr-el driver el "class")]
     (cond
       (nil? classes) false
       (string? classes)
       (str/includes? classes (name class)))))
 
 (defn has-class? [driver q class]
-  (has-class* driver (query driver q) class))
+  (has-class-el? driver (query driver q) class))
 
 (def has-no-class? (complement has-class?))
 
@@ -1441,7 +1519,9 @@
 ;; input
 ;;
 
-(defn- fill* [driver el text]
+(defn fill-el
+  "Fills an element with text by its identifier."
+  [driver el text]
   (let [keys (if (char? text)
                (str text)
                text)]
@@ -1452,9 +1532,11 @@
 (defn fill
   "Fills an element found with a query with a given text."
   [driver q text]
-  (fill* driver (query driver q) text))
+  (fill-el driver (query driver q) text))
 
-(defn- clear* [driver el]
+(defn clear-el
+  "Clears an element by its identifier."
+  [driver el]
   (with-resp driver :post
     [:session (:session @driver) :element el :clear]
     nil _))
@@ -1462,7 +1544,7 @@
 (defn clear
   "Clears an element (input, textarea) found with a query."
   [driver q]
-  (clear* driver (query driver q)))
+  (clear-el driver (query driver q)))
 
 ;;
 ;; submit
@@ -1481,7 +1563,9 @@
 ;; human actions
 ;;
 
-(defn- fill-human* [driver el text]
+(defn fill-human-el
+  ;; todo opt params
+  [driver el text]
   (let [mistake-prob 0.1
         pause-max 0.2
         rand-char #(-> 26 rand-int (+ 97) char)
@@ -1489,11 +1573,11 @@
                     (wait (if (> r pause-max) pause-max r)))]
     (doseq [key text]
       (when (< (rand) mistake-prob)
-        (fill* driver el (rand-char))
+        (fill-el driver el (rand-char))
         (wait-key)
-        (fill* driver el keys/backspace)
+        (fill-el driver el keys/backspace)
         (wait-key))
-      (fill* driver el key)
+      (fill-el driver el key)
       (wait-key))))
 
 (defn fill-human
@@ -1507,7 +1591,7 @@
 
   - `text`: a string to input."
   [driver q text]
-  (fill-human* driver (query driver q) text))
+  (fill-human-el driver (query driver q) text))
 
 ;;
 ;; screenshot

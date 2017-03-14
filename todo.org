@@ -10,3 +10,4 @@ That document is to keep in mind all the things I always forget.
 - [ ] merge the release branch
 - [ ] put a Git tag
 - [ ] deploy to Clojars
+- [ ] upload docs
