@@ -44,7 +44,7 @@ To see how to compose separated functions into the whole scenarios, check our
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.1.2"]
+[etaoin "0.1.3"]
 ```
 ## Usage
 
@@ -209,6 +209,7 @@ console output.
 
 ## Roadmap
 
+- Make some function names shorter.
 - Add MS Edge support.
 - Add touch API tests.
 - Add mobile support.
