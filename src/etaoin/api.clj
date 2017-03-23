@@ -42,6 +42,8 @@
    :phantom 8910})
 
 (def default-locator "xpath")
+(def locator-xpath "xpath")
+(def locator-css "css selector")
 
 ;;
 ;; utils
@@ -438,19 +440,23 @@
   in case of unsupported clause."
   [driver q]
   (cond
+    (= q :active)
+    (get-active-element* driver)
+
+    (keyword? q)
+    [locator-xpath (q-xpath {:id q})]
+
     (string? q)
     [(:locator @driver) q]
 
-    (and (map? q)
-         (:xpath q))
-    ["xpath" (:xpath q)]
+    (and (map? q) (:xpath q))
+    [locator-xpath (:xpath q)]
 
-    (and (map? q)
-         (:css q))
-    ["css selector" (:css q)]
+    (and (map? q) (:css q))
+    [locator-css (:css q)]
 
     (map? q)
-    ["xpath" (q-xpath q)]
+    [locator-xpath (q-xpath q)]
 
     :else
     (throw+ {:type :etaoin/query
@@ -524,7 +530,9 @@
    //div[@id='content'] for XPath,
    div.article for CSS selector
 
-   - a keyword :active that means the current active element
+   - a keyword `:active` that means the current active element
+
+   - any keyword `value` that is converted to XPath `.//*[@id='<value>']`
 
    - a map with either :xpath or :css keys with a string term, e.g:
    {:xpath \"//div[@id='content']\"} or
@@ -544,9 +552,6 @@
 "
   [driver q]
   (cond
-    (= q :active)
-    (get-active-element* driver)
-
     (vector? q)
     (loop [el (query driver (first q))
            q-rest (rest q)]
@@ -1121,6 +1126,10 @@
     resp
     (:value resp)))
 
+(defn js-localstorage-clear
+  [driver]
+  (js-execute driver "localStorage.clear()"))
+
 (defn add-script [driver url]
   (let [script
         (str "var s = document.createElement('script');"
@@ -1162,10 +1171,15 @@
 ;; locators
 ;;
 
-
-(defn by [driver locator]
+(defn use-locator [driver locator]
   (swap! driver assoc :locator locator)
   driver)
+
+(defn use-xpath [driver]
+  (use-locator driver locator-xpath))
+
+(defn use-css [driver]
+  (use-locator driver locator-css))
 
 (defmacro with-locator [driver locator & body]
   `(let [old# (-> ~driver deref :locator)]
@@ -1176,11 +1190,11 @@
          (swap! ~driver assoc :locator old#)))))
 
 (defmacro with-xpath [driver & body]
-  `(with-locator ~driver "xpath"
+  `(with-locator ~driver locator-xpath
      ~@body))
 
 (defmacro with-css [driver & body]
-  `(with-locator ~driver "css selector"
+  `(with-locator ~driver locator-css
      ~@body))
 
 ;;
@@ -1324,11 +1338,27 @@
 
 (def disabled? (complement enabled?))
 
-(defn has-text? [driver text]
-  (with-http-error
-    (let [q (format "//*[contains(text(),'%s')]" text)]
-      (query driver {:xpath q})
-      true)))
+(defn has-text?
+  ([driver text]
+   (has-text? driver {:tag :*} text))
+  ([driver q text]
+   (let [[locator term] (q-expand driver q)
+         term1 (format "%s[contains(text(), '%s')]" term text)
+         term2 (format "%s//*[contains(text(), '%s')]" term text)]
+     (when-not (= locator locator-xpath)
+       (throw+ {:type :etaoin/locator
+                :driver @driver
+                :message "Only XPath locator works here."
+                :text text
+                :q q}))
+     (or
+      (with-http-error
+        (find-element* driver locator term1)
+        true)
+      (with-http-error
+        (find-element* driver locator term2)
+        true)
+      false))))
 
 (defn has-class-el? [driver el class]
   (let [classes (get-element-attr-el driver el "class")]
@@ -1407,8 +1437,9 @@
 (defn wait-has-alert [driver & [opt]]
   (wait-predicate #(has-alert? driver) opt))
 
-(defn wait-has-text [driver text & [opt]]
-  (wait-predicate #(has-text? driver text) opt))
+(defn wait-has-text
+  [driver q text & [opt]]
+  (wait-predicate #(has-text? driver q text) opt))
 
 (defn wait-has-class [driver q class & [opt]]
   (wait-predicate #(has-class? driver q class) opt))

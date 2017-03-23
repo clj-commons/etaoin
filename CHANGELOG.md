@@ -1,4 +1,7 @@
 
+## 0.1.4
+ * Misc changes made for production usage
+
 ## 0.1.3
  * Query multiple elements
  * Functions to work with driver's system elements.
