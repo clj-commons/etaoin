@@ -8,6 +8,6 @@ That document is to keep in mind all the things I always forget.
 - [ ] add note to CHANGELOG.md
 - [ ] check roadmap in README.md
 - [ ] merge the release branch
+- [ ] upload docs
 - [ ] put a Git tag
 - [ ] deploy to Clojars
-- [ ] upload docs
