@@ -167,7 +167,7 @@
       (refresh)
       (wait-visible {:id :document-end})
       (click {:id :wait-button})
-      (wait-has-text "-secret-" {:message "wait simiple"}))
+      (wait-has-text :wait-span "-secret-" {:message "wait simiple"}))
     (is true "text found"))
   (testing "wait for text timeout"
     (doto *driver*
@@ -175,7 +175,9 @@
       (wait-visible {:id :document-end})
       (click {:id :wait-button}))
     (try+
+     (screenshot *driver* "/Users/ivan/webdriver/foo.png")
      (wait-has-text *driver*
+                    :wait-span
                     "-secret-"
                     {:timeout 1
                      :message "No -secret- text on the page"})
@@ -193,6 +195,7 @@
       (wait-visible {:id :document-end}))
     (try+
      (wait-has-text *driver*
+                    :wait-span
                     "-dunno-whatever-foo-bar-"
                     {:timeout 2
                      :message "wait non-existing"})
