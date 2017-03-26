@@ -22,7 +22,9 @@
             [clojure.data.codec.base64 :as b64]
             [clojure.java.io :as io]
             [clojure.string :as str]
-            [slingshot.slingshot :refer [try+ throw+]]))
+            [slingshot.slingshot :refer [try+ throw+]])
+  (:import java.util.Date
+           java.text.SimpleDateFormat))
 
 ;;
 ;; defaults
@@ -1153,6 +1155,7 @@
 (defn get-hash [driver]
   (let [[_ hash] (split-hash (get-url driver))]
     hash))
+
 ;;
 ;; exceptions
 ;;
@@ -1658,6 +1661,68 @@
                      :driver @driver}))
         (b64-to-file filename))))
 
+;; postmortem
+
+(defn postmortem-handler
+  "Internal postmortem handler that creates files. See
+  `with-postmortem` for more info."
+  [driver opt]
+  (let [dir-src (or (:dir-src opt)
+                    (:dir opt))
+        dir-img (or (:dir-img opt)
+                    (:dir opt))
+        date-format (or (:date-format opt)
+                        "yyyy-MM-dd-hh-mm-ss")
+        date-str (-> date-format
+                     SimpleDateFormat.
+                     (.format (Date.)))
+        params [(-> @driver :type name)
+                (-> @driver :host)
+                (-> @driver :port)
+                date-str]
+        path-template "%s/%s-%s-%s-%s.%s"
+        path-img (apply format
+                        path-template
+                        dir-img
+                        (conj params "png"))
+        path-src (apply format
+                        path-template
+                        dir-src
+                        (conj params "html"))
+        src (get-source driver)]
+    (screenshot driver path-img)
+    (spit path-src src)))
+
+(defmacro with-postmortem
+  "Wraps the body with postmortem handler. If any error occurs,
+  it will save a screenshot and the page's source code on disk before
+  rising an exception so it could help you to discover what happened.
+
+  Arguments:
+
+  - `driver`: a driver instance,
+
+  - `opt`: a map of options, where:
+
+  -- `:dir` path to a directory where to store both `.png` and `.html`
+  files. Might not exist, will be created otherwise.
+
+  -- `:dir-img`: path to a directory where to store `.png`
+  files (screenshots). If `nil`, `:dir` value is used.
+
+  -- `:dir-src`: path to a directory where to store `.html`
+  files (page source). If `nil`, `:dir` value is used.
+
+  -- `:date-format`: a string represents date(time) pattern to make
+  filenames unique. Default is \"yyyy-MM-dd-hh-mm-ss\". See Oracle
+  Java `SimpleDateFormat` class manual for more patterns."
+  [driver opt & body]
+  `(try
+     ~@body
+     (catch Exception e#
+       (postmortem-handler ~driver ~opt)
+       (throw e#))))
+
 ;;
 ;; driver management
 ;;
@@ -1755,7 +1820,7 @@
         env (or (:env opt) {})
         port-args (port-args driver)
         full-args (vec (concat [path] port-args args))
-        process (proc/run full-args env)]
+        process (proc/run full-args)] ;; todo deal with env
     (swap! driver assoc
            :env env
            :args full-args

@@ -150,6 +150,28 @@ Here is a example of how to get all the links from the page:
 ;; returns ["//ru.wikipedia.org/" "//en.wikipedia.org/" etc ... ]
 ```
 
+### Auto-save screenshots in case of exception
+
+Sometimes, it might be difficult to discover what went wrong during the last UI
+tests session. To keep some postmortem evident on your disk, wrap the code
+block with `with-postmortem` macros:
+
+```clojure
+(def driver (firefox))
+(with-postmortem driver {:dir "/Users/ivan/artifacts"}
+  (click driver :non-existing-element))
+```
+
+An exception will rise, but in `/Users/ivan/artifacts` there will be two files:
+
+- `firefox-127.0.0.1-4444-2017-03-26-02-45-07.png`: an actual screenshot of the
+  browser's page;
+
+- `firefox-127.0.0.1-4444-2017-03-26-02-45-07.html`: an actual browser's HTML
+  content.
+
+The filename template is `<browser>-<host>-<port>-<datetime>.ext`.
+
 ### Be patient
 
 The main difference between a program and a human is that the first one

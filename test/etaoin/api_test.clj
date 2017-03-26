@@ -175,7 +175,6 @@
       (wait-visible {:id :document-end})
       (click {:id :wait-button}))
     (try+
-     (screenshot *driver* "/Users/ivan/webdriver/foo.png")
      (wait-has-text *driver*
                     :wait-span
                     "-secret-"
@@ -475,3 +474,20 @@
                       (get-element-tag-el *driver* el))]
       (is (= (vec tag-names)
              ["div" "b" "p" "span"])))))
+
+(deftest test-postmortem
+  (let [dir-tmp (format
+                 "%s/%s"
+                 (System/getProperty "java.io.tmpdir")
+                 (System/currentTimeMillis))]
+    (io/make-parents (format "%s/%s" dir-tmp "_"))
+    (testing "postmortem"
+      (try
+        (with-postmortem *driver* {:dir dir-tmp}
+          (click *driver* :non-existing-element))
+        (is false "should be caught")
+        (catch Exception e
+          (is true "caught")
+          (let [files (file-seq (io/file dir-tmp))]
+            (is (= (-> files rest count)
+                   2))))))))
