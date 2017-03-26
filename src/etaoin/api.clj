@@ -22,7 +22,9 @@
             [clojure.data.codec.base64 :as b64]
             [clojure.java.io :as io]
             [clojure.string :as str]
-            [slingshot.slingshot :refer [try+ throw+]]))
+            [slingshot.slingshot :refer [try+ throw+]])
+  (:import java.util.Date
+           java.text.SimpleDateFormat))
 
 ;;
 ;; defaults
@@ -1153,6 +1155,7 @@
 (defn get-hash [driver]
   (let [[_ hash] (split-hash (get-url driver))]
     hash))
+
 ;;
 ;; exceptions
 ;;
@@ -1658,6 +1661,43 @@
                      :driver @driver}))
         (b64-to-file filename))))
 
+;; postmortem
+
+(defn postmortem-handler [driver opt]
+  (let [dir-src (or (:dir-src opt)
+                    (:dir opt))
+        dir-img (or (:dir-img opt)
+                    (:dir opt))
+        date-format (or (:date-format opt)
+                        "yyyy-MM-dd-hh-mm-ss")
+        date-str (-> date-format
+                     SimpleDateFormat.
+                     (.format (Date.)))
+        params [(-> @driver :type name)
+                (-> @driver :host)
+                (-> @driver :port)
+                date-str]
+        path-template "%s/%s-%s-%s-%s.%s"
+        path-img (apply format
+                        path-template
+                        dir-img
+                        (conj params "png"))
+        path-src (apply format
+                        path-template
+                        dir-src
+                        (conj params "html"))
+        src (get-source driver)]
+    (screenshot driver path-img)
+    (spit path-src src)))
+
+(defmacro with-postmortem
+  [driver opt & body]
+  `(try
+     ~@body
+     (catch Exception e#
+       (postmortem-handler ~driver ~opt)
+       (throw e#))))
+
 ;;
 ;; driver management
 ;;
@@ -1755,7 +1795,7 @@
         env (or (:env opt) {})
         port-args (port-args driver)
         full-args (vec (concat [path] port-args args))
-        process (proc/run full-args env)]
+        process (proc/run full-args)] ;; todo deal with env
     (swap! driver assoc
            :env env
            :args full-args

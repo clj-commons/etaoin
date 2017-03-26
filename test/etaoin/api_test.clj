@@ -175,7 +175,6 @@
       (wait-visible {:id :document-end})
       (click {:id :wait-button}))
     (try+
-     (screenshot *driver* "/Users/ivan/webdriver/foo.png")
      (wait-has-text *driver*
                     :wait-span
                     "-secret-"
@@ -475,3 +474,12 @@
                       (get-element-tag-el *driver* el))]
       (is (= (vec tag-names)
              ["div" "b" "p" "span"])))))
+
+(deftest test-postmortem
+  (testing "postmortem"
+    (try
+      (with-postmortem *driver* {:dir "/Users/ivan/bar"}
+        (click *driver* :non-existing-element))
+      (is false "should be caught")
+      (catch Exception e
+        (is true "caught")))))
