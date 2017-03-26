@@ -44,7 +44,7 @@ To see how to compose separated functions into the whole scenarios, check our
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.1.4"]
+[etaoin "0.1.5"]
 ```
 ## Usage
 

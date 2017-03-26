@@ -1,4 +1,7 @@
 
+## 0.1.5
+ * Postmortem wrapper added
+
 ## 0.1.4
  * Misc changes made for production usage
 
