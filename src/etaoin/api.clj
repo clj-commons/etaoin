@@ -1663,7 +1663,10 @@
 
 ;; postmortem
 
-(defn postmortem-handler [driver opt]
+(defn postmortem-handler
+  "Internal postmortem handler that creates files. See
+  `with-postmortem` for more info."
+  [driver opt]
   (let [dir-src (or (:dir-src opt)
                     (:dir opt))
         dir-img (or (:dir-img opt)
@@ -1691,6 +1694,28 @@
     (spit path-src src)))
 
 (defmacro with-postmortem
+  "Wraps the body with postmortem handler. If any error occurs,
+  it will save a screenshot and the page's source code on disk before
+  rising an exception so it could help you to discover what happened.
+
+  Arguments:
+
+  - `driver`: a driver instance,
+
+  - `opt`: a map of options, where:
+
+  -- `:dir` path to a directory where to store both `.png` and `.html`
+  files. Might not exist, will be created otherwise.
+
+  -- `:dir-img`: path to a directory where to store `.png`
+  files (screenshots). If `nil`, `:dir` value is used.
+
+  -- `:dir-src`: path to a directory where to store `.html`
+  files (page source). If `nil`, `:dir` value is used.
+
+  -- `:date-format`: a string represents date(time) pattern to make
+  filenames unique. Default is \"yyyy-MM-dd-hh-mm-ss\". See Oracle
+  Java `SimpleDateFormat` class manual for more patterns."
   [driver opt & body]
   `(try
      ~@body

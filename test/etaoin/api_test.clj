@@ -476,10 +476,18 @@
              ["div" "b" "p" "span"])))))
 
 (deftest test-postmortem
-  (testing "postmortem"
-    (try
-      (with-postmortem *driver* {:dir "/Users/ivan/bar"}
-        (click *driver* :non-existing-element))
-      (is false "should be caught")
-      (catch Exception e
-        (is true "caught")))))
+  (let [dir-tmp (format
+                 "%s/%s"
+                 (System/getProperty "java.io.tmpdir")
+                 (System/currentTimeMillis))]
+    (io/make-parents (format "%s/%s" dir-tmp "_"))
+    (testing "postmortem"
+      (try
+        (with-postmortem *driver* {:dir dir-tmp}
+          (click *driver* :non-existing-element))
+        (is false "should be caught")
+        (catch Exception e
+          (is true "caught")
+          (let [files (file-seq (io/file dir-tmp))]
+            (is (= (-> files rest count)
+                   2))))))))
