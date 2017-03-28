@@ -442,9 +442,6 @@
   in case of unsupported clause."
   [driver q]
   (cond
-    (= q :active)
-    (get-active-element* driver)
-
     (keyword? q)
     [locator-xpath (q-xpath {:id q})]
 
@@ -550,10 +547,12 @@
    [{:id :footer} {:tag :a}] => finds the first hyperlink
    inside a div with id 'footer'.
 
-   Returns an element's unique identifier as a string.
-"
+   Returns an element's unique identifier as a string."
   [driver q]
   (cond
+    (= q :active)
+    (get-active-element* driver)
+
     (vector? q)
     (loop [el (query driver (first q))
            q-rest (rest q)]
@@ -1552,6 +1551,10 @@
 ;;
 ;; input
 ;;
+
+;; todo  SEND_KEYS_TO_ACTIVE_ELEMENT
+;; (_Method.POST, '/session/:sessionId/keys')
+;; todo multiple lines
 
 (defn fill-el
   "Fills an element with text by its identifier."
