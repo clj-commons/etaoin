@@ -20,6 +20,7 @@
             [etaoin.client :as client]
             [etaoin.keys :as keys]
             [clojure.data.codec.base64 :as b64]
+            [clojure.tools.logging :as log]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [slingshot.slingshot :refer [try+ throw+]])
@@ -40,7 +41,7 @@
 (def default-ports
   "Default ports to launch a driver process."
   {:firefox 4444
-   :chrome 5555
+   :chrome 9515
    :phantom 8910})
 
 (def default-locator "xpath")
@@ -1385,8 +1386,8 @@
 ;; wait functions
 ;;
 
-(def default-timeout 10)
-(def default-interval 0.1)
+(def default-timeout 20)
+(def default-interval 0.33)
 
 (defn wait
   "Does nothing for N seconds."
@@ -1422,10 +1423,14 @@
   (wait-predicate #(exists? driver q) opt))
 
 (defn wait-absent [driver q & [opt]]
-  (wait-predicate #(absent? driver q) opt))
+  (let [message (format "Wait for %s element is absent" q)]
+    (wait-predicate #(absent? driver q)
+                    (assoc opt :message message))))
 
 (defn wait-visible [driver q & [opt]]
-  (wait-predicate #(visible? driver q) opt))
+  (let [message (format "Wait for %s element is visible" q)]
+    (wait-predicate #(visible? driver q)
+                    (assoc opt :message message))))
 
 (defn wait-invisible [driver q & [opt]]
   (wait-predicate #(invisible? driver q) opt))
@@ -1441,13 +1446,26 @@
 
 (defn wait-has-text
   [driver q text & [opt]]
-  (wait-predicate #(has-text? driver q text) opt))
+  (let [message (format "Wait for %s element has text %s"
+                        q text)]
+    (wait-predicate #(has-text? driver q text)
+                    (assoc opt :message message))))
 
 (defn wait-has-class [driver q class & [opt]]
   (wait-predicate #(has-class? driver q class) opt))
 
 (defn wait-running [driver & [opt]]
   (wait-predicate #(running? driver) opt))
+
+;;
+;; visible actions
+;;
+
+(defn click-visible
+  [driver q & [opt]]
+  (doto driver
+    (wait-visible q opt)
+    (click q)))
 
 ;;
 ;; touch
@@ -1691,10 +1709,11 @@
         path-src (apply format
                         path-template
                         dir-src
-                        (conj params "html"))
-        src (get-source driver)]
+                        (conj params "html"))]
+    (log/debugf "Writing screenshot: %s" path-img)
+    (log/debugf "Writing HTML source: %s" path-src)
     (screenshot driver path-img)
-    (spit path-src src)))
+    (spit path-src (get-source driver))))
 
 (defmacro with-postmortem
   "Wraps the body with postmortem handler. If any error occurs,
