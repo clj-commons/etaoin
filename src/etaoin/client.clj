@@ -13,6 +13,8 @@
   {:as :json
    :accept :json
    :content-type :json
+   :socket-timeout (* 1000 5)
+   :conn-timeout (* 1000 5)
    :form-params {}
    :debug false})
 

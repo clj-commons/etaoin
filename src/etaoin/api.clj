@@ -25,6 +25,7 @@
             [clojure.string :as str]
             [slingshot.slingshot :refer [try+ throw+]])
   (:import java.util.Date
+           java.net.ConnectException
            java.text.SimpleDateFormat))
 
 ;;
@@ -64,8 +65,10 @@
   []
   (let [max-port 65536
         offset 1024]
-    (+ (rand-int (- max-port offset))
-       offset)))
+    (-> max-port
+        (- offset)
+        (rand-int)
+        (+ offset))))
 
 (defn dispatch-driver
   "Returns the current driver's type. Used as dispatcher in
@@ -1251,18 +1254,50 @@
     nil _))
 
 ;;
-;; predicates
+;; network
 ;;
 
-(defn running? [driver]
-  (with-exception Throwable false
-    (let [{:keys [host port]} @driver
-          socket (java.net.Socket. host port)]
+(defn connectable?
+  "Checks whether it's possible to connect a given host/port pair."
+  [host port]
+  (with-exception ConnectException false
+    (let [socket (java.net.Socket. host port)]
       (if (.isConnected socket)
         (do
           (.close socket)
           true)
         false))))
+
+(defn running?
+  "Check whether a driver runs HTTP server."
+  [driver]
+  (connectable? (:host @driver)
+                (:port @driver)))
+
+(defn discover-port
+  "Finds a port for a driver type.
+
+  Takes a default one from `default-ports` map. If it's already taken,
+  continues to take random ports until if finds non-busy one.
+
+  Arguments:
+
+  - `type`: a keyword, browser type (:chrome, :firefox, etc),
+
+  - `host`: a string, hostname or IP.
+
+  Returns a port as an integer."
+  [type host]
+  (loop [port (-> type
+                  (get default-ports)
+                  (or (random-port)))]
+    (if (connectable? host port)
+      (recur (random-port))
+      port)))
+
+;;
+;; predicates
+;;
 
 (defn driver? [driver type]
   (= (dispatch-driver driver) type))
@@ -1799,8 +1834,7 @@
   (let [driver (atom {})
         host (or (:host opt) "127.0.0.1")
         port (or (:port opt)
-                 (type default-ports)
-                 (random-port))
+                 (discover-port type host))
         url (make-url host port)
         locator (or (:locator opt) default-locator)]
     (swap! driver assoc
