@@ -1288,9 +1288,8 @@
 
   Returns a port as an integer."
   [type host]
-  (loop [port (-> type
-                  (get default-ports)
-                  (or (random-port)))]
+  (loop [port (or (default-ports type)
+                  (random-port))]
     (if (connectable? host port)
       (recur (random-port))
       port)))
