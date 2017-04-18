@@ -1490,6 +1490,8 @@
   (wait-predicate #(has-class? driver q class) opt))
 
 (defn wait-running [driver & [opt]]
+  (log/debugf "Waiting for %s:%s is running"
+              (:host @driver) (:port @driver))
   (wait-predicate #(running? driver) opt))
 
 ;;
@@ -1843,6 +1845,7 @@
            :port port
            :url url
            :locator locator)
+    (log/debugf "Created driver: %s %s:%s" (name type) host port)
     driver))
 
 (defn run-driver
@@ -1881,6 +1884,7 @@
            :env env
            :args full-args
            :process process)
+    (log/debugf "Started process: %s" (str/join \space full-args))
     driver))
 
 (defn connect-driver
