@@ -9,12 +9,14 @@
 ;; defaults
 ;;
 
+(def timeout 20)
+
 (def default-api-params
   {:as :json
    :accept :json
    :content-type :json
-   :socket-timeout (* 1000 5)
-   :conn-timeout (* 1000 5)
+   :socket-timeout (* 1000 timeout)
+   :conn-timeout (* 1000 timeout)
    :form-params {}
    :debug false})
 
