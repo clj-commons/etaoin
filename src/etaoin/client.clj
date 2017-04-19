@@ -9,7 +9,12 @@
 ;; defaults
 ;;
 
-(def timeout 20)
+(def timeout
+  "HTTP timeout in seconds. The current value may seems to high,
+  but according to my experience with SPA application full of React
+  modules even 20 seconds could not be enough for a driver to process
+  your request."
+  60)
 
 (def default-api-params
   {:as :json
