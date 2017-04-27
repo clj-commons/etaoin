@@ -41,12 +41,44 @@
     (-> (invisible? {:id :div-hidden}) is)
     (-> (invisible? {:id :dunno-foo-bar}) is)))
 
+(deftest test-input
+  (testing "fill multiple imputs"
+    (doto *driver*
+      (fill-multi {:simple-input 1
+                   :simple-password 2
+                   :simple-textarea 3})
+      (click :simple-submit)
+      (when-safari (wait 3))
+      (-> get-url
+          (str/ends-with? "?login=1&password=2&message=3")
+          is)))
+  (testing "fill multiple vars"
+    (doto *driver*
+      (fill :simple-input 1 "test" 2 \space \A)
+      (click :simple-submit)
+      (when-safari (wait 3))
+      (-> get-url
+          (str/ends-with? "?login=1test2+A&password=&message=")
+          is))))
+
 (deftest test-clear
   (testing "simple clear"
     (doto *driver*
       (fill {:id :simple-input} "test")
       (clear {:id :simple-input})
       (click {:id :simple-submit})
+      (when-safari (wait 3))
+      (-> get-url
+          (str/ends-with? "?login=&password=&message=")
+          is)))
+  (testing "multiple clear"
+    (doto *driver*
+      (fill-multi {:simple-input 1
+                   :simple-password 2
+                   :simple-textarea 3})
+      (clear :simple-input
+             :simple-password
+             :simple-textarea)
       (when-safari (wait 3))
       (-> get-url
           (str/ends-with? "?login=&password=&message=")

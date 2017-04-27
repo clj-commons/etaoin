@@ -1638,7 +1638,7 @@
 (defn fill
   "Fills an element found with a query with a given text.
 
-  Added in 0.1.6: now the rest parameters are supported. They will
+  0.1.6: now the rest parameters are supported. They will
   joined using \"str\":
 
   (fill driver :simple-input \"foo\" \"baz\" 1)
@@ -1704,9 +1704,12 @@
     nil _))
 
 (defn clear
-  "Clears an element (input, textarea) found with a query."
-  [driver q]
-  (clear-el driver (query driver q)))
+  "Clears an element (input, textarea) found with a query.
+
+  0.1.6: multiple queries added."
+  [driver q & more]
+  (doseq [q (cons q more)]
+    (clear-el driver (query driver q))))
 
 ;;
 ;; submit
