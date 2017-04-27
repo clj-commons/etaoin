@@ -1606,9 +1606,24 @@
 ;; input
 ;;
 
-;; todo  SEND_KEYS_TO_ACTIVE_ELEMENT
-;; (_Method.POST, '/session/:sessionId/keys')
-;; todo multiple lines
+(defn- join-str
+  [text more]
+  (apply str text more))
+
+(defmulti fill-active*
+  {:arglists '([driver keys])}
+  dispatch-driver)
+
+(defmethod fill-active* :chrome
+  [driver keys]
+  (with-resp driver :post
+    [:session (:session @driver) :keys]
+    {:value (vec keys)} _))
+
+(defn fill-active
+  "Fills an active element with keys."
+  [driver text & more]
+  (fill-active* driver (join-str text more)))
 
 (defn fill-el
   "Fills an element with text by its identifier."
@@ -1621,38 +1636,35 @@
       {:value (vec keys)} _)))
 
 (defn fill
-  "Fills an element found with a query with a given text."
-  [driver q text]
-  (fill-el driver (query driver q) text))
+  "Fills an element found with a query with a given text.
 
-(defn clear-el
-  "Clears an element by its identifier."
-  [driver el]
-  (with-resp driver :post
-    [:session (:session @driver) :element el :clear]
-    nil _))
+  Added in 0.1.6: now the rest parameters are supported. They will
+  joined using \"str\":
 
-(defn clear
-  "Clears an element (input, textarea) found with a query."
-  [driver q]
-  (clear-el driver (query driver q)))
+  (fill driver :simple-input \"foo\" \"baz\" 1)
+  ;; fills the input with  \"foobaz1\""
+  [driver q text & more]
+  (fill-el driver (query driver q) (join-str text more)))
 
-;;
-;; submit
-;;
+(defn fill-multi
+  "Fills multiple inputs in batch.
 
-(defn submit
-  "Sends Enter button value to an element found with query."
-  [driver q]
-  (fill driver q keys/enter))
+  `q-text` could be:
 
-;;
-;; forms
-;;
+  - a map of {query -> text}
+  - a vector of [query1 text1 query2 text2 ...]"
+  [driver q-text]
+  (cond
+    (map? q-text)
+    (doseq [[q text] q-text]
+      (fill driver q text))
 
-;;
-;; human actions
-;;
+    (vector? q-text)
+    (recur driver (apply hash-map q-text))
+
+    :else (throw+ {:type :etaoin/argument
+                   :message "Wrong argument type"
+                   :arg q-text})))
 
 (defn fill-human-el
   ;; todo opt params
@@ -1683,6 +1695,27 @@
   - `text`: a string to input."
   [driver q text]
   (fill-human-el driver (query driver q) text))
+
+(defn clear-el
+  "Clears an element by its identifier."
+  [driver el]
+  (with-resp driver :post
+    [:session (:session @driver) :element el :clear]
+    nil _))
+
+(defn clear
+  "Clears an element (input, textarea) found with a query."
+  [driver q]
+  (clear-el driver (query driver q)))
+
+;;
+;; submit
+;;
+
+(defn submit
+  "Sends Enter button value to an element found with query."
+  [driver q]
+  (fill driver q keys/enter))
 
 ;;
 ;; screenshot
