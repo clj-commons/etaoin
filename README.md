@@ -27,6 +27,12 @@ after a mysteries note was produced on it.
 - Run your unit tests directly from Emacs pressing `C-t t` as usual.
 - Can imitate human-like behaviour (delays, typos, etc).
 
+## Installation
+
+```
+[etaoin "0.1.6"]
+```
+
 ## Documentation
 
 - [Wiki][url-pages]

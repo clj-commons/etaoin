@@ -1933,9 +1933,7 @@
   - `opt`: an map of the following optional parameters:
 
   -- `:desired-capabilities` a map of desired capabilities your
-  browser should support. There are some common capabilities that most
-  of the browsers support. Besides that, each driver accepts its own
-  capabilities to regilate internal behaviour.
+  browser should support.
 
   See https://www.w3.org/TR/webdriver/#capabilities"
   [driver & [opt]]
