@@ -1,4 +1,10 @@
 
+## 0.1.6
+  * Multi-fill/clear
+  * Desired capabilities
+  * Readme moved to wiki
+  * Minor improvements
+
 ## 0.1.5
  * Postmortem wrapper added
 
