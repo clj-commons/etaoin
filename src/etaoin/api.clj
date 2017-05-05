@@ -137,11 +137,11 @@
   side-effect. All the further requests are made within specific
   session. Some drivers may work with only one active session. Returns
   a long string identifier."
-  [driver]
+  [driver & [capabilities]]
   (with-resp driver
     :post
     [:session]
-    {:desiredCapabilities {}}
+    {:desiredCapabilities (or capabilities {})}
     result
     (:sessionId result)))
 
@@ -1926,11 +1926,25 @@
   "Connects to a running Webdriver server.
 
   Creates a new session on Webdriver HTTP server. Sets the session to
-  the driver. Returns the modified driver."
+  the driver. Returns the modified driver.
+
+  Arguments:
+
+  - `opt`: an map of the following optional parameters:
+
+  -- `:desired-capabilities` a map of desired capabilities your
+  browser should support. There are some common capabilities that most
+  of the browsers support. Besides that, each driver accepts its own
+  capabilities to regilate internal behaviour.
+
+  See https://www.w3.org/TR/webdriver/#capabilities"
   [driver & [opt]]
   (wait-running driver)
-  (let [session (create-session driver)]
-    (swap! driver assoc :session session)
+  (let [capabilities (:desired-capabilities opt)
+        session (create-session driver capabilities)]
+    (swap! driver assoc
+           :session session
+           :desired-capabilities capabilities)
     driver))
 
 (defn disconnect-driver
@@ -1940,7 +1954,8 @@
   session from the driver instance. Returns modified driver."
   [driver]
   (delete-session driver)
-  (swap! driver dissoc :session)
+  (swap! driver dissoc
+         :session :desired-capabilities)
   driver)
 
 (defn stop-driver
