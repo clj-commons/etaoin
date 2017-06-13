@@ -36,7 +36,7 @@ after a mysteries note was produced on it.
   * [Calling maximize function throws an error](#calling-maximize-function-throws-an-error)
   * [Clicking On Non-Visible Element](#clicking-on-non-visible-element)
   * [Unpredictable errors in Chrome when window is not active](#unpredictable-errors-in-chrome-when-window-is-not-active)
-- [Contributing](#contributing)
+- [Contributors](#contributors)
 - [License](#license)
 
 <!-- tocstop -->
@@ -459,7 +459,10 @@ Google Chrome fails.
 time. When the page is suspended, no operation could be done on it. No clicks,
 Js execution, etc. So try to keep Chrome window active during test session.
 
-## Contributing
+## Contributors
+
+- [Ivan Grishaev](https://github.com/igrishaev)
+- [Adam Frey](https://github.com/AdamFrey)
 
 The project is open for your improvements and ideas. If any of unit tests fall
 on your machine please submit an issue giving your OS version, browser and
