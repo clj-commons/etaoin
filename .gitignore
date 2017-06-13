@@ -11,3 +11,4 @@ pom.xml.asc
 .hg/
 .DS_Store
 autodoc/**
+node_modules
