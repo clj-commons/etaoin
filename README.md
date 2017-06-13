@@ -77,6 +77,7 @@ The good news you may automate your browser directly from the REPL:
 ```clojure
 (use 'etaoin.api)
 (require '[etaoin.keys :as k])
+
 (def driver (firefox)) ;; here, a Firefox window should appear
 
 ;; let's perform a quick Wiki session
