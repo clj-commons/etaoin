@@ -3,33 +3,39 @@
 [url-tests]: https://github.com/igrishaev/etaoin/blob/master/test/etaoin/api_test.clj
 [url-doc]: http://grishaev.me/etaoin/
 
-Pure Clojure implementation of [Webdriver][url-webdriver] protocol.
+# Etaion
 
-Use that library to automate a browser, test your frontend behaviour, simulate
-human actions or whatever you want.
+Pure Clojure implementation of [Webdriver][url-webdriver] protocol. Use that
+library to automate a browser, test your frontend behaviour, simulate human
+actions or whatever you want.
 
 It's named after [Etaoin Shrdlu][url-wiki] -- a typing machine that became alive
 after a mysteries note was produced on it.
+
+# Table of Contents
 
 <!-- toc -->
 
 - [Benefits](#benefits)
 - [Capabilities](#capabilities)
-- [Installation](#installation)
 - [Documentation](#documentation)
-- [Installation](#installation-1)
-- [Usage](#usage)
+- [Installation](#installation)
+- [Basic Usage](#basic-usage)
   * [From REPL](#from-repl)
+- [Advanced Usage](#advanced-usage)
   * [Working with multiple elements](#working-with-multiple-elements)
   * [Auto-save screenshots in case of exception](#auto-save-screenshots-in-case-of-exception)
   * [Be patient](#be-patient)
-- [Basic fixture](#basic-fixture)
-- [Multi-driver fixtures](#multi-driver-fixtures)
-- [Postmortem handler to collect artifacts](#postmortem-handler-to-collect-artifacts)
-- [Running tests by tag](#running-tests-by-tag)
+- [Writing Integration Tests For Your Application](#writing-integration-tests-for-your-application)
+  * [Basic fixture](#basic-fixture)
+  * [Multi-Driver Fixtures](#multi-driver-fixtures)
+  * [Postmortem Handler To Collect Artifacts](#postmortem-handler-to-collect-artifacts)
+  * [Running Tests By Tag](#running-tests-by-tag)
+- [Installing Drivers](#installing-drivers)
+- [Troubleshooting](#troubleshooting)
   * [Calling maximize function throws an error](#calling-maximize-function-throws-an-error)
-- [Clicking on non-visible element](#clicking-on-non-visible-element)
-- [Unpredictable errors in Chrome when window is not active](#unpredictable-errors-in-chrome-when-window-is-not-active)
+  * [Clicking On Non-Visible Element](#clicking-on-non-visible-element)
+  * [Unpredictable errors in Chrome when window is not active](#unpredictable-errors-in-chrome-when-window-is-not-active)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -49,12 +55,6 @@ after a mysteries note was produced on it.
 - Run your unit tests directly from Emacs pressing `C-t t` as usual.
 - Can imitate human-like behaviour (delays, typos, etc).
 
-## Installation
-
-```
-[etaoin "0.1.6"]
-```
-
 ## Documentation
 
 - [API docs][url-doc]
@@ -65,9 +65,10 @@ after a mysteries note was produced on it.
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.1.5"]
+[etaoin "0.1.6"]
 ```
-## Usage
+
+## Basic Usage
 
 ### From REPL
 
@@ -144,6 +145,7 @@ macros as follows:
 
 Whatever happens during a session, the process will be stopped anyway.
 
+## Advanced Usage
 
 ### Working with multiple elements
 
@@ -193,9 +195,15 @@ The filename template is `<browser>-<host>-<port>-<datetime>.ext`.
 
 ### Be patient
 
-This page shows how to prepare fixtures for unit tests.
+The main difference between a program and a human is that the first one
+operates very fast. It means so fast, that sometimes a browser cannot render new
+HTML in time. So after each action you need to put `wait-<something>` function
+that just polls a browser checking for a predicate. O just `(wait <seconds>)` if
+you don't care about optimization.
 
-## Basic fixture
+## Writing Integration Tests For Your Application
+
+### Basic fixture
 
 To make your test not depend on each other, you need to wrap them into a fixture
 that will create a new instance of a driver and shut it down properly at the end
@@ -238,7 +246,7 @@ point to the target driver during the tests.
     ))
 ```
 
-## Multi-driver fixtures
+### Multi-Driver Fixtures
 
 In the example above, we examined a case when you run tests against a single
 type of driver. However, you may want to test your site on multiple drivers,
@@ -262,7 +270,7 @@ note the test call is prepended with `testing` macro that puts driver name into
 the report. Once you've got an error, you'll easy find what driver failed the
 tests exactly.
 
-## Postmortem handler to collect artifacts
+### Postmortem Handler To Collect Artifacts
 
 To save a screenshot and HTML dump of your page in case of exception, wrap your
 fixture into `with-postmortem` handler as follows:
@@ -297,7 +305,7 @@ Now pass `pm-dir` into `with-postmortem` macro:
 Once an error occurs, you will find a PNG image that represents your browser
 page at the moment of exception and HTML dump.
 
-## Running tests by tag
+### Running Tests By Tag
 
 Since UI tests may take lots of time to pass, it's definitely a good practice to
 pass both server and UI tests independently from each other.
@@ -330,6 +338,7 @@ HTML in time. So after each action you need to put `wait-<something>` function
 that just polls a browser checking for a predicate. O just `(wait <seconds>)` if
 you don't care about optimization.
 
+## Installing Drivers
 
 [url-webdriver]: https://www.w3.org/TR/webdriver/
 [url-tests]: https://github.com/igrishaev/etaoin/blob/master/test/etaoin/api_test.clj
@@ -391,6 +400,8 @@ file with a special layout to validate the most of the cases.
 
 This page holds common troubles you might face during webdriver automation.
 
+## Troubleshooting
+
 ### Calling maximize function throws an error
 
 Example:
@@ -419,7 +430,7 @@ See the [related issue][maximize-issue] in Selenium project.
 [maximize-issue]:https://github.com/SeleniumHQ/selenium/issues/3508
 [chromedriver-dl]:https://sites.google.com/a/chromium.org/chromedriver/downloads
 
-## Clicking on non-visible element
+### Clicking On Non-Visible Element
 
 Example:
 
@@ -438,7 +449,7 @@ ExceptionInfo throw+: {:response {
 dimentions are as little as it's impossible for a human to click on it. You
 should pass another selector.
 
-## Unpredictable errors in Chrome when window is not active
+### Unpredictable errors in Chrome when window is not active
 
 **Problem:** when you focus on other window, webdriver session that is run under
 Google Chrome fails.
