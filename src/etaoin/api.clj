@@ -209,7 +209,7 @@
 (defmethods get-window-handles [:chrome :phantom]
   [driver]
   (with-resp driver :get
-    [:session (:session @driver) :window :window_handles]
+    [:session (:session @driver) :window_handles]
     nil resp
     (:value resp)))
 
