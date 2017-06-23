@@ -1,4 +1,7 @@
 
+deploy:
+	lein deploy clojars
+
 toc-install:
 	npm install --save markdown-toc
 
