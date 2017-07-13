@@ -1424,13 +1424,24 @@
 (def default-interval 0.33)
 
 (defn wait
-  "Does nothing for N seconds."
+  "Sleeps for N seconds."
   ([driver sec]
    (wait sec))
   ([sec]
    (Thread/sleep (* sec 1000))))
 
 (defn wait-predicate
+  "Sleeps continuously calling a predicate until it returns true.
+  Rises a slingshot exception when timeout is reached.
+
+  Arguments:
+
+  - `pred`: a zero-argument predicate to call;
+  - `opt`: a map of optional parameters:
+  -- `:timeout` wait limit in seconds, 20 by default;
+  -- `:interval` how long to wait b/w calls, 0.33 by default;
+  -- `:message` a message that becomes a part of exception when timeout is reached."
+
   ([pred]
    (wait-predicate pred {}))
   ([pred opt]
@@ -1453,39 +1464,121 @@
                     :time-rest (- time-rest interval)
                     :times (inc times)))))))
 
-(defn wait-exists [driver q & [opt]]
+(defn wait-exists
+  "Waits until an element exists on a page (bur may not be visible though).
+
+  Arguments:
+
+  - `driver`: a driver instance;
+  - `q`: a query term (see `query`);
+  - `opt`: a map of options (see `wait-predicate`)."
+
+  [driver q & [opt]]
   (wait-predicate #(exists? driver q) opt))
 
-(defn wait-absent [driver q & [opt]]
+(defn wait-absent
+  "Waits until an element is absent.
+
+  Arguments:
+
+  - `driver`: a driver instance;
+  - `q`: a query term (see `query`);
+  - `opt`: a map of options (see `wait-predicate`)."
+
+  [driver q & [opt]]
   (let [message (format "Wait for %s element is absent" q)]
     (wait-predicate #(absent? driver q)
                     (assoc opt :message message))))
 
-(defn wait-visible [driver q & [opt]]
+(defn wait-visible
+  "Waits until an element presents and is visible.
+
+  Arguments:
+
+  - `driver`: a driver instance;
+  - `q`: a query term (see `query`);
+  - `opt`: a map of options (see `wait-predicate`)."
+
+  [driver q & [opt]]
   (let [message (format "Wait for %s element is visible" q)]
     (wait-predicate #(visible? driver q)
                     (assoc opt :message message))))
 
-(defn wait-invisible [driver q & [opt]]
+(defn wait-invisible
+  "Waits until an element presents but not visible.
+
+  Arguments:
+
+  - `driver`: a driver instance;
+  - `q`: a query term (see `query`);
+  - `opt`: a map of options (see `wait-predicate`)."
+
+  [driver q & [opt]]
   (wait-predicate #(invisible? driver q) opt))
 
-(defn wait-enabled [driver q & [opt]]
+(defn wait-enabled
+  "Waits until an element is enabled (usually an input element).
+
+  Arguments:
+
+  - `driver`: a driver instance;
+  - `q`: a query term (see `query`);
+  - `opt`: a map of options (see `wait-predicate`)."
+
+  [driver q & [opt]]
   (wait-predicate #(enabled? driver q) opt))
 
-(defn wait-disabled [driver q & [opt]]
+(defn wait-disabled
+  "Waits until an element is disabled (usually an input element).
+
+  Arguments:
+
+  - `driver`: a driver instance;
+  - `q`: a query term (see `query`);
+  - `opt`: a map of options (see `wait-predicate`)."
+
+  [driver q & [opt]]
   (wait-predicate #(disabled? driver q) opt))
 
-(defn wait-has-alert [driver & [opt]]
+(defn wait-has-alert
+  "Waits until an alert dialog appears on the screen.
+
+  Arguments:
+
+  - `driver`: a driver instance;
+  - `q`: a query term (see `query`);
+  - `opt`: a map of options (see `wait-predicate`)."
+
+  [driver & [opt]]
   (wait-predicate #(has-alert? driver) opt))
 
 (defn wait-has-text
+  "Waits until an element has text anywhere inside it (including inner HTML).
+
+  Arguments:
+
+  - `driver`: a driver instance;
+  - `q`: a query term (see `query`);
+  - `text`: a string to search;
+  - `opt`: a map of options (see `wait-predicate`)."
+
   [driver q text & [opt]]
   (let [message (format "Wait for %s element has text %s"
                         q text)]
     (wait-predicate #(has-text? driver q text)
                     (assoc opt :message message))))
 
-(defn wait-has-class [driver q class & [opt]]
+(defn wait-has-class
+  "Waits until an element has specific class.
+
+  Arguments:
+
+  - `driver`: a driver instance;
+  - `q`: a query term (see `query`);
+  - `class`: a class to search as string;
+  - `opt`: a map of options (see `wait-predicate`)."
+
+  [driver q class & [opt]]
   (wait-predicate #(has-class? driver q class) opt))
 
 (defn wait-running [driver & [opt]]
@@ -1498,6 +1591,14 @@
 ;;
 
 (defn click-visible
+  "Waits until an element becomes visible, then clicks on it.
+
+  Arguments:
+
+  - `driver`: a driver instance;
+  - `q`: a query term (see `query`);
+  - `opt`: a map of options (see `wait-predicate`)."
+
   [driver q & [opt]]
   (doto driver
     (wait-visible q opt)
@@ -1559,19 +1660,29 @@
   `(when-not (~predicate)
      ~@body))
 
-(defmacro when-not-chrome [driver & body]
+(defmacro when-not-chrome
+  "Executes the body only if a browser is NOT Chrome."
+  [driver & body]
   `(when-not-predicate #(chrome? ~driver) ~@body))
 
-(defmacro when-not-phantom [driver & body]
+(defmacro when-not-phantom
+  "Executes the body only if a browser is NOT Phantom.js."
+  [driver & body]
   `(when-not-predicate #(phantom? ~driver) ~@body))
 
-(defmacro when-not-firefox [driver & body]
+(defmacro when-not-firefox
+  "Executes the body only if a browser is NOT Firefox."
+  [driver & body]
   `(when-not-predicate #(firefox? ~driver) ~@body))
 
-(defmacro when-not-safari [driver & body]
+(defmacro when-not-safari
+  "Executes the body only if a browser is NOT Safari."
+  [driver & body]
   `(when-not-predicate #(safari? ~driver) ~@body))
 
-(defmacro when-predicate [predicate & body]
+(defmacro when-predicate
+  "Executes the body only if a predicate returns true."
+  [predicate & body]
   `(when (~predicate)
      ~@body))
 
@@ -1582,8 +1693,8 @@
 
   (def driver (chrome))
   (when-chrome driver
-    (println \"It's Chrome!\")
-"
+    (println \"It's Chrome!\")"
+
   [driver & body]
   `(when-predicate #(chrome? ~driver) ~@body))
 
