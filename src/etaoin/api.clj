@@ -1465,7 +1465,7 @@
                     :times (inc times)))))))
 
 (defn wait-exists
-  "Waits until an element exists on a page (bur may not be visible though).
+  "Waits until an element exists on a page (but may not be visible though).
 
   Arguments:
 
