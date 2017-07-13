@@ -18,6 +18,7 @@ after a mysteries note was produced on it.
 
 - [Benefits](#benefits)
 - [Capabilities](#capabilities)
+- [Who uses it?](#who-uses-it)
 - [Documentation](#documentation)
 - [Installation](#installation)
 - [Basic Usage](#basic-usage)
@@ -54,6 +55,12 @@ after a mysteries note was produced on it.
 - May either connect to a remote driver or run it on your local machine.
 - Run your unit tests directly from Emacs pressing `C-t t` as usual.
 - Can imitate human-like behaviour (delays, typos, etc).
+
+## Who uses it?
+
+- [Room Key](https://www.roomkey.com/)
+
+You are welcome to submit your company.
 
 ## Documentation
 
