@@ -1,4 +1,7 @@
 
+repl:
+	lein repl
+
 deploy:
 	lein deploy clojars
 
