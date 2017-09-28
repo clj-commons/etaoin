@@ -1320,6 +1320,9 @@
 (defn safari? [driver]
   (driver? driver :safari))
 
+(defn headless? [driver]
+  (driver? driver :headless))
+
 (defn exists? [driver q]
   (with-http-error
     (get-element-text driver q)
@@ -1687,6 +1690,11 @@
   [driver & body]
   `(when-not-predicate #(safari? ~driver) ~@body))
 
+(defmacro when-not-headless
+  "Executes the body only if a browser is NOT headless Chrome."
+  [driver & body]
+  `(when-not-predicate #(headless? ~driver) ~@body))
+
 (defmacro when-predicate
   "Executes the body only if a predicate returns true."
   [predicate & body]
@@ -1719,6 +1727,12 @@
   "Executes the body only if the driver is Safari."
   [driver & body]
   `(when-predicate #(safari? ~driver) ~@body))
+
+(defmacro when-headless
+  "Executes the body only if the driver is headless Chrome."
+  [driver & body]
+  `(when-predicate #(headless? ~driver) ~@body))
+
 
 ;;
 ;; input

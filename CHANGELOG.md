@@ -1,3 +1,5 @@
+## 0.1.7
+  * Headless Chrome support added
 
 ## 0.1.6
   * Multi-fill/clear
