@@ -25,6 +25,7 @@ after a mysteries note was produced on it.
   * [From REPL](#from-repl)
 - [Advanced Usage](#advanced-usage)
   * [Working with multiple elements](#working-with-multiple-elements)
+  * [Using headless driver](#using-headless-driver)
   * [Auto-save screenshots in case of exception](#auto-save-screenshots-in-case-of-exception)
   * [Be patient](#be-patient)
 - [Writing Integration Tests For Your Application](#writing-integration-tests-for-your-application)
@@ -177,6 +178,28 @@ Here is a example of how to get all the links from the page:
       get-link #(get-element-attr-el driver % :href)]
   (mapv get-link els))
 ;; returns ["//ru.wikipedia.org/" "//en.wikipedia.org/" etc ... ]
+```
+
+### Using headless driver
+
+Since version 59, Google Chrome officially supports headless mode. It's when it
+works without opening a UI window so it is possible to run such a driver on
+servers without a display device.
+
+Headless mode uses the standard `chromedriver`, the difference is only in
+additional parameters passed to Chrome.
+
+To use headless driver in your code, use either `(headless)` function or
+`(with-headless)` macros as well. Perhaps you will need to take more screenshots
+to see that's going on under the hood:
+
+```clojure
+(doto driver
+  ;; ... clicks, etc
+  (when-headless
+    (screenshot driver "/in/the/middle/of/test.png"))
+  ;; continue
+  )
 ```
 
 ### Auto-save screenshots in case of exception

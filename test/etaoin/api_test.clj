@@ -22,7 +22,7 @@
 
 (defn fixture-browsers [f]
   (let [url (-> "html/test.html" io/resource str)]
-    (doseq [type [:firefox :chrome :phantom :safari]]
+    (doseq [type [:firefox :chrome :phantom :safari :headless]]
       (with-driver type {} driver
         (go driver url)
         (wait-visible driver {:id :document-end})
@@ -71,6 +71,7 @@
       (-> get-url
           (str/ends-with? "?login=&password=&message=")
           is)))
+
   (testing "multiple clear"
     (doto *driver*
       (fill-multi {:simple-input 1

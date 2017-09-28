@@ -32,18 +32,25 @@
 ;; defaults
 ;;
 
-(def default-paths
-  "Default commands to launch a driver process."
-  {:firefox "geckodriver"
-   :chrome "chromedriver"
-   :phantom "phantomjs"
-   :safari "safaridriver"})
+(def defaults
+  {:firefox {:port 4444
+             :path "geckodriver"}
+   :chrome {:port 9515
+            :path "chromedriver"}
+   :phantom {:port 8910
+             :path "phantomjs"}
+   :safari {:port 4445
+            :path "safaridriver"}
+   :headless {:port 9515
+              :path "chromedriver"
+              :capabilities {:chromeOptions {:args ["--headless"]}}}})
 
-(def default-ports
-  "Default ports to launch a driver process."
-  {:firefox 4444
-   :chrome 9515
-   :phantom 8910})
+(defn deep-merge
+  [& vals]
+  (if (every? map? vals)
+    (apply merge-with deep-merge vals)
+    (last vals)))
+
 
 (def default-locator "xpath")
 (def locator-xpath "xpath")
@@ -1277,7 +1284,7 @@
 (defn discover-port
   "Finds a port for a driver type.
 
-  Takes a default one from `default-ports` map. If it's already taken,
+  Takes a default one from `defaults` map. If it's already taken,
   continues to take random ports until if finds non-busy one.
 
   Arguments:
@@ -1288,7 +1295,7 @@
 
   Returns a port as an integer."
   [type host]
-  (loop [port (or (default-ports type)
+  (loop [port (or (-> defaults (get type) :port)
                   (random-port))]
     (if (connectable? host port)
       (recur (random-port))
@@ -1312,6 +1319,9 @@
 
 (defn safari? [driver]
   (driver? driver :safari))
+
+(defn headless? [driver]
+  (driver? driver :headless))
 
 (defn exists? [driver q]
   (with-http-error
@@ -1680,6 +1690,11 @@
   [driver & body]
   `(when-not-predicate #(safari? ~driver) ~@body))
 
+(defmacro when-not-headless
+  "Executes the body only if a browser is NOT headless Chrome."
+  [driver & body]
+  `(when-not-predicate #(headless? ~driver) ~@body))
+
 (defmacro when-predicate
   "Executes the body only if a predicate returns true."
   [predicate & body]
@@ -1712,6 +1727,12 @@
   "Executes the body only if the driver is Safari."
   [driver & body]
   `(when-predicate #(safari? ~driver) ~@body))
+
+(defmacro when-headless
+  "Executes the body only if the driver is headless Chrome."
+  [driver & body]
+  `(when-predicate #(headless? ~driver) ~@body))
+
 
 ;;
 ;; input
@@ -1945,7 +1966,7 @@
 (defmethods port-args [:firefox :safari] [driver]
   ["--port" (:port @driver)])
 
-(defmethod port-args :chrome [driver]
+(defmethods port-args [:chrome :headless] [driver]
   [(str "--port=" (:port @driver))])
 
 (defmethod port-args :phantom [driver]
@@ -1972,7 +1993,7 @@
   server is run not locally but somethere in your network.
 
   -- `:port` is an integer value what HTTP port to use. It is taken
-  from the `default-ports` global map if is not passed. If there is no
+  from the `defaults` global map if is not passed. If there is no
   port in that map, a random-generated port is used.
 
   -- `:locator` is a string determs what algorithm to use by default
@@ -2008,7 +2029,7 @@
   - `opt` is an optional map with the following possible parameters:
 
   -- `:path` is a string path to a binary file to
-  launch. `default-paths` global map is used for lookup when not
+  launch. `default` global map is used for lookup when not
   passed.
 
   -- `:args` is a vector of additional arguments passed when starting
@@ -2019,10 +2040,9 @@
   [driver & [opt]]
   (let [type (:type @driver)
         path (or (:path opt)
-                 (type default-paths))
-        args (or (:args opt)
-                 [])
-        env (or (:env opt) {})
+                 (-> defaults (get type) :path))
+        args (-> opt :args (or []))
+        env (-> opt :env)
         port-args (port-args driver)
         full-args (vec (concat [path] port-args args))
         process (proc/run full-args)] ;; todo deal with env
@@ -2043,17 +2063,24 @@
 
   - `opt`: an map of the following optional parameters:
 
-  -- `:desired-capabilities` a map of desired capabilities your
-  browser should support.
+  -- `:capabilities` a map of desired capabilities your
+  browser should support;
+
+  -- `:desired-capabilities`: an alias for `:capabilities`.
 
   See https://www.w3.org/TR/webdriver/#capabilities"
   [driver & [opt]]
   (wait-running driver)
-  (let [capabilities (:desired-capabilities opt)
-        session (create-session driver capabilities)]
+  (let [type (:type @driver)
+        cap-default (-> defaults (get type) :capabilities)
+        cap (or (:capabilities opt)
+                (:desired-capabilities opt)
+                {})
+        cap-full (deep-merge cap-default cap)
+        session (create-session driver cap-full)]
     (swap! driver assoc
            :session session
-           :desired-capabilities capabilities)
+           :capabilities cap-full)
     driver))
 
 (defn disconnect-driver
@@ -2064,7 +2091,7 @@
   [driver]
   (delete-session driver)
   (swap! driver dissoc
-         :session :desired-capabilities)
+         :session :capabilities)
   driver)
 
 (defn stop-driver
@@ -2084,8 +2111,7 @@
   - `type` a keyword determines a driver type.
 
   - `opt` a map of all possible parameters that `create-driver`,
-  `run-driver` and `connect-driver` may accept.
-"
+  `run-driver` and `connect-driver` may accept."
   [type & [opt]]
   (-> type
       (create-driver opt)
@@ -2115,6 +2141,10 @@
 (def safari
   "Launches Safari driver. A shortcut for `boot-driver`."
   (partial boot-driver :safari))
+
+(def headless
+  "Launches headless Chrome driver. A shortcut for `boot-driver`."
+  (partial boot-driver :headless))
 
 (defmacro with-driver
   "Performs the body within a driver session.
@@ -2172,4 +2202,11 @@
   `with-driver`."
   [opt bind & body]
   `(with-driver :safari ~opt ~bind
+     ~@body))
+
+(defmacro with-headless
+  "Performs the body with headless Chrome session. A shortcut for
+  `with-driver`."
+  [opt bind & body]
+  `(with-driver :headless ~opt ~bind
      ~@body))
