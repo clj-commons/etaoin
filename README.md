@@ -25,6 +25,7 @@ after a mysteries note was produced on it.
   * [From REPL](#from-repl)
 - [Advanced Usage](#advanced-usage)
   * [Working with multiple elements](#working-with-multiple-elements)
+  * [Using headless driver](#using-headless-driver)
   * [Auto-save screenshots in case of exception](#auto-save-screenshots-in-case-of-exception)
   * [Be patient](#be-patient)
 - [Writing Integration Tests For Your Application](#writing-integration-tests-for-your-application)
@@ -179,7 +180,7 @@ Here is a example of how to get all the links from the page:
 ;; returns ["//ru.wikipedia.org/" "//en.wikipedia.org/" etc ... ]
 ```
 
-### Using Headless driver on the server
+### Using headless driver
 
 Since version 59, Google Chrome officially supports headless mode. It's when it
 works without opening a UI window so it is possible to run such a driver on
