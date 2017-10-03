@@ -1094,7 +1094,7 @@
   browser wraps your code into a function so avoid `function` clause
   at on the top level.
 
-  Don't forget to add `return <something>` operator if your are
+  Don't forget to add `return <something>` operator if you are
   interested in the result value.
 
   You may access arguments through the built-in `arguments`
@@ -1102,7 +1102,7 @@
   are JSON-compatible (scalars, maps, vectors).
 
   The result value is also returned trough JSON encode/decode
-  pipeline (Js objects turn to Clojure maps, arrays into vectors and
+  pipeline (JS objects turn to Clojure maps, arrays into vectors and
   so on).
 
   Arguments:
