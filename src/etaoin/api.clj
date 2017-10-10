@@ -49,8 +49,9 @@
   [& vals]
   (if (every? map? vals)
     (apply merge-with deep-merge vals)
-    (last vals)))
-
+    (if (every? sequential? vals)
+      (apply concat vals)
+      (last vals))))
 
 (def default-locator "xpath")
 (def locator-xpath "xpath")
