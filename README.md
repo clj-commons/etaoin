@@ -73,7 +73,7 @@ You are welcome to submit your company.
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.1.6"]
+[etaoin "0.1.8"]
 ```
 
 ## Basic Usage
