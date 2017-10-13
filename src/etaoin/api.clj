@@ -176,7 +176,8 @@
     nil resp
     (-> resp :value first second)))
 
-(defmethods get-active-element* [:chrome :phantom :safari]
+(defmethods get-active-element*
+  [:chrome :headless :phantom :safari]
   [driver]
   (with-resp driver :post
     [:session (:session @driver) :element :active]
@@ -220,7 +221,8 @@
     nil resp
     (:value resp)))
 
-(defmethods get-window-handles [:chrome :phantom]
+(defmethods get-window-handles
+  [:chrome :headless :phantom]
   [driver]
   (with-resp driver :get
     [:session (:session @driver) :window_handles]
@@ -256,7 +258,8 @@
     [:session (:session @driver) :window :maximize]
     nil _))
 
-(defmethods maximize [:chrome :safari]
+(defmethods maximize
+  [:chrome :headless :safari]
   [driver]
   (let [h (get-window-handle driver)]
     (with-resp driver :post
@@ -613,7 +616,8 @@
   {:arglists '([driver])}
   dispatch-driver)
 
-(defmethods mouse-btn-down [:chrome :phantom :safari]
+(defmethods mouse-btn-down
+  [:chrome :headless :phantom :safari]
   [driver]
   (with-resp driver :post
     [:session (:session @driver) :buttondown]
@@ -624,7 +628,8 @@
   {:arglists '([driver])}
   dispatch-driver)
 
-(defmethods mouse-btn-up [:chrome :phantom :safari]
+(defmethods mouse-btn-up
+  [:chrome :headless :phantom :safari]
   [driver]
   (with-resp driver :post
     [:session (:session @driver) :buttonup]
@@ -636,7 +641,8 @@
   {:arglists '([driver q] [driver x y])}
   dispatch-driver)
 
-(defmethods mouse-move-to [:chrome :phantom :safari]
+(defmethods mouse-move-to
+  [:chrome :headless :phantom :safari]
   ([driver q]
    (with-resp driver :post
      [:session (:session @driver) :moveto]
@@ -700,7 +706,8 @@
 
 (defmulti double-click-el dispatch-driver)
 
-(defmethods double-click-el [:chrome :phantom]
+(defmethods double-click-el
+  [:chrome :headless :phantom]
   [driver el]
   (with-resp driver :post
     [:session (:session @driver) :element el :doubleclick]
@@ -711,10 +718,9 @@
 
   Note:
 
-  the supported browsers are Chrome and Phantom.js. For Firefox and
-  Safari, your may try to simulate it as a `click, wait, click`
-  sequence.
-"
+  the supported browsers are (Headless) Chrome, and Phantom.js.
+  For Firefox and Safari, your may try to simulate it as a `click, wait, click`
+  sequence."
   [driver q]
   (double-click-el driver (query driver q)))
 
@@ -724,7 +730,8 @@
 
 (defmulti get-element-size-el dispatch-driver)
 
-(defmethods get-element-size-el [:chrome :phantom :safari]
+(defmethods get-element-size-el
+  [:chrome :headless :phantom :safari]
   [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :size]
@@ -752,7 +759,7 @@
 (defmulti get-element-location-el dispatch-driver)
 
 (defmethods get-element-location-el
-  [:chrome :phantom :safari]
+  [:chrome :headless :phantom :safari]
   [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :location]
@@ -928,7 +935,8 @@
 
 (defmulti get-active* dispatch-driver)
 
-(defmethods get-active* [:chrome :phantom :safari]
+(defmethods get-active*
+  [:chrome :headless :phantom :safari]
   [driver]
   (with-resp driver :get
     [:session (:session @driver) :element :active]
@@ -1215,7 +1223,9 @@
 ;; alerts
 ;;
 
-(defmulti get-alert-text dispatch-driver)
+(defmulti get-alert-text
+  "Returns a string of text that appears in alert dialog (if present)."
+  dispatch-driver)
 
 (defmethod get-alert-text :firefox
   [driver]
@@ -1225,7 +1235,8 @@
     resp
     (:value resp)))
 
-(defmethods get-alert-text [:chrome :safari]
+(defmethods get-alert-text
+  [:chrome :headless :safari]
   [driver]
   (with-resp driver :get
     [:session (:session @driver) :alert_text]
@@ -1233,7 +1244,9 @@
     resp
     (:value resp)))
 
-(defmulti dismiss-alert dispatch-driver)
+(defmulti dismiss-alert
+  "Simulates cancelling an alert dialog (pressing cross button)."
+  dispatch-driver)
 
 (defmethod dismiss-alert :firefox
   [driver]
@@ -1241,13 +1254,16 @@
     [:session (:session @driver) :alert :dismiss]
     nil _))
 
-(defmethods dismiss-alert [:chrome :safari]
+(defmethods dismiss-alert
+  [:chrome :headless :safari]
   [driver]
   (with-resp driver :post
     [:session (:session @driver) :dismiss_alert]
     nil _))
 
-(defmulti accept-alert dispatch-driver)
+(defmulti accept-alert
+  "Simulates submitting an alert dialog (pressing OK button)."
+  dispatch-driver)
 
 (defmethod accept-alert :firefox
   [driver]
@@ -1255,7 +1271,8 @@
     [:session (:session @driver) :alert :accept]
     nil _))
 
-(defmethods accept-alert [:chrome :safari]
+(defmethods accept-alert
+  [:chrome :headless :safari]
   [driver]
   (with-resp driver :post
     [:session (:session @driver) :accept_alert]
@@ -1309,27 +1326,43 @@
 (defn driver? [driver type]
   (= (dispatch-driver driver) type))
 
-(defn chrome? [driver]
+(defn chrome?
+  "Returns true if a driver is a Chrome instance."
+  [driver]
   (driver? driver :chrome))
 
-(defn firefox? [driver]
+(defn firefox?
+  "Returns true if a driver is a Firefox instance."
+  [driver]
   (driver? driver :firefox))
 
-(defn phantom? [driver]
+(defn phantom?
+  "Returns true if a driver is a Phantom.js instance."
+  [driver]
   (driver? driver :phantom))
 
-(defn safari? [driver]
+(defn safari?
+  "Returns true if a driver is a Safari instance."
+  [driver]
   (driver? driver :safari))
 
-(defn headless? [driver]
+(defn headless?
+  "Returns true if a driver is a Headless Chrome instance."
+  [driver]
   (driver? driver :headless))
 
-(defn exists? [driver q]
+(defn exists?
+  "Returns true if an element exists on the page.
+
+  Keep in mind it does not validates whether the element is visible,
+  clickable and so on."
+  [driver q]
   (with-http-error
     (get-element-text driver q)
     true))
 
-(def absent? (complement exists?))
+(def ^{:doc "Oppsite to `exists?`."}
+  absent? (complement exists?))
 
 (defmulti displayed-el?
   "Checks whether an element is displayed by its identifier.
@@ -1338,8 +1371,7 @@
   have to check some common cases manually (CSS display, visibility,
   etc).
 
-  Returns true or false.
-"
+  Returns true or false."
   dispatch-driver)
 
 (defmethod displayed-el? :default
@@ -1366,11 +1398,14 @@
   [driver q]
   (displayed-el? driver (query driver q)))
 
-(defn visible? [driver q]
+(defn visible?
+  "Checks whether an element is visible on the page."
+  [driver q]
   (and (exists? driver q)
        (displayed? driver q)))
 
-(def invisible? (complement visible?))
+(def ^{:doc "Oppsite to `visible?`."}
+  invisible? (complement visible?))
 
 (defn enabled-el? [driver el]
   (with-resp driver :get
@@ -1387,6 +1422,10 @@
 (def disabled? (complement enabled?))
 
 (defn has-text?
+  "Returns true if text appears anywhere on a page.
+
+  When a query expression is passed, tries to find that text
+  into the first element found with that term."
   ([driver text]
    (has-text? driver {:tag :*} text))
   ([driver q text]
@@ -1408,24 +1447,31 @@
         true)
       false))))
 
-(defn has-class-el? [driver el class]
+(defn has-class-el?
+  [driver el class]
   (let [classes (get-element-attr-el driver el "class")]
     (cond
       (nil? classes) false
       (string? classes)
       (str/includes? classes (name class)))))
 
-(defn has-class? [driver q class]
+(defn has-class?
+  "Checks whether an element has a specific class."
+  [driver q class]
   (has-class-el? driver (query driver q) class))
 
-(def has-no-class? (complement has-class?))
+(def ^{:doc "Opposite to `has-class?`."}
+  has-no-class? (complement has-class?))
 
-(defn has-alert? [driver]
+(defn has-alert?
+  "Checks if there is an alert dialog opened on the page."
+  [driver]
   (with-http-error
     (get-alert-text driver)
     true))
 
-(def has-no-alert? (complement has-alert?))
+(def ^{:doc "Opposite to `has-alert?`."}
+  has-no-alert? (complement has-alert?))
 
 ;;
 ;; wait functions
@@ -1621,7 +1667,8 @@
 
 (defmulti touch-tap dispatch-driver)
 
-(defmethod touch-tap :chrome
+(defmethods touch-tap
+  [:chrome :headless]
   [driver q]
   (with-resp driver :post
     [:session (:session @driver) :touch :click]
@@ -1629,7 +1676,8 @@
 
 (defmulti touch-down dispatch-driver)
 
-(defmethod touch-down :chrome
+(defmethods touch-down
+  [:chrome :headless]
   ([driver q]
    (let [{:keys [x y]}
          (get-element-location driver q)]
@@ -1641,7 +1689,8 @@
 
 (defmulti touch-up dispatch-driver)
 
-(defmethod touch-up :chrome
+(defmethod touch-up
+  [:chrome :headless]
   ([driver q]
    (let [{:keys [x y]}
          (get-element-location driver q)]
@@ -1653,7 +1702,8 @@
 
 (defmulti touch-move dispatch-driver)
 
-(defmethod touch-move :chrome
+(defmethod touch-move
+  [:chrome :headless]
   ([driver q]
    (let [{:keys [x y]}
          (get-element-location driver q)]
@@ -1747,7 +1797,8 @@
   {:arglists '([driver keys])}
   dispatch-driver)
 
-(defmethod fill-active* :chrome
+(defmethod fill-active*
+  [:chrome :headless]
   [driver keys]
   (with-resp driver :post
     [:session (:session @driver) :keys]
@@ -1964,10 +2015,14 @@
   {:arglists '([driver])}
   dispatch-driver)
 
-(defmethods port-args [:firefox :safari] [driver]
+(defmethods port-args
+  [:firefox :safari]
+  [driver]
   ["--port" (:port @driver)])
 
-(defmethods port-args [:chrome :headless] [driver]
+(defmethods port-args
+  [:chrome :headless]
+  [driver]
   [(str "--port=" (:port @driver))])
 
 (defmethod port-args :phantom [driver]
@@ -1985,7 +2040,7 @@
   Arguments:
 
   - `type` is a keyword determines what driver to use. The supported
-  browsers are `:firefox`, `:chrome`, `:phantom` and `:safari`.
+  browsers are `:firefox`, `:chrome`, `:headless`, `:phantom` and `:safari`.
 
   - `opt` is a map with additional options for a driver. The supported
   options are:
