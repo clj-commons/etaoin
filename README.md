@@ -59,7 +59,7 @@ after a mysteries note was produced on it.
 
 ## Who uses it?
 
-- [Flyerbee](flyerbee.com)
+- [Flyerbee](https://www.flyerbee.com/)
 - [Room Key](https://www.roomkey.com/)
 
 You are welcome to submit your company.
