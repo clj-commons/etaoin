@@ -1487,6 +1487,15 @@
   ([sec]
    (Thread/sleep (* sec 1000))))
 
+(defmacro with-wait
+  "Executes the body waiting for n seconds before each form.
+  Returns a value of the last form. Use that macros to perform
+  a bunch of actions slowly. Some SPA applications need extra time
+  to re-render the content."
+  [n & body]
+  (let [combo (interleave (repeat `(wait ~n)) body)]
+    `(do ~@combo)))
+
 (defn wait-predicate
   "Sleeps continuously calling a predicate until it returns true.
   Rises a slingshot exception when timeout is reached.

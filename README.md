@@ -27,7 +27,7 @@ after a mysteries note was produced on it.
   * [Working with multiple elements](#working-with-multiple-elements)
   * [Using headless driver](#using-headless-driver)
   * [Auto-save screenshots in case of exception](#auto-save-screenshots-in-case-of-exception)
-  * [Be patient](#be-patient)
+  * [Be patient (wait, with-wait etc)](#be-patient-wait-with-wait-etc)
 - [Writing Integration Tests For Your Application](#writing-integration-tests-for-your-application)
   * [Basic fixture](#basic-fixture)
   * [Multi-Driver Fixtures](#multi-driver-fixtures)
@@ -74,7 +74,7 @@ You are welcome to submit your company.
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.1.8"]
+[etaoin "0.1.8-SNAPSHOT"]
 ```
 
 ## Basic Usage
@@ -225,13 +225,35 @@ An exception will rise, but in `/Users/ivan/artifacts` there will be two files:
 
 The filename template is `<browser>-<host>-<port>-<datetime>.ext`.
 
-### Be patient
+### Be patient (wait, with-wait etc)
 
 The main difference between a program and a human is that the first one
 operates very fast. It means so fast, that sometimes a browser cannot render new
 HTML in time. So after each action you need to put `wait-<something>` function
 that just polls a browser checking for a predicate. O just `(wait <seconds>)` if
 you don't care about optimization.
+
+The `with-wait` macro might be helpful when you need to prepend each action
+with `(wait n)`. For example, the following form
+
+```clojure
+(with-chrome {} driver
+  (with-wait 3
+    (go driver "http://site.com")
+    (click driver {:id "search_button"})))
+```
+
+turns into something like this:
+
+```clojure
+(with-chrome {} driver
+  (wait 3)
+  (go driver "http://site.com")
+  (wait 3)
+  (click driver {:id "search_button"}))
+```
+
+and thus returns the result of the last form of the original body.
 
 ## Writing Integration Tests For Your Application
 

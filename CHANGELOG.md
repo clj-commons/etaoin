@@ -3,6 +3,7 @@
 ## 0.1.8-SNAPSHOT
   * `:headless` case added to the most of the multi-methods.
   * more docstrings added
+  * `with-wait` macros added
 
 ## 0.1.8
   * Fixed a deep merge issue when running Headless Chrome (thank
