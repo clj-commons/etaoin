@@ -233,7 +233,7 @@
   [driver handle]
   (with-resp driver :post
     [:session (:session @driver) :window]
-    {:handle handle} _))
+    {:name handle} _))
 
 (defmulti close-window
   "Closes the current browser window."
