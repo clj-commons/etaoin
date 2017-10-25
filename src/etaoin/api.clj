@@ -229,13 +229,24 @@
     nil resp
     (:value resp)))
 
-(defn switch-window
+(defmulti switch-window
   "Switches a browser to another window."
   {:arglists '([driver handle])}
+  dispatch-driver)
+
+(defmethod switch-window
+  :default
   [driver handle]
   (with-resp driver :post
     [:session (:session @driver) :window]
     {:handle handle} _))
+
+(defmethods switch-window
+  [:chrome :headless]
+  [driver handle]
+  (with-resp driver :post
+    [:session (:session @driver) :window]
+    {:name handle} _))
 
 (defmulti close-window
   "Closes the current browser window."
