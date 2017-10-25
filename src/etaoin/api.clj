@@ -239,7 +239,7 @@
   [driver handle]
   (with-resp driver :post
     [:session (:session @driver) :window]
-    {:handle handle} _))
+    {:name handle} _))
 
 (defmethods switch-window
   [:chrome :headless]
