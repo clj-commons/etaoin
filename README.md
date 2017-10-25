@@ -2,6 +2,7 @@
 [url-wiki]: https://en.wikipedia.org/wiki/Etaoin_shrdlu#Literature
 [url-tests]: https://github.com/igrishaev/etaoin/blob/master/test/etaoin/api_test.clj
 [url-doc]: http://grishaev.me/etaoin/
+[url-slack]: https://clojurians.slack.com/messages/C7KDM0EKW/
 
 # Etaion
 
@@ -62,11 +63,12 @@ after a mysteries note was produced on it.
 - [Flyerbee](https://www.flyerbee.com/)
 - [Room Key](https://www.roomkey.com/)
 
-You are welcome to submit your company.
+You are welcome to submit your company into that list.
 
 ## Documentation
 
 - [API docs][url-doc]
+- [Slack channel][url-slack]
 - [Unit tests][url-tests]
 
 ## Installation
