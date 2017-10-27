@@ -1809,35 +1809,31 @@
 ;; input
 ;;
 
-(defn- join-str
-  [text more]
-  (apply str text more))
+(defn- make-input* [text & more]
+  (mapv str (apply str text more)))
 
 (defmulti fill-active*
-  {:arglists '([driver keys])}
+  {:arglists '([driver text & more])}
   dispatch-driver)
 
-(defmethod fill-active*
+(defmethods fill-active*
   [:chrome :headless]
-  [driver keys]
+  [driver text & more]
   (with-resp driver :post
     [:session (:session @driver) :keys]
-    {:value (vec keys)} _))
+    {:value (apply make-input* text more)} _))
 
 (defn fill-active
   "Fills an active element with keys."
   [driver text & more]
-  (fill-active* driver (join-str text more)))
+  (apply fill-active* driver text more))
 
 (defn fill-el
   "Fills an element with text by its identifier."
-  [driver el text]
-  (let [keys (if (char? text)
-               (str text)
-               text)]
-    (with-resp driver :post
-      [:session (:session @driver) :element el :value]
-      {:value (vec keys)} _)))
+  [driver el text & more]
+  (with-resp driver :post
+    [:session (:session @driver) :element el :value]
+    {:value (apply make-input* text more)} _))
 
 (defn fill
   "Fills an element found with a query with a given text.
@@ -1848,7 +1844,7 @@
   (fill driver :simple-input \"foo\" \"baz\" 1)
   ;; fills the input with  \"foobaz1\""
   [driver q text & more]
-  (fill-el driver (query driver q) (join-str text more)))
+  (apply fill-el driver (query driver q) text more))
 
 (defn fill-multi
   "Fills multiple inputs in batch.
