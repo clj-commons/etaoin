@@ -26,6 +26,7 @@ after a mysteries note was produced on it.
   * [From REPL](#from-repl)
 - [Advanced Usage](#advanced-usage)
   * [Working with multiple elements](#working-with-multiple-elements)
+  * [File uploading](#file-uploading)
   * [Using headless driver](#using-headless-driver)
   * [Auto-save screenshots in case of exception](#auto-save-screenshots-in-case-of-exception)
   * [Be patient (wait, with-wait etc)](#be-patient-wait-with-wait-etc)
