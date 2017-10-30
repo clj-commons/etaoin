@@ -183,6 +183,27 @@ Here is a example of how to get all the links from the page:
 ;; returns ["//ru.wikipedia.org/" "//en.wikipedia.org/" etc ... ]
 ```
 
+### File uploading
+
+When selecting files to upload, you are not allowed to navigate through the
+system file dialog. Instead, use the `upload-file` function to attach a local
+file to a file input widget. The function takes either a full path as a string
+or a native `java.io.File` instance. The file should exist or you'll get an
+exception otherwise. Usage example:
+
+```clojure
+(def driver (chrome))
+
+;; open a web page that serves uploaded files
+(go driver "http://nervgh.github.io/pages/angular-file-upload/examples/simple/")
+
+;; search for input widgets, there are a couple of them
+(query-all driver {:tag :input :type :file})
+
+;; upload an image with the first one
+(upload-file driver {:tag :input :type :file} "/Users/ivan/Downloads/sample.png")
+```
+
 ### Using headless driver
 
 Since version 59, Google Chrome officially supports headless mode. It's when it

@@ -1912,6 +1912,38 @@
     (clear-el driver (query driver q))))
 
 ;;
+;; file upload
+;;
+
+(defmulti upload-file
+  "Attaches a local file to a file input field.
+
+  Arguments:
+
+  - `q` is a query term that refers to a file input;
+  - `file` is either a string or java.io.File object
+  that references a local file. The file should exist.
+
+  Under the hood, it sends the file's name as a sequence of keys
+  to the input."
+  (fn [driver q file]
+    (type file)))
+
+(defmethod upload-file String
+  [driver q path]
+  (upload-file driver q (io/file path)))
+
+(defmethod upload-file java.io.File
+  [driver q file]
+  (let [path (.getAbsolutePath file)
+        message (format "File %s does not exist" path)]
+    (if (.exists file)
+      (fill driver q path)
+      (throw+ {:type :etaoin/file
+               :message message
+               :driver @driver}))))
+
+;;
 ;; submit
 ;;
 
