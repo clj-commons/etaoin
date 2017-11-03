@@ -1917,8 +1917,28 @@
                         (conj params "html"))]
     (log/debugf "Writing screenshot: %s" path-img)
     (log/debugf "Writing HTML source: %s" path-src)
+    (clojure.java.io/make-parents path-img)
     (screenshot driver path-img)
     (spit path-src (get-source driver))))
+
+(def current-driver-map (atom nil))
+(def original-reporter (atom nil))
+
+(defmulti reporter :type)
+
+(defn- handle-problem [report-map]
+  (let [{:keys [driver opts]} @current-driver-map]
+    (postmortem-handler driver opts))
+  (@original-reporter report-map))
+
+(defmethod reporter :default [report-map]
+  (@original-reporter report-map))
+
+(defmethod reporter :error [report-map]
+  (handle-problem report-map))
+
+(defmethod reporter :fail [report-map]
+  (handle-problem report-map))
 
 (defmacro with-postmortem
   "Wraps the body with postmortem handler. If any error occurs,
@@ -1944,11 +1964,15 @@
   filenames unique. Default is \"yyyy-MM-dd-hh-mm-ss\". See Oracle
   Java `SimpleDateFormat` class manual for more patterns."
   [driver opt & body]
-  `(try
-     ~@body
-     (catch Exception e#
-       (postmortem-handler ~driver ~opt)
-       (throw e#))))
+  `(do
+     (reset! original-reporter clojure.test/report)
+     (reset! current-driver-map {:driver ~driver :opts ~opt})
+     (binding [clojure.test/report reporter]
+       (try
+         ~@body
+         (finally (do
+                    (reset! current-driver-map nil)
+                    (reset! original-reporter nil)))))))
 
 ;;
 ;; driver management
