@@ -140,25 +140,38 @@
     nil resp
     (:value resp)))
 
-(defn create-session
+(defmulti create-session
   "Initiates a new session for a driver. Opens a browser window as a
   side-effect. All the further requests are made within specific
   session. Some drivers may work with only one active session. Returns
   a long string identifier."
+  dispatch-driver)
+
+(defmethod create-session :default
   [driver & [capabilities]]
   (with-resp driver
-    :post
-    [:session]
-    {:desiredCapabilities (or capabilities {})}
-    result
-    (:sessionId result)))
+             :post
+             [:session]
+             {:desiredCapabilities (or capabilities {})}
+             result
+             (:sessionId result)))
+
+(defmethod create-session :firefox
+  [driver & [capabilities]]
+  (with-resp driver
+             :post
+             [:session]
+             {:desiredCapabilities (or capabilities {})}
+             result
+             (get-in result [:value :sessionId])))
 
 (defn delete-session [driver]
   "Deletes a session. Closes a browser window."
-  (with-resp driver
-    :delete
-    [:session (:session @driver)]
-    nil _))
+  (if-not (nil? (:session @driver))
+    (with-resp driver
+      :delete
+      [:session (:session @driver)]
+      nil _)))
 
 ;;
 ;; actice element
@@ -693,10 +706,20 @@
     [:session (:session @driver) :element el :click]
     nil _))
 
-(defn click
+(declare wait)
+
+(defmulti click
   "Clicks on an element (a link, button, etc)."
+  dispatch-driver)
+
+(defmethod click :default
   [driver q]
   (click-el driver (query driver q)))
+
+(defmethod click :safari
+  [driver q]
+  (click-el driver (query driver q))
+  (wait driver 0.1))
 
 (defmulti double-click-el dispatch-driver)
 
@@ -1758,8 +1781,9 @@
   [driver text & more]
   (fill-active* driver (join-str text more)))
 
-(defn fill-el
-  "Fills an element with text by its identifier."
+(defmulti fill-el dispatch-driver)
+
+(defmethod fill-el :default
   [driver el text]
   (let [keys (if (char? text)
                (str text)
@@ -1767,6 +1791,15 @@
     (with-resp driver :post
       [:session (:session @driver) :element el :value]
       {:value (vec keys)} _)))
+
+(defmethod fill-el :firefox
+  [driver el text]
+  (let [keys (if (char? text)
+               (str text)
+               text)]
+    (with-resp driver :post
+               [:session (:session @driver) :element el :value]
+               {:text keys} _)))
 
 (defn fill
   "Fills an element found with a query with a given text.
