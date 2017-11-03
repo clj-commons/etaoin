@@ -1324,7 +1324,7 @@
 
   Returns a port as an integer."
   [type host]
-  (loop [port (or (-> defaults (get type) :port)
+  (loop [port (or (get-in defaults [type :port])
                   (random-port))]
     (if (connectable? host port)
       (recur (random-port))
@@ -2141,12 +2141,9 @@
 
   -- `:env` is a map with system ENV variables. Keys are turned to
   upper-case strings."
-  [driver & [opt]]
+  [driver & [{:keys [path args env]}]]
   (let [type (:type @driver)
-        path (or (:path opt)
-                 (-> defaults (get type) :path))
-        args (-> opt :args (or []))
-        env (-> opt :env)
+        path (or path (get-in defaults [type :path]))
         port-args (port-args driver)
         full-args (vec (concat [path] port-args args))
         process (proc/run full-args)] ;; todo deal with env
