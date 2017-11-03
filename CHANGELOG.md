@@ -1,5 +1,11 @@
 [adam]: https://github.com/AdamFrey
 
+## 0.1.8-SNAPSHOT
+  * `:headless` case added to the most of the multi-methods.
+  * more docstrings added
+  * `with-wait` macros added
+  * file upload function added
+
 ## 0.1.8
   * Fixed a deep merge issue when running Headless Chrome (thank
     you [Adam][adam]).

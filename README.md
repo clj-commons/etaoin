@@ -2,6 +2,7 @@
 [url-wiki]: https://en.wikipedia.org/wiki/Etaoin_shrdlu#Literature
 [url-tests]: https://github.com/igrishaev/etaoin/blob/master/test/etaoin/api_test.clj
 [url-doc]: http://grishaev.me/etaoin/
+[url-slack]: https://clojurians.slack.com/messages/C7KDM0EKW/
 
 # Etaion
 
@@ -25,9 +26,10 @@ after a mysteries note was produced on it.
   * [From REPL](#from-repl)
 - [Advanced Usage](#advanced-usage)
   * [Working with multiple elements](#working-with-multiple-elements)
+  * [File uploading](#file-uploading)
   * [Using headless driver](#using-headless-driver)
   * [Auto-save screenshots in case of exception](#auto-save-screenshots-in-case-of-exception)
-  * [Be patient](#be-patient)
+  * [Be patient (wait, with-wait etc)](#be-patient-wait-with-wait-etc)
 - [Writing Integration Tests For Your Application](#writing-integration-tests-for-your-application)
   * [Basic fixture](#basic-fixture)
   * [Multi-Driver Fixtures](#multi-driver-fixtures)
@@ -59,13 +61,15 @@ after a mysteries note was produced on it.
 
 ## Who uses it?
 
+- [Flyerbee](https://www.flyerbee.com/)
 - [Room Key](https://www.roomkey.com/)
 
-You are welcome to submit your company.
+You are welcome to submit your company into that list.
 
 ## Documentation
 
 - [API docs][url-doc]
+- [Slack channel][url-slack]
 - [Unit tests][url-tests]
 
 ## Installation
@@ -73,7 +77,7 @@ You are welcome to submit your company.
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.1.8"]
+[etaoin "0.1.8-SNAPSHOT"]
 ```
 
 ## Basic Usage
@@ -180,6 +184,27 @@ Here is a example of how to get all the links from the page:
 ;; returns ["//ru.wikipedia.org/" "//en.wikipedia.org/" etc ... ]
 ```
 
+### File uploading
+
+When selecting files to upload, you are not allowed to navigate through the
+system file dialog. Instead, use the `upload-file` function to attach a local
+file to a file input widget. The function takes either a full path as a string
+or a native `java.io.File` instance. The file should exist or you'll get an
+exception otherwise. Usage example:
+
+```clojure
+(def driver (chrome))
+
+;; open a web page that serves uploaded files
+(go driver "http://nervgh.github.io/pages/angular-file-upload/examples/simple/")
+
+;; search for input widgets, there are a couple of them
+(query-all driver {:tag :input :type :file})
+
+;; upload an image with the first one
+(upload-file driver {:tag :input :type :file} "/Users/ivan/Downloads/sample.png")
+```
+
 ### Using headless driver
 
 Since version 59, Google Chrome officially supports headless mode. It's when it
@@ -224,13 +249,35 @@ An exception will rise, but in `/Users/ivan/artifacts` there will be two files:
 
 The filename template is `<browser>-<host>-<port>-<datetime>.ext`.
 
-### Be patient
+### Be patient (wait, with-wait etc)
 
 The main difference between a program and a human is that the first one
 operates very fast. It means so fast, that sometimes a browser cannot render new
 HTML in time. So after each action you need to put `wait-<something>` function
 that just polls a browser checking for a predicate. O just `(wait <seconds>)` if
 you don't care about optimization.
+
+The `with-wait` macro might be helpful when you need to prepend each action
+with `(wait n)`. For example, the following form
+
+```clojure
+(with-chrome {} driver
+  (with-wait 3
+    (go driver "http://site.com")
+    (click driver {:id "search_button"})))
+```
+
+turns into something like this:
+
+```clojure
+(with-chrome {} driver
+  (wait 3)
+  (go driver "http://site.com")
+  (wait 3)
+  (click driver {:id "search_button"}))
+```
+
+and thus returns the result of the last form of the original body.
 
 ## Writing Integration Tests For Your Application
 
