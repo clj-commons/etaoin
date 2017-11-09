@@ -19,6 +19,8 @@
   (:require [etaoin.proc :as proc]
             [etaoin.client :as client]
             [etaoin.keys :as keys]
+            [etaoin.util :refer [defmethods deep-merge]]
+            [etaoin.driver :as drv]
             [clojure.data.codec.base64 :as b64]
             [clojure.tools.logging :as log]
             [clojure.java.io :as io]
@@ -45,14 +47,6 @@
               :path "chromedriver"
               :capabilities {:chromeOptions {:args ["--headless"]}}}})
 
-(defn deep-merge
-  [& vals]
-  (if (every? map? vals)
-    (apply merge-with deep-merge vals)
-    (if (every? sequential? vals)
-      (apply concat vals)
-      (last vals))))
-
 (def default-locator "xpath")
 (def locator-xpath "xpath")
 (def locator-css "css selector")
@@ -60,13 +54,6 @@
 ;;
 ;; utils
 ;;
-
-(defmacro defmethods
-  "Declares multimethods in batch. For each dispatch value from
-  dispatch-vals, creates a new method."
-  [multifn dispatch-vals & fn-tail]
-  `(doseq [dispatch-val# ~dispatch-vals]
-     (defmethod ~multifn dispatch-val# ~@fn-tail)))
 
 (defn random-port
   "Returns a random port skiping the first 1024 ones."
@@ -1310,7 +1297,7 @@
   (connectable? (:host @driver)
                 (:port @driver)))
 
-(defn discover-port
+(defn discover-port ;; todo move to utils
   "Finds a port for a driver type.
 
   Takes a default one from `defaults` map. If it's already taken,
@@ -2058,24 +2045,6 @@
   [host port]
   (format "http://%s:%s" host port))
 
-(defmulti port-args
-  "Returns a vector of port arguments specific for each driver type."
-  {:arglists '([driver])}
-  dispatch-driver)
-
-(defmethods port-args
-  [:firefox :safari]
-  [driver]
-  ["--port" (:port @driver)])
-
-(defmethods port-args
-  [:chrome :headless]
-  [driver]
-  [(str "--port=" (:port @driver))])
-
-(defmethod port-args :phantom [driver]
-  ["--webdriver" (:port @driver)])
-
 (defn create-driver
   "Creates a new driver instance.
 
@@ -2103,7 +2072,7 @@
   -- `:locator` is a string determs what algorithm to use by default
   when finding elements on a page. `default-locator` variable is used
   if not passed."
-  [type & [opt]]
+  [type & [opt]] ;; todo move port and host to create-driver
   (let [driver (atom {})
         host (or (:host opt) "127.0.0.1")
         port (or (:port opt)
@@ -2140,18 +2109,25 @@
   a process.
 
   -- `:env` is a map with system ENV variables. Keys are turned to
-  upper-case strings."
-  [driver & [{:keys [path args env]}]]
-  (let [type (:type @driver)
+  upper-case strings.
+
+  -- `size` is a vector of two integers specifying initial window size."
+
+  [driver & [{:keys [path args env size]}]] ;; todo process env
+  (let [{:keys [type port]} @driver
+        [with height] size
         path (or path (get-in defaults [type :path]))
-        port-args (port-args driver)
-        full-args (vec (concat [path] port-args args))
-        process (proc/run full-args)] ;; todo deal with env
+        _ (swap! driver drv/set-path path) ;; todo get rid of atom storage
+        _ (swap! driver drv/set-port port)
+        _ (when size
+            (swap! driver drv/set-window-size with height))
+        _ (swap! driver drv/set-args args)
+        proc-args (drv/get-args @driver)
+        _ (log/debugf "Starting process: %s" (str/join \space proc-args))
+        process (proc/run proc-args)]
     (swap! driver assoc
            :env env
-           :args full-args
            :process process)
-    (log/debugf "Started process: %s" (str/join \space full-args))
     driver))
 
 (defn connect-driver
@@ -2173,15 +2149,12 @@
   [driver & [opt]]
   (wait-running driver)
   (let [type (:type @driver)
-        cap-default (-> defaults (get type) :capabilities)
-        cap (or (:capabilities opt)
-                (:desired-capabilities opt)
-                {})
-        cap-full (deep-merge cap-default cap)
-        session (create-session driver cap-full)]
-    (swap! driver assoc
-           :session session
-           :capabilities cap-full)
+        _ (swap! driver drv/set-capabilities (get-in defaults [type :capabilities]))
+        _ (swap! driver drv/set-capabilities (:capabilities opt))
+        _ (swap! driver drv/set-capabilities (:desired-capabilities opt))
+        caps (:capabilities @driver)
+        session (create-session driver caps)]
+    (swap! driver assoc :session session)
     driver))
 
 (defn disconnect-driver
