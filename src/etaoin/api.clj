@@ -138,7 +138,8 @@
     [:session]
     {:desiredCapabilities (or capabilities {})}
     result
-    (:sessionId result)))
+    (or (:sessionId result)             ;; default
+        (:sessionId (:value result))))) ;; firefox
 
 (defn delete-session [driver]
   "Deletes a session. Closes a browser window."

@@ -110,11 +110,10 @@
   {:arglists '([driver w h])}
   dispatch-driver)
 
-;; todo unsure about it
-#_(defmethod set-window-size
+(defmethod set-window-size
   :default
   [driver w h]
-  (log/debugf "Your browser doesn't support window size arguments")
+  (log/debugf "Setting window size for that browser has not been implemented yet.")
   driver)
 
 (defmethods set-window-size
