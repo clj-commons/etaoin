@@ -1,5 +1,11 @@
 [adam]: https://github.com/AdamFrey
 
+## 0.1.9
+  * `utils` and `driver` namespaces were added;
+  * `:size` parameter is accepted to set window size;
+  * `session` field is processed properly for firefox;
+  * some internal refactoring.
+
 ## 0.1.8-SNAPSHOT
   * `:headless` case added to the most of the multi-methods.
   * more docstrings added
