@@ -249,6 +249,42 @@ An exception will rise, but in `/Users/ivan/artifacts` there will be two files:
 
 The filename template is `<browser>-<host>-<port>-<datetime>.ext`.
 
+### Additional paremeters
+
+When running a driver instance, a map of additional parameters might be passed
+to tweak the browser's behaviour:
+
+```clojure
+(def driver (chrome {:path "/path/to/driver/binary"}))
+```
+
+Below, here is a map of parameters the library support. All of them might be
+skipped or have nil values. Some of them, if not passed, are taken from the
+`defaults` map.
+
+```clojure
+{;; Host and port for webdriver's process. Both are taken from defaults
+ ;; when are not passed. If you pass a port that has been already taken,
+ ;; the library will try to take a random one instead.
+ :host "127.0.0.1"
+ :port 9999
+
+ ;; Path to webdriver's binary file. Taken from defaults when not passed.
+ :path "/Users/ivan/Downloads/geckodriver"
+
+ ;; Extra command line arguments sent webdriver's process.
+ :args ["-b" "/path/to/firefox/binary"]
+
+ ;; Env variables sent to the driver's process. Not processed yet.
+ :env {:MOZ_CRASHREPORTER_URL "http://test.com"}
+
+ ;; Initial window size.
+ :size [1024 680]
+
+ ;; Driver-specific options. Make sure you have read the docs before setting them.
+ :capabilities {:chromeOptions {:args ["--headless"]}}}
+```
+
 ### Be patient (wait, with-wait etc)
 
 The main difference between a program and a human is that the first one
