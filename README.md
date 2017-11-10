@@ -29,7 +29,7 @@ after a mysteries note was produced on it.
   * [File uploading](#file-uploading)
   * [Using headless driver](#using-headless-driver)
   * [Auto-save screenshots in case of exception](#auto-save-screenshots-in-case-of-exception)
-  * [Additional paremeters](#additional-paremeters)
+  * [Additional parameters](#additional-parameters)
   * [Be patient (wait, with-wait etc)](#be-patient-wait-with-wait-etc)
 - [Writing Integration Tests For Your Application](#writing-integration-tests-for-your-application)
   * [Basic fixture](#basic-fixture)
@@ -250,7 +250,7 @@ An exception will rise, but in `/Users/ivan/artifacts` there will be two files:
 
 The filename template is `<browser>-<host>-<port>-<datetime>.ext`.
 
-### Additional paremeters
+### Additional parameters
 
 When running a driver instance, a map of additional parameters might be passed
 to tweak the browser's behaviour:
