@@ -29,6 +29,7 @@ after a mysteries note was produced on it.
   * [File uploading](#file-uploading)
   * [Using headless driver](#using-headless-driver)
   * [Auto-save screenshots in case of exception](#auto-save-screenshots-in-case-of-exception)
+  * [Additional paremeters](#additional-paremeters)
   * [Be patient (wait, with-wait etc)](#be-patient-wait-with-wait-etc)
 - [Writing Integration Tests For Your Application](#writing-integration-tests-for-your-application)
   * [Basic fixture](#basic-fixture)
