@@ -149,3 +149,6 @@
   :firefox
   [driver url]
   (set-options-args driver ["--new-window" url]))
+
+;; Don't know why but Chrome ignores all the --new-window, --app
+;; or --google-base-url parameters when starting.
