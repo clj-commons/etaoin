@@ -273,8 +273,12 @@ skipped or have nil values. Some of them, if not passed, are taken from the
  ;; Path to webdriver's binary file. Taken from defaults when not passed.
  :path "/Users/ivan/Downloads/geckodriver"
 
+ ;; Extra command line arguments sent to the browser's process. See your browser's
+ ;; supported flags.
+ :args ["--incognito" "--app" "http://example.com"]
+
  ;; Extra command line arguments sent to the webdriver's process.
- :args ["-b" "/path/to/firefox/binary"]
+ :args-driver ["-b" "/path/to/firefox/binary"]
 
  ;; Env variables sent to the driver's process. Not processed yet.
  :env {:MOZ_CRASHREPORTER_URL "http://test.com"}

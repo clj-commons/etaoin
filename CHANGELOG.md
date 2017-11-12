@@ -2,6 +2,7 @@
 
 ## 0.1.9-SNAPSHOT
   * initial URL parameter added for FF
+  * args parameters naming
 
 ## 0.1.9
   * `utils` and `driver` namespaces were added;
