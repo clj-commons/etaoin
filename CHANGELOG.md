@@ -1,5 +1,8 @@
 [adam]: https://github.com/AdamFrey
 
+## 0.1.9-SNAPSHOT
+  * initial URL parameter added for FF
+
 ## 0.1.9
   * `utils` and `driver` namespaces were added;
   * `:size` parameter is accepted to set window size;
