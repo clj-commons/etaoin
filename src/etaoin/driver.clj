@@ -24,15 +24,22 @@
   [seq x]
   (cons x seq))
 
-(defn set-args
-  "Sets browser's command line arguments."
-  [driver args]
-  (update driver :args concat args))
+(defn append-args
+  [args extra]
+  (concat args extra))
+
+(defn prepend-args
+  [args extra]
+  (concat extra args))
 
 (defn set-path
   "Sets path to the driver's binary file."
   [driver path]
-  (update driver :args prepend path))
+  (update driver :args prepend-args [path]))
+
+(defn set-args
+  [driver args]
+  (update driver :args append-args args))
 
 (defn get-args
   [driver]
@@ -62,32 +69,6 @@
   [driver caps]
   (update driver :capabilities deep-merge caps))
 
-(defmulti set-options-args
-  "Adds command line arguments for options object
-  (chromeOptions, FirefoxOptions, etc)."
-  {:arglists '([driver args])}
-  dispatch-driver)
-
-(defmethod set-options-args
-  :default
-  [driver args]
-  (log/debugf "Your browser doesn't support setting options.")
-  driver)
-
-(defmethods set-options-args
-  [:chrome :headless]
-  [driver args]
-  (update-in driver
-             [:capabilities :chromeOptions :args]
-             concat args))
-
-(defmethod set-options-args
-  :firefox
-  [driver args]
-  (update-in driver
-             [:capabilities :FirefoxOptions :args]
-             concat args))
-
 ;; https://github.com/SeleniumHQ/selenium/blob/master/py/selenium/webdriver/firefox/options.py
 (defmulti options-name dispatch-driver)
 
@@ -102,6 +83,11 @@
   :chromeOptions)
 
 (defmethod options-name
+  :safari
+  [driver]
+  :safariOptions) ;; todo check
+
+(defmethod options-name
   :opera
   [driver]
   :operaOptions)
@@ -111,7 +97,7 @@
   [driver args]
   (update-in driver
              [:capabilities (options-name driver) :args]
-             concat (map str args)))
+             append-args (map str args)))
 
 (defmulti set-window-size
   "Adds browser's command line arguments for setting initial window size."

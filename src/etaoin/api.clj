@@ -2107,27 +2107,29 @@
   launch. `default` global map is used for lookup when not
   passed.
 
-  -- `:args` is a vector of additional arguments passed when starting
-  a process.
-
-  -- `:env` is a map with system ENV variables. Keys are turned to
-  upper-case strings.
-
   -- `size` is a vector of two integers specifying initial window size.
 
-  -- `url` is a string with the default URL opened by default (FF only for now)."
+  -- `url` is a string with the default URL opened by default (FF only for now).
 
-  [driver & [{:keys [path args env size url]}]] ;; todo process env
+  -- `:args` is a vector of additional command line arguments
+  to the browser's process.
+
+  -- `:args-driver` is a vector of additional arguments to the
+  driver's process.
+
+  -- `:env` is a map with system ENV variables. Keys are turned into
+  upper-case strings."
+
+  [driver & [{:keys [path env size url args-driver args]}]] ;; todo process env
   (let [{:keys [type port]} @driver
         [with height] size
         path (or path (get-in defaults [type :path]))
         _ (swap! driver drv/set-path path) ;; todo get rid of atom storage
         _ (swap! driver drv/set-port port)
-        _ (when size
-            (swap! driver drv/set-window-size with height))
-        _ (when url
-            (swap! driver drv/set-url url))
-        _ (swap! driver drv/set-args args)
+        _ (when args-driver (swap! driver drv/set-args args-driver))
+        _ (when size (swap! driver drv/set-window-size with height))
+        _ (when url (swap! driver drv/set-url url))
+        _ (when args (swap! driver drv/set-options-args args))
         proc-args (drv/get-args @driver)
         _ (log/debugf "Starting process: %s" (str/join \space proc-args))
         process (proc/run proc-args)]
