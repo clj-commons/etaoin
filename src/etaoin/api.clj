@@ -11,6 +11,7 @@
   https://github.com/bayandin/chromedriver/
 
   Firefox (Geckodriver):
+  https://github.com/mozilla/geckodriver
   https://github.com/mozilla/webdriver-rust/
 
   Phantom.js (Ghostdriver)
@@ -2112,9 +2113,11 @@
   -- `:env` is a map with system ENV variables. Keys are turned to
   upper-case strings.
 
-  -- `size` is a vector of two integers specifying initial window size."
+  -- `size` is a vector of two integers specifying initial window size.
 
-  [driver & [{:keys [path args env size]}]] ;; todo process env
+  -- `url` is a string with the default URL opened by default (FF only for now)."
+
+  [driver & [{:keys [path args env size url]}]] ;; todo process env
   (let [{:keys [type port]} @driver
         [with height] size
         path (or path (get-in defaults [type :path]))
@@ -2122,6 +2125,8 @@
         _ (swap! driver drv/set-port port)
         _ (when size
             (swap! driver drv/set-window-size with height))
+        _ (when url
+            (swap! driver drv/set-url url))
         _ (swap! driver drv/set-args args)
         proc-args (drv/get-args @driver)
         _ (log/debugf "Starting process: %s" (str/join \space proc-args))

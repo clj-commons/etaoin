@@ -282,6 +282,9 @@ skipped or have nil values. Some of them, if not passed, are taken from the
  ;; Initial window size.
  :size [1024 680]
 
+ ;; Default URL to open. Works only in FF for now.
+ :url "http://example.com"
+
  ;; Driver-specific options. Make sure you have read the docs before setting them.
  :capabilities {:chromeOptions {:args ["--headless"]}}}
 ```

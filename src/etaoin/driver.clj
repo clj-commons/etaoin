@@ -8,6 +8,9 @@
   Firefox command line flags:
   /Applications/Firefox.app/Contents/MacOS/firefox-bin --help
 
+  Chrome binary path:
+  /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+
 "
   (:require [etaoin.util :refer [defmethods deep-merge]]
             [clojure.tools.logging :as log]))
@@ -85,7 +88,7 @@
              [:capabilities :FirefoxOptions :args]
              concat args))
 
-;; see https://github.com/SeleniumHQ/selenium/blob/master/py/selenium/webdriver/firefox/options.py
+;; https://github.com/SeleniumHQ/selenium/blob/master/py/selenium/webdriver/firefox/options.py
 (defmulti options-name dispatch-driver)
 
 (defmethod options-name
@@ -97,6 +100,11 @@
   [:chrome :headless]
   [driver]
   :chromeOptions)
+
+(defmethod options-name
+  :opera
+  [driver]
+  :operaOptions)
 
 (defn set-options-args
   "Adds command line arguments for the window initial size."
@@ -113,7 +121,7 @@
 (defmethod set-window-size
   :default
   [driver w h]
-  (log/debugf "Setting window size for that browser has not been implemented yet.")
+  (log/debugf "This driver doesn't support setting window size.")
   driver)
 
 (defmethods set-window-size
@@ -126,5 +134,18 @@
   [driver w h]
   (set-options-args driver ["-width" w "-height" h]))
 
-;; todo add initial url
-;; (set-options-args driver ["--new-tab" "http://ya.ru"])
+(defmulti set-url
+  "Sets the default URL that the browser should open by default."
+  {:arglists '([driver url])}
+  dispatch-driver)
+
+(defmethod set-url
+  :default
+  [driver url]
+  (log/debugf "This driver doesn't support setting initial URL.")
+  driver)
+
+(defmethod set-url
+  :firefox
+  [driver url]
+  (set-options-args driver ["--new-window" url]))
