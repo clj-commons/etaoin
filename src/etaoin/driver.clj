@@ -19,11 +19,6 @@
   [driver & _]
   (:type driver))
 
-(defn prepend
-  "Puts an element into a seq's head returning a new lazy seq."
-  [seq x]
-  (cons x seq))
-
 (defn append-args
   [args extra]
   (concat args extra))
