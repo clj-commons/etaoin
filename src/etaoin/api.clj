@@ -147,7 +147,7 @@
     nil _))
 
 ;;
-;; actice element
+;; active element
 ;;
 
 (defmulti ^:private get-active-element*
@@ -925,27 +925,6 @@
   corresponding properties."
   [driver q & names]
   (apply get-element-csss-el driver (query driver q) names))
-
-;;
-;; active element
-;;
-
-(defmulti get-active* dispatch-driver)
-
-(defmethods get-active*
-  [:chrome :phantom :safari]
-  [driver]
-  (with-resp driver :get
-    [:session (:session @driver) :element :active]
-    nil resp
-    (-> resp :value :ELEMENT)))
-
-(defmethod get-active* :firefox
-  [driver]
-  (with-resp driver :get
-    [:session (:session @driver) :element :active]
-    nil resp
-    (-> resp :value first second)))
 
 ;;
 ;; element text, name and value
@@ -1808,17 +1787,35 @@
     [:session (:session @driver) :keys]
     {:value (apply make-input* text more)} _))
 
+(defmethod fill-active*
+  :firefox
+  [driver text & more]
+  (let [el (get-active-element* driver)]
+    (apply fill-el driver el text more)))
+
 (defn fill-active
   "Fills an active element with keys."
   [driver text & more]
   (apply fill-active* driver text more))
 
-(defn fill-el
+(defmulti fill-el
   "Fills an element with text by its identifier."
+  {:arglists '([driver el text & more])}
+  dispatch-driver)
+
+(defmethod fill-el
+  :default
   [driver el text & more]
   (with-resp driver :post
     [:session (:session @driver) :element el :value]
     {:value (apply make-input* text more)} _))
+
+(defmethod fill-el
+  :firefox ;; todo support the old version for :default
+  [driver el text & more]
+  (with-resp driver :post
+    [:session (:session @driver) :element el :value]
+    {:text (str/join (apply make-input* text more))} _))
 
 (defn fill
   "Fills an element found with a query with a given text.
