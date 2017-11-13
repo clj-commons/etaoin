@@ -1776,6 +1776,25 @@
 (defn- make-input* [text & more]
   (mapv str (apply str text more)))
 
+(defmulti fill-el
+  "Fills an element with text by its identifier."
+  {:arglists '([driver el text & more])}
+  dispatch-driver)
+
+(defmethod fill-el
+  :default
+  [driver el text & more]
+  (with-resp driver :post
+    [:session (:session @driver) :element el :value]
+    {:value (apply make-input* text more)} _))
+
+(defmethod fill-el
+  :firefox ;; todo support the old version for :default
+  [driver el text & more]
+  (with-resp driver :post
+    [:session (:session @driver) :element el :value]
+    {:text (str/join (apply make-input* text more))} _))
+
 (defmulti fill-active*
   {:arglists '([driver text & more])}
   dispatch-driver)
@@ -1797,25 +1816,6 @@
   "Fills an active element with keys."
   [driver text & more]
   (apply fill-active* driver text more))
-
-(defmulti fill-el
-  "Fills an element with text by its identifier."
-  {:arglists '([driver el text & more])}
-  dispatch-driver)
-
-(defmethod fill-el
-  :default
-  [driver el text & more]
-  (with-resp driver :post
-    [:session (:session @driver) :element el :value]
-    {:value (apply make-input* text more)} _))
-
-(defmethod fill-el
-  :firefox ;; todo support the old version for :default
-  [driver el text & more]
-  (with-resp driver :post
-    [:session (:session @driver) :element el :value]
-    {:text (str/join (apply make-input* text more))} _))
 
 (defn fill
   "Fills an element found with a query with a given text.
@@ -2096,9 +2096,11 @@
 
   - `opt` is an optional map with the following possible parameters:
 
-  -- `:path` is a string path to a binary file to
-  launch. `default` global map is used for lookup when not
-  passed.
+  -- `:path-driver` is a string path to the driver's binary file. When
+  not passed, it is taken from defaults.
+
+  -- `:path-browser` is a string path to the browser's binary
+  file. When not passed, the driver discovers it by its own.
 
   -- `:size` is a vector of two integers specifying initial window size.
 
@@ -2112,28 +2114,41 @@
   -- `:args` is a vector of additional command line arguments
   to the browser's process.
 
+  -- `:prefs` is a map of FF-specific preferences (those one you see
+  opening about:config page).
+
   -- `:args-driver` is a vector of additional arguments to the
   driver's process.
 
   -- `:env` is a map with system ENV variables. Keys are turned into
   upper-case strings."
 
-  [driver & [{:keys [path env size url args-driver args headless]}]] ;; todo process env
+  [driver & [{:keys [env
+                     url
+                     args
+                     size
+                     prefs
+                     headless
+                     args-driver
+                     path-driver
+                     path-browser]}]]
   (let [{:keys [type port]} @driver
         [with height] size
-        path (or path (get-in defaults [type :path]))
-        _ (swap! driver drv/set-path path) ;; todo get rid of atom storage
+        path-driver (or path-driver (get-in defaults [type :path]))
+        _ (swap! driver drv/set-path path-driver) ;; todo get rid of atom storage
         _ (swap! driver drv/set-port port)
         _ (when args-driver (swap! driver drv/set-args args-driver))
         _ (when size (swap! driver drv/set-window-size with height))
         _ (when url (swap! driver drv/set-url url))
         _ (when headless (swap! driver drv/set-headless))
         _ (when args (swap! driver drv/set-options-args args))
+        _ (when prefs (swap! driver drv/set-prefs prefs))
+        _ (when path-browser (swap! driver drv/set-binary path-browser))
         proc-args (drv/get-args @driver)
         _ (log/debugf "Starting process: %s" (str/join \space proc-args))
         process (proc/run proc-args)]
     (swap! driver assoc
-           :env env
+           :env env  ;; todo process env
            :process process)
     driver))
 

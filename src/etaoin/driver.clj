@@ -168,3 +168,39 @@
   :phantom
   [driver]
   true)
+
+;;
+;; FF preferences
+;;
+
+(defmulti set-prefs
+  {:arglists '([driver prefs])}
+  dispatch-driver)
+
+(defmethod set-prefs
+  :default
+  [driver prefs]
+  (log/debugf "This driver doesn't support setting preferences.")
+  driver)
+
+(defmethods set-prefs
+  [:firefox :chrome]
+  [driver prefs]
+  (update-in driver
+             [:capabilities (options-name driver) :prefs]
+             merge prefs))
+
+;;
+;; binary path
+;;
+
+(defmulti set-binary
+  {:arglists '([driver binary])}
+  dispatch-driver)
+
+(defmethod set-binary
+  :default
+  [driver binary]
+  (assoc-in driver
+            [:capabilities (options-name driver) :binary]
+            binary))

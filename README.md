@@ -313,7 +313,11 @@ skipped or have nil values. Some of them, if not passed, are taken from the
  :port 9999
 
  ;; Path to webdriver's binary file. Taken from defaults when not passed.
- :path "/Users/ivan/Downloads/geckodriver"
+ :path-driver "/Users/ivan/Downloads/geckodriver"
+
+ ;; Path to the driver's binary file. When not passed, the driver discovers it
+ ;; by its own.
+ :path-browser "/Users/ivan/Downloads/firefox/firefox"
 
  ;; Extra command line arguments sent to the browser's process. See your browser's
  ;; supported flags.
