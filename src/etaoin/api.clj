@@ -43,10 +43,7 @@
    :phantom {:port 8910
              :path "phantomjs"}
    :safari {:port 4445
-            :path "safaridriver"}
-   :headless {:port 9515
-              :path "chromedriver"
-              :capabilities {:chromeOptions {:args ["--headless"]}}}})
+            :path "safaridriver"}})
 
 (def default-locator "xpath")
 (def locator-xpath "xpath")
@@ -166,7 +163,7 @@
     (-> resp :value first second)))
 
 (defmethods get-active-element*
-  [:chrome :headless :phantom :safari]
+  [:chrome :phantom :safari]
   [driver]
   (with-resp driver :post
     [:session (:session @driver) :element :active]
@@ -211,7 +208,7 @@
     (:value resp)))
 
 (defmethods get-window-handles
-  [:chrome :headless :phantom]
+  [:chrome :phantom]
   [driver]
   (with-resp driver :get
     [:session (:session @driver) :window_handles]
@@ -230,8 +227,8 @@
     [:session (:session @driver) :window]
     {:handle handle} _))
 
-(defmethods switch-window
-  [:chrome :headless]
+(defmethod switch-window
+  :chrome
   [driver handle]
   (with-resp driver :post
     [:session (:session @driver) :window]
@@ -259,7 +256,7 @@
     nil _))
 
 (defmethods maximize
-  [:chrome :headless :safari]
+  [:chrome :safari]
   [driver]
   (let [h (get-window-handle driver)]
     (with-resp driver :post
@@ -617,7 +614,7 @@
   dispatch-driver)
 
 (defmethods mouse-btn-down
-  [:chrome :headless :phantom :safari]
+  [:chrome :phantom :safari]
   [driver]
   (with-resp driver :post
     [:session (:session @driver) :buttondown]
@@ -629,7 +626,7 @@
   dispatch-driver)
 
 (defmethods mouse-btn-up
-  [:chrome :headless :phantom :safari]
+  [:chrome :phantom :safari]
   [driver]
   (with-resp driver :post
     [:session (:session @driver) :buttonup]
@@ -642,7 +639,7 @@
   dispatch-driver)
 
 (defmethods mouse-move-to
-  [:chrome :headless :phantom :safari]
+  [:chrome :phantom :safari]
   ([driver q]
    (with-resp driver :post
      [:session (:session @driver) :moveto]
@@ -707,7 +704,7 @@
 (defmulti double-click-el dispatch-driver)
 
 (defmethods double-click-el
-  [:chrome :headless :phantom]
+  [:chrome :phantom]
   [driver el]
   (with-resp driver :post
     [:session (:session @driver) :element el :doubleclick]
@@ -718,7 +715,7 @@
 
   Note:
 
-  the supported browsers are (Headless) Chrome, and Phantom.js.
+  the supported browsers are Chrome, and Phantom.js.
   For Firefox and Safari, your may try to simulate it as a `click, wait, click`
   sequence."
   [driver q]
@@ -731,7 +728,7 @@
 (defmulti get-element-size-el dispatch-driver)
 
 (defmethods get-element-size-el
-  [:chrome :headless :phantom :safari]
+  [:chrome :phantom :safari]
   [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :size]
@@ -759,7 +756,7 @@
 (defmulti get-element-location-el dispatch-driver)
 
 (defmethods get-element-location-el
-  [:chrome :headless :phantom :safari]
+  [:chrome :phantom :safari]
   [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :location]
@@ -936,7 +933,7 @@
 (defmulti get-active* dispatch-driver)
 
 (defmethods get-active*
-  [:chrome :headless :phantom :safari]
+  [:chrome :phantom :safari]
   [driver]
   (with-resp driver :get
     [:session (:session @driver) :element :active]
@@ -1236,7 +1233,7 @@
     (:value resp)))
 
 (defmethods get-alert-text
-  [:chrome :headless :safari]
+  [:chrome :safari]
   [driver]
   (with-resp driver :get
     [:session (:session @driver) :alert_text]
@@ -1255,7 +1252,7 @@
     nil _))
 
 (defmethods dismiss-alert
-  [:chrome :headless :safari]
+  [:chrome :safari]
   [driver]
   (with-resp driver :post
     [:session (:session @driver) :dismiss_alert]
@@ -1272,7 +1269,7 @@
     nil _))
 
 (defmethods accept-alert
-  [:chrome :headless :safari]
+  [:chrome :safari]
   [driver]
   (with-resp driver :post
     [:session (:session @driver) :accept_alert]
@@ -1347,9 +1344,9 @@
   (driver? driver :safari))
 
 (defn headless?
-  "Returns true if a driver is a Headless Chrome instance."
+  "Returns true if a driver is run in headless mode (without UI window)."
   [driver]
-  (driver? driver :headless))
+  (drv/is-headless? driver))
 
 (defn exists?
   "Returns true if an element exists on the page.
@@ -1676,8 +1673,8 @@
 
 (defmulti touch-tap dispatch-driver)
 
-(defmethods touch-tap
-  [:chrome :headless]
+(defmethod touch-tap
+  :chrome
   [driver q]
   (with-resp driver :post
     [:session (:session @driver) :touch :click]
@@ -1685,8 +1682,8 @@
 
 (defmulti touch-down dispatch-driver)
 
-(defmethods touch-down
-  [:chrome :headless]
+(defmethod touch-down
+  :chrome
   ([driver q]
    (let [{:keys [x y]}
          (get-element-location driver q)]
@@ -1699,7 +1696,7 @@
 (defmulti touch-up dispatch-driver)
 
 (defmethod touch-up
-  [:chrome :headless]
+  :chrome
   ([driver q]
    (let [{:keys [x y]}
          (get-element-location driver q)]
@@ -1712,7 +1709,7 @@
 (defmulti touch-move dispatch-driver)
 
 (defmethod touch-move
-  [:chrome :headless]
+  :chrome
   ([driver q]
    (let [{:keys [x y]}
          (get-element-location driver q)]
@@ -1751,7 +1748,7 @@
   `(when-not-predicate #(safari? ~driver) ~@body))
 
 (defmacro when-not-headless
-  "Executes the body only if a browser is NOT headless Chrome."
+  "Executes the body only if a browser is NOT run in headless mode."
   [driver & body]
   `(when-not-predicate #(headless? ~driver) ~@body))
 
@@ -1789,10 +1786,9 @@
   `(when-predicate #(safari? ~driver) ~@body))
 
 (defmacro when-headless
-  "Executes the body only if the driver is headless Chrome."
+  "Executes the body only if the driver is run in headless mode."
   [driver & body]
   `(when-predicate #(headless? ~driver) ~@body))
-
 
 ;;
 ;; input
@@ -1805,8 +1801,8 @@
   {:arglists '([driver text & more])}
   dispatch-driver)
 
-(defmethods fill-active*
-  [:chrome :headless]
+(defmethod fill-active*
+  :chrome
   [driver text & more]
   (with-resp driver :post
     [:session (:session @driver) :keys]
@@ -2059,7 +2055,7 @@
   Arguments:
 
   - `type` is a keyword determines what driver to use. The supported
-  browsers are `:firefox`, `:chrome`, `:headless`, `:phantom` and `:safari`.
+  browsers are `:firefox`, `:chrome`, `:phantom` and `:safari`.
 
   - `opt` is a map with additional options for a driver. The supported
   options are:
@@ -2107,9 +2103,14 @@
   launch. `default` global map is used for lookup when not
   passed.
 
-  -- `size` is a vector of two integers specifying initial window size.
+  -- `:size` is a vector of two integers specifying initial window size.
 
-  -- `url` is a string with the default URL opened by default (FF only for now).
+  -- `:url` is a string with the default URL opened by default (FF only for now).
+
+  -- `headless` is a boolean flag to run the browser in headless mode
+  (i.e. without GUI window). Useful when running tests on CI servers
+  rather than local machine. Currently, only FF and Chrome support headless mode.
+  Phantom.js is headless by its nature.
 
   -- `:args` is a vector of additional command line arguments
   to the browser's process.
@@ -2120,7 +2121,7 @@
   -- `:env` is a map with system ENV variables. Keys are turned into
   upper-case strings."
 
-  [driver & [{:keys [path env size url args-driver args]}]] ;; todo process env
+  [driver & [{:keys [path env size url args-driver args headless]}]] ;; todo process env
   (let [{:keys [type port]} @driver
         [with height] size
         path (or path (get-in defaults [type :path]))
@@ -2129,6 +2130,7 @@
         _ (when args-driver (swap! driver drv/set-args args-driver))
         _ (when size (swap! driver drv/set-window-size with height))
         _ (when url (swap! driver drv/set-url url))
+        _ (when headless (swap! driver drv/set-headless))
         _ (when args (swap! driver drv/set-options-args args))
         proc-args (drv/get-args @driver)
         _ (log/debugf "Starting process: %s" (str/join \space proc-args))
@@ -2224,9 +2226,15 @@
   "Launches Safari driver. A shortcut for `boot-driver`."
   (partial boot-driver :safari))
 
-(def headless
+(defn chrome-headless
   "Launches headless Chrome driver. A shortcut for `boot-driver`."
-  (partial boot-driver :headless))
+  [& opt]
+  (boot-driver :chrome (assoc opt :headless true)))
+
+(defn firefox-headless
+  "Launches headless Firefox driver. A shortcut for `boot-driver`."
+  [& opt]
+  (boot-driver :firefox (assoc opt :headless true)))
 
 (defmacro with-driver
   "Performs the body within a driver session.
@@ -2286,9 +2294,16 @@
   `(with-driver :safari ~opt ~bind
      ~@body))
 
-(defmacro with-headless
+(defmacro with-chrome-headless
   "Performs the body with headless Chrome session. A shortcut for
   `with-driver`."
   [opt bind & body]
-  `(with-driver :headless ~opt ~bind
+  `(with-driver :chrome (assoc ~opt :headless true) ~bind
+     ~@body))
+
+(defmacro with-firefox-headless
+  "Performs the body with headless Firefox session. A shortcut for
+  `with-driver`."
+  [opt bind & body]
+  `(with-driver :firefox (assoc ~opt :headless true) ~bind
      ~@body))

@@ -50,8 +50,8 @@
   [driver port]
   (set-args driver ["--port" port]))
 
-(defmethods set-port
-  [:chrome :headless]
+(defmethod set-port
+  :chrome
   [driver port]
   (set-args driver [(str "--port=" port)]))
 
@@ -72,8 +72,8 @@
   [driver]
   :moz:firefoxOptions)
 
-(defmethods options-name
-  [:chrome :headless]
+(defmethod options-name
+  :chrome
   [driver]
   :chromeOptions)
 
@@ -105,8 +105,8 @@
   (log/debugf "This driver doesn't support setting window size.")
   driver)
 
-(defmethods set-window-size
-  [:chrome :headless]
+(defmethod set-window-size
+  :chrome
   [driver w h]
   (set-options-args driver [(format "--window-size=%s,%s" w h)]))
 
@@ -133,3 +133,38 @@
 
 ;; Don't know why but Chrome ignores all the --new-window, --app
 ;; or --google-base-url parameters when starting.
+
+;;
+;; headless feature
+;;
+
+(defmulti set-headless
+  {:arglists '([driver])}
+  dispatch-driver)
+
+(defmethod set-headless
+  :default
+  [driver]
+  (log/debugf "This driver doesn't support setting headless mode.")
+  driver)
+
+(defmethods set-headless
+  [:chrome :firefox]
+  [driver]
+  (-> driver
+      (assoc :headless true)
+      (set-options-args ["--headless"])))
+
+(defmulti is-headless?
+  {:arglists '([driver])}
+  dispatch-driver)
+
+(defmethod is-headless?
+  :default
+  [driver]
+  (:headless driver))
+
+(defmethod is-headless?
+  :phantom
+  [driver]
+  true)
