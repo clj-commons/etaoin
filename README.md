@@ -27,7 +27,7 @@ after a mysteries note was produced on it.
 - [Advanced Usage](#advanced-usage)
   * [Working with multiple elements](#working-with-multiple-elements)
   * [File uploading](#file-uploading)
-  * [Using headless driver](#using-headless-driver)
+  * [Using headless drivers](#using-headless-drivers)
   * [Auto-save screenshots in case of exception](#auto-save-screenshots-in-case-of-exception)
   * [Additional parameters](#additional-parameters)
   * [Be patient (wait, with-wait etc)](#be-patient-wait-with-wait-etc)
@@ -206,26 +206,68 @@ exception otherwise. Usage example:
 (upload-file driver {:tag :input :type :file} "/Users/ivan/Downloads/sample.png")
 ```
 
-### Using headless driver
+### Using headless drivers
 
-Since version 59, Google Chrome officially supports headless mode. It's when it
-works without opening a UI window so it is possible to run such a driver on
-servers without a display device.
+Recently, Google Chrome and later Firefox started support a feature named
+headless mode. When being headless, none of UI windows occur on the screen, only
+the stdout output goes into console. This feature allows you to run integration
+tests on servers that do not have graphical output device.
 
-Headless mode uses the standard `chromedriver`, the difference is only in
-additional parameters passed to Chrome.
+Ensure your browser supports headless mode by checking if it accepts `--headles`
+command line argument when running it from the terminal. Phantom.js driver is
+headless by its nature (it has never been developed for rendering UI).
 
-To use headless driver in your code, use either `(headless)` function or
-`(with-headless)` macros as well. Perhaps you will need to take more screenshots
-to see that's going on under the hood:
+When starting a driver, pass `:headless` boolean flag to switch into headless
+mode. Note, only latest version of Chrome and Firefox are supported. For other
+drivers, the flag will be ignored.
 
 ```clojure
-(doto driver
-  ;; ... clicks, etc
-  (when-headless
-    (screenshot driver "/in/the/middle/of/test.png"))
-  ;; continue
-  )
+(def driver (chrome {:headless true})) ;; runs headless Chrome
+```
+
+or
+
+```clojure
+(def driver (firefox {:headless true})) ;; runs headless Firefox
+```
+
+To check of any driver has been run in headless mode, use `headless?` predicate:
+
+```clojure
+(headless? driver) ;; true
+```
+
+Note, it will always return true for Phantom.js instances.
+
+There are several shortcuts to run Chrome or Firefox in headless mode by
+default:
+
+```clojure
+(def driver (chrome-headless))
+
+;; or
+
+(def driver (firefox-headless))
+
+;; or
+
+(with-chrome-headless nil driver
+  (go driver "http://example.com"))
+
+(with-firefox-headless nil driver
+  (go driver "http://example.com"))
+```
+
+There is also `when-headless` and `when-not-headless` macroses that allow to
+perform a bunch of commands only if a browser is in headless mode or not
+respectively:
+
+```clojure
+(with-chrome nil driver
+  ...
+  (when-not-headless driver
+    ... some actions that might be not available in headless mode)
+  ... common actions for both versions)
 ```
 
 ### Auto-save screenshots in case of exception

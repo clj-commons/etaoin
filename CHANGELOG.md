@@ -3,6 +3,8 @@
 ## 0.1.9-SNAPSHOT
   * initial URL parameter added for FF
   * args parameters naming
+  * global headless feature added
+  * headless driver type removed
 
 ## 0.1.9
   * `utils` and `driver` namespaces were added;
