@@ -247,18 +247,18 @@ default:
 
 ;; or
 
-(def driver (firefox-headless))
+(def driver (firefox-headless {...})) ;; with extra settings
 
 ;; or
 
 (with-chrome-headless nil driver
   (go driver "http://example.com"))
 
-(with-firefox-headless nil driver
+(with-firefox-headless {...} driver ;; extra settings
   (go driver "http://example.com"))
 ```
 
-There is also `when-headless` and `when-not-headless` macroses that allow to
+There are also `when-headless` and `when-not-headless` macroses that allow to
 perform a bunch of commands only if a browser is in headless mode or not
 respectively:
 
