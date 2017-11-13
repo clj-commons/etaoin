@@ -5,6 +5,8 @@
   * args parameters naming
   * global headless feature added
   * headless driver type removed
+  * get active element redundant code removed
+  * fill function extended for FF to support API changes
 
 ## 0.1.9
   * `utils` and `driver` namespaces were added;
