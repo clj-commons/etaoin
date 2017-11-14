@@ -4,27 +4,18 @@
            java.lang.IllegalThreadStateException
            java.io.IOException))
 
-(defmacro exec [& args]
-  `(.exec (Runtime/getRuntime) ~@args))
-
 (defn java-params [params]
   (->> params
        (map str)
        (into-array String)))
 
-(defn java-env [env]
-  (->> env
-       (map (fn [[k v]]
-              (format "%s=%s" (name k) v)))
-       (into-array String)))
+(defn run [args]
+  (let [pb (java.lang.ProcessBuilder. (java-params args))]
+    (.redirectOutput pb (java.io.File/createTempFile "driver.out" ".log"))
+    (.redirectError pb (java.io.File/createTempFile "driver.err" ".log"))
+    (.start pb)))
 
-(defn run
-  ([params]
-   (exec (java-params params)))
-  ([params env]
-   (exec (java-params params) (java-env env)))
-  ([params env dir]
-   (exec (java-params params) (java-env env) (io/file dir))))
+;; todo store those streams
 
 (defn alive? [proc]
   (-> proc .isAlive))
@@ -36,6 +27,8 @@
 
 (defn kill [proc]
   (-> proc .destroy))
+
+;; todo refactor those
 
 (defn read-out [proc]
   (try
