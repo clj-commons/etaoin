@@ -339,16 +339,16 @@ skipped or have nil values. Some of them, if not passed, are taken from the
  :capabilities {:chromeOptions {:args ["--headless"]}}}
 ```
 
-### Be patient (wait, with-wait etc)
+### Wait functions
 
-The main difference between a program and a human is that the first one
+The main difference between a program and a human being is that the first one
 operates very fast. It means so fast, that sometimes a browser cannot render new
-HTML in time. So after each action you need to put `wait-<something>` function
-that just polls a browser checking for a predicate. O just `(wait <seconds>)` if
-you don't care about optimization.
+HTML in time. So after each action you'd better to put `wait-<something>`
+function that just polls a browser until the predicate evaluates into true. Or
+just `(wait <seconds>)` if you don't care about optimization.
 
-The `with-wait` macro might be helpful when you need to prepend each action
-with `(wait n)`. For example, the following form
+The `with-wait` macro might be helpful when you need to prepend each action with
+`(wait n)`. For example, the following form
 
 ```clojure
 (with-chrome {} driver
@@ -368,6 +368,32 @@ turns into something like this:
 ```
 
 and thus returns the result of the last form of the original body.
+
+There is another macro `(doto-wait n driver & body)` that acts like the standard
+`doto` but prepend each form with `(wait n)`. For example:
+
+```clojure
+(with-chrome {} driver
+  (doto-wait 1 driver
+    (go "http://site.com")
+    (click :this-link)
+    (click :that-button)
+    ...etc))
+```
+
+The final form would be something like this:
+
+```clojure
+(with-chrome {} driver
+  (doto driver
+    (wait 1)
+    (go "http://site.com")
+    (wait 1)
+    (click :this-link)
+    (wait 1)
+    (click :that-button)
+    ...etc))
+```
 
 ## Writing Integration Tests For Your Application
 

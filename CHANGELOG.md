@@ -7,6 +7,9 @@
   * headless driver type removed
   * get active element redundant code removed
   * fill function extended for FF to support API changes
+  * setting timeouts API added
+  * with-wait refactored
+  * doto-wait macto added
 
 ## 0.1.9
   * `utils` and `driver` namespaces were added;
