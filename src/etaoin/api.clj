@@ -1935,6 +1935,68 @@
   (fill driver q keys/enter))
 
 ;;
+;; timeouts
+;; https://github.com/SeleniumHQ/selenium/blob/bc19742bb0256c0cb73a47eec5361aa7a5743723/py/selenium/webdriver/remote/webdriver.py#L674
+;; https://searchfox.org/mozilla-central/source/testing/webdriver/src/command.rs#529
+
+(defn sec-to-ms [sec]
+  (int (* sec 1000)))
+
+(defmulti set-timeout*
+  "Basic method to set a specific timeout."
+  {:arglists '([driver type sec])}
+  dispatch-driver)
+
+(defmethod set-timeout*
+  :default
+  [driver type sec]
+  (with-resp driver :post
+    [:session (:session @driver) :timeouts]
+    {type (sec-to-ms sec)} _))
+
+(defmethod set-timeout*
+  :chrome
+  [driver type sec]
+  (with-resp driver :post
+    [:session (:session @driver) :timeouts]
+    {:type type :ms (sec-to-ms sec)} _))
+
+(defmulti set-script-timeout
+  "Sets timeout for executing JS sctipts."
+  {:arglists '([driver sec])}
+  dispatch-driver)
+
+(defmethod set-script-timeout
+  :default
+  [driver sec]
+  (set-timeout* driver :script sec))
+
+(defmulti set-page-load-timeout
+  "Sets timeout for loading pages."
+  {:arglists '([driver sec])}
+  dispatch-driver)
+
+(defmethod set-page-load-timeout
+  :default
+  [driver sec]
+  (set-timeout* driver :pageLoad sec))
+
+(defmethod set-page-load-timeout
+  :chrome
+  [driver sec]
+  (set-timeout* driver "page load" sec))
+
+(defmulti set-implicit-timeout
+  "Sets timeout that is used when finding elements on the page."
+  {:arglists '([driver sec])}
+  dispatch-driver)
+
+(defmethod set-implicit-timeout
+  :default
+  [driver sec]
+  (set-timeout* driver :implicit sec))
+
+;;
 ;; screenshot
 ;;
 
