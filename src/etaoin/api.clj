@@ -1492,7 +1492,7 @@
   ([pred]
    (wait-predicate pred {}))
   ([pred opt]
-   (let [timeout (get opt :timeout default-timeout)
+   (let [timeout (get opt :timeout default-timeout) ;; refactor this (call for java millisec)
          time-rest (get opt :time-rest timeout)
          interval (get opt :interval default-interval)
          times (get opt :times 0)
