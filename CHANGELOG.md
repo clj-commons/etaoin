@@ -10,6 +10,7 @@
   * setting timeouts API added
   * with-wait refactored
   * doto-wait macto added
+  * ProcessBuilder class used
 
 ## 0.1.9
   * `utils` and `driver` namespaces were added;
