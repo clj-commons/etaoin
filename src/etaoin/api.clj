@@ -1469,8 +1469,13 @@
   a bunch of actions slowly. Some SPA applications need extra time
   to re-render the content."
   [n & body]
-  (let [combo (interleave (repeat `(wait ~n)) body)]
-    `(do ~@combo)))
+  `(do ~@(interleave (repeat `(wait ~n)) body)))
+
+(defmacro doto-wait
+  "The same as doto but prepends each form with (wait n) clause."
+  [n obj & body]
+  `(doto ~obj
+     ~@(interleave (repeat `(wait ~n)) body)))
 
 (defn wait-predicate
   "Sleeps continuously calling a predicate until it returns true.
