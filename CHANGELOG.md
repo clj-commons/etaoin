@@ -11,6 +11,9 @@
   * with-wait refactored
   * doto-wait macto added
   * ProcessBuilder class used
+  * wait-predicate wrapped with HTTP exception
+  * set/get-hash docstrings added
+  * scroll functions added
 
 ## 0.1.9
   * `utils` and `driver` namespaces were added;

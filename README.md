@@ -30,6 +30,7 @@ after a mysteries note was produced on it.
   * [Using headless drivers](#using-headless-drivers)
   * [Auto-save screenshots in case of exception](#auto-save-screenshots-in-case-of-exception)
   * [Additional parameters](#additional-parameters)
+  * [Scrolling](#scrolling)
   * [Wait functions](#wait-functions)
 - [Writing Integration Tests For Your Application](#writing-integration-tests-for-your-application)
   * [Basic fixture](#basic-fixture)
@@ -338,6 +339,49 @@ skipped or have nil values. Some of them, if not passed, are taken from the
  ;; Driver-specific options. Make sure you have read the docs before setting them.
  :capabilities {:chromeOptions {:args ["--headless"]}}}
 ```
+
+### Scrolling
+
+The library ships a set of functions to scroll the page.
+
+The most important one, `scroll-query` jumps the the first element found with
+the query term:
+
+```clojure
+(def driver (chrome))
+
+;; the form button placed somewhere below
+(scroll-query driver :button-submit)
+
+;; the main article
+(scroll-query driver {:tag :h1})
+```
+
+To jump to the absolute position, just use `scroll` as follows:
+
+```clojure
+(scroll driver 100 600)
+
+;; or pass a map with x and y keys
+(scroll driver {:x 100 :y 600})
+```
+
+To scroll relatively, use `scroll-by` with offset values:
+
+```clojure
+;; keeps the same horizontal position, goes up for 100 pixels
+(scroll-by driver 0 -100) ;; map parameter is also supported
+```
+
+There are two shortcuts to jump top or bottom of the page:
+
+```clojure
+(scroll-bottom driver) ;; you'll see the footer...
+(scroll-top driver)    ;; ...and the header again
+```
+
+One note, in all cases the scroll actions are served with Javascript. Ensure
+your browser has it enabled.
 
 ### Wait functions
 
