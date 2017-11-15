@@ -1075,9 +1075,9 @@
 (defmulti js-execute
   "Executes Javascript code in browser synchronously.
 
-  The code is sent as a string (might be multi-line). Under the hood, a
-  browser wraps your code into a function so avoid `function` clause
-  at on the top level.
+  The code is sent as a string (might be multi-line). Under the hood,
+  a browser wraps your code into a function so avoid using `function`
+  clause at the top level.
 
   Don't forget to add `return <something>` operator if you are
   interested in the result value.
@@ -1142,12 +1142,18 @@
 (defn- split-hash [url]
   (str/split url #"#" 2))
 
-(defn set-hash [driver hash]
+(defn set-hash
+  "Sets a new hash fragment for the current page.
+  Don't include the leading # symbol. Useful when navigating
+  on single page applications."
+  [driver hash]
   (let [[url _] (split-hash (get-url driver))
         new (format "%s#%s" url hash)]
     (go driver new)))
 
-(defn get-hash [driver]
+(defn get-hash
+  "Returns the current hash fragment (nil when not set)."
+  [driver]
   (let [[_ hash] (split-hash (get-url driver))]
     hash))
 
