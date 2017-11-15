@@ -1069,8 +1069,28 @@
     (:value resp)))
 
 ;;
-;; execute js
+;; Javascript
 ;;
+
+(defn el-to-js
+  "Turns machinery-wise element ID into an object
+  that Javascript use to reference existing DOM element.
+
+  The magic constant below is taken from the standard:
+  https://www.w3.org/TR/webdriver/#elements
+
+  Passing such an object to `js-execute` automatically expands into a
+  DOM node. For example:
+
+  ;; returns long UUID
+  (def el (query driver :button-ok))
+
+  ;; the first argument will the an Element instance.
+  (js-execute driver \"arguments[0].scrollIntoView()\", (el-to-js el))
+  "
+  [el]
+  {:ELEMENT el
+   :element-6066-11e4-a52e-4f735466cecf el})
 
 (defmulti js-execute
   "Executes Javascript code in browser synchronously.
@@ -1134,6 +1154,59 @@
              "s.src = arguments[0];"
              "document.head.appendChild(s);")]
     (js-execute driver script url)))
+
+;;
+;; scrolling
+;;
+
+(defn scroll
+  "Scrolls the window into absolute position (jumps to exact place)."
+  ([driver x y]
+   (js-execute driver "window.scroll(arguments[0], arguments[1]);" x y))
+  ([driver {:keys [x y]}]
+   (scroll driver x y)))
+
+(defn scroll-by
+  "Scrolls the window by offset (relatively the current position)."
+  ([driver x y]
+   (js-execute driver "window.scrollBy(arguments[0], arguments[1]);" x y))
+  ([driver {:keys [x y]}]
+   (scroll-by driver x y)))
+
+(defn scroll-query
+  "Scrolls to the first element found with a query.
+
+  Invokes element's `.scrollIntoView()` method. Accepts extra `param`
+  argument that might be either boolean or object for more control.
+
+  See this page for details:
+  https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+  "
+  ([driver q]
+   (let [el (query driver q)]
+     (js-execute driver "arguments[0].scrollIntoView();" (el-to-js el))))
+  ([driver q param]
+   (let [el (query driver q)]
+     (js-execute driver "arguments[0].scrollIntoView(arguments[1]);" (el-to-js el) param))))
+
+(defn get-scroll
+  "Returns the current scroll position as a map
+  with `:x` and `:y` keys and integer values."
+  [driver]
+  (js-execute driver "return {x: window.scrollX, y: window.scrollY};"))
+
+(defn scroll-top
+  "Scrolls to top of the page keeping current horizontal position."
+  [driver]
+  (let [{:keys [x y]} (get-scroll driver)]
+    (scroll driver x 0)))
+
+(defn scroll-bottom
+  "Scrolls to bottom of the page keeping current horizontal position."
+  [driver]
+  (let [y-max (js-execute driver "return document.body.scrollHeight;")
+        {:keys [x y]} (get-scroll driver)]
+    (scroll driver x y-max)))
 
 ;;
 ;; get/set hash
