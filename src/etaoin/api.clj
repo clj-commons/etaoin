@@ -2236,7 +2236,7 @@
   -- `:desired-capabilities`: an alias for `:capabilities`.
 
   See https://www.w3.org/TR/webdriver/#capabilities"
-  [driver & [opt]]
+  [driver & [opt]] ;; move params here
   (wait-running driver)
   (let [type (:type @driver)
         _ (swap! driver drv/set-capabilities (get-in defaults [type :capabilities]))
