@@ -1,5 +1,11 @@
 [adam]: https://github.com/AdamFrey
 
+## 0.2.0-SNAPSHOT
+  * click as multimethod
+
+## 0.2.0
+  * release
+
 ## 0.1.9-SNAPSHOT
   * initial URL parameter added for FF
   * args parameters naming

@@ -696,8 +696,13 @@
     [:session (:session @driver) :element el :click]
     nil _))
 
-(defn click
-  "Clicks on an element (a link, button, etc)."
+(defmulti click
+  "Clicks on an element (a link, a button, etc)."
+  {:arglists '([driver q])}
+  dispatch-driver)
+
+(defmethod click
+  :default
   [driver q]
   (click-el driver (query driver q)))
 
