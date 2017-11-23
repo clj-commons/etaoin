@@ -80,7 +80,7 @@ You are welcome to submit your company into that list.
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.2.0-SNAPSHOT"]
+[etaoin "0.2.1"]
 ```
 
 ## Basic Usage
