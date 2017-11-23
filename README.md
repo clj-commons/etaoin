@@ -327,6 +327,13 @@ skipped or have nil values. Some of them, if not passed, are taken from the
  ;; Extra command line arguments sent to the webdriver's process.
  :args-driver ["-b" "/path/to/firefox/binary"]
 
+ ;; Sets browser's minimal logging level. Only messages with level above
+ ;; that one will be collected. Useful for fetching Javascript logs. Possible
+ ;; values are: nil (aliases :off, :none), :debug, :info, :warn (alias :warning),
+ ;; :err (aliases :error, :severe, :crit, :critical), :all. When not passes,
+ ;; :all is set.
+ :log-level :err ;; to show only errors but not debug
+
  ;; Env variables sent to the driver's process. Not processed yet.
  :env {:MOZ_CRASHREPORTER_URL "http://test.com"}
 

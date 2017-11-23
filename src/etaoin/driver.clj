@@ -220,9 +220,9 @@
     :info       "INFO"
     (:warn
      :warning)  "WARNING"
-    (:severe
-     :err
+    (:err
      :error
+     :severe
      :crit
      :critical) "SEVERE"
     :all        "ALL"
