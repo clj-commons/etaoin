@@ -204,3 +204,38 @@
   (assoc-in driver
             [:capabilities (options-name driver) :binary]
             binary))
+
+;;
+;; logging
+;;
+
+(defn- remap-log-level
+  "Mapping from a human-friendly log level to a system one."
+  [level]
+  (case level
+    (nil
+     :off
+     :none)     "OFF"
+    :debug      "DEBUG"
+    :info       "INFO"
+    (:warn
+     :warning)  "WARNING"
+    (:severe
+     :err
+     :error
+     :crit
+     :critical) "SEVERE"
+    :all        "ALL"
+    (assert false (format "Logging level %s is unsupported." level))))
+
+(defmulti set-browser-log-level
+  "Sets browser logging level."
+  {:arglists '([driver binary])}
+  dispatch-driver)
+
+(defmethod set-browser-log-level
+  :default
+  [driver level]
+  (assoc-in driver
+            [:capabilities :loggingPrefs :browser]
+            (remap-log-level level)))

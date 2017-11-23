@@ -950,7 +950,7 @@
   (get-element-tag-el driver (query driver q)))
 
 (defn get-element-text-el
-  "Retuns element's inner text by its identifier."
+  "Returns element's inner text by its identifier."
   [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :text]
@@ -1212,6 +1212,69 @@
   (let [y-max (js-execute driver "return document.body.scrollHeight;")
         {:keys [x y]} (get-scroll driver)]
     (scroll driver x y-max)))
+
+;;
+;; logs
+;;
+
+(defmulti get-log-types
+  "Returns a set of log types the browser supports."
+  {:arglists '([driver])}
+  dispatch-driver)
+
+(defmethods get-log-types
+  [:chrome :phantom]
+  [driver]
+  (with-resp driver :get
+    [:session (:session @driver) :log :types]
+    nil
+    result
+    (:value result)))
+
+(defn- process-log
+  "Remaps some of the log's fields."
+  [entry]
+  (-> entry
+      (update :level (comp keyword str/lower-case))
+      (update :source keyword)
+      (assoc :datetime (-> entry :timestamp java.util.Date.))))
+
+(defmulti get-logs
+  "Returns Javascript log entries. Each log entry is a map
+  with the following structure:
+
+  {:level :warning,
+   :message \"1,2,3,4  anonymous (:1)\",
+   :timestamp 1511449388366,
+   :source nil,
+   :datetime #inst \"2017-11-23T15:03:08.366-00:00\"}
+
+  Empirical knowledge about browser differences:
+
+  * Chrome:
+  - Returns all recorded logs.
+  - Clears the logs once they have been read.
+  - JS console logs have `:console-api` for `:source` field.
+  - Entries about errors will have SEVERE level.
+
+  * PhantomJS:
+  - Return all recorded logs since the last URL change.
+  - Does not clear recorded logs on subsequent invocations.
+  - JS console logs have nil for `:source` field.
+  - Entries about errors will have WARNING level, as coded here:
+      https://github.com/detro/ghostdriver/blob/be7ffd9d47c1e76c7bfa1d47cdcde9164fd40db8/src/session.js#L494
+"
+  {:arglists '([driver])}
+  dispatch-driver)
+
+(defmethods get-logs
+  [:chrome :phantom]
+  [driver]
+  (with-resp driver :post
+    [:session (:session @driver) :log]
+    {:type :browser}
+    result
+    (mapv process-log (:value result))))
 
 ;;
 ;; get/set hash
@@ -2258,6 +2321,11 @@
 
   -- `:url` is a string with the default URL opened by default (FF only for now).
 
+  -- `:log-level` a keyword to set browser's log level. Used when fetching
+  browser's logs. Possible values are:
+  `:off`, `:debug`, `:warn`, `:info`, `:error`, `:all`.
+  When not passed, `:all` is set.
+
   -- `headless` is a boolean flag to run the browser in headless mode
   (i.e. without GUI window). Useful when running tests on CI servers
   rather than local machine. Currently, only FF and Chrome support headless mode.
@@ -2274,20 +2342,23 @@
 
   -- `:env` is a map with system ENV variables. Keys are turned into
   upper-case strings."
-
+  ;; todo get rid of atom storage
   [driver & [{:keys [env
                      url
                      args
                      size
                      prefs
                      headless
+                     log-level
                      args-driver
                      path-driver
                      path-browser]}]]
   (let [{:keys [type port]} @driver
         [with height] size
+        log-level (or log-level :all)
         path-driver (or path-driver (get-in defaults [type :path]))
-        _ (swap! driver drv/set-path path-driver) ;; todo get rid of atom storage
+        _ (swap! driver drv/set-browser-log-level log-level)
+        _ (swap! driver drv/set-path path-driver)
         _ (swap! driver drv/set-port port)
         _ (when args-driver (swap! driver drv/set-args args-driver))
         _ (when size (swap! driver drv/set-window-size with height))
