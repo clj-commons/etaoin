@@ -349,7 +349,7 @@ skipped or have nil values. Some of them, if not passed, are taken from the
  ;; Sets browser's minimal logging level. Only messages with level above
  ;; that one will be collected. Useful for fetching Javascript logs. Possible
  ;; values are: nil (aliases :off, :none), :debug, :info, :warn (alias :warning),
- ;; :err (aliases :error, :severe, :crit, :critical), :all. When not passes,
+ ;; :err (aliases :error, :severe, :crit, :critical), :all. When not passed,
  ;; :all is set.
  :log-level :err ;; to show only errors but not debug
 
