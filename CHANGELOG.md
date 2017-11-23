@@ -1,5 +1,8 @@
 [adam]: https://github.com/AdamFrey
 
+## 0.2.1
+  * browser logs access added
+
 ## 0.2.0-SNAPSHOT
   * click as multimethod
 

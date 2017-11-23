@@ -29,6 +29,7 @@ after a mysteries note was produced on it.
   * [File uploading](#file-uploading)
   * [Using headless drivers](#using-headless-drivers)
   * [Auto-save screenshots in case of exception](#auto-save-screenshots-in-case-of-exception)
+  * [Reading browser's logs](#reading-browsers-logs)
   * [Additional parameters](#additional-parameters)
   * [Scrolling](#scrolling)
   * [Wait functions](#wait-functions)
@@ -292,6 +293,24 @@ An exception will rise, but in `/Users/ivan/artifacts` there will be two files:
   content.
 
 The filename template is `<browser>-<host>-<port>-<datetime>.ext`.
+
+### Reading browser's logs
+
+Function `(get-logs driver)` returns the browser's logs as a vector of
+maps. Each map has the following structure:
+
+```clojure
+{:level :warning,
+ :message "1,2,3,4  anonymous (:1)",
+ :timestamp 1511449388366,
+ :source nil,
+ :datetime #inst "2017-11-23T15:03:08.366-00:00"}
+```
+
+Currently, logs are available in Chrome and Phantom.js only. Please note, the
+message text and the source type highly depend on the browser. Chrome wipes the
+logs once they have been read. Phantom.js keeps them but only until you change
+the page.
 
 ### Additional parameters
 
