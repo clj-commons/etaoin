@@ -524,3 +524,10 @@
           (let [files (file-seq (io/file dir-tmp))]
             (is (= (-> files rest count)
                    2))))))))
+
+(deftest test-click-by-text
+  (testing "click on a button by text")
+  (doto *driver*
+    (refresh)
+    (click-visible {:tag :button :text "Test Wait Button"})
+    (wait-has-text :wait-span "-secret-" {:message "wait simiple"})))

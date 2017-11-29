@@ -436,14 +436,16 @@
   [q]
   (let [tag (or (:tag q) :*)
         idx (:index q)
-        attrs (dissoc q :tag :index)
+        text (:text q)
+        attrs (dissoc q :tag :index :text)
         get-val (fn [val] (if (keyword? val)
                             (name val)
                             (str val)))
         pair (fn [[key val]] (format "[@%s='%s']"
                                      (name key)
                                      (get-val val)))
-        parts (map pair attrs)
+        parts (cond-> (map pair attrs)
+                text (conj (format "[text()='%s']" (get-val text))))
         xpath (apply str ".//" (name tag) parts)
         xpath (str xpath (if idx (format "[%s]" idx) ""))]
     xpath))
