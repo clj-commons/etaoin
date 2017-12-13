@@ -524,3 +524,7 @@
           (let [files (file-seq (io/file dir-tmp))]
             (is (= (-> files rest count)
                    2))))))))
+
+(deftest find-quotes-in-text
+  (doto *driver*
+    (-> (has-text? "'quote") is)))
