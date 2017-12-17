@@ -406,6 +406,22 @@ There are two shortcuts to jump top or bottom of the page:
 (scroll-top driver)    ;; ...and the header again
 ```
 
+The following functions scroll the page in all directions:
+
+```clojure
+(scroll-down driver 200) ;; scrolls down by 200 pixels
+(scroll-down driver)     ;; scrolls down by the default (100) number of pixels
+
+(scroll-up driver 200)
+(scroll-up driver)
+
+(scroll-left driver 200)
+(scroll-left driver)
+
+(scroll-right driver 200)
+(scroll-right driver)
+```
+
 One note, in all cases the scroll actions are served with Javascript. Ensure
 your browser has it enabled.
 
