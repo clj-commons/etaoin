@@ -1,5 +1,8 @@
 [adam]: https://github.com/AdamFrey
 
+## 0.2.1-SNAPSHOT
+  * scroll up/down/left/right functions
+
 ## 0.2.1
   * browser logs access added
 
