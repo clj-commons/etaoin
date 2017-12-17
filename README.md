@@ -32,6 +32,7 @@ after a mysteries note was produced on it.
   * [Reading browser's logs](#reading-browsers-logs)
   * [Additional parameters](#additional-parameters)
   * [Scrolling](#scrolling)
+  * [Working with frames and iframes](#working-with-frames-and-iframes)
   * [Wait functions](#wait-functions)
 - [Writing Integration Tests For Your Application](#writing-integration-tests-for-your-application)
   * [Basic fixture](#basic-fixture)
@@ -409,21 +410,68 @@ There are two shortcuts to jump top or bottom of the page:
 The following functions scroll the page in all directions:
 
 ```clojure
-(scroll-down driver 200) ;; scrolls down by 200 pixels
-(scroll-down driver)     ;; scrolls down by the default (100) number of pixels
+(scroll-down driver 200)  ;; scrolls down by 200 pixels
+(scroll-down driver)      ;; scrolls down by the default (100) number of pixels
 
-(scroll-up driver 200)
+(scroll-up driver 200)    ;; the same, but scrolls up...
 (scroll-up driver)
 
-(scroll-left driver 200)
+(scroll-left driver 200)  ;; ...left
 (scroll-left driver)
 
-(scroll-right driver 200)
+(scroll-right driver 200) ;; ... and right
 (scroll-right driver)
 ```
 
 One note, in all cases the scroll actions are served with Javascript. Ensure
 your browser has it enabled.
+
+### Working with frames and iframes
+
+While working with the page, you cannot interact with those items that are put
+into a frame or an iframe. The functions below switch the current context on
+specific frame:
+
+```clojure
+(switch-frame driver :frameId) ;; now you are inside an iframe with id="frameId"
+(click driver :someButton)     ;; click on a button inside that iframe
+(switch-frame-top driver)      ;; switches on the top of the page again
+```
+
+Frames could be nested one into another. The functions take that into
+account. Say you have an HTML layout like this:
+
+```html
+<iframe src="...">
+  <iframe src="...">
+    <button id="the-goal">
+  </frame>
+</frame>
+```
+
+So you can reach the button with the following code:
+
+```clojure
+(switch-frame-first driver)  ;; switches to the first top-level iframe
+(switch-frame-first driver)  ;; the same for an iframe inside the previous one
+(click driver :the-goal)
+(switch-frame-parent driver) ;; you are in the first iframe now
+(switch-frame-parent driver) ;; you are at the top
+```
+
+To reduce number of code lines, there is a special `with-frame` macro. It
+temporary switches frames while executing the body returning its last expression
+and switching to the previous frame afterwards.
+
+```clojure
+(with-frame driver {:id :first-frame}
+  (with-frame driver {:id :nested-frame}
+    (click driver {:id :nested-button})
+    42))
+```
+
+The code above returns `42` staying at the same frame that has been before
+before evaluating the macros.
 
 ### Wait functions
 
