@@ -1252,32 +1252,37 @@
 ;; iframes
 ;;
 
-(defn switch-frame
-  "todo"
+(defn switch-frame*
+  "Switches to an (i)frame by its index or an element reference."
   [driver id]
   (with-resp driver :post
     [:session (:session @driver) :frame]
     {:id id}
     _))
 
-(defn switch-frame-query
-  "todo"
+(defn switch-frame
+  "Switches to an (i)frame quering the page for it."
   [driver q]
   (let [el (query driver q)]
-    (switch-frame driver (el->ref el))))
+    (switch-frame* driver (el->ref el))))
 
-(defn switch-parent-frame
-  "todo"
+(defn switch-frame-first
+  "Switches to the first (i)frame."
+  [driver]
+  (switch-frame* driver 0))
+
+(defn switch-frame-parent
+  "Switches to the parent of the current (i)frame."
   [driver]
   (with-resp driver :post
     [:session (:session @driver) :frame :parent]
     nil
     _))
 
-(defn switch-top-frame
-  "todo"
+(defn switch-frame-top
+  "Switches to the most top of the page."
   [driver]
-  (switch-frame driver nil))
+  (switch-frame* driver nil))
 
 ;;
 ;; logs
