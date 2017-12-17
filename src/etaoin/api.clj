@@ -1213,6 +1213,41 @@
         {:keys [x y]} (get-scroll driver)]
     (scroll driver x y-max)))
 
+(def ^{:doc "Default scroll offset in pixels."}
+  scroll-offset 100)
+
+(defn scroll-up
+  "Scrolls the page up by specific number of pixels.
+  The `scroll-offset` constant is used when not passed."
+  ([driver offset]
+   (scroll-by driver 0 (- offset)))
+  ([driver]
+   (scroll-up driver scroll-offset)))
+
+(defn scroll-down
+  "Scrolls the page down by specific number of pixels.
+  The `scroll-offset` constant is used when not passed."
+  ([driver offset]
+   (scroll-by driver 0 offset))
+  ([driver]
+   (scroll-down driver scroll-offset)))
+
+(defn scroll-left
+  "Scrolls the page left by specific number of pixels.
+  The `scroll-offset` constant is used when not passed."
+  ([driver offset]
+   (scroll-by driver offset 0))
+  ([driver]
+   (scroll-left driver scroll-offset)))
+
+(defn scroll-right
+  "Scrolls the page right by specific number of pixels.
+  The `scroll-offset` constant is used when not passed."
+  ([driver offset]
+   (scroll-by driver (- offset) 0))
+  ([driver]
+   (scroll-right driver scroll-offset)))
+
 ;;
 ;; logs
 ;;
