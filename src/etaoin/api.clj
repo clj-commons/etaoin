@@ -1284,6 +1284,16 @@
   [driver]
   (switch-frame* driver nil))
 
+(defmacro with-frame
+  "Switches to the (i)frame temporary while executing the body
+  returning the result of the last expression."
+  [driver q & body]
+  `(do
+     (switch-frame ~driver ~q)
+     (let [result# (do ~@body)]
+       (switch-frame-parent ~driver)
+       result#)))
+
 ;;
 ;; logs
 ;;
