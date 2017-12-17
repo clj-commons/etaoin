@@ -1077,7 +1077,7 @@
 ;; Javascript
 ;;
 
-(defn el-to-js
+(defn el->ref
   "Turns machinery-wise element ID into an object
   that Javascript use to reference existing DOM element.
 
@@ -1091,7 +1091,7 @@
   (def el (query driver :button-ok))
 
   ;; the first argument will the an Element instance.
-  (js-execute driver \"arguments[0].scrollIntoView()\", (el-to-js el))
+  (js-execute driver \"arguments[0].scrollIntoView()\", (el->ref el))
   "
   [el]
   {:ELEMENT el
@@ -1189,10 +1189,10 @@
   "
   ([driver q]
    (let [el (query driver q)]
-     (js-execute driver "arguments[0].scrollIntoView();" (el-to-js el))))
+     (js-execute driver "arguments[0].scrollIntoView();" (el->ref el))))
   ([driver q param]
    (let [el (query driver q)]
-     (js-execute driver "arguments[0].scrollIntoView(arguments[1]);" (el-to-js el) param))))
+     (js-execute driver "arguments[0].scrollIntoView(arguments[1]);" (el->ref el) param))))
 
 (defn get-scroll
   "Returns the current scroll position as a map
@@ -1247,6 +1247,37 @@
    (scroll-by driver (- offset) 0))
   ([driver]
    (scroll-right driver scroll-offset)))
+
+;;
+;; iframes
+;;
+
+(defn switch-frame
+  "todo"
+  [driver id]
+  (with-resp driver :post
+    [:session (:session @driver) :frame]
+    {:id id}
+    _))
+
+(defn switch-frame-query
+  "todo"
+  [driver q]
+  (let [el (query driver q)]
+    (switch-frame driver (el->ref el))))
+
+(defn switch-parent-frame
+  "todo"
+  [driver]
+  (with-resp driver :post
+    [:session (:session @driver) :frame :parent]
+    nil
+    _))
+
+(defn switch-top-frame
+  "todo"
+  [driver]
+  (switch-frame driver nil))
 
 ;;
 ;; logs
