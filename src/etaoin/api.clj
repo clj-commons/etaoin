@@ -1077,7 +1077,7 @@
 ;; Javascript
 ;;
 
-(defn el-to-js
+(defn el->ref
   "Turns machinery-wise element ID into an object
   that Javascript use to reference existing DOM element.
 
@@ -1091,7 +1091,7 @@
   (def el (query driver :button-ok))
 
   ;; the first argument will the an Element instance.
-  (js-execute driver \"arguments[0].scrollIntoView()\", (el-to-js el))
+  (js-execute driver \"arguments[0].scrollIntoView()\", (el->ref el))
   "
   [el]
   {:ELEMENT el
@@ -1189,10 +1189,10 @@
   "
   ([driver q]
    (let [el (query driver q)]
-     (js-execute driver "arguments[0].scrollIntoView();" (el-to-js el))))
+     (js-execute driver "arguments[0].scrollIntoView();" (el->ref el))))
   ([driver q param]
    (let [el (query driver q)]
-     (js-execute driver "arguments[0].scrollIntoView(arguments[1]);" (el-to-js el) param))))
+     (js-execute driver "arguments[0].scrollIntoView(arguments[1]);" (el->ref el) param))))
 
 (defn get-scroll
   "Returns the current scroll position as a map
@@ -1247,6 +1247,52 @@
    (scroll-by driver (- offset) 0))
   ([driver]
    (scroll-right driver scroll-offset)))
+
+;;
+;; iframes
+;;
+
+(defn switch-frame*
+  "Switches to an (i)frame by its index or an element reference."
+  [driver id]
+  (with-resp driver :post
+    [:session (:session @driver) :frame]
+    {:id id}
+    _))
+
+(defn switch-frame
+  "Switches to an (i)frame quering the page for it."
+  [driver q]
+  (let [el (query driver q)]
+    (switch-frame* driver (el->ref el))))
+
+(defn switch-frame-first
+  "Switches to the first (i)frame."
+  [driver]
+  (switch-frame* driver 0))
+
+(defn switch-frame-parent
+  "Switches to the parent of the current (i)frame."
+  [driver]
+  (with-resp driver :post
+    [:session (:session @driver) :frame :parent]
+    nil
+    _))
+
+(defn switch-frame-top
+  "Switches to the most top of the page."
+  [driver]
+  (switch-frame* driver nil))
+
+(defmacro with-frame
+  "Switches to the (i)frame temporary while executing the body
+  returning the result of the last expression."
+  [driver q & body]
+  `(do
+     (switch-frame ~driver ~q)
+     (let [result# (do ~@body)]
+       (switch-frame-parent ~driver)
+       result#)))
 
 ;;
 ;; logs

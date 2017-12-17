@@ -1,5 +1,8 @@
 [adam]: https://github.com/AdamFrey
 
+## 0.2.2
+  * frames and iframes support
+
 ## 0.2.1-SNAPSHOT
   * scroll up/down/left/right functions
 
