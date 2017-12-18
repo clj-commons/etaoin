@@ -1236,7 +1236,7 @@
   "Scrolls the page left by specific number of pixels.
   The `scroll-offset` constant is used when not passed."
   ([driver offset]
-   (scroll-by driver offset 0))
+   (scroll-by driver (- offset) 0))
   ([driver]
    (scroll-left driver scroll-offset)))
 
@@ -1244,7 +1244,7 @@
   "Scrolls the page right by specific number of pixels.
   The `scroll-offset` constant is used when not passed."
   ([driver offset]
-   (scroll-by driver (- offset) 0))
+   (scroll-by driver offset 0))
   ([driver]
    (scroll-right driver scroll-offset)))
 
