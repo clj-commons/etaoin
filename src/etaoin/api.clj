@@ -1634,8 +1634,8 @@
    (has-text? driver {:tag :*} text))
   ([driver q text]
    (let [[locator term] (q-expand driver q)
-         term1 (format "%s[contains(text(), '%s')]" term text)
-         term2 (format "%s//*[contains(text(), '%s')]" term text)]
+         term1 (format "%s[contains(text(), \"%s\")]" term text)
+         term2 (format "%s//*[contains(text(), \"%s\")]" term text)]
      (when-not (= locator locator-xpath)
        (throw+ {:type :etaoin/locator
                 :driver @driver
