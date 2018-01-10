@@ -67,6 +67,7 @@ after a mysteries note was produced on it.
 
 - [Flyerbee](https://www.flyerbee.com/)
 - [Room Key](https://www.roomkey.com/)
+- [Barrick Gold](http://www.barrick.com/)
 
 You are welcome to submit your company into that list.
 
