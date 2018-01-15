@@ -3,6 +3,7 @@
 ## 0.2.3-SNAPSHOT
   * #84 headless? bug fixed
   * #79 readme updated, file upload section
+  * #16 postmortem filepath
 
 ## 0.2.2
   * frames and iframes support

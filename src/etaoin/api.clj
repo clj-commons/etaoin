@@ -2266,35 +2266,44 @@
 
 ;; postmortem
 
+(defn get-pwd []
+  (System/getProperty "user.dir"))
+
+(defn join-path
+  "Joins two and more path components into a single file path OS-wisely."
+  [p1 p2 & more]
+  (.getPath (apply io/file p1 p2 more)))
+
+(defn format-date
+  [date pattern]
+  (.format (SimpleDateFormat. pattern) date))
+
 (defn postmortem-handler
-  "Internal postmortem handler that creates files. See
-  `with-postmortem` for more info."
-  [driver opt]
-  (let [dir-src (or (:dir-src opt)
-                    (:dir opt))
-        dir-img (or (:dir-img opt)
-                    (:dir opt))
-        date-format (or (:date-format opt)
-                        "yyyy-MM-dd-hh-mm-ss")
-        date-str (-> date-format
-                     SimpleDateFormat.
-                     (.format (Date.)))
+  "Internal postmortem handler that creates files.
+  See the `with-postmortem`'s docstring below for more info."
+  [driver {:keys [dir dir-src dir-img date-format]}]
+  (let [dir     (or dir (get-pwd))
+        dir-img (or dir-img dir)
+        dir-src (or dir-src dir)
+
+        file-tpl "%s-%s-%s-%s.%s"
+
+        date-format (or date-format "yyyy-MM-dd-hh-mm-ss")
         params [(-> @driver :type name)
                 (-> @driver :host)
                 (-> @driver :port)
-                date-str]
-        path-template "%s/%s-%s-%s-%s.%s"
-        path-img (apply format
-                        path-template
-                        dir-img
-                        (conj params "png"))
-        path-src (apply format
-                        path-template
-                        dir-src
-                        (conj params "html"))]
+                (format-date (Date.) date-format)]
+
+        file-img (apply format file-tpl (conj params "png"))
+        file-src (apply format file-tpl (conj params "html"))
+
+        path-img (join-path dir-src file-img)
+        path-src (join-path dir-src file-src)]
+
     (log/debugf "Writing screenshot: %s" path-img)
-    (log/debugf "Writing HTML source: %s" path-src)
     (screenshot driver path-img)
+
+    (log/debugf "Writing HTML source: %s" path-src)
     (spit path-src (get-source driver))))
 
 (defmacro with-postmortem
@@ -2302,14 +2311,18 @@
   it will save a screenshot and the page's source code on disk before
   rising an exception so it could help you to discover what happened.
 
+  Note: do not use it in test's fixtures. The standard `clojure.test`
+  framework has its own way of handling exceptions, so wrapping a fixture
+  with `(with-postmortem...)` would be in vain.
+
   Arguments:
 
   - `driver`: a driver instance,
 
   - `opt`: a map of options, where:
 
-  -- `:dir` path to a directory where to store both `.png` and `.html`
-  files. Might not exist, will be created otherwise.
+  -- `:dir` path to a directory where to store artifacts by default.
+  When not passed, the current working directory (`pwd`) is used.
 
   -- `:dir-img`: path to a directory where to store `.png`
   files (screenshots). If `nil`, `:dir` value is used.
