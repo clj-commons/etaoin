@@ -192,11 +192,12 @@ Here is a example of how to get all the links from the page:
 
 ### File uploading
 
-When selecting files to upload, you are not allowed to navigate through the
-system file dialog. Instead, use the `upload-file` function to attach a local
-file to a file input widget. The function takes either a full path as a string
-or a native `java.io.File` instance. The file should exist or you'll get an
-exception otherwise. Usage example:
+Clicking on a file input button opens an OS-specific dialog that you are not
+allowed to interact with using WebDriver protocol. Use the `upload-file`
+function to attach a local file to a file input widget. The function takes a
+selector that points to a file input and either a full path as a string or a
+native `java.io.File` instance. The file should exist or you'll get an exception
+otherwise. Usage example:
 
 ```clojure
 (def driver (chrome))
@@ -204,11 +205,17 @@ exception otherwise. Usage example:
 ;; open a web page that serves uploaded files
 (go driver "http://nervgh.github.io/pages/angular-file-upload/examples/simple/")
 
-;; search for input widgets, there are a couple of them
-(query-all driver {:tag :input :type :file})
+;; bound selector to variable; you may also specify an id, class, etc
+(def input {:tag :input :type :file})
 
-;; upload an image with the first one
-(upload-file driver {:tag :input :type :file} "/Users/ivan/Downloads/sample.png")
+;; upload an image with the first one file input
+(def my-file "/Users/ivan/Downloads/sample.png")
+(upload-file driver input my-file)
+
+;; or pass a native Java object:
+(require '[clojure.java.io :as io])
+(def my-file (io/file "/Users/ivan/Downloads/sample.png"))
+(upload-file driver input my-file)
 ```
 
 ### Using headless drivers
