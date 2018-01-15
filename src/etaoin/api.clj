@@ -1553,7 +1553,7 @@
 (defn headless?
   "Returns true if a driver is run in headless mode (without UI window)."
   [driver]
-  (drv/is-headless? driver))
+  (drv/is-headless? @driver))
 
 (defn exists?
   "Returns true if an element exists on the page.
