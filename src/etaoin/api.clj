@@ -2292,7 +2292,7 @@
         params [(-> @driver :type name)
                 (-> @driver :host)
                 (-> @driver :port)
-                date-format]
+                (format-date (Date.) date-format)]
 
         file-img (apply format file-tpl (conj params "png"))
         file-src (apply format file-tpl (conj params "html"))
@@ -2301,8 +2301,9 @@
         path-src (join-path dir-src file-src)]
 
     (log/debugf "Writing screenshot: %s" path-img)
-    (log/debugf "Writing HTML source: %s" path-src)
     (screenshot driver path-img)
+
+    (log/debugf "Writing HTML source: %s" path-src)
     (spit path-src (get-source driver))))
 
 (defmacro with-postmortem
