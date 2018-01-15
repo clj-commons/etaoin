@@ -1,7 +1,8 @@
 [adam]: https://github.com/AdamFrey
 
 ## 0.2.3-SNAPSHOT
-  * headless? bug fixed #84
+  * #84 headless? bug fixed
+  * #79 readme updated, file upload section
 
 ## 0.2.2
   * frames and iframes support
