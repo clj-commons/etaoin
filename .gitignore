@@ -12,3 +12,4 @@ pom.xml.asc
 .DS_Store
 autodoc/**
 node_modules
+package-lock.json
