@@ -28,7 +28,7 @@ after a mysteries note was produced on it.
   * [Working with multiple elements](#working-with-multiple-elements)
   * [File uploading](#file-uploading)
   * [Using headless drivers](#using-headless-drivers)
-  * [Auto-save screenshots in case of exception](#auto-save-screenshots-in-case-of-exception)
+  * [Postmortem: auto-save artifacts in case of exception](#postmortem-auto-save-artifacts-in-case-of-exception)
   * [Reading browser's logs](#reading-browsers-logs)
   * [Additional parameters](#additional-parameters)
   * [Scrolling](#scrolling)
@@ -282,7 +282,7 @@ respectively:
   ... common actions for both versions)
 ```
 
-### Auto-save artifacts in case of exception
+### Postmortem: auto-save artifacts in case of exception
 
 Sometimes, it might be difficult to discover what went wrong during the last UI
 tests session. A special macro `with-postmortem` saves some useful data on disk
@@ -291,14 +291,14 @@ JS console logs. Note: not all browsers support getting JS logs.
 
 Example:
 
-
 ```clojure
 (def driver (chrome))
 (with-postmortem driver {:dir "/Users/ivan/artifacts"}
   (click driver :non-existing-element))
 ```
 
-An exception will rise, but in `/Users/ivan/artifacts` there will be three files:
+An exception will rise, but in `/Users/ivan/artifacts` there will be three files
+named by a template `<browser>-<host>-<port>-<datetime>.<ext>`:
 
 - `firefox-127.0.0.1-4444-2017-03-26-02-45-07.png`: an actual screenshot of the
   browser's page;
@@ -307,7 +307,25 @@ An exception will rise, but in `/Users/ivan/artifacts` there will be three files
 - `firefox-127.0.0.1-4444-2017-03-26-02-45-07.json`: a JSON file with console
   logs; those are a vector of objects.
 
-Generally, the filename template is `<browser>-<host>-<port>-<datetime>.<ext>`.
+The handler takes a map of options with the following keys. All of them might be
+absent.
+
+```clojure
+{;; default directory where to store artifacts; pwd is used when not passed
+ :dir "/home/ivan/UI-tests"
+
+ ;; a directory where to store screenshots; :dir is used when not passed
+ :dir-img "/home/ivan/UI-tests/screenshots"
+
+ ;; the same but for HTML sources
+ :dir-src "/home/ivan/UI-tests/HTML"
+
+ ;; the same but for console logs
+ :dir-log "/home/ivan/UI-tests/console"
+
+ ;; a string template to format a data; See docs for SimpleDateFormat class
+ :date-format "yyyy-MM-dd-hh-mm-ss"}
+```
 
 ### Reading browser's logs
 
@@ -614,34 +632,41 @@ tests exactly.
 
 ### Postmortem Handler To Collect Artifacts
 
-To save a screenshot and HTML dump of your page in case of exception, wrap your
-fixture into `with-postmortem` handler as follows:
+To save some artifacts in case of exception, wrap the body of your test into
+`with-postmortem` handler as follows:
 
 ```clojure
-(defn fixture-drivers [f]
-  (doseq [type driver-types]
-    (with-driver type {} driver
-      (with-postmortem driver {:dir "/path/to/folder"}
-        (binding [*driver* driver]
-          (testing (format "Testing in %s browser" (name type))
-            (f)))))))
+(deftest test-user-login
+  (with-postmortem *driver* {:dir "/path/to/folder"}
+    (doto *driver*
+      (go "http://127.0.0.1:8080")
+      (click-visible :login)
+      ;; any other actions...
+      )))
 ```
 
-If you use Circle CI, it would be great to save data into artifacts directory:
+Now that, if any exception occurs in that test, artifacts will be saved.
+
+To not copy and paste the options map, declare it on the top of the module. If
+you use Circle CI, it would be great to save the data into a special artifacts
+directory that might be downloaded as a zip file once a build was finished:
 
 ```clojure
 (def pm-dir
-  (or (System/getenv "CIRCLE_ARTIFACTS")
-      "/some/local/path"))
+  (or (System/getenv "CIRCLE_ARTIFACTS") ;; you are on CI
+      "/some/local/path"))               ;; local machine
+
+(def pm-opt
+  {:dir pm-dir})
 ```
 
-Now pass `pm-dir` into `with-postmortem` macro:
+Now pass that map everywhere into PM handler:
 
 ```clojure
-...
-  (with-postmortem driver {:dir pm-dir}
-    (binding [*driver* driver]
-      ...
+  ;; test declaration
+  (with-postmortem *driver* pm-dir
+    ;; test body goes here
+    )
 ```
 
 Once an error occurs, you will find a PNG image that represents your browser
