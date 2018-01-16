@@ -26,6 +26,7 @@
             [clojure.tools.logging :as log]
             [clojure.java.io :as io]
             [clojure.string :as str]
+            [cheshire.core :refer [generate-stream]]
             [slingshot.slingshot :refer [try+ throw+]])
   (:import java.util.Date
            java.net.ConnectException
@@ -68,6 +69,11 @@
   multimethods."
   [driver & _]
   (:type @driver))
+
+(defn- implemented?
+  [driver feature]
+  (when (get-method feature (:type @driver))
+    true))
 
 ;;
 ;; api
@@ -1357,6 +1363,18 @@
     result
     (mapv process-log (:value result))))
 
+(defn supports-logs?
+  "Returns whether a driver supports getting console logs."
+  [driver]
+  (implemented? driver get-logs))
+
+(defn- dump-logs
+  [logs filename & [opt]]
+  (generate-stream
+   logs
+   (io/writer filename)
+   (merge {:pretty true} opt)))
+
 ;;
 ;; get/set hash
 ;;
@@ -2281,10 +2299,11 @@
 (defn postmortem-handler
   "Internal postmortem handler that creates files.
   See the `with-postmortem`'s docstring below for more info."
-  [driver {:keys [dir dir-src dir-img date-format]}]
+  [driver {:keys [dir dir-src dir-img dir-log date-format]}]
   (let [dir     (or dir (get-pwd))
         dir-img (or dir-img dir)
         dir-src (or dir-src dir)
+        dir-log (or dir-log dir)
 
         file-tpl "%s-%s-%s-%s.%s"
 
@@ -2296,15 +2315,21 @@
 
         file-img (apply format file-tpl (conj params "png"))
         file-src (apply format file-tpl (conj params "html"))
+        file-log (apply format file-tpl (conj params "json"))
 
         path-img (join-path dir-src file-img)
-        path-src (join-path dir-src file-src)]
+        path-src (join-path dir-src file-src)
+        path-log (join-path dir-src file-log)]
 
     (log/debugf "Writing screenshot: %s" path-img)
     (screenshot driver path-img)
 
     (log/debugf "Writing HTML source: %s" path-src)
-    (spit path-src (get-source driver))))
+    (spit path-src (get-source driver))
+
+    (when (supports-logs? driver)
+      (log/debugf "Writing console logs: %s" path-log)
+      (dump-logs (get-logs driver) path-log))))
 
 (defmacro with-postmortem
   "Wraps the body with postmortem handler. If any error occurs,
