@@ -282,27 +282,32 @@ respectively:
   ... common actions for both versions)
 ```
 
-### Auto-save screenshots in case of exception
+### Auto-save artifacts in case of exception
 
 Sometimes, it might be difficult to discover what went wrong during the last UI
-tests session. To keep some postmortem evident on your disk, wrap the code
-block with `with-postmortem` macros:
+tests session. A special macro `with-postmortem` saves some useful data on disk
+before the exception was triggered. Those data are a screenshot, HTML code and
+JS console logs. Note: not all browsers support getting JS logs.
+
+Example:
+
 
 ```clojure
-(def driver (firefox))
+(def driver (chrome))
 (with-postmortem driver {:dir "/Users/ivan/artifacts"}
   (click driver :non-existing-element))
 ```
 
-An exception will rise, but in `/Users/ivan/artifacts` there will be two files:
+An exception will rise, but in `/Users/ivan/artifacts` there will be three files:
 
 - `firefox-127.0.0.1-4444-2017-03-26-02-45-07.png`: an actual screenshot of the
   browser's page;
+- `firefox-127.0.0.1-4444-2017-03-26-02-45-07.html`: the current browser's HTML
+  content;
+- `firefox-127.0.0.1-4444-2017-03-26-02-45-07.json`: a JSON file with console
+  logs; those are a vector of objects.
 
-- `firefox-127.0.0.1-4444-2017-03-26-02-45-07.html`: an actual browser's HTML
-  content.
-
-The filename template is `<browser>-<host>-<port>-<datetime>.ext`.
+Generally, the filename template is `<browser>-<host>-<port>-<datetime>.<ext>`.
 
 ### Reading browser's logs
 

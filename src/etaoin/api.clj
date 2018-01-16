@@ -2333,8 +2333,9 @@
 
 (defmacro with-postmortem
   "Wraps the body with postmortem handler. If any error occurs,
-  it will save a screenshot and the page's source code on disk before
-  rising an exception so it could help you to discover what happened.
+  it will save a screenshot, the page's source code and console logs
+  (if supported) on disk before rising an exception. Having them
+  could help you to discover what happened.
 
   Note: do not use it in test's fixtures. The standard `clojure.test`
   framework has its own way of handling exceptions, so wrapping a fixture
@@ -2354,6 +2355,9 @@
 
   -- `:dir-src`: path to a directory where to store `.html`
   files (page source). If `nil`, `:dir` value is used.
+
+  -- `:dir-log`: path to a directory where to store `.json`
+  files with console logs. If `nil`, `:dir` value is used.
 
   -- `:date-format`: a string represents date(time) pattern to make
   filenames unique. Default is \"yyyy-MM-dd-hh-mm-ss\". See Oracle
