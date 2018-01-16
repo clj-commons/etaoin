@@ -323,7 +323,7 @@ absent.
  ;; the same but for console logs
  :dir-log "/home/ivan/UI-tests/console"
 
- ;; a string template to format a data; See docs for SimpleDateFormat class
+ ;; a string template to format a date; See SimpleDateFormat Java class
  :date-format "yyyy-MM-dd-hh-mm-ss"}
 ```
 
@@ -649,7 +649,8 @@ Now that, if any exception occurs in that test, artifacts will be saved.
 
 To not copy and paste the options map, declare it on the top of the module. If
 you use Circle CI, it would be great to save the data into a special artifacts
-directory that might be downloaded as a zip file once a build was finished:
+directory that might be downloaded as a zip file once the build has been
+finished:
 
 ```clojure
 (def pm-dir

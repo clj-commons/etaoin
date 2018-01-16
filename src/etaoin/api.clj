@@ -1364,7 +1364,7 @@
     (mapv process-log (:value result))))
 
 (defn supports-logs?
-  "Returns whether a driver supports getting console logs."
+  "Checks whether a driver supports getting console logs."
   [driver]
   (implemented? driver get-logs))
 
