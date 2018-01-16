@@ -26,6 +26,7 @@
             [clojure.tools.logging :as log]
             [clojure.java.io :as io]
             [clojure.string :as str]
+            [cheshire.core :refer [generate-stream]]
             [slingshot.slingshot :refer [try+ throw+]])
   (:import java.util.Date
            java.net.ConnectException
@@ -68,6 +69,11 @@
   multimethods."
   [driver & _]
   (:type @driver))
+
+(defn- implemented?
+  [driver feature]
+  (when (get-method feature (:type @driver))
+    true))
 
 ;;
 ;; api
@@ -1357,6 +1363,18 @@
     result
     (mapv process-log (:value result))))
 
+(defn supports-logs?
+  "Checks whether a driver supports getting console logs."
+  [driver]
+  (implemented? driver get-logs))
+
+(defn- dump-logs
+  [logs filename & [opt]]
+  (generate-stream
+   logs
+   (io/writer filename)
+   (merge {:pretty true} opt)))
+
 ;;
 ;; get/set hash
 ;;
@@ -2281,10 +2299,11 @@
 (defn postmortem-handler
   "Internal postmortem handler that creates files.
   See the `with-postmortem`'s docstring below for more info."
-  [driver {:keys [dir dir-src dir-img date-format]}]
+  [driver {:keys [dir dir-src dir-img dir-log date-format]}]
   (let [dir     (or dir (get-pwd))
         dir-img (or dir-img dir)
         dir-src (or dir-src dir)
+        dir-log (or dir-log dir)
 
         file-tpl "%s-%s-%s-%s.%s"
 
@@ -2296,20 +2315,27 @@
 
         file-img (apply format file-tpl (conj params "png"))
         file-src (apply format file-tpl (conj params "html"))
+        file-log (apply format file-tpl (conj params "json"))
 
         path-img (join-path dir-src file-img)
-        path-src (join-path dir-src file-src)]
+        path-src (join-path dir-src file-src)
+        path-log (join-path dir-src file-log)]
 
     (log/debugf "Writing screenshot: %s" path-img)
     (screenshot driver path-img)
 
     (log/debugf "Writing HTML source: %s" path-src)
-    (spit path-src (get-source driver))))
+    (spit path-src (get-source driver))
+
+    (when (supports-logs? driver)
+      (log/debugf "Writing console logs: %s" path-log)
+      (dump-logs (get-logs driver) path-log))))
 
 (defmacro with-postmortem
   "Wraps the body with postmortem handler. If any error occurs,
-  it will save a screenshot and the page's source code on disk before
-  rising an exception so it could help you to discover what happened.
+  it will save a screenshot, the page's source code and console logs
+  (if supported) on disk before rising an exception. Having them
+  could help you to discover what happened.
 
   Note: do not use it in test's fixtures. The standard `clojure.test`
   framework has its own way of handling exceptions, so wrapping a fixture
@@ -2329,6 +2355,9 @@
 
   -- `:dir-src`: path to a directory where to store `.html`
   files (page source). If `nil`, `:dir` value is used.
+
+  -- `:dir-log`: path to a directory where to store `.json`
+  files with console logs. If `nil`, `:dir` value is used.
 
   -- `:date-format`: a string represents date(time) pattern to make
   filenames unique. Default is \"yyyy-MM-dd-hh-mm-ss\". See Oracle
