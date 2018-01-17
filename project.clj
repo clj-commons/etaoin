@@ -6,7 +6,8 @@
 
   :profiles {:dev {:plugins [[autodoc/lein-autodoc "1.1.1"]]
                    :dependencies [[org.clojure/clojure "1.8.0"]
-                                  [log4j/log4j "1.2.17"]]}}
+                                  [log4j/log4j "1.2.17"]]
+                   :resource-paths ["env/dev/resources"]}}
 
   :dependencies [[clj-http "2.3.0"]
                  [cheshire "5.6.3"]
