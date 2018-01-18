@@ -722,7 +722,7 @@ Now pass that map everywhere into PM handler:
 
 ```clojure
   ;; test declaration
-  (with-postmortem *driver* pm-dir
+  (with-postmortem *driver* pm-opt
     ;; test body goes here
     )
 ```
