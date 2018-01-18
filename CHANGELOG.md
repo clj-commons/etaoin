@@ -5,6 +5,7 @@
   * #79 readme updated, file upload section
   * #16 postmortem filepath
   * #69 dump console logs in PM
+  * #62 profile support
 
 ## 0.2.2
   * frames and iframes support

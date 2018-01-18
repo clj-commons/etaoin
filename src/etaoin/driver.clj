@@ -5,14 +5,37 @@
   to be used with swap!. Our further goal is to reduce atom usage
   everywhere it is possible.
 
+  Links for development:
+
   Firefox command line flags:
   /Applications/Firefox.app/Contents/MacOS/firefox-bin --help
 
   Chrome binary path:
   /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
 
+  Chrome CLI args:
+  https://peter.sh/experiments/chromium-command-line-switches/
+
+  Chrome capabilities:
+  https://sites.google.com/a/chromium.org/chromedriver/capabilities
+
+  Firefox capabilities:
+  https://github.com/mozilla/geckodriver/#firefox-capabilities
+
+  Firefox profiles:
+  https://support.mozilla.org/en-US/kb/profiles-where-firefox-stores-user-data
+
+  Safari endpoints
+  https://developer.apple.com/library/content/documentation/NetworkingInternetWeb/Conceptual/WebDriverEndpointDoc/Commands/Commands.html
+
+  JSON Wire protocol (obsolete)
+  https://github.com/SeleniumHQ/selenium/wiki/JsonWireProtocol
+
+  Selenium Python source code for Firefox
+  https://github.com/SeleniumHQ/selenium/blob/master/py/selenium/webdriver/firefox/options.py
 "
   (:require [etaoin.util :refer [defmethods deep-merge]]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]))
 
 (defn dispatch-driver
@@ -40,6 +63,10 @@
   [driver]
   (or (:args driver) []))
 
+;;
+;; port
+;;
+
 (defmulti set-port
   "Updates driver's map with the given port added to the args."
   {:arglists '([driver port])}
@@ -60,11 +87,18 @@
   [driver port]
   (set-args driver ["--webdriver" port]))
 
+;;
+;; capabilities
+;;
+
 (defn set-capabilities
   [driver caps]
   (update driver :capabilities deep-merge caps))
 
-;; https://github.com/SeleniumHQ/selenium/blob/master/py/selenium/webdriver/firefox/options.py
+;;
+;; options utils
+;;
+
 (defmulti options-name dispatch-driver)
 
 (defmethod options-name
@@ -88,11 +122,47 @@
   :operaOptions)
 
 (defn set-options-args
-  "Adds command line arguments for the window initial size."
+  "Adds command line arguments for a browser binary (not a driver)."
   [driver args]
   (update-in driver
              [:capabilities (options-name driver) :args]
              append-args (map str args)))
+
+;;
+;; profiles
+;;
+
+(defmulti set-profile dispatch-driver)
+
+(defmethod set-profile
+  :default
+  [driver profile]
+  (log/debugf "This driver doesn't support setting a profile.")
+  driver)
+
+(defmethod set-profile
+  :chrome
+  ;; Chrome adds the trailing `/Default` part to the profile path.
+  ;; To prevent duplication, let's clear the given path manually.
+  [driver profile]
+  (let [default #"(\\|/)Default$"
+        p (string/replace profile default "")]
+    (set-options-args driver [(format "--user-data-dir=%s" p)])))
+
+(defmethod set-profile
+  :firefox
+  ;; When setting a custom profile, geckodriver cannot
+  ;; connect to the browser. The issue
+  ;; https://github.com/mozilla/geckodriver/issues/1058
+  ;; says to specify a marionette port manually.
+  [driver profile]
+  (-> driver
+      (set-options-args ["-profile" profile])
+      (set-args ["--marionette-port" 2828])))
+
+;;
+;; window size
+;;
 
 (defmulti set-window-size
   "Adds browser's command line arguments for setting initial window size."
@@ -114,6 +184,10 @@
   :firefox
   [driver w h]
   (set-options-args driver ["-width" w "-height" h]))
+
+;;
+;; initial URL
+;;
 
 (defmulti set-url
   "Sets the default URL that the browser should open by default."
@@ -170,7 +244,7 @@
   true)
 
 ;;
-;; FF preferences
+;; Custom preferences
 ;;
 
 (defmulti set-prefs
