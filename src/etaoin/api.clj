@@ -2448,8 +2448,9 @@
   browser's logs. Possible values are: `:off`, `:debug`, `:warn`, `:info`,
   `:error`, `:all`. When not passed, `:all` is set.
 
-  -- `:profile` a string path that points on profile folder.
-  See `Setting profile` section in `README.md` file for more information.
+  -- `:profile` is a string path that points on profile folder.
+  See the `Setting browser profile` section in `README.md` to know
+  how to do it properly.
 
   -- `headless` is a boolean flag to run the browser in headless mode
   (i.e. without GUI window). Useful when running tests on CI servers
