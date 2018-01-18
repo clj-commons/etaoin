@@ -1,5 +1,7 @@
 [adam]: https://github.com/AdamFrey
 
+## 0.2.4
+
 ## 0.2.3-SNAPSHOT
   * #84 headless? bug fixed
   * #79 readme updated, file upload section
