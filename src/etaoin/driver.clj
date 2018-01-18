@@ -32,6 +32,7 @@
   https://github.com/SeleniumHQ/selenium/wiki/JsonWireProtocol
 "
   (:require [etaoin.util :refer [defmethods deep-merge]]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]))
 
 (defn dispatch-driver
@@ -139,9 +140,15 @@
 
 (defmethod set-profile
   :chrome
+  ;; Chrome ignores the last `/Default` folder in the profile path
+  ;; (it adds it to the path internally). But on the
+  ;; `chrome://version/` page, it shows it with trailing `/Default`.
+  ;; So it would be better to remove that part manually
+  ;; in case somebody would copy and paste the profile path from there.
   [driver profile]
-  (set-options-args driver [(format "--user-data-dir=%s" profile)]))
-
+  (let [default #"(\\|/)Default$"
+        p (string/replace profile default "")]
+    (set-options-args driver [(format "--user-data-dir=%s" p)])))
 
 (defmethod set-profile
   :firefox
