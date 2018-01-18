@@ -390,6 +390,9 @@ skipped or have nil values. Some of them, if not passed, are taken from the
  ;; :all is set.
  :log-level :err ;; to show only errors but not debug
 
+ ;; Path to a custorm browser profile. See the section below.
+ :profile "/Users/ivan/Library/Application Support/Firefox/Profiles/iy4iitbg.Test"
+
  ;; Env variables sent to the driver's process. Not processed yet.
  :env {:MOZ_CRASHREPORTER_URL "http://test.com"}
 
