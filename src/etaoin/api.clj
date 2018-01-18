@@ -2445,9 +2445,11 @@
   -- `:url` is a string with the default URL opened by default (FF only for now).
 
   -- `:log-level` a keyword to set browser's log level. Used when fetching
-  browser's logs. Possible values are:
-  `:off`, `:debug`, `:warn`, `:info`, `:error`, `:all`.
-  When not passed, `:all` is set.
+  browser's logs. Possible values are: `:off`, `:debug`, `:warn`, `:info`,
+  `:error`, `:all`. When not passed, `:all` is set.
+
+  -- `:profile` a string path that points on profile folder.
+  See `Setting profile` section in `README.md` file for more information.
 
   -- `headless` is a boolean flag to run the browser in headless mode
   (i.e. without GUI window). Useful when running tests on CI servers
@@ -2471,6 +2473,7 @@
                      args
                      size
                      prefs
+                     profile
                      headless
                      log-level
                      args-driver
@@ -2489,6 +2492,7 @@
         _ (when headless (swap! driver drv/set-headless))
         _ (when args (swap! driver drv/set-options-args args))
         _ (when prefs (swap! driver drv/set-prefs prefs))
+        _ (when profile (swap! driver drv/set-profile profile))
         _ (when path-browser (swap! driver drv/set-binary path-browser))
         proc-args (drv/get-args @driver)
         _ (log/debugf "Starting process: %s" (str/join \space proc-args))
