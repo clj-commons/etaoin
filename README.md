@@ -49,6 +49,7 @@ after a mysteries note was produced on it.
   * [Clicking On Non-Visible Element](#clicking-on-non-visible-element)
   * [Unpredictable errors in Chrome when window is not active](#unpredictable-errors-in-chrome-when-window-is-not-active)
 - [Contributors](#contributors)
+- [Other materials](#other-materials)
 - [License](#license)
 
 <!-- tocstop -->
@@ -892,6 +893,15 @@ Js execution, etc. So try to keep Chrome window active during test session.
 The project is open for your improvements and ideas. If any of unit tests fall
 on your machine please submit an issue giving your OS version, browser and
 console output.
+
+## Other materials
+
+[ui-test]:http://grishaev.me/en/ui-test
+[stream]:https://www.youtube.com/watch?v=cLL_5rETLWY
+
+- [Thoughts on UI tests][ui-test]. My blog-post about some pitfalls that might
+  occur when testing UI.
+- [Live-coding session][stream] where I work on some of the Etaoin issues.
 
 ## License
 
