@@ -30,6 +30,9 @@
 
   JSON Wire protocol (obsolete)
   https://github.com/SeleniumHQ/selenium/wiki/JsonWireProtocol
+
+  Selenium Python source code for Firefox
+  https://github.com/SeleniumHQ/selenium/blob/master/py/selenium/webdriver/firefox/options.py
 "
   (:require [etaoin.util :refer [defmethods deep-merge]]
             [clojure.string :as string]
@@ -96,7 +99,6 @@
 ;; options utils
 ;;
 
-;; https://github.com/SeleniumHQ/selenium/blob/master/py/selenium/webdriver/firefox/options.py
 (defmulti options-name dispatch-driver)
 
 (defmethod options-name
@@ -140,11 +142,8 @@
 
 (defmethod set-profile
   :chrome
-  ;; Chrome ignores the last `/Default` folder in the profile path
-  ;; (it adds it to the path internally). But on the
-  ;; `chrome://version/` page, it shows it with trailing `/Default`.
-  ;; So it would be better to remove that part manually
-  ;; in case somebody would copy and paste the profile path from there.
+  ;; Chrome adds the trailing `/Default` part to the profile path.
+  ;; To prevent duplication, let's clear the given path manually.
   [driver profile]
   (let [default #"(\\|/)Default$"
         p (string/replace profile default "")]
@@ -152,12 +151,10 @@
 
 (defmethod set-profile
   :firefox
-  ;; As usual, Firefox is pain in the ass.
   ;; When setting a custom profile, geckodriver cannot
   ;; connect to the browser. The issue
   ;; https://github.com/mozilla/geckodriver/issues/1058
   ;; says to specify a marionette port manually.
-  ;; Suddenly, it works.
   [driver profile]
   (-> driver
       (set-options-args ["-profile" profile])

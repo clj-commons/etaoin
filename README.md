@@ -413,8 +413,8 @@ purposes. A profile is a folder that keeps browser settings, history, bookmarks
 and other user-specific data.
 
 Imagine you'd like to run your integration tests against a user that turned off
-Javascript execution or image rendering. To prepare and then use a special
-profile would be a good choice.
+Javascript execution or image rendering. To prepare a special profile for that
+task would be a good choice.
 
 #### Create and find a profile in Chrome
 
@@ -429,11 +429,13 @@ profile would be a good choice.
 
 [ff-profile]:https://support.mozilla.org/en-US/kb/profile-manager-create-and-remove-firefox-profiles
 
-1. Run Firefox with `-P`, `-p` or `-ProfileManager` key as the [official page][ff-profile] suggests.
+1. Run Firefox with `-P`, `-p` or `-ProfileManager` key as the [official
+   page][ff-profile] describes.
 2. Create a new profile and run the browser.
 3. Setup the profile as you need.
-4. Open `about:support` page. Near the `Profile Folder` caption, press `Show in
-   Finder` button.
+4. Open `about:support` page. Near the `Profile Folder` caption, press the `Show
+   in Finder` button. A new folder window should appear. Copy its path from
+   there.
 
 #### Running a driver with a profile
 
@@ -445,7 +447,7 @@ follows:
 (def chrome-profile
   "/Users/ivan/Library/Application Support/Google/Chrome/Profile 2/Default")
 
-(def chrm (chrome {:profile chrome-profile }))
+(def chrm (chrome {:profile chrome-profile}))
 
 ;; Firefox
 (def ff-profile
