@@ -31,6 +31,10 @@ after a mysteries note was produced on it.
   * [Postmortem: auto-save artifacts in case of exception](#postmortem-auto-save-artifacts-in-case-of-exception)
   * [Reading browser's logs](#reading-browsers-logs)
   * [Additional parameters](#additional-parameters)
+  * [Setting browser profile](#setting-browser-profile)
+    + [Create and find a profile in Chrome](#create-and-find-a-profile-in-chrome)
+    + [Create and find a profile in Firefox](#create-and-find-a-profile-in-firefox)
+    + [Running a driver with a profile](#running-a-driver-with-a-profile)
   * [Scrolling](#scrolling)
   * [Working with frames and iframes](#working-with-frames-and-iframes)
   * [Wait functions](#wait-functions)
@@ -397,6 +401,54 @@ skipped or have nil values. Some of them, if not passed, are taken from the
 
  ;; Driver-specific options. Make sure you have read the docs before setting them.
  :capabilities {:chromeOptions {:args ["--headless"]}}}
+```
+
+### Setting browser profile
+
+When running Chrome or Firefox, you may specify a special profile made for test
+purposes. A profile is a folder that keeps browser settings, history, bookmarks
+and other user-specific data.
+
+Imagine you'd like to run your integration tests against a user that turned off
+Javascript execution or image rendering. To prepare and then use a special
+profile would be a good choice.
+
+#### Create and find a profile in Chrome
+
+1. In the right top corner of the main window, click on a user button.
+2. In the dropdown, select "Manage People".
+3. Click "Add person", submit a name and press "Save".
+4. The new browser window should appear. Now, setup the new profile as you want.
+5. Open `chrome://version/` page. Copy the file path that is beneath the
+   `Profile Path` caption.
+
+#### Create and find a profile in Firefox
+
+[ff-profile]:https://support.mozilla.org/en-US/kb/profile-manager-create-and-remove-firefox-profiles
+
+1. Run Firefox with `-P`, `-p` or `-ProfileManager` key as the [official page][ff-profile] suggests.
+2. Create a new profile and run the browser.
+3. Setup the profile as you need.
+4. Open `about:support` page. Near the `Profile Folder` caption, press `Show in
+   Finder` button.
+
+#### Running a driver with a profile
+
+Once you've got a profile path, launch a driver with a special `:profile` key as
+follows:
+
+```clojure
+;; Chrome
+(def chrome-profile
+  "/Users/ivan/Library/Application Support/Google/Chrome/Profile 2/Default")
+
+(def chrm (chrome {:profile chrome-profile }))
+
+;; Firefox
+(def ff-profile
+  "/Users/ivan/Library/Application Support/Firefox/Profiles/iy4iitbg.Test")
+
+(def ff (firefox {:profile ff-profile}))
 ```
 
 ### Scrolling
