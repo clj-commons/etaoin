@@ -17,10 +17,11 @@
   Phantom.js (Ghostdriver)
   https://github.com/detro/ghostdriver/blob/
   "
-  (:require [etaoin.proc :as proc]
+  (:require [etaoin.legacy] ;; patch legacy clojure.string first
+            [etaoin.proc :as proc]
             [etaoin.client :as client]
             [etaoin.keys :as keys]
-            [etaoin.util :refer [defmethods deep-merge]]
+            [etaoin.util :as util :refer [defmethods]]
             [etaoin.driver :as drv]
             [clojure.data.codec.base64 :as b64]
             [clojure.tools.logging :as log]

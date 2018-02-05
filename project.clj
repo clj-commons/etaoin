@@ -1,4 +1,4 @@
-(defproject etaoin "0.2.4"
+(defproject etaoin "0.2.5"
   :description "Pure Clojure Webdriver protocol implementation."
   :url "https://github.com/igrishaev/etaoin"
   :license {:name "Eclipse Public License"
@@ -7,7 +7,10 @@
   :profiles {:dev {:plugins [[autodoc/lein-autodoc "1.1.1"]]
                    :dependencies [[org.clojure/clojure "1.8.0"]
                                   [log4j/log4j "1.2.17"]]
-                   :resource-paths ["env/dev/resources"]}}
+                   :resource-paths ["env/dev/resources"]}
+             :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
+             :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}
+             :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]]}}
 
   :dependencies [[clj-http "2.3.0"]
                  [cheshire "5.6.3"]

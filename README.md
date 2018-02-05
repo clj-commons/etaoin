@@ -88,8 +88,10 @@ You are welcome to submit your company into that list.
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.2.4"]
+[etaoin "0.2.5"]
 ```
+
+Works with Clojure 1.7 and above.
 
 ## Basic Usage
 
