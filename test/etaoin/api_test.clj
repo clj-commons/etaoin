@@ -244,8 +244,9 @@
   (is 1)
   (testing "wait for an element has class"
     (doto *driver*
-      (click {:id :wait-add-class-trigger})
-      (wait-has-class {:id :wait-add-class-target}
+      (scroll-query :wait-add-class-trigger)
+      (click :wait-add-class-trigger)
+      (wait-has-class :wait-add-class-target
                       :new-one
                       {:timeout 20
                        :interval 1
