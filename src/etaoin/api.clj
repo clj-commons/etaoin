@@ -1128,7 +1128,8 @@
 
   - `script`: a string with the code to execute.
 
-  - `args`: additinal arguments for your code.
+  - `args`: additional arguments for your code. Any data that might be
+  serialized into JSON.
 
   Example:
 
@@ -1139,7 +1140,7 @@
   {:arglists '([driver script & args])}
   dispatch-driver)
 
-(defmethods js-execute [:default]
+(defmethod js-execute :default
   [driver script & args]
   (with-resp driver :post
     [:session (:session @driver) :execute]
@@ -1154,6 +1155,67 @@
     {:script script :args (vec args)}
     resp
     (:value resp)))
+
+(defmulti js-async
+  "Executes an asynchronous script in the browser and returns the result.
+  An asynchronous script is a such one that performs any kind of IO operations,
+  say, AJAX request to the server. When running such kind of a script, you cannot
+  just use the `return` statement like you do in ordinary scripts. Instead, the
+  driver passes a special handler as the last argument that should be called
+  to return the final result.
+
+  *Note:* calling this function requires the `script` timeout to be set properly,
+  meaning non-zero positive value. See `get-script-timeout`, `get-script-timeout`
+  and `with-script-timeout` functions/macroses.
+
+  Example of a script:
+
+  // the `arguments` would be an array of something like:
+  // [1, 2, true, ..., <special callback>]
+
+  var callback = arguments[arguments.length-1];
+
+  // so the main script would look like:
+  $.ajax({url: '/some/url', success: function(result) {
+    if (isResultOk(result)) {
+      callback({ok: getProgressData(result)});
+    }
+    else {
+      callback({error: getErrorData(result)});
+    }
+  }});
+
+  Arguments:
+
+  - `driver`: a driver instance,
+
+  - `script`: a string with the code to execute.
+
+  - `args`: additional arguments for your code. Any data that might be
+  serialized into JSON.
+  "
+  {:arglists '([driver script & args])}
+  dispatch-driver)
+
+(defmethod js-async :default
+  [driver script & args]
+  (with-resp driver :post
+    [:session (:session @driver) :execute_async]
+    {:script script :args (vec args)}
+    resp
+    (:value resp)))
+
+(defmethod js-async :firefox
+  [driver script & args]
+  (with-resp driver :post
+    [:session (:session @driver) :execute :async]
+    {:script script :args (vec args)}
+    resp
+    (:value resp)))
+
+;;
+;; Javascript helpers
+;;
 
 (defn js-localstorage-clear
   [driver]
@@ -2192,10 +2254,7 @@
 ;; https://github.com/SeleniumHQ/selenium/blob/bc19742bb0256c0cb73a47eec5361aa7a5743723/py/selenium/webdriver/remote/webdriver.py#L674
 ;; https://searchfox.org/mozilla-central/source/testing/webdriver/src/command.rs#529
 
-(defn sec-to-ms [sec]
-  (int (* sec 1000)))
-
-(defmulti set-timeout*
+(defmulti ^:private set-timeout*
   "Basic method to set a specific timeout."
   {:arglists '([driver type sec])}
   dispatch-driver)
@@ -2205,14 +2264,14 @@
   [driver type sec]
   (with-resp driver :post
     [:session (:session @driver) :timeouts]
-    {type (sec-to-ms sec)} _))
+    {type (util/sec->ms sec)} _))
 
 (defmethod set-timeout*
   :chrome
   [driver type sec]
   (with-resp driver :post
     [:session (:session @driver) :timeouts]
-    {:type type :ms (sec-to-ms sec)} _))
+    {:type type :ms (util/sec->ms sec)} _))
 
 (defmulti set-script-timeout
   "Sets timeout for executing JS sctipts."
@@ -2248,6 +2307,46 @@
   :default
   [driver sec]
   (set-timeout* driver :implicit sec))
+
+(defmulti ^:private get-timeout*
+  "Basic method to get a map of all the timeouts."
+  {:arglists '([driver])}
+  dispatch-driver)
+
+(defmethod get-timeout*
+  :default
+  [driver]
+  (with-resp driver :get
+    [:session (:session @driver) :timeouts]
+    nil
+    resp
+    (:value resp)))
+
+(defn get-script-timeout
+  "Returns the current script timeout in seconds."
+  [driver]
+  (-> driver get-timeout* :script util/ms->sec))
+
+(defn get-page-load-timeout
+  "Returns the current page load timeout in seconds."
+  [driver]
+  (-> driver get-timeout* :pageLoad util/ms->sec))
+
+(defn get-implicit-timeout
+  "Returns the current implicit timeout in seconds."
+  [driver]
+  (-> driver get-timeout* :implicit util/ms->sec))
+
+(defmacro with-script-timeout
+  "Performs the body setting the script timeout temporary.
+  Useful for async JS scripts."
+  [driver sec & body]
+  `(let [prev# (get-script-timeout ~driver)]
+     (set-script-timeout ~driver ~sec)
+     (try
+       ~@body
+       (finally
+         (set-script-timeout ~driver prev#)))))
 
 ;;
 ;; screenshot
