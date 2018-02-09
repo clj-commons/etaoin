@@ -37,6 +37,8 @@ after a mysteries note was produced on it.
     + [Running a driver with a profile](#running-a-driver-with-a-profile)
   * [Scrolling](#scrolling)
   * [Working with frames and iframes](#working-with-frames-and-iframes)
+  * [Executing Javascript](#executing-javascript)
+    + [Asynchronous scripts](#asynchronous-scripts)
   * [Wait functions](#wait-functions)
 - [Writing Integration Tests For Your Application](#writing-integration-tests-for-your-application)
   * [Basic fixture](#basic-fixture)
