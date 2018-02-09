@@ -88,7 +88,7 @@ You are welcome to submit your company into that list.
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.2.5"]
+[etaoin "0.2.6"]
 ```
 
 Works with Clojure 1.7 and above.
@@ -564,6 +564,69 @@ and switching to the previous frame afterwards.
 
 The code above returns `42` staying at the same frame that has been before
 before evaluating the macros.
+
+### Executing Javascript
+
+To evaluate a Javascript code in a browser, run:
+
+```clojure
+(js-execute driver "alert(1)")
+```
+
+You may pass any additional parameters into the call and cath them inside a
+script with the `arguments` array-like object:
+
+```clojure
+(js-execute driver "alert(arguments[2].foo)" 1 false {:foo "hello!"})
+```
+
+As the result, `hello!` string will appear inside the dialog.
+
+To return any data into Clojure, just add `return` into your script:
+
+```clojure
+(js-execute driver "return {foo: arguments[2].foo, bar: [1, 2, 3]}"
+                   1 false {:foo "hello!"})
+;; {:bar [1 2 3], :foo "hello!"}
+```
+
+#### Asynchronous scripts
+
+If your script performs AJAX requests or operates on `setTimeout` or any other
+async stuff, you cannot just `return` the result. Instead, a special callback
+should be called against the data you'd like to achieve. The webdriver passes
+this callback as the last argument for your script and might be reached with the
+`arguments` array-like object.
+
+Example:
+
+```clojure
+(js-async
+  driver
+  "var args = arguments; // preserve the global args
+  var callback = args[args.length-1];
+  setTimeout(function() {
+    callback(args[0].foo.bar.baz);
+  },
+  1000);"
+  {:foo {:bar {:baz 42}}})
+```
+
+returns `42` to the Clojure code.
+
+To evaluate an asynchronous script, you need either to setup a special timeout
+for that:
+
+```clojure
+(set-script-timeout driver 5) ;; in seconds
+```
+
+or wrap the code into a macros that does it temporary:
+
+```clojure
+(with-script-timeout driver 30
+  (js-async driver "some long script"))
+```
 
 ### Wait functions
 
