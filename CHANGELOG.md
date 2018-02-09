@@ -1,5 +1,8 @@
 [adam]: https://github.com/AdamFrey
 
+## 0.2.6
+  * #88 JS async scripts added, timeout improvements
+
 ## 0.2.5
   * #101 Clojure 1.7 now supported
 
