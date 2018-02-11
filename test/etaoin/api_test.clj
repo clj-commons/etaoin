@@ -119,6 +119,13 @@
       (when-safari (wait 1))
       (-> has-alert? not is))))
 
+(deftest test-properties
+  (is (= ["val"]
+         (get-element-properties
+          *driver*
+          {:id :input-property}
+          :value))))
+
 (deftest test-attributes
   (testing "common attributes"
     (doto *driver*

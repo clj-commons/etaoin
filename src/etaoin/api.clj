@@ -837,6 +837,49 @@
         (> (a :x1) (b :x2)))))
 
 ;;
+;; properties
+;;
+
+(defn get-element-property-el
+  [driver el property]
+  (with-resp driver :get
+    [:session (:session @driver) :element el :property (name property)]
+    nil
+    resp
+    (:value resp)))
+
+(defn get-element-property
+  "Returns a property of an element (value, etc).
+
+  Arguments:
+
+  - `driver`: a driver instance,
+
+  - `q`: a query term to find an element,
+
+  - `name`: either a string or a keyword with a name of a property.
+
+  Returns: a string with the attribute value, `nil` if no such
+  property for that element."
+  [driver q name]
+  (get-element-property-el driver (query driver q) name))
+
+(defn get-element-properties-el
+  [driver el & names]
+  (mapv
+   #(get-element-property-el driver el %)
+   names))
+
+(defn get-element-properties
+  "Returns multiple properties in batch. The result is a vector of
+  corresponding properties."
+  [driver q & names]
+  (apply get-element-properties-el
+         driver
+         (query driver q)
+         names))
+
+;;
 ;; attributes
 ;;
 
