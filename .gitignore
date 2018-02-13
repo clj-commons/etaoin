@@ -13,3 +13,4 @@ pom.xml.asc
 autodoc/**
 node_modules
 package-lock.json
+TAGS

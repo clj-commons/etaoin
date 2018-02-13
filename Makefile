@@ -15,6 +15,13 @@ repl-1.9:
 test:
 	lein test
 
+orig:
+	find . -name '*.orig' -delete
+
+.PHONY: tags
+tags:
+	ctags -e -R ./src
+
 deploy:
 	lein deploy clojars
 
