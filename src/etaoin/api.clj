@@ -840,7 +840,7 @@
 ;; properties
 ;;
 
-(defn get-element-property-el
+(defn- get-element-property-el
   [driver el property]
   (with-resp driver :get
     [:session (:session @driver) :element el :property (name property)]
@@ -864,20 +864,14 @@
   [driver q name]
   (get-element-property-el driver (query driver q) name))
 
-(defn get-element-properties-el
-  [driver el & names]
-  (mapv
-   #(get-element-property-el driver el %)
-   names))
-
 (defn get-element-properties
   "Returns multiple properties in batch. The result is a vector of
   corresponding properties."
-  [driver q & names]
-  (apply get-element-properties-el
-         driver
-         (query driver q)
-         names))
+  [driver q & props]
+  (let [el (query driver q)]
+    (vec
+     (for [prop props]
+       (get-element-property-el driver el prop)))))
 
 ;;
 ;; attributes
@@ -917,26 +911,21 @@
   [driver q name]
   (get-element-attr-el driver (query driver q) name))
 
-(defn get-element-attrs-el
-  [driver el & names]
-  (mapv
-   #(get-element-attr-el driver el %)
-   names))
-
 (defn get-element-attrs
   "Returns multiple attributes in batch. The result is a vector of
   corresponding attributes."
-  [driver q & names]
-  (apply get-element-attrs-el
-         driver
-         (query driver q)
-         names))
+  [driver q & attrs]
+  (let [el (query driver q)]
+    (vec
+     (for [attr attrs]
+       (get-element-attr-el driver el attr)))))
 
 ;;
 ;; css
 ;;
 
-(defn get-element-css-el [driver el name*]
+(defn- get-element-css-el
+  [driver el name*]
   (with-resp driver :get
     [:session (:session @driver) :element el :css (name name*)]
     nil
@@ -966,20 +955,18 @@
   (get-element-css driver {:id :content} :background-color)
   >> \"rgb(204, 204, 204)\" ;; or \"rgba(204, 204, 204, 1)\"
 "
-  [driver q name]
-  (get-element-css-el driver (query driver q) name))
+  [driver q prop]
+  (get-element-css-el driver (query driver q) prop))
 
-(defn get-element-csss-el
-  [driver el & names]
-  (mapv
-   #(get-element-css-el driver el %)
-   names))
 
 (defn get-element-csss
   "Returns multiple CSS properties in batch. The result is a vector of
   corresponding properties."
-  [driver q & names]
-  (apply get-element-csss-el driver (query driver q) names))
+  [driver q & props]
+  (let [el (query driver q)]
+    (vec
+     (for [prop props]
+       (get-element-css-el driver el prop)))))
 
 ;;
 ;; element text, name and value
