@@ -1,5 +1,8 @@
 [adam]: https://github.com/AdamFrey
 
+## 0.2.6-SNAPSHOT
+  * #89 common get-element-value method
+
 ## 0.2.6
   * #88 JS async scripts added, timeout improvements
 
