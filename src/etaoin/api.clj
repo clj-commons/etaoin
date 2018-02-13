@@ -1003,8 +1003,12 @@
   [driver q]
   (get-element-text-el driver (query driver q)))
 
-(defn get-element-value-el
-  "Returns element's value by its identifier."
+;;
+;; Element value
+;;
+
+(defn- get-element-value-el
+  "Low level: returns element's value by its identifier."
   [driver el]
   (with-resp driver :get
     [:session (:session @driver) :element el :value]
@@ -1012,10 +1016,22 @@
     resp
     (:value resp)))
 
-(defn get-element-value
-  "Returns element's value set with `value` attribute."
+(defmulti get-element-value
+  "Returns the current element's value (input text)."
+  {:arglists '([driver q])}
+  dispatch-driver)
+
+;; for non-FF browsers, call the API
+(defmethod get-element-value
+  :default
   [driver q]
   (get-element-value-el driver (query driver q)))
+
+;; for FF, get a self-named property
+(defmethod get-element-value
+  :firefox
+  [driver q]
+  (get-element-property driver q :value))
 
 ;;
 ;; cookes
