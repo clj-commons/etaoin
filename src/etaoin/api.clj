@@ -1021,13 +1021,16 @@
   {:arglists '([driver q])}
   dispatch-driver)
 
-;; for non-FF browsers, call the API
 (defmethod get-element-value
   :default
   [driver q]
   (get-element-value-el driver (query driver q)))
 
-;; for FF, get a self-named property
+(defmethods get-element-value
+  [:safari :phantom]
+  [driver q]
+  (get-element-attr driver q :value))
+
 (defmethod get-element-value
   :firefox
   [driver q]

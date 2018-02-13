@@ -120,11 +120,18 @@
       (-> has-alert? not is))))
 
 (deftest test-properties
-  (is (= ["val"]
-         (get-element-properties
-          *driver*
-          {:id :input-property}
-          :value))))
+  (when-firefox *driver*
+    (let [result (get-element-properties
+                  *driver*
+                  :input-property
+                  :value)]
+      (is (= ["val"] result)))))
+
+(deftest test-element-value
+  (let [result (get-element-value
+                *driver*
+                :input-property)]
+    (is (= "val" result))))
 
 (deftest test-attributes
   (testing "common attributes"
