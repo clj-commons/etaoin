@@ -95,9 +95,7 @@ Add the following into `:dependencies` vector in your `project.clj` file:
 
 Works with Clojure 1.7 and above.
 
-## Basic Usage
-
-### From REPL
+## Getting stated
 
 The good news you may automate your browser directly from the REPL:
 
@@ -146,15 +144,13 @@ may simplify it using `doto` macros:
 (doto driver
   (go "https://en.wikipedia.org/")
   (wait-visible [{:id :simpleSearch} {:tag :input :name :search}])
-  ...
+  ;; ...
   (fill {:tag :input :name :search} k/enter)
   (wait-visible {:class :mw-search-results})
-  ...
+  (click :some-button)
+  ;; ...
   (wait-visible {:id :firstHeading})
-  (get-url)
-  "https://en.wikipedia.org/wiki/Clojure"
-  ...
-
+  ;; ...
   (quit))
 ```
 
@@ -173,7 +169,7 @@ macros as follows:
 
 Whatever happens during a session, the process will be stopped anyway.
 
-## Advanced Usage
+## Common usage
 
 ### Working with multiple elements
 
@@ -225,6 +221,26 @@ otherwise. Usage example:
 (require '[clojure.java.io :as io])
 (def my-file (io/file "/Users/ivan/Downloads/sample.png"))
 (upload-file driver input my-file)
+```
+
+### Screenshots
+
+Calling a `screenshot` function dumps the current page into a PNG image on your
+disk:
+
+```
+(screenshot driver "page.png")             ;; relative path
+(screenshot driver "/Users/ivan/page.png") ;; absolute path
+```
+
+A native Java File object is also supported:
+
+```
+;; when imported as `[clojure.java.io :as io]`
+(screenshot driver (io/file "test.png"))
+
+;; native object
+(screenshot driver (java.io.File. "test-native.png"))
 ```
 
 ### Using headless drivers
