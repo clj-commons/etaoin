@@ -268,6 +268,13 @@
 ;; Download folder
 ;;
 
+(defn- ^String add-trailing-slash
+  [^String path]
+  (let [sep java.io.File/separator]
+    (if (string/ends-with? path sep)
+      path
+      (str path sep))))
+
 (defmulti set-download-dir
   {:arglists '([driver path])}
   dispatch-driver)
@@ -275,20 +282,60 @@
 (defmethod set-download-dir
   :default
   [driver path]
-  (log/debugf "This driver doesn't support setting a download dir.")
+  (log/debugf "This driver doesn't support setting a download directory.")
   driver)
 
+;; https://github.com/rshf/chromedriver/issues/338
+;; trailing slash is mandatory for Chrome
 (defmethod set-download-dir
   :chrome
   [driver path]
-  (set-prefs driver {:download.default_directory path}))
+  (set-prefs driver {:download.default_directory (add-trailing-slash path)
+                     :download.prompt_for_download false}))
+
+(def ^{:private true
+       :doc "A set of content types that should be downloaded without asking a user."}
+  ff-content-types
+  #{"application/gzip"
+    "application/json"
+    "application/msword"
+    "application/octet-stream"
+    "application/pdf"
+    "application/rtf"
+    "application/vnd.ms-excel"
+    "application/vnd.ms-powerpoint"
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    "application/x-7z-compressed"
+    "application/x-rar-compressed"
+    "application/x-shockwave-flash"
+    "application/x-tar"
+    "application/zip"
+    "audio/flac"
+    "audio/mpeg"
+    "audio/ogg"
+    "image/svg+xml"
+    "text/csv"
+    "text/javascript"
+    "text/plain"
+    "text/xml"
+    "video/mp4"
+    "video/mpeg"
+    "video/ogg"
+    "video/quicktime"
+    "video/webm"
+    "video/x-flv"
+    "video/x-msvideo"})
 
 (defmethod set-download-dir
   :firefox
   [driver path]
   (set-prefs driver {:browser.download.dir path
                      :browser.download.folderList 2
-                     :browser.download.useDownloadDir true}))
+                     :browser.download.useDownloadDir true
+                     :browser.helperApps.neverAsk.saveToDisk
+                     (string/join ";" ff-content-types)}))
 
 ;;
 ;; binary path
