@@ -391,6 +391,8 @@
     [:session (:session @driver) :refresh]
     nil _))
 
+(def reload refresh) ;; just an alias
+
 (defn forward
   "Move forwards in a browser's history."
   [driver]
@@ -2398,38 +2400,50 @@
          (set-script-timeout ~driver prev#)))))
 
 ;;
-;; screenshot
+;; screenshots
 ;;
 
-(defn b64-to-file [b64str filename]
-  (with-open [out (io/output-stream filename)]
+(defmulti ^:private b64-to-file
+  "Dumps a Base64-encoded string into a file.
+  A file might be either a path or a `java.io.File` instance."
+  {:arglists '([b64str file] [b64str filepath])}
+  util/dispatch-types)
+
+(defmethod b64-to-file
+  [String java.io.File]
+  [b64str file]
+  (b64-to-file b64str (.getAbsolutePath file)))
+
+(defmethod b64-to-file
+  [String String]
+  [b64str filepath]
+  (with-open [out (io/output-stream filepath)]
     (.write out (-> b64str .getBytes b64/decode))))
 
 (defmulti screenshot
   "Takes a screenshot of the current page. Saves it in a *.png file on disk.
-  Rises exception if a screenshot is empty.
+  Rises exception if a screenshot was empty.
 
   Arguments:
 
   - `driver`: driver instance,
 
-  - `filename`: full path to a file."
+  - `file`: either a path to a file or a native `java.io.File` instance.
+"
   {:arglists '([driver filename])}
   dispatch-driver)
 
 (defmethod screenshot :default
-  [driver filename]
+  [driver file]
   (with-resp driver :get
     [:session (:session @driver) :screenshot]
     nil
     resp
-    (-> resp
-        :value
-        not-empty
-        (or (throw+ {:type :etaoin/screenshot
-                     :message "Empty screenshot"
-                     :driver @driver}))
-        (b64-to-file filename))))
+    (if-let [b64str (-> resp :value not-empty)]
+      (b64-to-file b64str file)
+      (throw+ {:type :etaoin/screenshot
+               :message "Empty screenshot"
+               :driver @driver}))))
 
 ;; postmortem
 
