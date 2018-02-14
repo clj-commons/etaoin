@@ -92,7 +92,7 @@ You are welcome to submit your company into that list.
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.2.6-SNAPSHOT]
+[etaoin "0.2.7]
 ```
 
 Works with Clojure 1.7 and above.
