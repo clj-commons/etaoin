@@ -1,6 +1,7 @@
 [adam]: https://github.com/AdamFrey
 
 ## 0.2.6-SNAPSHOT
+  *  #73 download dir supported
   *  #89 common get-element-value method
   * #102 screenshot code improved; readme section added
 

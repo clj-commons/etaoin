@@ -423,6 +423,9 @@ skipped or have nil values. Some of them, if not passed, are taken from the
  ;; Default URL to open. Works only in FF for now.
  :url "http://example.com"
 
+ ;; Where to download files.
+ :download-dir "/Users/ivan/Desktop"
+
  ;; Driver-specific options. Make sure you have read the docs before setting them.
  :capabilities {:chromeOptions {:args ["--headless"]}}}
 ```
@@ -436,6 +439,33 @@ and other user-specific data.
 Imagine you'd like to run your integration tests against a user that turned off
 Javascript execution or image rendering. To prepare a special profile for that
 task would be a good choice.
+
+### File download directory
+
+To specify your own directory where to download files, pass `:download-dir`
+parameter into an option map when running a driver:
+
+```clojure
+(def driver (chrome {:download-dir "/Users/ivan/Desktop"}))
+```
+
+Now, once you click on a link, a file should be put into that folder. Currently,
+only Chrome and Firefox are supported.
+
+Firefox requires to specify MIME-types of those files that should be downloaded
+without showing a system dialog. By default, when the `:download-dir` parameter
+is passes, the library adds the most common MIME-types: archives, media files,
+office documents, etc. If you need to add your own one, override that preference
+manually:
+
+```clojure
+(def driver (firefox {:download-dir "/Users/ivan/Desktop"
+                      :prefs {:browser.helperApps.neverAsk.saveToDisk
+                              "some-mime/type-1;other-mime/type-2"}}))
+```
+
+To check whether a file was downloaded during UI tests, see the testing section
+below.
 
 #### Create and find a profile in Chrome
 
@@ -846,6 +876,41 @@ operates very fast. It means so fast, that sometimes a browser cannot render new
 HTML in time. So after each action you need to put `wait-<something>` function
 that just polls a browser checking for a predicate. O just `(wait <seconds>)` if
 you don't care about optimization.
+
+### Check whether a file was downloaded
+
+Sometimes, a file starts to download automatically once you clicked a link or
+just visited some page. In tests, you need to ensure a file really has been
+downloaded successfully. A common scenario would be:
+
+- provide a custom empty download folder when running a browser (see above).
+- Click on a link or perform any action needed to start file downloading.
+- Wait for some time; for small files, 5-10 seconds would be enough.
+- Using files API, scan that directory and try to find a new file. Check if
+  matches a proper extension, name, creation date, etc.
+
+Example:
+
+```clojure
+;; Local helper that checks whether it is really an Excel file.
+(defn xlsx? [file]
+  (-> file
+      .getAbsolutePath
+      (str/ends-with? ".xlsx")))
+
+;; Top-level declarations
+(def DL-DIR "/Users/ivan/Desktop")
+(def driver (chrome {:download-dir DL-DIR}))
+
+;; Later, in tests...
+(click-visible driver :download-that-application)
+(wait driver 7) ;; wait for a file has been downloaded
+
+;; Now, scan the directory and try to find a file:
+(let [files (file-seq (io/file DL-DIR))
+      found (some xlsx? files)]
+  (is found (format "No *.xlsx file found in %s directory." DL-DIR)))
+```
 
 ## Installing Drivers
 
