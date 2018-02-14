@@ -2656,10 +2656,10 @@
         _ (when url (swap! driver drv/set-url url))
         _ (when headless (swap! driver drv/set-headless))
         _ (when args (swap! driver drv/set-options-args args))
-        _ (when prefs (swap! driver drv/set-prefs prefs))
         _ (when profile (swap! driver drv/set-profile profile))
         _ (when path-browser (swap! driver drv/set-binary path-browser))
         _ (when download-dir (swap! driver drv/set-download-dir download-dir))
+        _ (when prefs (swap! driver drv/set-prefs prefs))
         proc-args (drv/get-args @driver)
         _ (log/debugf "Starting process: %s" (str/join \space proc-args))
         process (proc/run proc-args)]
