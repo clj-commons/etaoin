@@ -99,7 +99,7 @@
 ;; options utils
 ;;
 
-(defmulti options-name dispatch-driver)
+(defmulti options-name dispatch-driver) ;; todo nil default
 
 (defmethod options-name
   :firefox
@@ -263,6 +263,32 @@
   (update-in driver
              [:capabilities (options-name driver) :prefs]
              merge prefs))
+
+;;
+;; Download folder
+;;
+
+(defmulti set-download-dir
+  {:arglists '([driver path])}
+  dispatch-driver)
+
+(defmethod set-download-dir
+  :default
+  [driver path]
+  (log/debugf "This driver doesn't support setting a download dir.")
+  driver)
+
+(defmethod set-download-dir
+  :chrome
+  [driver path]
+  (set-prefs driver {:download.default_directory path}))
+
+(defmethod set-download-dir
+  :firefox
+  [driver path]
+  (set-prefs driver {:browser.download.dir path
+                     :browser.download.folderList 2
+                     :browser.download.useDownloadDir true}))
 
 ;;
 ;; binary path
