@@ -2623,15 +2623,15 @@
   -- `:args` is a vector of additional command line arguments
   to the browser's process.
 
-  -- `:prefs` is a map of FF-specific preferences (those one you see
-  opening about:config page).
+  -- `:prefs` is a map of browser-specific preferences.
 
   -- `:args-driver` is a vector of additional arguments to the
   driver's process.
 
   -- `:env` is a map with system ENV variables. Keys are turned into
   upper-case strings."
-  ;; todo get rid of atom storage
+  ;; todo: get rid of atom storage
+  ;; todo: quite ugly
   [driver & [{:keys [env
                      url
                      args
@@ -2642,6 +2642,7 @@
                      log-level
                      args-driver
                      path-driver
+                     download-dir
                      path-browser]}]]
   (let [{:keys [type port]} @driver
         [with height] size
@@ -2655,9 +2656,10 @@
         _ (when url (swap! driver drv/set-url url))
         _ (when headless (swap! driver drv/set-headless))
         _ (when args (swap! driver drv/set-options-args args))
-        _ (when prefs (swap! driver drv/set-prefs prefs))
         _ (when profile (swap! driver drv/set-profile profile))
         _ (when path-browser (swap! driver drv/set-binary path-browser))
+        _ (when download-dir (swap! driver drv/set-download-dir download-dir))
+        _ (when prefs (swap! driver drv/set-prefs prefs))
         proc-args (drv/get-args @driver)
         _ (log/debugf "Starting process: %s" (str/join \space proc-args))
         process (proc/run proc-args)]
