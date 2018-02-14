@@ -230,14 +230,14 @@ otherwise. Usage example:
 Calling a `screenshot` function dumps the current page into a PNG image on your
 disk:
 
-```
+```clojure
 (screenshot driver "page.png")             ;; relative path
 (screenshot driver "/Users/ivan/page.png") ;; absolute path
 ```
 
 A native Java File object is also supported:
 
-```
+```clojure
 ;; when imported as `[clojure.java.io :as io]`
 (screenshot driver (io/file "test.png"))
 
