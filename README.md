@@ -454,7 +454,7 @@ only Chrome and Firefox are supported.
 
 Firefox requires to specify MIME-types of those files that should be downloaded
 without showing a system dialog. By default, when the `:download-dir` parameter
-is passes, the library adds the most common MIME-types: archives, media files,
+is passed, the library adds the most common MIME-types: archives, media files,
 office documents, etc. If you need to add your own one, override that preference
 manually:
 
@@ -877,16 +877,16 @@ HTML in time. So after each action you need to put `wait-<something>` function
 that just polls a browser checking for a predicate. O just `(wait <seconds>)` if
 you don't care about optimization.
 
-### Check whether a file was downloaded
+### Check whether a file has been downloaded
 
-Sometimes, a file starts to download automatically once you clicked a link or
+Sometimes, a file starts to download automatically once you clicked on a link or
 just visited some page. In tests, you need to ensure a file really has been
 downloaded successfully. A common scenario would be:
 
 - provide a custom empty download folder when running a browser (see above).
 - Click on a link or perform any action needed to start file downloading.
 - Wait for some time; for small files, 5-10 seconds would be enough.
-- Using files API, scan that directory and try to find a new file. Check if
+- Using files API, scan that directory and try to find a new file. Check if it
   matches a proper extension, name, creation date, etc.
 
 Example:
