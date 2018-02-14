@@ -24,3 +24,7 @@
 
 (defn ms->sec [ms]
   (/ ms 1000))
+
+(defn dispatch-types
+  [& args]
+  (mapv class args))
