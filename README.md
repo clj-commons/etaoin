@@ -192,7 +192,7 @@ an element on a page. For example:
 The library supports the following query types and values.
 
 - `:active` stands for the current active element. When opening Google page for
-  example, it focuses the cursor on the main search input. So there is not need
+  example, it focuses the cursor on the main search input. So there is no need
   to click on in manually. Example:
 
   ```clojure
@@ -224,9 +224,7 @@ The library supports the following query types and values.
   See the [CSS selector][css-sel] manual for more info.
 
 - any other map that represents an XPath expression as data. See the next
-  section;
-
-- a vector of query terms (TBD).
+  section.
 
 #### Map syntax for querying
 
@@ -238,46 +236,46 @@ The library supports the following query types and values.
 
 Examples:
 
-- find a form by its attributes:
+- find a form by its attributes: (todo :index, section)
 
   ```clojure
-  (xpath/expand {:tag :form :method :GET :class :message})
-  .//form[@method="GET"][@class="message"]
+  (query driver {:tag :form :method :GET :class :message})
+  ;; expands into .//form[@method="GET"][@class="message"]
   ```
 
 - find a button by its text (exact match):
 
   ```clojure
-  (xpath/expand {:tag :button :fn/text "Press Me"})
-  .//button[text()="Press Me"]
+  (query driver {:tag :button :fn/text "Press Me"})
+  ;; .//button[text()="Press Me"]
   ```
 
-- find any element (`p`, `a`, whatever) with "download" text:
+- find an nth element (`p`, `a`, whatever) with "download" text:
 
   ```clojure
-  (xpath/expand {:fn/has-text "download"})
-  .//*[contains(text(), "download")]
+  (query driver {:fn/has-text "download" :index 3})
+  ;; .//*[contains(text(), "download")][3]
   ```
 
 - find an element that has the following class:
 
   ```clojure
-  (xpath/expand {:tag :div :fn/has-class "overlay"})
-  .//div[contains(@class, "overlay")]
+  (query driver {:tag :div :fn/has-class "overlay"})
+  ;; .//div[contains(@class, "overlay")]
   ```
 
 - find an element that has the following classes at once:
 
   ```clojure
-  (xpath/expand {:fn/has-classes [:active :sticky :marked]})
-  .//*[contains(@class, "active")][contains(@class, "sticky")][contains(@class, "marked")]
+  (query driver {:fn/has-classes [:active :sticky :marked]})
+  ;; .//*[contains(@class, "active")][contains(@class, "sticky")][contains(@class, "marked")]
   ```
 
 - find all the disabled input widgets:
 
   ```clojure
-  (xpath/expand {:tag :input :fn/disabled true})
-  .//input[@disabled=true()]
+  (query driver {:tag :input :fn/disabled true})
+  ;; .//input[@disabled=true()]
   ```
 
 ### Working with multiple elements
