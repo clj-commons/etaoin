@@ -30,3 +30,8 @@ toc-install:
 
 toc-build:
 	node_modules/.bin/markdown-toc -i README.md
+
+.PHONY: kill
+kill:
+	pkill chromedriver || true
+	pkill geckodriver || true
