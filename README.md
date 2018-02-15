@@ -236,7 +236,7 @@ The library supports the following query types and values.
 
 Examples:
 
-- find a form by its attributes: (todo :index, section)
+- find a form by its attributes:
 
   ```clojure
   (query driver {:tag :form :method :GET :class :message})
