@@ -21,6 +21,7 @@
             [etaoin.proc :as proc]
             [etaoin.client :as client]
             [etaoin.keys :as keys]
+            [etaoin.xpath :as xpath]
             [etaoin.util :as util :refer [defmethods]]
             [etaoin.driver :as drv]
             [clojure.data.codec.base64 :as b64]
@@ -424,39 +425,6 @@
 ;; find element(s)
 ;;
 
-(defn q-xpath
-  "Turns a map into an XPath clause. The rules are:
-
-  - `:tag` value becomes a tag name, otherwise `*` is used;
-
-  - `:index` becomes a `[x]` at the end of expression if passed;
-
-  - any other key-value pair becomes an attribute filter as follows:
-  `{:foo \"one\" :baz \"two\"}` => `\"[@foo='one'][@bar='two']\"`.
-
-  - the final XPath is always relative (started with `.//`) to make it
-  work with nested expressions.
-
-  Example:
-
-  (q-xpath {:tag :a :class :large :index 2 :target :_blank})
-  > \".//a[@class='large'][@target='_blank'][2]\"
-"
-  [q]
-  (let [tag (or (:tag q) :*)
-        idx (:index q)
-        attrs (dissoc q :tag :index)
-        get-val (fn [val] (if (keyword? val)
-                            (name val)
-                            (str val)))
-        pair (fn [[key val]] (format "[@%s='%s']"
-                                     (name key)
-                                     (get-val val)))
-        parts (map pair attrs)
-        xpath (apply str ".//" (name tag) parts)
-        xpath (str xpath (if idx (format "[%s]" idx) ""))]
-    xpath))
-
 (defn q-expand
   "Expands a query expression into a pair of `[locator, term]` values
   to pass them into low-level HTTP API. Throws a Slingshot exception
@@ -464,7 +432,7 @@
   [driver q]
   (cond
     (keyword? q)
-    [locator-xpath (q-xpath {:id q})]
+    [locator-xpath (xpath/expand {:id q})]
 
     (string? q)
     [(:locator @driver) q]
@@ -476,7 +444,7 @@
     [locator-css (:css q)]
 
     (map? q)
-    [locator-xpath (q-xpath q)]
+    [locator-xpath (xpath/expand q)]
 
     :else
     (throw+ {:type :etaoin/query
