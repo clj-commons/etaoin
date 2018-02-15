@@ -422,35 +422,8 @@
     (:value resp)))
 
 ;;
-;; find element(s)
+;; Finding element(s)
 ;;
-
-(defn q-expand
-  "Expands a query expression into a pair of `[locator, term]` values
-  to pass them into low-level HTTP API. Throws a Slingshot exception
-  in case of unsupported clause."
-  [driver q]
-  (cond
-    (keyword? q)
-    [locator-xpath (xpath/expand {:id q})]
-
-    (string? q)
-    [(:locator @driver) q]
-
-    (and (map? q) (:xpath q))
-    [locator-xpath (:xpath q)]
-
-    (and (map? q) (:css q))
-    [locator-css (:css q)]
-
-    (map? q)
-    [locator-xpath (xpath/expand q)]
-
-    :else
-    (throw+ {:type :etaoin/query
-             :q q
-             :driver @driver
-             :message "Unsupported query clause"})))
 
 (defmulti find-element* dispatch-driver)
 
@@ -508,6 +481,38 @@
     resp
     (->> resp :value (mapv (comp second first)))))
 
+;;
+;; Querying elements (high-level API)
+;;
+
+(defmulti q-expand
+  "Expands a query expression into a pair of `[locator, term]` values
+  to pass them into low-level HTTP API. Throws a Slingshot exception
+  in case of unsupported clause."
+  type)
+
+(defmethod q-expand clojure.lang.Keyword
+  [q]
+  (q-expand {:id q}))
+
+(defmethod q-expand java.lang.String
+  [q]
+  (q-expand {:xpath q}))
+
+(defmethod q-expand clojure.lang.IPersistentMap
+  [{:keys [xpath css] :as q}]
+  (cond
+    xpath [locator-xpath xpath]
+    css [locator-css css]
+    :else [locator-xpath (xpath/expand q)]))
+
+#_(defmethod q-expand :default
+  [q] ;; todo
+  (throw+ {:type :etaoin/query
+           :q q
+           :driver @driver
+           :message "Unsupported query clause"}))
+
 (defn query
   "Finds an element on a page.
 
@@ -548,12 +553,12 @@
       (if (empty? q-rest)
         el
         (let [q (first q-rest)
-              [loc term] (q-expand driver q)]
+              [loc term] (q-expand q)]
           (recur (find-element-from* driver el loc term)
                  (rest q-rest)))))
 
     :else
-    (let [[loc term] (q-expand driver q)]
+    (let [[loc term] (q-expand q)]
       (find-element* driver loc term))))
 
 (defn query-all
@@ -573,12 +578,12 @@
     (let [q-but-last (vec (butlast q))
           q-last (last q)
           el (query driver q-but-last)
-          [loc term] (q-expand driver q-last)]
+          [loc term] (q-expand q-last)]
 
       (find-elements-from* driver el loc term))
 
     :else
-    (let [[loc term] (q-expand driver q)]
+    (let [[loc term] (q-expand q)]
       (find-elements* driver loc term))))
 
 ;;
@@ -1733,7 +1738,7 @@
   ([driver text]
    (has-text? driver {:tag :*} text))
   ([driver q text]
-   (let [[locator term] (q-expand driver q)
+   (let [[locator term] (q-expand q)
          term1 (format "%s[contains(text(), \"%s\")]" term text)
          term2 (format "%s//*[contains(text(), \"%s\")]" term text)]
      (when-not (= locator locator-xpath)
