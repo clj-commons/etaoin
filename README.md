@@ -271,21 +271,11 @@ Examples:
   .//*[contains(@class, "active")][contains(@class, "sticky")][contains(@class, "marked")]
   ```
 
-- find a link or an image by their partial `href` and `src` values:
-
-  ```clojure
-  (xpath/expand {:tag :a :fn/href "google.com"})
-  .//a[contains(@href, "google.com")]
-
-  (xpath/expand {:tag :img :fn/src "google.com"})
-  .//img[contains(@src, "google.com")]
-  ```
-
 - find all the disabled input widgets:
 
   ```clojure
-  (xpath/expand {:tag :iniput :fn/disabled true})
-  .//iniput[@disabled=true()]
+  (xpath/expand {:tag :input :fn/disabled true})
+  .//input[@disabled=true()]
   ```
 
 ### Working with multiple elements

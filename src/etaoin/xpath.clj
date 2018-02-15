@@ -63,14 +63,6 @@
    (for [class classes]
      (node-contains "@class" class))))
 
-(defmethod clause :fn/href
-  [[_ href]]
-  (node-contains "@href" href))
-
-(defmethod clause :fn/src
-  [[_ src]]
-  (node-contains "@src" src))
-
 (defmethod clause :fn/disabled
   [[_ bool]]
   (node-boolean "@disabled" bool))
