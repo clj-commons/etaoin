@@ -50,6 +50,7 @@ after a mysteries note was produced on it.
 - [Installing Drivers](#installing-drivers)
 - [Troubleshooting](#troubleshooting)
   * [Calling maximize function throws an error](#calling-maximize-function-throws-an-error)
+  * [Querying wrong elements with XPath expressions](#querying-wrong-elements-with-xpath-expressions)
   * [Clicking On Non-Visible Element](#clicking-on-non-visible-element)
   * [Unpredictable errors in Chrome when window is not active](#unpredictable-errors-in-chrome-when-window-is-not-active)
 - [Contributors](#contributors)
@@ -1005,6 +1006,18 @@ See the [related issue][maximize-issue] in Selenium project.
 
 [maximize-issue]:https://github.com/SeleniumHQ/selenium/issues/3508
 [chromedriver-dl]:https://sites.google.com/a/chromium.org/chromedriver/downloads
+
+### Querying wrong elements with XPath expressions
+
+When passing a vector-like query, say `[{:tag :p} "//*[text()='foo')]]"}]` be
+careful with hand-written XPath expressions. In vector, every its expression
+searches from the previous one in a loop. There is a hidden mistake here:
+without a leading dot, the `"//..."` clause means to find an element from the
+root of the whole page. With a dot, it means to find from the current node,
+which is one from the previous query, and so forth.
+
+That's why, it's easy to select something completely different that what you
+would like. A proper expression would be: `[{:tag :p} ".//*[text()='foo')]]"}]`.
 
 ### Clicking On Non-Visible Element
 
