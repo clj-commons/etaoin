@@ -1,5 +1,8 @@
 [adam]: https://github.com/AdamFrey
 
+## 0.2.7-SNAPSHOT
+  * #114 extended XPath expressions
+
 ## 0.2.7
   * release
 

@@ -24,6 +24,8 @@ after a mysteries note was produced on it.
 - [Installation](#installation)
 - [Getting stated](#getting-stated)
 - [Common usage](#common-usage)
+  * [Querying elements](#querying-elements)
+    + [Map syntax for querying](#map-syntax-for-querying)
   * [Working with multiple elements](#working-with-multiple-elements)
   * [File uploading](#file-uploading)
   * [Screenshots](#screenshots)
@@ -93,7 +95,7 @@ You are welcome to submit your company into that list.
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.2.7]
+[etaoin "0.2.7-SNAPSHOT"]
 ```
 
 Works with Clojure 1.7 and above.
