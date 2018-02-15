@@ -174,6 +174,120 @@ Whatever happens during a session, the process will be stopped anyway.
 
 ## Common usage
 
+### Querying elements
+
+Most of the functions like `click`, `fill`, etc require a query term to discover
+an element on a page. For example:
+
+```clojure
+(click driver {:tag :button})
+(fill driver {:id "searchInput"} "Clojure")
+```
+
+[xpath-sel]:https://www.w3schools.com/xml/xpath_syntax.asp
+[css-sel]:https://www.w3schools.com/cssref/css_selectors.asp
+
+The library supports the following query types and values.
+
+- `:active` stands for the current active element. When opening Google page for
+  example, it focuses the cursor on the main search input. So there is not need
+  to click on in manually. Example:
+
+  ```clojure
+  (fill driver :active "Let's search for something" keys/enter)
+  ```
+
+- any other keyword that indicates an element's ID. For Google page, it is
+  `:lst-ib` or `"lst-ib"` (strings are also supported). The registry
+  matters. Example:
+
+  ```clojure
+  (fill driver :lst-ib "What is the Matrix?" keys/enter)
+  ```
+- a string with an [XPath][xpath-sel] expression. Be careful when writing them
+  manually. Check the `Troubleshooting` section below. Example:
+
+  ```clojure
+  (fill driver ".//input[@id='lst-ib'][@name='q']" "XPath in action!" keys/enter)
+  ```
+
+- a map with either `:xpath` or `:css` key with a string expression of
+  corresponding syntax. Example:
+
+  ```clojure
+  (fill driver {:xpath ".//input[@id='lst-ib']"} "XPath selector" keys/enter)
+  (fill driver {:css "input#lst-ib[name='q']"} "CSS selector" keys/enter)
+  ```
+
+  See the [CSS selector][css-sel] manual for more info.
+
+- any other map that represents an XPath expression as data. See the next
+  section;
+
+- a vector of query terms (TBD).
+
+#### Map syntax for querying
+
+- A `:tag` key represents a tag's name. It becomes `*` when not passed.
+- An `:index` key expands into the trailing `[x]` clause. Useful when you need
+  to select a third row from a table for example.
+- Any non-special key represents an attribute and its value.
+- A special key has `:fn/` namespace and expands into something specific.
+
+Examples:
+
+- find a form by its attributes:
+
+  ```clojure
+  (xpath/expand {:tag :form :method :GET :class :message})
+  .//form[@method="GET"][@class="message"]
+  ```
+
+- find a button by its text (exact match):
+
+  ```clojure
+  (xpath/expand {:tag :button :fn/text "Press Me"})
+  .//button[text()="Press Me"]
+  ```
+
+- find any element (`p`, `a`, whatever) with "download" text:
+
+  ```clojure
+  (xpath/expand {:fn/has-text "download"})
+  .//*[contains(text(), "download")]
+  ```
+
+- find an element that has the following class:
+
+  ```clojure
+  (xpath/expand {:tag :div :fn/has-class "overlay"})
+  .//div[contains(@class, "overlay")]
+  ```
+
+- find an element that has the following classes at once:
+
+  ```clojure
+  (xpath/expand {:fn/has-classes [:active :sticky :marked]})
+  .//*[contains(@class, "active")][contains(@class, "sticky")][contains(@class, "marked")]
+  ```
+
+- find a link or an image by their partial `href` and `src` values:
+
+  ```clojure
+  (xpath/expand {:tag :a :fn/href "google.com"})
+  .//a[contains(@href, "google.com")]
+
+  (xpath/expand {:tag :img :fn/src "google.com"})
+  .//img[contains(@src, "google.com")]
+  ```
+
+- find all the disabled input widgets:
+
+  ```clojure
+  (xpath/expand {:tag :iniput :fn/disabled true})
+  .//iniput[@disabled=true()]
+  ```
+
 ### Working with multiple elements
 
 Most of the functions work with a term that return first single element. For
