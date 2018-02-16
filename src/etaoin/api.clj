@@ -530,21 +530,23 @@
   ([driver q]
    (cond
 
+     (el/el? q) q
+
      (= q :active)
-     (get-active-element* driver)
+     (el/el (get-active-element* driver))
 
      (vector? q)
      (apply query driver q)
 
      :else
      (let [[loc term] (q-expand q)]
-       (find-element* driver loc term))))
+       (el/el (find-element* driver loc term)))))
 
   ([driver q & more]
    (letfn [(folder [el q]
              (let [[loc term] (q-expand q)]
                (if el
-                 (find-element-from* driver el loc term)
+                 (el/el (find-element-from* driver el loc term))
                  (query driver q))))]
      (reduce folder nil (cons q more)))))
 
@@ -561,12 +563,12 @@
 
      :else
      (let [[loc term] (q-expand q)]
-       (find-elements* driver loc term))))
+       (el/els (find-elements* driver loc term)))))
 
   ([driver q & more]
    (let [[loc term] (q-expand (last more))
          el (apply query driver q (butlast more))]
-     (find-elements-from* driver el loc term))))
+     (el/els (find-elements-from* driver el loc term)))))
 
 ;;
 ;; mouse
@@ -660,13 +662,8 @@
     [:session (:session @driver) :element el :click]
     nil _))
 
-(defmulti click
+(defn click
   "Clicks on an element (a link, a button, etc)."
-  {:arglists '([driver q])}
-  dispatch-driver)
-
-(defmethod click
-  :default
   [driver q]
   (click-el driver (query driver q)))
 
