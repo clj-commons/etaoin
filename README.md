@@ -25,8 +25,9 @@ after a mysteries note was produced on it.
 - [Getting stated](#getting-stated)
 - [Common usage](#common-usage)
   * [Querying elements](#querying-elements)
+    + [Simple queries, XPath, CSS](#simple-queries-xpath-css)
     + [Map syntax for querying](#map-syntax-for-querying)
-  * [Working with multiple elements](#working-with-multiple-elements)
+    + [Vector syntax for querying](#vector-syntax-for-querying)
   * [File uploading](#file-uploading)
   * [Screenshots](#screenshots)
   * [Using headless drivers](#using-headless-drivers)
@@ -191,7 +192,9 @@ an element on a page. For example:
 
 The library supports the following query types and values.
 
-- `:active` stands for the current active element. When opening Google page for
+#### Simple queries, XPath, CSS
+
+- `:Active` stands for the current active element. When opening Google page for
   example, it focuses the cursor on the main search input. So there is no need
   to click on in manually. Example:
 
@@ -223,10 +226,10 @@ The library supports the following query types and values.
 
   See the [CSS selector][css-sel] manual for more info.
 
-- any other map that represents an XPath expression as data. See the next
-  section.
-
 #### Map syntax for querying
+
+A query might be any other map that represents an XPath expression as data. The
+rules are:
 
 - A `:tag` key represents a tag's name. It becomes `*` when not passed.
 - An `:index` key expands into the trailing `[x]` clause. Useful when you need
@@ -278,28 +281,22 @@ Examples:
   ;; .//input[@disabled=true()]
   ```
 
-### Working with multiple elements
+#### Vector syntax for querying
 
-Most of the functions work with a term that return first single element. For
-example, `(click driver {:tag :div})` will click on the first `div` tag found on
-the page. Therefore it's better to operate on element's IDs rather then classes
-to prevent strange behaviour.
+A query might be a vector that consists from any expressions mentioned above. In
+such a query, every next term searches from a previous one recursively.
 
-In case your really need to get multiple elements and process them in batch, use
-`query-all` function with other ones that names end with `-el`. These functions
-are to work with machine wise elements represented by long driver-specific
-string values.
-
-Here is a example of how to get all the links from the page:
+A simple example:
 
 ```clojure
-(def driver (firefox))
-(go driver "http://wikipedia.org")
-(let [els (query-all driver {:tag :a})
-      ;; els is vector of strings smth like "280abeaf-27ec-5544-8634-b2cfe86a58a6"
-      get-link #(get-element-attr-el driver % :href)]
-  (mapv get-link els))
-;; returns ["//ru.wikipedia.org/" "//en.wikipedia.org/" etc ... ]
+(click driver [{:tag :html} {:tag :body} {:tag :a}])
+```
+
+You may combine both XPath and CSS expressions as well (pay attention at a
+leading dot in XPath expression:
+
+```clojure
+(click driver [{:tag :html} {:css "div.class"} ".//a[@class='download']"])
 ```
 
 ### File uploading
