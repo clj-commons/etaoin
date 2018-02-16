@@ -191,7 +191,7 @@ The library supports the following query types and values.
 
 ### Simple queries, XPath, CSS
 
-- `:Active` stands for the current active element. When opening Google page for
+- `:active` stands for the current active element. When opening Google page for
   example, it focuses the cursor on the main search input. So there is no need
   to click on in manually. Example:
 
