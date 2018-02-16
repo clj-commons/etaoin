@@ -530,25 +530,21 @@
   ([driver q]
    (cond
 
-     (el/el? q) q
-
      (= q :active)
-     (el/el (get-active-element* driver))
+     (get-active-element* driver)
 
      (vector? q)
      (apply query driver q)
 
      :else
      (let [[loc term] (q-expand q)]
-       (el/el (find-element* driver loc term)))))
+       (find-element* driver loc term))))
 
   ([driver q & more]
    (letfn [(folder [el q]
              (let [[loc term] (q-expand q)]
-               (if el
-                 (el/el (find-element-from* driver el loc term))
-                 (query driver q))))]
-     (reduce folder nil (cons q more)))))
+               (find-element-from* driver el loc term)))]
+     (reduce folder (query driver q) more))))
 
 (defn query-all
   "Finds multiple elements on a page.
@@ -563,12 +559,12 @@
 
      :else
      (let [[loc term] (q-expand q)]
-       (el/els (find-elements* driver loc term)))))
+       (find-elements* driver loc term))))
 
   ([driver q & more]
    (let [[loc term] (q-expand (last more))
          el (apply query driver q (butlast more))]
-     (el/els (find-elements-from* driver el loc term)))))
+     (find-elements-from* driver el loc term))))
 
 ;;
 ;; mouse
