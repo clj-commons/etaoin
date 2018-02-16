@@ -23,27 +23,26 @@ after a mysteries note was produced on it.
 - [Documentation](#documentation)
 - [Installation](#installation)
 - [Getting stated](#getting-stated)
-- [Common usage](#common-usage)
-  * [Querying elements](#querying-elements)
-    + [Simple queries, XPath, CSS](#simple-queries-xpath-css)
-    + [Map syntax for querying](#map-syntax-for-querying)
-    + [Vector syntax for querying](#vector-syntax-for-querying)
-  * [File uploading](#file-uploading)
-  * [Screenshots](#screenshots)
-  * [Using headless drivers](#using-headless-drivers)
-  * [Postmortem: auto-save artifacts in case of exception](#postmortem-auto-save-artifacts-in-case-of-exception)
-  * [Reading browser's logs](#reading-browsers-logs)
-  * [Additional parameters](#additional-parameters)
-  * [Setting browser profile](#setting-browser-profile)
-  * [File download directory](#file-download-directory)
-    + [Create and find a profile in Chrome](#create-and-find-a-profile-in-chrome)
-    + [Create and find a profile in Firefox](#create-and-find-a-profile-in-firefox)
-    + [Running a driver with a profile](#running-a-driver-with-a-profile)
-  * [Scrolling](#scrolling)
-  * [Working with frames and iframes](#working-with-frames-and-iframes)
-  * [Executing Javascript](#executing-javascript)
-    + [Asynchronous scripts](#asynchronous-scripts)
-  * [Wait functions](#wait-functions)
+- [Querying elements](#querying-elements)
+  * [Simple queries, XPath, CSS](#simple-queries-xpath-css)
+  * [Map syntax for querying](#map-syntax-for-querying)
+  * [Vector syntax for querying](#vector-syntax-for-querying)
+- [File uploading](#file-uploading)
+- [Screenshots](#screenshots)
+- [Using headless drivers](#using-headless-drivers)
+- [Postmortem: auto-save artifacts in case of exception](#postmortem-auto-save-artifacts-in-case-of-exception)
+- [Reading browser's logs](#reading-browsers-logs)
+- [Additional parameters](#additional-parameters)
+- [File download directory](#file-download-directory)
+- [Setting browser profile](#setting-browser-profile)
+  * [Create and find a profile in Chrome](#create-and-find-a-profile-in-chrome)
+  * [Create and find a profile in Firefox](#create-and-find-a-profile-in-firefox)
+  * [Running a driver with a profile](#running-a-driver-with-a-profile)
+- [Scrolling](#scrolling)
+- [Working with frames and iframes](#working-with-frames-and-iframes)
+- [Executing Javascript](#executing-javascript)
+  * [Asynchronous scripts](#asynchronous-scripts)
+- [Wait functions](#wait-functions)
 - [Writing Integration Tests For Your Application](#writing-integration-tests-for-your-application)
   * [Basic fixture](#basic-fixture)
   * [Multi-Driver Fixtures](#multi-driver-fixtures)
@@ -175,9 +174,7 @@ macros as follows:
 
 Whatever happens during a session, the process will be stopped anyway.
 
-## Common usage
-
-### Querying elements
+## Querying elements
 
 Most of the functions like `click`, `fill`, etc require a query term to discover
 an element on a page. For example:
@@ -192,7 +189,7 @@ an element on a page. For example:
 
 The library supports the following query types and values.
 
-#### Simple queries, XPath, CSS
+### Simple queries, XPath, CSS
 
 - `:Active` stands for the current active element. When opening Google page for
   example, it focuses the cursor on the main search input. So there is no need
@@ -226,7 +223,7 @@ The library supports the following query types and values.
 
   See the [CSS selector][css-sel] manual for more info.
 
-#### Map syntax for querying
+### Map syntax for querying
 
 A query might be any other map that represents an XPath expression as data. The
 rules are:
@@ -281,7 +278,7 @@ Examples:
   ;; .//input[@disabled=true()]
   ```
 
-#### Vector syntax for querying
+### Vector syntax for querying
 
 A query might be a vector that consists from any expressions mentioned above. In
 such a query, every next term searches from a previous one recursively.
@@ -299,7 +296,7 @@ leading dot in XPath expression:
 (click driver [{:tag :html} {:css "div.class"} ".//a[@class='download']"])
 ```
 
-### File uploading
+## File uploading
 
 Clicking on a file input button opens an OS-specific dialog that you are not
 allowed to interact with using WebDriver protocol. Use the `upload-file`
@@ -327,7 +324,7 @@ otherwise. Usage example:
 (upload-file driver input my-file)
 ```
 
-### Screenshots
+## Screenshots
 
 Calling a `screenshot` function dumps the current page into a PNG image on your
 disk:
@@ -347,7 +344,7 @@ A native Java File object is also supported:
 (screenshot driver (java.io.File. "test-native.png"))
 ```
 
-### Using headless drivers
+## Using headless drivers
 
 Recently, Google Chrome and later Firefox started support a feature named
 headless mode. When being headless, none of UI windows occur on the screen, only
@@ -411,7 +408,7 @@ respectively:
   ... common actions for both versions)
 ```
 
-### Postmortem: auto-save artifacts in case of exception
+## Postmortem: auto-save artifacts in case of exception
 
 Sometimes, it might be difficult to discover what went wrong during the last UI
 tests session. A special macro `with-postmortem` saves some useful data on disk
@@ -456,7 +453,7 @@ absent.
  :date-format "yyyy-MM-dd-hh-mm-ss"}
 ```
 
-### Reading browser's logs
+## Reading browser's logs
 
 Function `(get-logs driver)` returns the browser's logs as a vector of
 maps. Each map has the following structure:
@@ -474,7 +471,7 @@ message text and the source type highly depend on the browser. Chrome wipes the
 logs once they have been read. Phantom.js keeps them but only until you change
 the page.
 
-### Additional parameters
+## Additional parameters
 
 When running a driver instance, a map of additional parameters might be passed
 to tweak the browser's behaviour:
@@ -534,17 +531,7 @@ skipped or have nil values. Some of them, if not passed, are taken from the
  :capabilities {:chromeOptions {:args ["--headless"]}}}
 ```
 
-### Setting browser profile
-
-When running Chrome or Firefox, you may specify a special profile made for test
-purposes. A profile is a folder that keeps browser settings, history, bookmarks
-and other user-specific data.
-
-Imagine you'd like to run your integration tests against a user that turned off
-Javascript execution or image rendering. To prepare a special profile for that
-task would be a good choice.
-
-### File download directory
+## File download directory
 
 To specify your own directory where to download files, pass `:download-dir`
 parameter into an option map when running a driver:
@@ -571,7 +558,17 @@ manually:
 To check whether a file was downloaded during UI tests, see the testing section
 below.
 
-#### Create and find a profile in Chrome
+## Setting browser profile
+
+When running Chrome or Firefox, you may specify a special profile made for test
+purposes. A profile is a folder that keeps browser settings, history, bookmarks
+and other user-specific data.
+
+Imagine you'd like to run your integration tests against a user that turned off
+Javascript execution or image rendering. To prepare a special profile for that
+task would be a good choice.
+
+### Create and find a profile in Chrome
 
 1. In the right top corner of the main window, click on a user button.
 2. In the dropdown, select "Manage People".
@@ -580,7 +577,7 @@ below.
 5. Open `chrome://version/` page. Copy the file path that is beneath the
    `Profile Path` caption.
 
-#### Create and find a profile in Firefox
+### Create and find a profile in Firefox
 
 [ff-profile]:https://support.mozilla.org/en-US/kb/profile-manager-create-and-remove-firefox-profiles
 
@@ -592,7 +589,7 @@ below.
    in Finder` button. A new folder window should appear. Copy its path from
    there.
 
-#### Running a driver with a profile
+### Running a driver with a profile
 
 Once you've got a profile path, launch a driver with a special `:profile` key as
 follows:
@@ -611,7 +608,7 @@ follows:
 (def ff (firefox {:profile ff-profile}))
 ```
 
-### Scrolling
+## Scrolling
 
 The library ships a set of functions to scroll the page.
 
@@ -670,7 +667,7 @@ The following functions scroll the page in all directions:
 One note, in all cases the scroll actions are served with Javascript. Ensure
 your browser has it enabled.
 
-### Working with frames and iframes
+## Working with frames and iframes
 
 While working with the page, you cannot interact with those items that are put
 into a frame or an iframe. The functions below switch the current context on
@@ -717,7 +714,7 @@ and switching to the previous frame afterwards.
 The code above returns `42` staying at the same frame that has been before
 before evaluating the macros.
 
-### Executing Javascript
+## Executing Javascript
 
 To evaluate a Javascript code in a browser, run:
 
@@ -742,7 +739,7 @@ To return any data into Clojure, just add `return` into your script:
 ;; {:bar [1 2 3], :foo "hello!"}
 ```
 
-#### Asynchronous scripts
+### Asynchronous scripts
 
 If your script performs AJAX requests or operates on `setTimeout` or any other
 async stuff, you cannot just `return` the result. Instead, a special callback
@@ -780,7 +777,7 @@ or wrap the code into a macros that does it temporary:
   (js-async driver "some long script"))
 ```
 
-### Wait functions
+## Wait functions
 
 The main difference between a program and a human being is that the first one
 operates very fast. It means so fast, that sometimes a browser cannot render new
