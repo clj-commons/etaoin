@@ -1473,7 +1473,7 @@
      ~@body))
 
 ;;
-;; locators
+;; locators TODO: drop or refactor
 ;;
 
 (defn use-locator [driver locator]
