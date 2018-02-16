@@ -35,3 +35,5 @@ toc-build:
 kill:
 	pkill chromedriver || true
 	pkill geckodriver || true
+	pkill safaridriver || true
+	pkill phantomjs || true

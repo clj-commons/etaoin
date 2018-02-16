@@ -422,35 +422,8 @@
     (:value resp)))
 
 ;;
-;; find element(s)
+;; Finding element(s)
 ;;
-
-(defn q-expand
-  "Expands a query expression into a pair of `[locator, term]` values
-  to pass them into low-level HTTP API. Throws a Slingshot exception
-  in case of unsupported clause."
-  [driver q]
-  (cond
-    (keyword? q)
-    [locator-xpath (xpath/expand {:id q})]
-
-    (string? q)
-    [(:locator @driver) q]
-
-    (and (map? q) (:xpath q))
-    [locator-xpath (:xpath q)]
-
-    (and (map? q) (:css q))
-    [locator-css (:css q)]
-
-    (map? q)
-    [locator-xpath (xpath/expand q)]
-
-    :else
-    (throw+ {:type :etaoin/query
-             :q q
-             :driver @driver
-             :message "Unsupported query clause"})))
 
 (defmulti find-element* dispatch-driver)
 
@@ -508,78 +481,89 @@
     resp
     (->> resp :value (mapv (comp second first)))))
 
+;;
+;; Querying elements (high-level API)
+;;
+
+(defmulti q-expand
+  "Expands a query expression into a pair of `[locator, term]` values
+  to pass them into low-level HTTP API. Throws a Slingshot exception
+  in case of unsupported clause."
+  type)
+
+(defmethod q-expand clojure.lang.Keyword
+  [q]
+  (q-expand {:id q}))
+
+(defmethod q-expand java.lang.String
+  [q]
+  (q-expand {:xpath q}))
+
+(defmethod q-expand clojure.lang.IPersistentMap
+  [{:keys [xpath css] :as q}]
+  (cond
+    xpath [locator-xpath xpath]
+    css [locator-css css]
+    :else [locator-xpath (xpath/expand q)]))
+
+(defmethod q-expand :default
+  [q]
+  (throw (Exception. (format "Wrong query: %s" q))))
+
 (defn query
   "Finds an element on a page.
 
    A query might be:
 
-   - a string, so the current browser's locator will be used. Examples:
+   - a string with an XPath expression;
+   - a keyword `:active` that means to get the current active element;
+   - any other keyword which stands for an element's ID attribute;
+   - a map with either `:xpath` or `:css` key with a string value
+     of corresponding selector type (XPath or CSS);
+   - any other map that will be expanded into XPath term (see README.md);
+   - a vector of any expressions mentioned above. In that case, each next
+     term is searched from the previous one.
 
-   //div[@id='content'] for XPath,
-   div.article for CSS selector
+   Returns a element's unique identifier."
 
-   - a keyword `:active` that means the current active element
+  ([driver q]
+   (cond
 
-   - any keyword `value` that is converted to XPath `.//*[@id='<value>']`
+     (= q :active)
+     (get-active-element* driver)
 
-   - a map with either :xpath or :css keys with a string term, e.g:
-   {:xpath \"//div[@id='content']\"} or
-   {:css \"div.article\"}
+     (vector? q)
+     (apply query driver q)
 
-   - a map that will turn into an XPath expression:
-   {:tag :div} => .//div
-   {:id :container} => .//*[@id='container']
-   {:tag :a :class :external :index 2} => .//a[@class='external'][2]
+     :else
+     (let [[loc term] (q-expand q)]
+       (find-element* driver loc term))))
 
-   - a vector of any clause mentioned above. In that case,
-   every next term is searched inside the previous one. Example:
-   [{:id :footer} {:tag :a}] => finds the first hyperlink
-   inside a div with id 'footer'.
-
-   Returns an element's unique identifier as a string."
-  [driver q]
-  (cond
-    (= q :active)
-    (get-active-element* driver)
-
-    (vector? q)
-    (loop [el (query driver (first q))
-           q-rest (rest q)]
-      (if (empty? q-rest)
-        el
-        (let [q (first q-rest)
-              [loc term] (q-expand driver q)]
-          (recur (find-element-from* driver el loc term)
-                 (rest q-rest)))))
-
-    :else
-    (let [[loc term] (q-expand driver q)]
-      (find-element* driver loc term))))
+  ([driver q & more]
+   (letfn [(folder [el q]
+             (let [[loc term] (q-expand q)]
+               (find-element-from* driver el loc term)))]
+     (reduce folder (query driver q) more))))
 
 (defn query-all
-  "Finds multiple elements by a single query.
+  "Finds multiple elements on a page.
+  See `query` function for incoming params.
+  Returns a vector of element identifiers."
 
-  If a query is a vector, it finds the first element for all the terms
-  except the last one, then all the elements for the last term from
-  the element got from the previous terms.
+  ([driver q]
+   (cond
 
-  See `query` function for more info.
+     (vector? q)
+     (apply query-all driver q)
 
-  Returns a vector of element identifiers.
-"
-  [driver q]
-  (cond
-    (vector? q)
-    (let [q-but-last (vec (butlast q))
-          q-last (last q)
-          el (query driver q-but-last)
-          [loc term] (q-expand driver q-last)]
+     :else
+     (let [[loc term] (q-expand q)]
+       (find-elements* driver loc term))))
 
-      (find-elements-from* driver el loc term))
-
-    :else
-    (let [[loc term] (q-expand driver q)]
-      (find-elements* driver loc term))))
+  ([driver q & more]
+   (let [[loc term] (q-expand (last more))
+         el (apply query driver q (butlast more))]
+     (find-elements-from* driver el loc term))))
 
 ;;
 ;; mouse
@@ -673,13 +657,8 @@
     [:session (:session @driver) :element el :click]
     nil _))
 
-(defmulti click
+(defn click
   "Clicks on an element (a link, a button, etc)."
-  {:arglists '([driver q])}
-  dispatch-driver)
-
-(defmethod click
-  :default
   [driver q]
   (click-el driver (query driver q)))
 
@@ -1494,7 +1473,7 @@
      ~@body))
 
 ;;
-;; locators
+;; locators TODO: drop or refactor
 ;;
 
 (defn use-locator [driver locator]
@@ -1733,7 +1712,7 @@
   ([driver text]
    (has-text? driver {:tag :*} text))
   ([driver q text]
-   (let [[locator term] (q-expand driver q)
+   (let [[locator term] (q-expand q)
          term1 (format "%s[contains(text(), \"%s\")]" term text)
          term2 (format "%s//*[contains(text(), \"%s\")]" term text)]
      (when-not (= locator locator-xpath)
