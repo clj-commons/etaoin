@@ -158,7 +158,10 @@
   [driver profile]
   (-> driver
       (set-options-args ["-profile" profile])
-      (set-args ["--marionette-port" 2828])))
+      ((fn [driver]
+          (if (some #(= "--marionette-port" %) (get-args driver))
+            driver
+            (set-args driver ["--marionette-port" 2828]))))))
 
 ;;
 ;; window size
