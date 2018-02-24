@@ -499,7 +499,7 @@
         text (get-element-text *driver* q)]
     (is (= text "target-3"))))
 
-(deftest test-find-elements
+(deftest test-find-elements-more
   (testing "simple case"
     (let [q {:class :find-elements-target}
           elements (query-all *driver* q)]
