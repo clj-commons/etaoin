@@ -34,3 +34,13 @@
    (throw (Exception. msg)))
   ([tpl & args]
    (error (apply format tpl args))))
+
+(defn random-port
+  "Returns a random port skiping the first 1024 ones."
+  []
+  (let [max-port 65536
+        offset 1024]
+    (-> max-port
+        (- offset)
+        (rand-int)
+        (+ offset))))
