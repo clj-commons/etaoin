@@ -29,6 +29,7 @@ after a mysteries note was produced on it.
   * [Vector syntax for querying](#vector-syntax-for-querying)
 - [File uploading](#file-uploading)
 - [Screenshots](#screenshots)
+  * [Screening elements](#screening-elements)
 - [Using headless drivers](#using-headless-drivers)
 - [Postmortem: auto-save artifacts in case of exception](#postmortem-auto-save-artifacts-in-case-of-exception)
 - [Reading browser's logs](#reading-browsers-logs)
@@ -342,6 +343,16 @@ A native Java File object is also supported:
 
 ;; native object
 (screenshot driver (java.io.File. "test-native.png"))
+```
+
+### Screening elements
+
+With Firefox, you may capture not the whole page but a single element, say a
+div, an input widget or whatever. It doesn't work with other browsers for
+now. Example:
+
+```clojure
+(screenshot-element driver {:tag :div :class :smart-widget} "smart_widget.png")
 ```
 
 ## Using headless drivers

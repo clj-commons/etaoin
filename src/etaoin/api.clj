@@ -2342,7 +2342,7 @@
 
   - `file`: either a path to a file or a native `java.io.File` instance.
 "
-  {:arglists '([driver filename])}
+  {:arglists '([driver file])}
   dispatch-driver)
 
 (defmethod screenshot :default
@@ -2353,11 +2353,33 @@
     resp
     (if-let [b64str (-> resp :value not-empty)]
       (b64-to-file b64str file)
-      (throw+ {:type :etaoin/screenshot
-               :message "Empty screenshot"
-               :driver @driver}))))
+      (util/error "Empty screenshot"))))
 
+(defmulti screenshot-element
+
+  {:arglists '([driver q file])}
+  dispatch-driver)
+
+(defmethod screenshot-element
+  :default
+  [driver q file]
+  (util/error "This driver doesn't support screening elements."))
+
+(defmethod screenshot-element
+  :firefox
+  [driver q file]
+  (let [el (query driver q)]
+    (with-resp driver :get
+      [:session (:session @driver) :element el :screenshot]
+      nil
+      resp
+      (if-let [b64str (-> resp :value not-empty)]
+        (b64-to-file b64str file)
+        (util/error "Empty screenshot, query: %s" q)))))
+
+;;
 ;; postmortem
+;;
 
 (defn get-pwd []
   (System/getProperty "user.dir"))
