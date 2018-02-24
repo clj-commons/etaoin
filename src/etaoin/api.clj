@@ -21,7 +21,7 @@
             [etaoin.proc :as proc]
             [etaoin.client :as client]
             [etaoin.keys :as keys]
-            [etaoin.xpath :as xpath]
+            [etaoin.query :as query]
             [etaoin.util :as util :refer [defmethods]]
             [etaoin.driver :as drv]
             [clojure.data.codec.base64 :as b64]
@@ -485,31 +485,6 @@
 ;; Querying elements (high-level API)
 ;;
 
-(defmulti q-expand
-  "Expands a query expression into a pair of `[locator, term]` values
-  to pass them into low-level HTTP API. Throws a Slingshot exception
-  in case of unsupported clause."
-  type)
-
-(defmethod q-expand clojure.lang.Keyword
-  [q]
-  (q-expand {:id q}))
-
-(defmethod q-expand java.lang.String
-  [q]
-  (q-expand {:xpath q}))
-
-(defmethod q-expand clojure.lang.IPersistentMap
-  [{:keys [xpath css] :as q}]
-  (cond
-    xpath [locator-xpath xpath]
-    css [locator-css css]
-    :else [locator-xpath (xpath/expand q)]))
-
-(defmethod q-expand :default
-  [q]
-  (throw (Exception. (format "Wrong query: %s" q))))
-
 (defn query
   "Finds an element on a page.
 
@@ -536,12 +511,12 @@
      (apply query driver q)
 
      :else
-     (let [[loc term] (q-expand q)]
+     (let [[loc term] (query/expand driver q)]
        (find-element* driver loc term))))
 
   ([driver q & more]
    (letfn [(folder [el q]
-             (let [[loc term] (q-expand q)]
+             (let [[loc term] (query/expand driver q)]
                (find-element-from* driver el loc term)))]
      (reduce folder (query driver q) more))))
 
@@ -557,11 +532,11 @@
      (apply query-all driver q)
 
      :else
-     (let [[loc term] (q-expand q)]
+     (let [[loc term] (query/expand driver q)]
        (find-elements* driver loc term))))
 
   ([driver q & more]
-   (let [[loc term] (q-expand (last more))
+   (let [[loc term] (query/expand driver (last more))
          el (apply query driver q (butlast more))]
      (find-elements-from* driver el loc term))))
 
@@ -1712,9 +1687,9 @@
   ([driver text]
    (has-text? driver {:tag :*} text))
   ([driver q text]
-   (let [[locator term] (q-expand q)
-         term1 (format "%s[contains(text(), \"%s\")]" term text)
-         term2 (format "%s//*[contains(text(), \"%s\")]" term text)]
+   (let [[locator term] (query/expand driver q)
+         term1 (format "%s[contains(text(), \"%s\")]" term text) ;; todo refactor here
+         term2 (format "%s//*[contains(text(), \"%s\")]" term text)] ;; and here
      (when-not (= locator locator-xpath)
        (throw+ {:type :etaoin/locator
                 :driver @driver

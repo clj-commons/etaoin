@@ -28,3 +28,9 @@
 (defn dispatch-types
   [& args]
   (mapv class args))
+
+(defn error
+  ([msg]
+   (throw (Exception. msg)))
+  ([tpl & args]
+   (error (apply format tpl args))))
