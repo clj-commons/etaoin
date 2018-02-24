@@ -56,16 +56,6 @@
 ;; utils
 ;;
 
-(defn random-port
-  "Returns a random port skiping the first 1024 ones."
-  []
-  (let [max-port 65536
-        offset 1024]
-    (-> max-port
-        (- offset)
-        (rand-int)
-        (+ offset))))
-
 (defn dispatch-driver
   "Returns the current driver's type. Used as dispatcher in
   multimethods."
@@ -1572,9 +1562,9 @@
   Returns a port as an integer."
   [type host]
   (loop [port (or (get-in defaults [type :port])
-                  (random-port))]
+                  (util/random-port))]
     (if (connectable? host port)
-      (recur (random-port))
+      (recur (util/random-port))
       port)))
 
 ;;
@@ -1687,10 +1677,10 @@
   ([driver text]
    (has-text? driver {:tag :*} text))
   ([driver q text]
-   (let [[locator term] (query/expand driver q)
+   (let [[loc term] (query/expand driver q)
          term1 (format "%s[contains(text(), \"%s\")]" term text) ;; todo refactor here
          term2 (format "%s//*[contains(text(), \"%s\")]" term text)] ;; and here
-     (when-not (= locator locator-xpath)
+     (when-not (= loc locator-xpath)
        (throw+ {:type :etaoin/locator
                 :driver @driver
                 :message "Only XPath locator works here."
@@ -1698,10 +1688,10 @@
                 :q q}))
      (or
       (with-http-error
-        (find-element* driver locator term1)
+        (find-element* driver loc term1)
         true)
       (with-http-error
-        (find-element* driver locator term2)
+        (find-element* driver loc term2)
         true)
       false))))
 
