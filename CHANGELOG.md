@@ -2,6 +2,7 @@
 
 ## 0.2.7-SNAPSHOT
   * #114 extended XPath expressions
+  * #134 element screenshots for FF
 
 ## 0.2.7
   * release
