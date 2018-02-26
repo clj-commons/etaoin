@@ -1,5 +1,8 @@
 [adam]: https://github.com/AdamFrey
 
+## 0.2.8-SNAPSHOT
+  * 116 has-text? refactored and fixed
+
 ## 0.2.8
   * release
 

@@ -1,4 +1,4 @@
-(defproject etaoin "0.2.8"
+(defproject etaoin "0.2.8-SNAPSHOT"
   :description "Pure Clojure Webdriver protocol implementation."
   :url "https://github.com/igrishaev/etaoin"
   :license {:name "Eclipse Public License"
@@ -22,4 +22,4 @@
             :description "Pure Clojure Webdriver protocol implementation."
             :web-src-dir "https://github.com/igrishaev/etaoin/blob/"
             :web-home "https://igrishaev.github.io/etaoin"
-            :copyright "2017 Ivan Grishaev"})
+            :copyright "2018 Ivan Grishaev"})

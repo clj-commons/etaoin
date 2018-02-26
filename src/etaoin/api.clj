@@ -1670,30 +1670,21 @@
 (def disabled? (complement enabled?))
 
 (defn has-text?
-  "Returns true if text appears anywhere on a page.
-
-  When a query expression is passed, tries to find that text
-  into the first element found with that term."
+  "Returns true if a passed text appears anywhere on a page.
+  With a leading query expression, finds a text inside the first
+  element that matches the query."
   ([driver text]
-   (has-text? driver {:tag :*} text))
+   (with-http-error
+     (boolean
+      (query driver {:xpath (xpath/node-by-text text)}))))
+
   ([driver q text]
-   (let [[loc term] (query/expand driver q)
-         term1 (format "%s[contains(text(), \"%s\")]" term text) ;; todo refactor here
-         term2 (format "%s//*[contains(text(), \"%s\")]" term text)] ;; and here
-     (when-not (= loc locator-xpath)
-       (throw+ {:type :etaoin/locator
-                :driver @driver
-                :message "Only XPath locator works here."
-                :text text
-                :q q}))
-     (or
-      (with-http-error
-        (find-element* driver loc term1)
-        true)
-      (with-http-error
-        (find-element* driver loc term2)
-        true)
-      false))))
+   (let [x {:xpath (xpath/node-by-text text)}]
+     (with-http-error
+       (boolean
+        (if (vector? q)
+          (apply query driver (conj q x))
+          (query driver q x)))))))
 
 (defn has-class-el?
   [driver el class]

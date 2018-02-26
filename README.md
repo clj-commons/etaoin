@@ -96,7 +96,7 @@ You are welcome to submit your company into that list.
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.2.8"]
+[etaoin "0.2.8-SNAPSHOT"]
 ```
 
 Works with Clojure 1.7 and above.
@@ -135,8 +135,7 @@ The good news you may automate your browser directly from the REPL:
 (back driver)
 (forward driver)
 (refresh driver)
-(get-title driver)
-;; "Clojure - Wikipedia"
+(get-title driver) ;; "Clojure - Wikipedia"
 
 ;; stops Firefox and HTTP server
 (quit driver)

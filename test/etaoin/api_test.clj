@@ -540,6 +540,17 @@
             (is (= (-> files rest count)
                    2))))))))
 
-(deftest find-quotes-in-text
+(deftest test-find-quotes-in-text
   (doto *driver*
     (-> (has-text? "'quote") is)))
+
+(deftest test-has-text
+  (testing "gloval"
+    (is (has-text? *driver* "From the depths I've come!"))
+    (is (has-text? *driver* "I've come from the dark")))
+  (testing "relative"
+    (is (has-text? *driver* [:wc3-barks {:tag :p} {:tag :span}] "ths I've come!")))
+  (testing "short path"
+    (is (has-text? *driver* [:wc3-barks {:tag :span}] "ths I've")))
+  (testing "wrong path"
+    (is (not (has-text? *driver* [:wc3-barks {:tag :p} :pit-lord] "ths I've come!")))))

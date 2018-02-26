@@ -4,6 +4,10 @@
 
 (def Q \")
 
+(defn node-by-text
+  [text]
+  (format ".//text()[contains(., %s%s%s)]/.." Q text Q))
+
 (defmulti to-str type)
 
 (defmethod to-str clojure.lang.Keyword
