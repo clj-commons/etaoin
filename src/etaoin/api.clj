@@ -24,6 +24,7 @@
             [etaoin.query :as query]
             [etaoin.util :as util :refer [defmethods]]
             [etaoin.driver :as drv]
+            [etaoin.xpath :as xpath]
             [clojure.data.codec.base64 :as b64]
             [clojure.tools.logging :as log]
             [clojure.java.io :as io]
