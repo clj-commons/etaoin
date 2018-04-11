@@ -4,7 +4,7 @@
 [url-doc]: http://grishaev.me/etaoin/
 [url-slack]: https://clojurians.slack.com/messages/C7KDM0EKW/
 
-# Etaion
+# Etaoin
 
 Pure Clojure implementation of [Webdriver][url-webdriver] protocol. Use that
 library to automate a browser, test your frontend behaviour, simulate human
