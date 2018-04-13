@@ -31,7 +31,7 @@
 
 (defn error
   ([msg]
-   (throw (Exception. msg)))
+   (throw (Exception. ^String msg)))
   ([tpl & args]
    (error (apply format tpl args))))
 

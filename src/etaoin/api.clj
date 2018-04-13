@@ -1351,7 +1351,7 @@
   (-> entry
       (update :level (comp keyword str/lower-case))
       (update :source keyword)
-      (assoc :datetime (-> entry :timestamp java.util.Date.))))
+      (assoc :datetime (java.util.Date. ^long (:timestamp entry)))))
 
 (defmulti get-logs
   "Returns Javascript log entries. Each log entry is a map
@@ -1535,7 +1535,7 @@
   "Checks whether it's possible to connect a given host/port pair."
   [host port]
   (with-exception ConnectException false
-    (let [socket (java.net.Socket. host port)]
+    (let [socket (java.net.Socket. ^String host ^int port)]
       (if (.isConnected socket)
         (do
           (.close socket)
@@ -2186,7 +2186,7 @@
   (upload-file driver q (io/file path)))
 
 (defmethod upload-file java.io.File
-  [driver q file]
+  [driver q ^java.io.File file]
   (let [path (.getAbsolutePath file)
         message (format "File %s does not exist" path)]
     (if (.exists file)
@@ -2315,14 +2315,14 @@
 
 (defmethod b64-to-file
   [String java.io.File]
-  [b64str file]
+  [b64str ^java.io.File file]
   (b64-to-file b64str (.getAbsolutePath file)))
 
 (defmethod b64-to-file
   [String String]
-  [b64str filepath]
+  [^String b64str filepath]
   (with-open [out (io/output-stream filepath)]
-    (.write out (-> b64str .getBytes b64/decode))))
+    (.write out ^bytes (b64/decode (.getBytes b64str)))))
 
 (defmulti screenshot
   "Takes a screenshot of the current page. Saves it in a *.png file on disk.
@@ -2379,7 +2379,7 @@
 (defn join-path
   "Joins two and more path components into a single file path OS-wisely."
   [p1 p2 & more]
-  (.getPath (apply io/file p1 p2 more)))
+  (.getPath ^java.io.File (apply io/file p1 p2 more)))
 
 (defn format-date
   [date pattern]
