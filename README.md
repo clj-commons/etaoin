@@ -1050,7 +1050,7 @@ Install specific drivers you need:
 
 - Geckodriver, a driver for Firefox:
 
-  - `brew install geckodriver` for Mac users
+  - `brew cask install geckodriver` for Mac users
   - or download it from the official [Mozilla site][url-geckodriver-dl].
 
 - Phantom.js browser:
