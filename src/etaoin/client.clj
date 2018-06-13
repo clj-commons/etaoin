@@ -9,12 +9,19 @@
 ;; defaults
 ;;
 
-(def timeout
+(def default-timeout
   "HTTP timeout in seconds. The current value may seems to high,
   but according to my experience with SPA application full of React
   modules even 20 seconds could not be enough for a driver to process
   your request."
   60)
+
+(defn read-timeout []
+  (if-let [t (System/getenv "ETAOIN_TIMEOUT")]
+    (Integer/parseInt t)
+    default-timeout))
+
+(def timeout (read-timeout))
 
 (def default-api-params
   {:as :json
