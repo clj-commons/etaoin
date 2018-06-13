@@ -523,6 +523,14 @@
       (is (= (vec tag-names)
              ["div" "b" "p" "span"])))))
 
+(deftest test-children
+  (let [parent-el (query *driver* {:css "#wc3-barks"})
+        children-el (children *driver* parent-el {:css ".crypt-lord"})
+        tag-name (get-element-tag-el children-el)
+        tag-text (get-element-text-el children-el)]
+    (is (= "span" tag-name))
+    (is (= "From the depths I've come!" tag-text))))
+
 (deftest test-postmortem
   (let [dir-tmp (format
                  "%s/%s"

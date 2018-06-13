@@ -531,6 +531,10 @@
          el (apply query driver q (butlast more))]
      (find-elements-from* driver el loc term))))
 
+(defn children [driver ancestor-el q]
+  (let [[loc term] (query/expand driver q)]
+    (find-element-from* driver ancestor-el loc term)))
+
 ;;
 ;; mouse
 ;;
