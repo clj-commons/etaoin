@@ -27,6 +27,7 @@ after a mysteries note was produced on it.
   * [Simple queries, XPath, CSS](#simple-queries-xpath-css)
   * [Map syntax for querying](#map-syntax-for-querying)
   * [Vector syntax for querying](#vector-syntax-for-querying)
+  * [Interacting with queried elements](#interacting-with-queried-elements)
 - [File uploading](#file-uploading)
 - [Screenshots](#screenshots)
   * [Screening elements](#screening-elements)
@@ -294,6 +295,26 @@ leading dot in XPath expression:
 
 ```clojure
 (click driver [{:tag :html} {:css "div.class"} ".//a[@class='download']"])
+```
+
+
+### Interacting with queried elements
+
+To interact with elements found via a query you have to pass the query result to
+either `click-el` or `fill-el`:
+
+```clojure
+(click-el driver (first (query-all driver {:tag :a})))
+```
+
+So you may collect elements into a vector and arbitrarily interact with them
+at any time:
+
+```clojure
+(def elements (atom (query-all driver {:tag :input :type :text})))
+
+(fill-el driver (first @elements) "This is a test")
+(fill-el driver (rand-nth @elements) "I like tests!")
 ```
 
 ## File uploading
