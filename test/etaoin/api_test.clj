@@ -523,13 +523,21 @@
       (is (= (vec tag-names)
              ["div" "b" "p" "span"])))))
 
+(deftest test-child
+  (let [parent-el (query *driver* {:css "#wc3-barks"})
+        child-el (child *driver* parent-el {:css ".crypt-lord"})
+        tag-name (get-element-tag-el *driver* child-el)
+        tag-text (get-element-text-el *driver* child-el)]
+    (is (= "span" tag-name))
+    (is (str/includes? tag-text "From the depths I've come!"))))
+
 (deftest test-children
   (let [parent-el (query *driver* {:css "#wc3-barks"})
-        children-el (children *driver* parent-el {:css ".crypt-lord"})
-        tag-name (get-element-tag-el children-el)
-        tag-text (get-element-text-el children-el)]
-    (is (= "span" tag-name))
-    (is (= "From the depths I've come!" tag-text))))
+        children-els (children *driver* parent-el {:css "p"})
+        children-texts (map #(get-element-text-el *driver* %) children-els)]
+    (is (= ["p" "p"] (map #(get-element-tag-el *driver* %) children-els)))
+    (is (str/includes? (first children-texts) "From the depths I've come!"))
+    (is (str/includes? (last children-texts) "I've come from the darkness of the pit!"))))
 
 (deftest test-postmortem
   (let [dir-tmp (format
