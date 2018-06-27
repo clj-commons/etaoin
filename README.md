@@ -28,6 +28,8 @@ after a mysteries note was produced on it.
   * [Map syntax for querying](#map-syntax-for-querying)
   * [Vector syntax for querying](#vector-syntax-for-querying)
   * [Interacting with queried elements](#interacting-with-queried-elements)
+  * [Advanced Queries](#advanced-queries)
+    - [Querying the *nth* element matched](#querying-the-nth-element-matched)
 - [File uploading](#file-uploading)
 - [Screenshots](#screenshots)
   * [Screening elements](#screening-elements)
@@ -223,6 +225,7 @@ The library supports the following query types and values.
   ```
 
   See the [CSS selector][css-sel] manual for more info.
+  
 
 ### Map syntax for querying
 
@@ -297,6 +300,40 @@ leading dot in XPath expression:
 (click driver [{:tag :html} {:css "div.class"} ".//a[@class='download']"])
 ```
 
+### Advanced queries
+#### Querying the *nth* element matched
+Sometimes you may need to interact with the *nth* element of a query, for instance when wanting to click on the second link in this example:
+
+```html
+<ul>
+    <li class="search-result">
+        <a href="a">a</a> 
+    </li>
+    <li class="search-result">
+        <a href="b">b</a> 
+    </li>
+    <li class="search-result">
+        <a href="c">c</a> 
+    </li>
+</ul>
+```
+
+In this case you may either use the `:index` directive that is supported for XPath expressions like this:
+```clojure
+(click driver [{:tag :li :class :search-result :index 2} {:tag :a}])
+```
+
+or you can use the [nth-child trick](https://www.w3schools.com/CSSref/sel_nth-child.asp) with the CSS expression like this:
+```clojure
+(click driver {:css "li.search-result:nth-child(2) a"})
+```
+
+Finally it is also possible to obtain the *nth* element directly by using `query-all`:
+```clojure
+(click-el driver (nth (query-all driver {:css "li.search-result a"}) 2))
+```
+
+Note the use of `click-el` here, as `query-all` returns an element, not a selector that can be passed to `click` directly.
 
 ### Interacting with queried elements
 
