@@ -311,10 +311,10 @@ So you may collect elements into a vector and arbitrarily interact with them
 at any time:
 
 ```clojure
-(def elements (atom (query-all driver {:tag :input :type :text})))
+(def elements (query-all driver {:tag :input :type :text})
 
-(fill-el driver (first @elements) "This is a test")
-(fill-el driver (rand-nth @elements) "I like tests!")
+(fill-el driver (first elements) "This is a test")
+(fill-el driver (rand-nth elements) "I like tests!")
 ```
 
 ## File uploading
