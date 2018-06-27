@@ -531,9 +531,17 @@
          el (apply query driver q (butlast more))]
      (find-elements-from* driver el loc term))))
 
-(defn children [driver ancestor-el q]
+(defn child 
+  "Finds a single element under given root element."
+  [driver ancestor-el q]
   (let [[loc term] (query/expand driver q)]
     (find-element-from* driver ancestor-el loc term)))
+
+(defn children 
+  "Finds multiple elements under given root element."
+  [driver ancestor-el q]
+  (let [[loc term] (query/expand driver q)]
+    (find-elements-from* driver ancestor-el loc term)))
 
 ;;
 ;; mouse
