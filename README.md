@@ -1221,6 +1221,7 @@ Js execution, etc. So try to keep Chrome window active during test session.
 - [Adam Frey](https://github.com/AdamFrey)
 - [JW Koelewijn](https://github.com/jwkoelewijn)
 - [Miloslav Nenadál](https://github.com/nenadalm)
+- [Aleh Atsman](https://github.com/atsman)
 
 The project is open for your improvements and ideas. If any of unit tests fall
 on your machine please submit an issue giving your OS version, browser and
