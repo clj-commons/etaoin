@@ -18,11 +18,26 @@
   (or (instance? Double val)
       (instance? Integer val)))
 
+; By default we run the tests with all the drivers supported on the current OS.
+; To override this, you can set the environment variable ETAOIN_TEST_DRIVERS
+; to a Clojure vector encoded as a string; for example:
+;
+;   ETAOIN_TEST_DRIVERS="[:firefox]" lein test
+;
+(def drivers
+  (if-let [override (System/getenv "ETAOIN_TEST_DRIVERS")]
+    (clojure.edn/read-string  override)
+    (case (first (str/split (System/getProperty "os.name") #"\s+"))
+      "Linux" [:firefox :chrome :phantom]
+      "Mac" [:firefox :chrome :phantom :safari]
+      "Windows" [:firefox :chrome :phantom :safari]
+      [:firefox :chrome :phantom :safari])))
+
 (def ^:dynamic *driver*)
 
 (defn fixture-browsers [f]
   (let [url (-> "html/test.html" io/resource str)]
-    (doseq [type [:firefox :chrome :phantom :safari]]
+    (doseq [type drivers]
       (with-driver type {} driver
         (go driver url)
         (wait-visible driver {:id :document-end})
