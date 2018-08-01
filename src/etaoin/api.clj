@@ -2323,7 +2323,7 @@
                        :method :get
                        :path [:session (:session @driver) :screenshot]})
         b64str (-> resp :value not-empty)]
-    (when b64str
+    (if b64str
       (b64-to-file b64str file)
       (util/error "Empty screenshot"))))
 
@@ -2345,7 +2345,7 @@
                        :method :get
                        :path [:session (:session @driver) :element el :screenshot]})
         b64str (-> resp :value not-empty)]
-    (when b64str
+    (if b64str
       (b64-to-file b64str file)
       (util/error "Empty screenshot, query: %s" q))))
 
