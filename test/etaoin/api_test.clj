@@ -23,15 +23,25 @@
 ; to a Clojure vector encoded as a string; for example:
 ;
 ;   ETAOIN_TEST_DRIVERS="[:firefox]" lein test
-;
+
+(defn get-drivers-from-env []
+  (when-let [override (System/getenv "ETAOIN_TEST_DRIVERS")]
+    (clojure.edn/read-string override)))
+
+(defn get-drivers-from-prop []
+  (case (first (str/split (System/getProperty "os.name") #"\s+"))
+    "Linux" [:firefox :chrome :phantom]
+    "Mac" [:firefox :chrome :phantom :safari]
+    "Windows" [:firefox :chrome :phantom :safari]
+    nil))
+
+(defn get-default-drivers []
+  [:firefox :chrome :phantom :safari])
+
 (def drivers
-  (if-let [override (System/getenv "ETAOIN_TEST_DRIVERS")]
-    (clojure.edn/read-string  override)
-    (case (first (str/split (System/getProperty "os.name") #"\s+"))
-      "Linux" [:firefox :chrome :phantom]
-      "Mac" [:firefox :chrome :phantom :safari]
-      "Windows" [:firefox :chrome :phantom :safari]
-      [:firefox :chrome :phantom :safari])))
+  (or (get-drivers-from-env)
+      (get-drivers-from-prop)
+      (get-default-drivers)))
 
 (def ^:dynamic *driver*)
 
