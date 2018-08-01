@@ -6,7 +6,7 @@
 
 # Etaoin
 
-[![CircleCI](https://circleci.com/gh/marco-m/etaoin.svg?style=svg)](https://circleci.com/gh/marco-m/etaoin)
+[![CircleCI](https://circleci.com/gh/igrishaev/etaoin.svg?style=svg)](https://circleci.com/gh/igrishaev/etaoin)
 
 Pure Clojure implementation of [Webdriver][url-webdriver] protocol. Use that
 library to automate a browser, test your frontend behaviour, simulate human
