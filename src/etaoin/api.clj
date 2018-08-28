@@ -882,6 +882,26 @@
        (get-element-css-el driver el prop)))))
 
 ;;
+;; element inner HTML
+;;
+
+(defn get-element-inner-html-el
+  "Returns element's inner text by its identifier."
+  [driver el]
+  (:value (execute {:driver driver
+                    :method :get
+                    :path [:session (:session @driver) :element el :property :innerHTML]})))
+
+(defn get-element-inner-html
+  "Returns element's inner HTML.
+
+  For element `el` in `<div id=\"el\"><p class=\"foo\">hello</p></div>` it will
+  be \"<p class=\"foo\">hello</p>\" string.
+"
+  [driver q]
+  (get-element-inner-html-el driver (query driver q)))
+
+;;
 ;; element text, name and value
 ;;
 
