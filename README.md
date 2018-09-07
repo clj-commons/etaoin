@@ -1103,14 +1103,14 @@ Install specific drivers you need:
 
 - Google [Chrome driver][url-chromedriver]:
 
-  - `brew install chromedriver` for Mac users
+  - `brew cask install chromedriver` for Mac users
   - or download compiled binaries from the [official site][url-chromedriver-dl].
   - ensure you have at least `2.28` version installed. `2.27` and below has a
     bug related to maximizing a window (see [[Troubleshooting]]).
 
 - Geckodriver, a driver for Firefox:
 
-  - `brew cask install geckodriver` for Mac users
+  - `brew install geckodriver` for Mac users
   - or download it from the official [Mozilla site][url-geckodriver-dl].
 
 - Phantom.js browser:
