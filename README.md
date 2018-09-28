@@ -101,7 +101,7 @@ You are welcome to submit your company into that list.
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.2.8-SNAPSHOT"]
+[etaoin "0.2.9"]
 ```
 
 Works with Clojure 1.7 and above.
@@ -227,7 +227,7 @@ The library supports the following query types and values.
   ```
 
   See the [CSS selector][css-sel] manual for more info.
-  
+
 
 ### Map syntax for querying
 
@@ -309,13 +309,13 @@ Sometimes you may need to interact with the *nth* element of a query, for instan
 ```html
 <ul>
     <li class="search-result">
-        <a href="a">a</a> 
+        <a href="a">a</a>
     </li>
     <li class="search-result">
-        <a href="b">b</a> 
+        <a href="b">b</a>
     </li>
     <li class="search-result">
-        <a href="c">c</a> 
+        <a href="c">c</a>
     </li>
 </ul>
 ```

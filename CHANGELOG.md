@@ -1,5 +1,8 @@
 [adam]: https://github.com/AdamFrey
 
+## 0.2.9
+  * minor functions
+
 ## 0.2.8-SNAPSHOT
   * 116 has-text? refactored and fixed
 
@@ -25,6 +28,7 @@
   * #101 Clojure 1.7 now supported
 
 ## 0.2.4
+  * minor changes
 
 ## 0.2.3-SNAPSHOT
   * #84 headless? bug fixed
