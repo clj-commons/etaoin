@@ -383,14 +383,12 @@
                          :value "test1",
                          :path "/",
                          :domain "",
-                         :expiry nil,
                          :secure false,
                          :httpOnly false}
                         {:name "cookie2",
                          :value "test2",
                          :path "/",
                          :domain "",
-                         :expiry nil,
                          :secure false,
                          :httpOnly false}])))
       (when-phantom *driver*
@@ -425,7 +423,6 @@
                 :value "test2"
                 :path "/"
                 :domain ""
-                :expiry nil
                 :secure false
                 :httpOnly false})))
       (when-phantom *driver*
