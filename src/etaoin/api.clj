@@ -32,8 +32,8 @@
             [cheshire.core :refer [generate-stream]]
             [slingshot.slingshot :refer [try+ throw+]])
   (:import java.util.Date
-           java.net.ConnectException
-           java.text.SimpleDateFormat))
+           java.text.SimpleDateFormat
+           (java.io IOException)))
 
 ;;
 ;; defaults
@@ -1542,11 +1542,11 @@
 (defn connectable?
   "Checks whether it's possible to connect a given host/port pair."
   [host port]
-  (with-exception ConnectException false
+  (with-exception IOException false
     (let [socket (java.net.Socket. ^String host ^int port)]
       (if (.isConnected socket)
         (do
-          (.close socket)
+          (try (.close socket) (catch IOException _))
           true)
         false))))
 
