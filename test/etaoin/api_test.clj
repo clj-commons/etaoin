@@ -256,10 +256,10 @@
      (catch [:type :etaoin/timeout] data
        (is (= (-> data (dissoc :predicate :time-rest))
               {:type :etaoin/timeout
-               :message "No -secret- text on the page"
+               :message "Wait for :wait-span element has text -secret-"
                :timeout 1
-               :interval 0.1
-               :times 11})))))
+               :interval 0.33
+               :times 4})))))
   (testing "wait for non-existing text"
     (doto *driver*
       (refresh)
@@ -274,10 +274,10 @@
      (catch [:type :etaoin/timeout] data
        (is (= (-> data (dissoc :predicate :time-rest))
               {:type :etaoin/timeout
-               :message "wait non-existing"
+               :message "Wait for :wait-span element has text -dunno-whatever-foo-bar-"
                :timeout 2
-               :interval 0.1
-               :times 20}))))))
+               :interval 0.33
+               :times 7}))))))
 
 (deftest test-wait-has-class
   (is 1)
