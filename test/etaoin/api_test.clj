@@ -556,9 +556,10 @@
         (is false "should be caught")
         (catch Exception e
           (is true "caught")
-          (let [files (file-seq (io/file dir-tmp))]
+          (let [files (file-seq (io/file dir-tmp))
+                expected-file-count (if (supports-logs? *driver*) 3 2)]
             (is (= (-> files rest count)
-                   2))))))))
+                   expected-file-count))))))))
 
 (deftest test-find-quotes-in-text
   (doto *driver*
