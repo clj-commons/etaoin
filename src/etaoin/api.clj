@@ -133,9 +133,17 @@
 
 (defn delete-session [driver]
   "Deletes a session. Closes a browser window."
-  (execute {:driver driver
-            :method :delete
-            :path [:session (:session @driver)]}))
+  (try+
+    (execute {:driver driver
+              :method :delete
+              :path [:session (:session @driver)]})
+    (catch [:type :etaoin/http-error] {:keys [status response]}
+      (if (and (= status 404)
+               (= (-> response :value :error) "invalid session id"))
+        (log/debug "Attempted to close driver session. Session has already been deleted")
+        (throw+)))
+    (finally driver)))
+
 
 ;;
 ;; active element
