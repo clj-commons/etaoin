@@ -436,24 +436,6 @@
                 :path "/"
                 :secure false
                 :value "test2"})))))
-  (testing "setting a cookie"
-    (when-not (or (phantom? *driver*)
-                  (safari? *driver*))
-      (set-cookie *driver* {:httponly false
-                            :name "cookie3"
-                            :domain ""
-                            :secure false
-                            :value "test3"})
-      (when-firefox *driver*
-        (let [cookie (get-cookie *driver* :cookie3)]
-          (is (= cookie)
-              {:name "cookie3"
-               :value "test3"
-               :path ""
-               :domain ""
-               :expiry nil
-               :secure false
-               :httpOnly false})))))
   (testing "deleting a cookie"
     (when-not-phantom
         *driver*
