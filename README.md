@@ -87,6 +87,7 @@ after a mysteries note was produced on it.
 - [Room Key](https://www.roomkey.com/)
 - [Barrick Gold](http://www.barrick.com/)
 - [Doctor Evidence](http://drevidence.com/)
+- [Vodori](https://www.vodori.com/)
 
 You are welcome to submit your company into that list.
 
