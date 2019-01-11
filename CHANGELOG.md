@@ -1,5 +1,8 @@
 [adam]: https://github.com/AdamFrey
 
+## 0.3.0
+  * eager page load
+
 ## 0.2.9
   * minor functions
 
