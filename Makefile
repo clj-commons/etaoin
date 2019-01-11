@@ -37,3 +37,12 @@ kill:
 	pkill geckodriver || true
 	pkill safaridriver || true
 	pkill phantomjs || true
+
+
+.PHONY: autodoc
+autodoc:
+	lein autodoc
+	cd autodoc && git checkout gh-pages
+	cd autodoc && git add -A
+	cd autodoc && git commit -m "Documentation updated"
+	cd autodoc && git push
