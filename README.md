@@ -29,9 +29,9 @@ after a mysteries note was produced on it.
   * [Simple queries, XPath, CSS](#simple-queries-xpath-css)
   * [Map syntax for querying](#map-syntax-for-querying)
   * [Vector syntax for querying](#vector-syntax-for-querying)
+  * [Advanced queries](#advanced-queries)
+    + [Querying the *nth* element matched](#querying-the-nth-element-matched)
   * [Interacting with queried elements](#interacting-with-queried-elements)
-  * [Advanced Queries](#advanced-queries)
-    - [Querying the *nth* element matched](#querying-the-nth-element-matched)
 - [File uploading](#file-uploading)
 - [Screenshots](#screenshots)
   * [Screening elements](#screening-elements)
@@ -39,6 +39,7 @@ after a mysteries note was produced on it.
 - [Postmortem: auto-save artifacts in case of exception](#postmortem-auto-save-artifacts-in-case-of-exception)
 - [Reading browser's logs](#reading-browsers-logs)
 - [Additional parameters](#additional-parameters)
+- [Eager page load](#eager-page-load)
 - [File download directory](#file-download-directory)
 - [Setting browser profile](#setting-browser-profile)
   * [Create and find a profile in Chrome](#create-and-find-a-profile-in-chrome)
@@ -600,6 +601,39 @@ skipped or have nil values. Some of them, if not passed, are taken from the
  ;; Driver-specific options. Make sure you have read the docs before setting them.
  :capabilities {:chromeOptions {:args ["--headless"]}}}
 ```
+
+## Eager page load
+
+When you navigate to a certain page, the driver waits until the whole page has
+been completely loaded. What's fine in most of the cases yet doesn't reflect the
+way human beings interact with the Internet.
+
+Change this default behavior with the `:load-strategy` option. There are three
+possible values for that: `:none`, `:eager` and `:normal` which is the default
+when not passed.
+
+When you pass `:none`, the driver responds immediately so you are welcome to
+execute next instructions. For example:
+
+```clojure
+(def c (chrome))
+(go c "http://some.slow.site.com")
+;; you'll hang on this line until the page loads
+(do-something)
+```
+
+Now when passing the load strategy option:
+
+```clojure
+(def c (chrome {:load-strategy :none}))
+(go c "http://some.slow.site.com")
+;; no pause, acts immediately
+(do-something)
+```
+
+For the `:eager` option, it works only with Firefox at the moment of adding the
+feature to the library.
+
 
 ## File download directory
 

@@ -95,6 +95,12 @@
   [driver caps]
   (update driver :capabilities deep-merge caps))
 
+
+(defn set-load-strategy
+  [driver strategy]
+  (assoc-in driver [:capabilities :pageLoadStrategy] strategy))
+
+
 ;;
 ;; options utils
 ;;

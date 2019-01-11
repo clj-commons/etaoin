@@ -99,7 +99,7 @@
   Example:
 
   (def driver (firefox))
-  (println (execute {:driver driver 
+  (println (execute {:driver driver
                      :method :get
                      :path [:session (:session @driver) :element :active])))
   "
@@ -118,6 +118,7 @@
                     :method :get
                     :path [:status]})))
 
+;; TODO safari: "Request body does not contain required parameter 'capabilities'."
 (defn create-session
   "Initiates a new session for a driver. Opens a browser window as a
   side-effect. All the further requests are made within specific
@@ -159,7 +160,7 @@
   (-> (execute {:driver driver
                 :method :post
                 :path [:session (:session @driver) :element :active]})
-      :value 
+      :value
       :ELEMENT))
 
 ;;
@@ -261,7 +262,7 @@
     (-> (execute {:driver driver
                   :method :get
                   :path [:session (:session @driver) :window h :size]})
-        :value 
+        :value
         (select-keys [:width :height]))))
 
 (defmulti get-window-position
@@ -283,7 +284,7 @@
     (-> (execute {:driver driver
                   :method :get
                   :path [:session (:session @driver) :window h :position]})
-        :value 
+        :value
         (select-keys [:x :y]))))
 
 (defmulti ^:private set-window-size* dispatch-driver)
@@ -407,8 +408,8 @@
                 :method :post
                 :path [:session (:session @driver) :element]
                 :data {:using locator :value term}})
-      :value 
-      first 
+      :value
+      first
       second))
 
 (defmethod find-element* :default
@@ -427,7 +428,7 @@
                  :method :post
                  :path [:session (:session @driver) :elements]
                  :data {:using locator :value term}})
-       :value 
+       :value
        (mapv (comp second first))))
 
 (defmulti find-element-from* dispatch-driver)
@@ -438,8 +439,8 @@
                 :method :post
                 :path [:session (:session @driver) :element el :element]
                 :data {:using locator :value term}})
-      :value 
-      first 
+      :value
+      first
       second))
 
 (defmethod find-element-from* :default
@@ -448,7 +449,7 @@
                 :method :post
                 :path [:session (:session @driver) :element el :element]
                 :data {:using locator :value term}})
-      :value 
+      :value
       :ELEMENT))
 
 (defmulti find-elements-from* dispatch-driver)
@@ -459,7 +460,7 @@
                  :method :post
                  :path [:session (:session @driver) :element el :elements]
                  :data {:using locator :value term}})
-       :value 
+       :value
        (mapv (comp second first))))
 
 ;;
@@ -521,13 +522,13 @@
          el (apply query driver q (butlast more))]
      (find-elements-from* driver el loc term))))
 
-(defn child 
+(defn child
   "Finds a single element under given root element."
   [driver ancestor-el q]
   (let [[loc term] (query/expand driver q)]
     (find-element-from* driver ancestor-el loc term)))
 
-(defn children 
+(defn children
   "Finds multiple elements under given root element."
   [driver ancestor-el q]
   (let [[loc term] (query/expand driver q)]
@@ -664,7 +665,7 @@
   (-> (execute {:driver driver
                 :method :get
                 :path [:session (:session @driver) :element el :size]})
-      :value 
+      :value
       (select-keys [:width :height])))
 
 (defmethod get-element-size-el :firefox
@@ -691,7 +692,7 @@
   (-> (execute {:driver driver
                 :method :get
                 :path [:session (:session @driver) :element el :location]})
-      :value 
+      :value
       (select-keys [:x :y])))
 
 (defmethod get-element-location-el :firefox
@@ -842,7 +843,7 @@
   (-> (execute {:driver driver
                 :method :get
                 :path [:session (:session @driver) :element el :css (name name*)]})
-      :value 
+      :value
       not-empty))
 
 (defn get-element-css
@@ -1291,7 +1292,7 @@
 (defn switch-frame*
   "Switches to an (i)frame by its index or an element reference."
   [driver id]
-  (execute {:driver driver 
+  (execute {:driver driver
             :method :post
             :path [:session (:session @driver) :frame]
             :data {:id id}}))
@@ -2467,6 +2468,7 @@
   [host port]
   (format "http://%s:%s" host port))
 
+
 (defn create-driver
   "Creates a new driver instance.
 
@@ -2510,6 +2512,7 @@
     (log/debugf "Created driver: %s %s:%s" (name type) host port)
     driver))
 
+
 (defn run-driver
   "Runs a driver process locally.
 
@@ -2541,6 +2544,12 @@
   See the `Setting browser profile` section in `README.md` to know
   how to do it properly.
 
+  -- `:load-strategy` is a string or keyword with specifying
+  what strategy to use when load a page. Might be `:none`, `:eager`
+  or :`normal` (default). To not wait the page being loaded completely,
+  specify `:none`. The `:eager` option is still under development
+  in most of the browser.
+
   -- `headless` is a boolean flag to run the browser in headless mode
   (i.e. without GUI window). Useful when running tests on CI servers
   rather than local machine. Currently, only FF and Chrome support headless mode.
@@ -2569,7 +2578,8 @@
                      args-driver
                      path-driver
                      download-dir
-                     path-browser]}]]
+                     path-browser
+                     load-strategy]}]]
   (let [{:keys [type port]} @driver
         [with height] size
         log-level (or log-level :all)
@@ -2577,6 +2587,10 @@
         _ (swap! driver drv/set-browser-log-level log-level)
         _ (swap! driver drv/set-path path-driver)
         _ (swap! driver drv/set-port port)
+
+        _ (when load-strategy
+            (swap! driver drv/set-load-strategy load-strategy))
+
         _ (when args-driver (swap! driver drv/set-args args-driver))
         _ (when size (swap! driver drv/set-window-size with height))
         _ (when url (swap! driver drv/set-url url))
@@ -2590,7 +2604,7 @@
         _ (log/debugf "Starting process: %s" (str/join \space proc-args))
         process (proc/run proc-args)]
     (swap! driver assoc
-           :env env  ;; todo process env
+           :env env ;; todo process env
            :process process)
     driver))
 
