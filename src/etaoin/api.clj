@@ -207,13 +207,21 @@
   {:arglists '([driver handle])}
   dispatch-driver)
 
-(defmethods switch-window
-  [:default :chrome]
+(defmethod switch-window
+  :default
   [driver handle]
   (execute {:driver driver
             :method :post
             :path [:session (:session @driver) :window]
             :data {:handle handle}}))
+
+(defmethod switch-window
+  :chrome
+  [driver handle]
+  (execute {:driver driver
+            :method :post
+            :path [:session (:session @driver) :window]
+            :data {:name handle}}))
 
 (defmulti close-window
   "Closes the current browser window."

@@ -1,5 +1,8 @@
 [adam]: https://github.com/AdamFrey
 
+## 0.3.1
+  * switching windows in chrome fix
+
 ## 0.3.0
   * eager page load
 
