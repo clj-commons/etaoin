@@ -40,6 +40,7 @@ after a mysteries note was produced on it.
 - [Reading browser's logs](#reading-browsers-logs)
 - [Additional parameters](#additional-parameters)
 - [Eager page load](#eager-page-load)
+- [Keyboard chords](#keyboard-chords)
 - [File download directory](#file-download-directory)
 - [Setting browser profile](#setting-browser-profile)
   * [Create and find a profile in Chrome](#create-and-find-a-profile-in-chrome)
@@ -102,7 +103,7 @@ You are welcome to submit your company into that list.
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.3.1"]
+[etaoin "0.3.2"]
 ```
 
 Works with Clojure 1.7 and above.
@@ -633,6 +634,57 @@ Now when passing the load strategy option:
 
 For the `:eager` option, it works only with Firefox at the moment of adding the
 feature to the library.
+
+
+## Keyboard chords
+
+There is an option to input a series of keys simultaneously. That is useful to
+imitate holding a system key like Control, Shift or whatever when typing.
+
+The namespace `etaoin.keys` holds a bunch of key constants as well as a set of
+functions related to input.
+
+```clojure
+(require '[etaoin.keys :as keys])
+```
+
+A quick example of entering ordinary characters holding shift:
+
+```clojure
+(def c (chrome))
+(go c "http://google.com")
+
+(fill-active c (keys/with-shift "caps is great"))
+```
+
+The main input gets populated with "CAPS IS GREAT". Now you'd like to delete the
+last word. In Chrome, this is done by pressing backspace holding Alt. Let's do
+that:
+
+```clojure
+(fill-active c (keys/with-alt keys/backspace))
+```
+
+Now you've got only "CAPS IS " in the input.
+
+The more complex example is, when you'd like to delete everything from the
+input. First, you move the caret at the very beginning. Then move it to the end
+holding shit so everything gets selected. Finally you press delete to clear the
+selected text.
+
+The combo is:
+
+```clojure
+(fill-active c keys/home (keys/with-shift keys/end) keys/delete)
+```
+
+Where are also `with-ctrl` and `with-command` functions that acts the same.
+
+Pay attention, these functions do not apply to global browser's shortcuts like
+page reloading or opening a new tab.
+
+All the `keys/with-*` functions are just wrappers upon the `keys/chord` function
+what you can use for complex cases.
 
 
 ## File download directory

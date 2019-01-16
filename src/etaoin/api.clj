@@ -334,8 +334,7 @@
      (execute {:driver driver
                :method :post
                :path [:session (:session @driver) :window h :position]
-               :data {:x x :y y}
-               }))))
+               :data {:x x :y y}}))))
 
 (defn set-window-position
   "Sets new position for a window. Absolute precision is not
