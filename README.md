@@ -641,14 +641,14 @@ feature to the library.
 There is an option to input a series of keys simultaneously. That is useful to
 imitate holding a system key like Control, Shift or whatever when typing.
 
-The namespace `etaoin.keys` holds a bunch of key constants as well as a set of
+The namespace `etaoin.keys` carries a bunch of key constants as well as a set of
 functions related to input.
 
 ```clojure
 (require '[etaoin.keys :as keys])
 ```
 
-A quick example of entering ordinary characters holding shift:
+A quick example of entering ordinary characters holding Shift:
 
 ```clojure
 (def c (chrome))
@@ -667,10 +667,10 @@ that:
 
 Now you've got only "CAPS IS " in the input.
 
-The more complex example is, when you'd like to delete everything from the
-input. First, you move the caret at the very beginning. Then move it to the end
-holding shit so everything gets selected. Finally you press delete to clear the
-selected text.
+Consider a more complex example which repeats real users' behaviour. You'd like
+to delete everything from the input. First, you move the caret at the very
+beginning. Then move it to the end holding shit so everything gets
+selected. Finally, you press delete to clear the selected text.
 
 The combo is:
 
@@ -678,13 +678,14 @@ The combo is:
 (fill-active c keys/home (keys/with-shift keys/end) keys/delete)
 ```
 
-Where are also `with-ctrl` and `with-command` functions that acts the same.
+There are also `with-ctrl` and `with-command` functions that act the same.
 
-Pay attention, these functions do not apply to global browser's shortcuts like
-page reloading or opening a new tab.
+Pay attention, these functions do not apply to the global browser's
+shortcuts. For example, neither "Command + R" nor "Command + T" reload the page
+or open a new tab.
 
 All the `keys/with-*` functions are just wrappers upon the `keys/chord` function
-what you can use for complex cases.
+that might be used for complex cases.
 
 
 ## File download directory
