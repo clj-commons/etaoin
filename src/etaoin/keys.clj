@@ -71,3 +71,23 @@
 (def num-arrow-down     \uE05B)
 (def num-insert         \uE05C)
 (def num-delete         \uE05D)
+
+(def command            meta-left)
+
+
+(defn chord
+  [text & more]
+  (str (apply str text more) unidentified))
+
+
+(def with-shift
+  (partial chord shift-left))
+
+(def with-ctrl
+  (partial chord control-left))
+
+(def with-alt
+  (partial chord alt-left))
+
+(def with-command
+  (partial chord command))
