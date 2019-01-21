@@ -10,3 +10,4 @@ That document is to keep in mind all the things I always forget.
 - [ ] upload docs
 - [ ] put a Git tag
 - [ ] deploy to Clojars
+- [ ] close issues
