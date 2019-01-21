@@ -1,6 +1,6 @@
 [adam]: https://github.com/AdamFrey
 
-## 0.3.3
+## 0.3.2
   * chords
 
 ## 0.3.1
