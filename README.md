@@ -522,7 +522,7 @@ absent.
  :dir-log "/home/ivan/UI-tests/console"
 
  ;; a string template to format a date; See SimpleDateFormat Java class
- :date-format "yyyy-MM-dd-hh-mm-ss"}
+ :date-format "yyyy-MM-dd-HH-mm-ss"}
 ```
 
 ## Reading browser's logs

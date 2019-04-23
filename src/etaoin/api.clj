@@ -2404,7 +2404,7 @@
 
         file-tpl "%s-%s-%s-%s.%s"
 
-        date-format (or date-format "yyyy-MM-dd-hh-mm-ss")
+        date-format (or date-format "yyyy-MM-dd-HH-mm-ss")
         params [(-> @driver :type name)
                 (-> @driver :host)
                 (-> @driver :port)
@@ -2457,7 +2457,7 @@
   files with console logs. If `nil`, `:dir` value is used.
 
   -- `:date-format`: a string represents date(time) pattern to make
-  filenames unique. Default is \"yyyy-MM-dd-hh-mm-ss\". See Oracle
+  filenames unique. Default is \"yyyy-MM-dd-HH-mm-ss\". See Oracle
   Java `SimpleDateFormat` class manual for more patterns."
   [driver opt & body]
   `(try
