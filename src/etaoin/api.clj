@@ -1615,7 +1615,7 @@
     (get-element-text driver q)
     true))
 
-(def ^{:doc "Oppsite to `exists?`."}
+(def ^{:doc "Opposite of `exists?`."}
   absent? (complement exists?))
 
 (defmulti displayed-el?
