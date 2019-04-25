@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Leiningen: clj-tuple:0.2.2">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/clj-tuple/clj-tuple/0.2.2/clj-tuple-0.2.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
