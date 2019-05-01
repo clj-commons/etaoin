@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Leiningen: commons-io:2.5">
-    <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/commons-io/commons-io/2.5/commons-io-2.5.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
