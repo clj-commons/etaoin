@@ -576,7 +576,7 @@
   dispatch-driver)
 
 (defmethods mouse-move-to
-  [:chrome :phantom :safari]
+  [:chrome :phantom :safari :firefox]
   ([driver q]
    (execute {:driver driver
              :method :post
@@ -635,10 +635,23 @@
             :method :post
             :path [:session (:session @driver) :element el :click]}))
 
+(defn click-on [driver bn]
+  (execute {:driver driver
+            :method :post
+            :path [:session (:session @driver) :click]
+            :data {:button bn}}))  ; JSON Parameters: button - {number} Which button, enum: {LEFT = 0, MIDDLE = 1 , RIGHT = 2}
+
 (defn click
   "Clicks on an element (a link, a button, etc)."
   [driver q]
   (click-el driver (query driver q)))
+
+(defn right-click
+  "Clicks at right button on an element (a link, a button, etc)."
+  [driver q]
+  (mouse-move-to driver q)  ; first - the cursor moves to element
+  (click-on driver 2))      ; second - call (click-on) for clicks with button RIGHT = 2
+
 
 (defmulti double-click-el dispatch-driver)
 
