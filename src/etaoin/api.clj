@@ -627,31 +627,22 @@
     (mouse-move-to driver q-to)))
 
 ;;
-;; click
+;; Clicking
 ;;
+
+;; Target click
 
 (defn click-el [driver el]
   (execute {:driver driver
             :method :post
             :path [:session (:session @driver) :element el :click]}))
 
-(defn click-on [driver bn]
-  (execute {:driver driver
-            :method :post
-            :path [:session (:session @driver) :click]
-            :data {:button bn}}))  ; JSON Parameters: button - {number} Which button, enum: {LEFT = 0, MIDDLE = 1 , RIGHT = 2}
-
 (defn click
   "Clicks on an element (a link, a button, etc)."
   [driver q]
   (click-el driver (query driver q)))
 
-(defn right-click
-  "Clicks at right button on an element (a link, a button, etc)."
-  [driver q]
-  (mouse-move-to driver q)  ; first - the cursor moves to element
-  (click-on driver 2))      ; second - call (click-on) for clicks with button RIGHT = 2
-
+;; Double click
 
 (defmulti double-click-el dispatch-driver)
 
@@ -673,8 +664,52 @@
   [driver q]
   (double-click-el driver (query driver q)))
 
+
+;; Blind click
+
+(defmulti mouse-click dispatch-driver)
+
+(defmethod mouse-click
+  :chrome ;; TODO: try safari once the issue with it is solved
+  [driver btn]
+  (execute {:driver driver
+            :method :post
+            :path [:session (:session @driver) :click]
+            :data {:button btn}}))
+
+(defn left-click
+  [driver]
+  (mouse-click driver keys/mouse-left))
+
+(defn right-click
+  [driver]
+  (mouse-click driver keys/mouse-right))
+
+(defn middle-click
+  [driver]
+  (mouse-click driver keys/mouse-middle))
+
+(defn mouse-click-at
+  [driver btn q]
+  (doto driver
+    (mouse-move-to q)
+    (mouse-click btn)))
+
+(defn left-click-at
+  [driver q]
+  (mouse-click-at driver keys/mouse-left q))
+
+(defn right-click-at
+  [driver q]
+  (mouse-click-at driver keys/mouse-right q))
+
+(defn middle-click-at
+  [driver q]
+  (mouse-click-at driver keys/mouse-middle q))
+
+
 ;;
-;; element size
+;; Element size
 ;;
 
 (defmulti get-element-size-el dispatch-driver)

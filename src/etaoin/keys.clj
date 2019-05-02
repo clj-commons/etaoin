@@ -91,3 +91,12 @@
 
 (def with-command
   (partial chord command))
+
+
+;;
+;; Mouse codes
+;;
+
+(def mouse-left 0)
+(def mouse-middle 1)
+(def mouse-right 2)
