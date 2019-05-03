@@ -32,6 +32,7 @@ after a mysteries note was produced on it.
   * [Advanced queries](#advanced-queries)
     + [Querying the *nth* element matched](#querying-the-nth-element-matched)
   * [Interacting with queried elements](#interacting-with-queried-elements)
+- [Mouse clicks](#mouse-clicks)
 - [File uploading](#file-uploading)
 - [Screenshots](#screenshots)
   * [Screening elements](#screening-elements)
@@ -306,8 +307,11 @@ leading dot in XPath expression:
 ```
 
 ### Advanced queries
+
 #### Querying the *nth* element matched
-Sometimes you may need to interact with the *nth* element of a query, for instance when wanting to click on the second link in this example:
+
+Sometimes you may need to interact with the *nth* element of a query, for
+instance when wanting to click on the second link in this example:
 
 ```html
 <ul>
@@ -323,22 +327,31 @@ Sometimes you may need to interact with the *nth* element of a query, for instan
 </ul>
 ```
 
-In this case you may either use the `:index` directive that is supported for XPath expressions like this:
+In this case you may either use the `:index` directive that is supported for
+XPath expressions like this:
+
 ```clojure
 (click driver [{:tag :li :class :search-result :index 2} {:tag :a}])
 ```
 
-or you can use the [nth-child trick](https://www.w3schools.com/CSSref/sel_nth-child.asp) with the CSS expression like this:
+[nth-child]: https://www.w3schools.com/CSSref/sel_nth-child.asp
+
+or you can use the [nth-child trick][nth-child] with the CSS expression like
+this:
+
 ```clojure
 (click driver {:css "li.search-result:nth-child(2) a"})
 ```
 
-Finally it is also possible to obtain the *nth* element directly by using `query-all`:
+Finally it is also possible to obtain the *nth* element directly by using
+`query-all`:
+
 ```clojure
 (click-el driver (nth (query-all driver {:css "li.search-result a"}) 2))
 ```
 
-Note the use of `click-el` here, as `query-all` returns an element, not a selector that can be passed to `click` directly.
+Note the use of `click-el` here, as `query-all` returns an element, not a
+selector that can be passed to `click` directly.
 
 ### Interacting with queried elements
 
@@ -358,6 +371,44 @@ at any time:
 (fill-el driver (first elements) "This is a test")
 (fill-el driver (rand-nth elements) "I like tests!")
 ```
+
+## Mouse clicks
+
+The `click` function triggers the left mouse click on an element found with the
+query term:
+
+```clojure
+(click driver {:tag :button})
+```
+
+A double click is used rarely in web yet is possible with the `double-click`
+function (Chrome, Phantom.js):
+
+```clojure
+(double-click driver {:tag :dbl-click-btn})
+```
+
+There is also a bunch of "blind" clicking functions. They trigger mouse clicks
+on the current mouse position:
+
+```clojure
+(left-click driver)
+(middle-click driver)
+(right-click driver)
+```
+
+Another bunch of functions do the same but move the mouse pointer to a specified
+element before clicking on them:
+
+```clojure
+(left-click-on driver {:tag :img})
+(middle-click-on driver {:tag :img})
+(right-click-on driver {:tag :img})
+```
+
+A middle mouse click is useful when opening a link in a new background tab. The
+right click sometimes is used to imitate a context menu in web applications.
+
 
 ## File uploading
 
