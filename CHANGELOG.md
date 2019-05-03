@@ -1,5 +1,10 @@
 [adam]: https://github.com/AdamFrey
 
+## 0.3.3
+  * date hours formatting
+  * typos fixed
+  * mouse click API/readme
+
 ## 0.3.2
   * chords
 

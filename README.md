@@ -105,7 +105,7 @@ You are welcome to submit your company into that list.
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.3.2"]
+[etaoin "0.3.3"]
 ```
 
 Works with Clojure 1.7 and above.
