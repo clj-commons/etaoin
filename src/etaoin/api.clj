@@ -627,31 +627,22 @@
     (mouse-move-to driver q-to)))
 
 ;;
-;; click
+;; Clicking
 ;;
+
+;; Target click
 
 (defn click-el [driver el]
   (execute {:driver driver
             :method :post
             :path [:session (:session @driver) :element el :click]}))
 
-(defn click-on [driver bn]
-  (execute {:driver driver
-            :method :post
-            :path [:session (:session @driver) :click]
-            :data {:button bn}}))  ; JSON Parameters: button - {number} Which button, enum: {LEFT = 0, MIDDLE = 1 , RIGHT = 2}
-
 (defn click
   "Clicks on an element (a link, a button, etc)."
   [driver q]
   (click-el driver (query driver q)))
 
-(defn right-click
-  "Clicks at right button on an element (a link, a button, etc)."
-  [driver q]
-  (mouse-move-to driver q)  ; first - the cursor moves to element
-  (click-on driver 2))      ; second - call (click-on) for clicks with button RIGHT = 2
-
+;; Double click
 
 (defmulti double-click-el dispatch-driver)
 
@@ -673,8 +664,86 @@
   [driver q]
   (double-click-el driver (query driver q)))
 
+
+;; Blind click
+
+(defmulti mouse-click
+  "
+  Click on a mouse button using the *current* mouse position.
+  The `btn` is a mouse button code. See `keys/mouse-*` constants.
+  "
+  {:arglists '([driver btn])}
+  dispatch-driver)
+
+(defmethod mouse-click
+  :default
+  [driver btn]
+  (let [{driver-type :type} @driver]
+    (throw (ex-info "Mouse click is not supported for that browser"
+                    {:button btn
+                     :driver-type driver-type}))))
+
+(defmethod mouse-click
+  :chrome ;; TODO: try safari once the issue with it is solved
+  [driver btn]
+  (execute {:driver driver
+            :method :post
+            :path [:session (:session @driver) :click]
+            :data {:button btn}}))
+
+(defn left-click
+  "A shortcut for `mouse-click` with the left button."
+  [driver]
+  (mouse-click driver keys/mouse-left))
+
+(defn right-click
+  "A shortcut for `mouse-click` with the right button."
+  [driver]
+  (mouse-click driver keys/mouse-right))
+
+(defn middle-click
+  "A shortcut for `mouse-click` with the middle button."
+  [driver]
+  (mouse-click driver keys/mouse-middle))
+
+(defn mouse-click-on
+  "
+  Mouse click on a specific element and a button.
+  Moves the mouse pointer to the element first.
+  "
+  [driver btn q]
+  (doto driver
+    (mouse-move-to q)
+    (mouse-click btn)))
+
+(defn left-click-on
+  "
+  Left mouse click on an element. Probably don't need
+  that one, use `click` instead.
+  "
+  [driver q]
+  (mouse-click-on driver keys/mouse-left q))
+
+(defn right-click-on
+  "
+  Move pointer to an element found with a query
+  and right click on it.
+  "
+  [driver q]
+  (mouse-click-on driver keys/mouse-right q))
+
+(defn middle-click-on
+  "
+  Move pointer to an element found with a query
+  and middle click on it. Useful for opening links
+  in a new tab.
+  "
+  [driver q]
+  (mouse-click-on driver keys/mouse-middle q))
+
+
 ;;
-;; element size
+;; Element size
 ;;
 
 (defmulti get-element-size-el dispatch-driver)
