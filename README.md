@@ -460,8 +460,8 @@ A native Java File object is also supported:
 
 ### Screening elements
 
-With Firefox, you may capture not the whole page but a single element, say a
-div, an input widget or whatever. It doesn't work with other browsers for
+With Firefox and Chrome, you may capture not the whole page but a single element,
+say a div, an input widget or whatever. It doesn't work with other browsers for
 now. Example:
 
 ```clojure
