@@ -87,7 +87,7 @@ after a mysteries note was produced on it.
 ## Who uses it?
 
 - [Flyerbee](https://www.flyerbee.com/)
-- [Room Key](https://www.roomkey.com/)
+- [Roomkey](https://www.roomkey.com/)
 - [Barrick Gold](http://www.barrick.com/)
 - [Doctor Evidence](http://drevidence.com/)
 - [Adzerk](https://adzerk.com/)
