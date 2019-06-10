@@ -721,7 +721,7 @@ Now you've got only "CAPS IS " in the input.
 
 Consider a more complex example which repeats real users' behaviour. You'd like
 to delete everything from the input. First, you move the caret at the very
-beginning. Then move it to the end holding shit so everything gets
+beginning. Then move it to the end holding shift so everything gets
 selected. Finally, you press delete to clear the selected text.
 
 The combo is:
