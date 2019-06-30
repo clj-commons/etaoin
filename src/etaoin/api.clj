@@ -8,7 +8,7 @@
   https://www.w3.org/TR/webdriver/
 
   Chrome:
-  https://github.com/bayandin/chromedriver/
+  https://chromium.googlesource.com/chromium/src/+/master/chrome/test/chromedriver/
 
   Firefox (Geckodriver):
   https://github.com/mozilla/geckodriver
