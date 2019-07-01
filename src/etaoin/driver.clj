@@ -421,7 +421,7 @@
             (-> capabilities
                 (assoc-in [:loggingPrefs :performance]
                           (remap-log-level level))
-                (assoc-in [:chromeOptions :perfLoggingPrefs]
+                (assoc-in [(options-name driver) :perfLoggingPrefs]
                           {:enableNetwork network?
                            :enablePage page?
                            :traceCategories (string/join "," (map name categories))
