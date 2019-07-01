@@ -31,12 +31,12 @@
         (assoc :_type _type))))
 
 
-(defn net?
+(defn request?
   [log]
   (some-> log :_type namespace (= "network")))
 
 
-(defn group-net
+(defn group-requests
   [logs]
   (group-by
    (fn [log]
@@ -44,95 +44,95 @@
    logs))
 
 
-(defn build-net
+
+(defn log->request
+  [acc log]
+
+  (let [{:keys [_type message]} log
+        {:keys [params]} message]
+
+    (case _type
+
+      :network/requestwillbesent
+      (let [{:keys [request requestId type]} params
+            {:keys [method headers url hasPostData]} request
+            type (some-> type str/lower-case keyword)
+            xhr? (identical? type :xhr)]
+        (-> acc
+            (assoc :id requestId)
+            (assoc :type type)
+            (assoc :xhr? xhr?)
+            (assoc :state 1)
+            (assoc :url url)
+            (assoc :with-data? hasPostData)
+            (assoc :request
+                   {:method (some-> method str/lower-case keyword)
+                    :headers headers})))
+
+      :network/responsereceived
+      (let [{:keys [response]} params
+            {:keys [method headers mimeType remoteIPAddress]} response
+            {:keys [status]} headers]
+        (-> acc
+            (assoc :state 2)
+            (assoc :response
+                   {:status status
+                    :headers headers
+                    :mime mimeType
+                    :remote-ip remoteIPAddress})))
+
+      :network/loadingfinished
+      (-> acc
+          (assoc :state 4)
+          (assoc :done? true))
+
+      :network/loadingfailed
+      (-> acc
+          (assoc :failed? true))
+
+      ;; default
+      acc)))
+
+
+(defn build-request
   [logs]
-
-  (reduce
-   (fn [net log]
-
-     (let [{:keys [_type message]} log
-           {:keys [params]} message]
-
-       (case _type
-
-         :network/requestwillbesent
-         (let [{:keys [request requestId type]} params
-               {:keys [method headers url hasPostData]} request
-               type (some-> type str/lower-case keyword)
-               xhr? (identical? type :xhr)]
-           (-> net
-               (assoc :id requestId)
-               (assoc :type type)
-               (assoc :xhr? xhr?)
-               (assoc :state 1)
-               (assoc :url url)
-               (assoc :with-data? hasPostData)
-               (assoc :request
-                      {:method (some-> method str/lower-case keyword)
-                       :headers headers})))
-
-         :network/responsereceived
-         (let [{:keys [response]} params
-               {:keys [method headers mimeType remoteIPAddress]} response
-               {:keys [status]} headers]
-           (-> net
-               (assoc :state 2)
-               (assoc :response
-                      {:status status
-                       :headers headers
-                       :mime mimeType
-                       :remote-ip remoteIPAddress})))
-
-         :network/loadingfinished
-         (-> net
-             (assoc :state 4)
-             (assoc :done? true))
-
-         :network/loadingfailed
-         (-> net
-             (assoc :failed? true))
-
-         ;; default
-         net)))
-
-   {}
-   logs))
+  (reduce log->request {} logs))
 
 
-(defn logs->network
+(defn logs->requests
   [logs]
   (->> logs
-       (filter net?)
-       group-net
+       (filter request?)
+       group-requests
        vals
-       (mapv build-net)))
+       (mapv build-request)))
 
 
 (defn ajax?
-  [net]
-  (:xhr? net))
+  [request]
+  (:xhr? request))
 
 
 (defn logs->ajax
   [logs]
   (->> logs
-       logs->network
+       logs->requests
        (filterv ajax?)))
 
 
-(defn net-done?
-  [net]
-  (:done? net))
+(defn request-done?
+  [request]
+  (:done? request))
 
 
-(defn net-failed?
-  [net]
-  (:failed? net))
+(defn request-failed?
+  [request]
+  (:failed? request))
 
 
-(defn net-success?
-  [net]
-  (every-pred net-done? (complement net-failed?)))
+(defn request-success?
+  [request]
+  (every-pred request-done? (complement request-failed?)))
 
 
 ;;
@@ -146,11 +146,11 @@
        (mapv (comp process-log api/process-log))))
 
 
-(defn get-network
+(defn get-requests
   [driver]
   (-> driver
       get-performance-logs
-      logs->network))
+      logs->requests))
 
 
 (defn get-ajax
