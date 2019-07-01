@@ -1435,7 +1435,7 @@
                     :method :get
                     :path [:session (:session @driver) :log :types]})))
 
-(defn- process-log
+(defn process-log
   "Remaps some of the log's fields."
   [entry]
   (-> entry
@@ -1443,7 +1443,7 @@
       (update :source keyword)
       (assoc :datetime (java.util.Date. ^long (:timestamp entry)))))
 
-(defmulti get-logs
+(defmulti get-logs*
   "Returns Javascript log entries. Each log entry is a map
   with the following structure:
 
@@ -1468,23 +1468,32 @@
   - Entries about errors will have WARNING level, as coded here:
       https://github.com/detro/ghostdriver/blob/be7ffd9d47c1e76c7bfa1d47cdcde9164fd40db8/src/session.js#L494
 "
-  {:arglists '([driver])}
+  {:arglists '([driver logtype])}
   dispatch-driver)
 
-(defmethods get-logs
+(defmethods get-logs*
   [:chrome :phantom]
-  [driver]
+  [driver logtype]
   (->> (execute {:driver driver
                  :method :post
                  :path [:session (:session @driver) :log]
-                 :data {:type :browser}})
+                 :data {:type logtype}})
        :value
        (mapv process-log)))
+
+
+(defn get-logs
+  ([driver]
+   (get-logs driver "browser"))
+  ([driver logtype]
+   (get-logs* driver logtype)))
+
 
 (defn supports-logs?
   "Checks whether a driver supports getting console logs."
   [driver]
   (implemented? driver get-logs))
+
 
 (defn- dump-logs
   [logs filename & [opt]]
@@ -1492,6 +1501,7 @@
    logs
    (io/writer filename)
    (merge {:pretty true} opt)))
+
 
 ;;
 ;; get/set hash
@@ -2666,6 +2676,7 @@
                      log-level
                      args-driver
                      path-driver
+                     perf-logging
                      download-dir
                      path-browser
                      load-strategy]}]]
@@ -2676,18 +2687,26 @@
         _ (swap! driver drv/set-browser-log-level log-level)
         _ (swap! driver drv/set-path path-driver)
         _ (swap! driver drv/set-port port)
-
+        _ (when perf-logging
+            (swap! driver drv/set-perf-logging perf-logging))
         _ (when load-strategy
             (swap! driver drv/set-load-strategy load-strategy))
-
-        _ (when args-driver (swap! driver drv/set-args args-driver))
-        _ (when size (swap! driver drv/set-window-size with height))
-        _ (when url (swap! driver drv/set-url url))
-        _ (when headless (swap! driver drv/set-headless))
-        _ (when args (swap! driver drv/set-options-args args))
-        _ (when profile (swap! driver drv/set-profile profile))
-        _ (when path-browser (swap! driver drv/set-binary path-browser))
-        _ (when download-dir (swap! driver drv/set-download-dir download-dir))
+        _ (when args-driver
+            (swap! driver drv/set-args args-driver))
+        _ (when size
+            (swap! driver drv/set-window-size with height))
+        _ (when url
+            (swap! driver drv/set-url url))
+        _ (when headless
+            (swap! driver drv/set-headless))
+        _ (when args
+            (swap! driver drv/set-options-args args))
+        _ (when profile
+            (swap! driver drv/set-profile profile))
+        _ (when path-browser
+            (swap! driver drv/set-binary path-browser))
+        _ (when download-dir
+            (swap! driver drv/set-download-dir download-dir))
         _ (when prefs (swap! driver drv/set-prefs prefs))
         proc-args (drv/get-args @driver)
         _ (log/debugf "Starting process: %s" (str/join \space proc-args))
@@ -2716,7 +2735,8 @@
   [driver & [opt]] ;; move params here
   (wait-running driver)
   (let [type (:type @driver)
-        _ (swap! driver drv/set-capabilities (get-in defaults [type :capabilities]))
+        caps (get-in defaults [type :capabilities])
+        _ (swap! driver drv/set-capabilities caps)
         _ (swap! driver drv/set-capabilities (:capabilities opt))
         _ (swap! driver drv/set-capabilities (:desired-capabilities opt))
         caps (:capabilities @driver)
