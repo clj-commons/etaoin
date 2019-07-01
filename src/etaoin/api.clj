@@ -2447,8 +2447,8 @@
   [driver q file]
   (util/error "This driver doesn't support screening elements."))
 
-(defmethod screenshot-element
-  :firefox
+(defmethods screenshot-element
+  [:chrome :firefox]
   [driver q file]
   (let [el (query driver q)
         resp (execute {:driver driver
