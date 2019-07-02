@@ -18,19 +18,22 @@
   https://github.com/detro/ghostdriver/blob/
   "
   (:require [etaoin.legacy] ;; patch legacy clojure.string first
-            [etaoin.proc :as proc]
+            [etaoin.proc   :as proc]
             [etaoin.client :as client]
-            [etaoin.keys :as keys]
-            [etaoin.query :as query]
-            [etaoin.util :as util :refer [defmethods]]
+            [etaoin.keys   :as keys]
+            [etaoin.query  :as query]
+            [etaoin.util   :as util :refer [defmethods]]
             [etaoin.driver :as drv]
-            [etaoin.xpath :as xpath]
+            [etaoin.xpath  :as xpath]
+
             [clojure.data.codec.base64 :as b64]
-            [clojure.tools.logging :as log]
-            [clojure.java.io :as io]
-            [clojure.string :as str]
-            [cheshire.core :refer [generate-stream]]
+            [clojure.tools.logging     :as log]
+            [clojure.java.io           :as io]
+            [clojure.string            :as str]
+
+            [cheshire.core       :refer [generate-stream]]
             [slingshot.slingshot :refer [try+ throw+]])
+
   (:import java.util.Date
            java.text.SimpleDateFormat
            (java.io IOException)))
@@ -2666,7 +2669,8 @@
   upper-case strings."
   ;; todo: get rid of atom storage
   ;; todo: quite ugly
-  [driver & [{:keys [env
+  [driver & [{:keys [dev
+                     env
                      url
                      args
                      size
@@ -2676,19 +2680,23 @@
                      log-level
                      args-driver
                      path-driver
-                     perf-logging
                      download-dir
                      path-browser
                      load-strategy]}]]
+
   (let [{:keys [type port]} @driver
         [with height] size
         log-level (or log-level :all)
         path-driver (or path-driver (get-in defaults [type :path]))
+
         _ (swap! driver drv/set-browser-log-level log-level)
         _ (swap! driver drv/set-path path-driver)
         _ (swap! driver drv/set-port port)
-        _ (when perf-logging
-            (swap! driver drv/set-perf-logging perf-logging))
+
+        _ (when dev
+            (let [{:keys [perf]} dev]
+              (swap! driver drv/set-perf-logging perf)))
+
         _ (when load-strategy
             (swap! driver drv/set-load-strategy load-strategy))
         _ (when args-driver

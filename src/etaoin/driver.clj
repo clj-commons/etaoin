@@ -403,8 +403,6 @@
 
 ;; http://chromedriver.chromium.org/capabilities
 ;; http://chromedriver.chromium.org/logging/performance-log
-
-
 (defn set-perf-logging
   "
   categories example:
