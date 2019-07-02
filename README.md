@@ -679,10 +679,14 @@ Perhaps you want to collect these logs by your own. A function
 atom or whatever:
 
 ```clojure
-(def (logs (atom [])))
+(def logs (atom []))
 
-;; repeat that line from time to time
-(swap! logs concat (dev/get-performance-logs c))
+;; repeat that form from time to time
+(do (swap! logs concat (dev/get-performance-logs c))
+    true)
+
+(count @logs)
+;; 76
 ```
 
 There are `logs->requests` and `logs->ajax` functions that convert logs into
