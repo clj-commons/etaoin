@@ -3,6 +3,9 @@
 ## 0.3.5
   * devtools requests
 
+## 0.3.4
+  * misc fixes
+
 ## 0.3.3
   * date hours formatting
   * typos fixed

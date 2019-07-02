@@ -37,6 +37,7 @@ after a mysteries note was produced on it.
 - [Screenshots](#screenshots)
   * [Screening elements](#screening-elements)
 - [Using headless drivers](#using-headless-drivers)
+- [Devtools: tracking HTTP requests, XHR (Ajax)](#devtools-tracking-http-requests-xhr-ajax)
 - [Postmortem: auto-save artifacts in case of exception](#postmortem-auto-save-artifacts-in-case-of-exception)
 - [Reading browser's logs](#reading-browsers-logs)
 - [Additional parameters](#additional-parameters)
