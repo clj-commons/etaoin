@@ -37,6 +37,7 @@ after a mysteries note was produced on it.
 - [Screenshots](#screenshots)
   * [Screening elements](#screening-elements)
 - [Using headless drivers](#using-headless-drivers)
+- [Devtools: tracking HTTP requests, XHR (Ajax)](#devtools-tracking-http-requests-xhr-ajax)
 - [Postmortem: auto-save artifacts in case of exception](#postmortem-auto-save-artifacts-in-case-of-exception)
 - [Reading browser's logs](#reading-browsers-logs)
 - [Additional parameters](#additional-parameters)
@@ -105,7 +106,7 @@ You are welcome to submit your company into that list.
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.3.4"]
+[etaoin "0.3.5"]
 ```
 
 Works with Clojure 1.7 and above.
@@ -531,6 +532,175 @@ respectively:
     ... some actions that might be not available in headless mode)
   ... common actions for both versions)
 ```
+
+## Devtools: tracking HTTP requests, XHR (Ajax)
+
+With recent updates, the library brings a great feature. Now you can trace
+events which come from the DevTools panel. It means, everything you see in the
+developer console now is available through API. That works only with Google
+Chrome now.
+
+To start a driver with special development settings specified, just pass an
+empty map to the `:dev` field when running a driver:
+
+```clojure
+(def c (chrome {:dev {}}))
+```
+
+The value must not be `nil`. When it's an empty map, a special function takes
+defaults. Here is a full version of dev settings with all the possible values
+specified.
+
+```clojure
+(def c (chrome {:dev
+                {:perf
+                 {:level :all
+                  :network? true
+                  :page? true
+                  :interval 1000
+                  :categories [:devtools
+                               :devtools.network
+                               :devtools.timeline]}}}))
+```
+
+Under the hood, it fills a special `perfLoggingPrefs` dictionary inside the
+`chromeOptions` object.
+
+Now that your browser accumulates these events, you can read them using a
+special `dev` namespace.
+
+```clojure
+(go c "http://google.com")
+;; wait until the page gets loaded
+
+;; load the namespace
+(require '[etaoin.dev :as dev])
+```
+
+Let's have a list of ALL the HTTP requests happened during the page was loading.
+
+```clojure
+(def reqs (dev/get-requests c))
+
+;; reqs is a vector of maps
+(count reqs)
+;; 19
+
+;; what were their types?
+(set (map :type reqs))
+;; #{:script :other :document :image :xhr}
+;; we've got Js requests, images, AJAX and other stuff
+```
+
+```clojure
+;; check the last one request, it's an image named tia.png
+(-> reqs last clojure.pprint/pprint)
+
+{:state 4,
+ :id "1000052292.8",
+ :type :image,
+ :xhr? false,
+ :url "https://www.gstatic.com/inputtools/images/tia.png",
+ :with-data? nil,
+ :request
+ {:method :get,
+  :headers
+  {:Referer "https://www.google.com/",
+   :User-Agent
+   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36"}},
+ :response
+ {:status 200,
+  :headers {}, ;; truncated
+  :mime "image/png",
+  :remote-ip "173.194.73.94"},
+ :done? true}
+```
+
+Since we're mostly interested in AJAX requests, there is a function `get-ajax`
+that does the same but filters XHR requests:
+
+```clojure
+(-> c dev/get-ajax last clojure.pprint/pprint)
+
+{:state 4,
+ :id "1000051989.41",
+ :type :xhr,
+ :xhr? true,
+ :url
+ "https://www.google.com/complete/search?q=clojure%20spec&cp=12&client=psy-ab&xssi=t&gs_ri=gws-wiz&hl=ru&authuser=0&psi=4iUbXdapJsbmrgTVt7H4BA.1562060259137&ei=4iUbXdapJsbmrgTVt7H4BA",
+ :with-data? nil,
+ :request
+ {:method :get,
+  :headers
+  {:Referer "https://www.google.com/",
+   :User-Agent
+   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36"}},
+ :response
+ {:status 200,
+  :headers {}, ;; truncated
+  :mime "application/json",
+  :remote-ip "74.125.131.99"},
+ :done? true}
+```
+
+A typical pattern of `get-ajax` usage is the following. You'd like to check if a
+certain request has been fired to the server. So you press a button, wait for a
+while and then read the requests made by your browser.
+
+Having a list of requests, you search for the one you need (e.g. by its URL) and
+then check its state. The `:state` field's got the same semantics like the
+`XMLHttpRequest.readyState` has. It's an integer from 1 to 4 with the same
+behavior.
+
+To check if a request has been finished, done or failed, use these predicates:
+
+```clojure
+(def req (last reqs))
+
+(dev/request-done? req)
+;; true
+
+(dev/request-failed? req)
+;; false
+
+(dev/request-success? req)
+;; true
+```
+
+Note that `request-done?` doesn't mean the request has succeeded. It only means
+its pipeline has reached a final step.
+
+**Warning:** when you read dev logs, you consume them from an internal buffer
+which gets flushed. The second call to `get-requests` or `get-ajax` will return
+an empty list.
+
+Perhaps you want to collect these logs by your own. A function
+`dev/get-performance-logs` return a list of logs so you accumulate them in an
+atom or whatever:
+
+```clojure
+(def logs (atom []))
+
+;; repeat that form from time to time
+(do (swap! logs concat (dev/get-performance-logs c))
+    true)
+
+(count @logs)
+;; 76
+```
+
+There are `logs->requests` and `logs->ajax` functions that convert logs into
+requests. Unlike `get-requests` and `get-ajax`, they are pure functions and won't
+flush anything.
+
+```clojure
+(dev/logs->requests @logs)
+```
+
+When working with logs and requests, pay attention it their count and size. The
+maps have got plenty of keys and the amount of items in collections might be
+huge. Printing a whole bunch of events might freeze your editor. Consider using
+`clojure.pprint/pprint` function as it relies on max level and length limits.
 
 ## Postmortem: auto-save artifacts in case of exception
 

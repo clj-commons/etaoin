@@ -384,6 +384,10 @@
     :all        "ALL"
     (assert false (format "Logging level %s is unsupported." level))))
 
+
+;;
+;; https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities#loggingpreferences-json-object
+;;
 (defmulti set-browser-log-level
   "Sets browser logging level."
   {:arglists '([driver binary])}
@@ -395,3 +399,28 @@
   (assoc-in driver
             [:capabilities :loggingPrefs :browser]
             (remap-log-level level)))
+
+
+;; http://chromedriver.chromium.org/capabilities
+;; http://chromedriver.chromium.org/logging/performance-log
+(defn set-perf-logging
+  "
+  categories example:
+  [:browser :devtools :devtools.timeline]
+  "
+  [driver & [{:keys [level network? page? categories interval]
+              :or    {level      :all
+                      network?   true
+                      page?      false
+                      categories [:devtools.network]
+                      interval   1000}}]]
+  (update driver :capabilities
+          (fn [capabilities]
+            (-> capabilities
+                (assoc-in [:loggingPrefs :performance]
+                          (remap-log-level level))
+                (assoc-in [(options-name driver) :perfLoggingPrefs]
+                          {:enableNetwork network?
+                           :enablePage page?
+                           :traceCategories (string/join "," (map name categories))
+                           :bufferUsageReportingInterval interval})))))
