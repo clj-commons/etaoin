@@ -135,8 +135,9 @@
     (or (:sessionId result)               ;; default
         (:sessionId (:value result)))))   ;; firefox
 
-(defn delete-session [driver]
+(defn delete-session
   "Deletes a session. Closes a browser window."
+  [driver]
   (execute {:driver driver
             :method :delete
             :path [:session (:session @driver)]}))
@@ -794,8 +795,9 @@
                 :path [:session (:session @driver) :element el :rect]})
       (select-keys [:x :y])))
 
-(defn get-element-location [driver q]
+(defn get-element-location
   "Returns an element location on a page as a map with :x and :x keys."
+  [driver q]
   (get-element-location-el driver (query driver q)))
 
 ;;
