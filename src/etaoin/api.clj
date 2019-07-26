@@ -1495,7 +1495,7 @@
 (defn supports-logs?
   "Checks whether a driver supports getting console logs."
   [driver]
-  (implemented? driver get-logs))
+  (implemented? driver get-logs*))
 
 
 (defn- dump-logs
