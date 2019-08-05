@@ -1839,7 +1839,7 @@
 
 (defn wait-predicate
   "Sleeps continuously calling a predicate until it returns true.
-  Rises a slingshot exception when timeout is reached.
+  Raises a slingshot exception when timeout is reached.
 
   Arguments:
 
