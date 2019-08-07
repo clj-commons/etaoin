@@ -487,6 +487,16 @@
         ImageIO/read
         is)))
 
+(deftest test-screenshot-element
+  (when (or (chrome? *driver*)
+            (firefox? *driver*))
+    (with-tmp-file "screenshot" ".png" path
+      (screenshot-element *driver* {:id :css-test} path)
+      (-> path
+          io/file
+          ImageIO/read
+          is))))
+
 (deftest test-js-execute
   (testing "simple result"
     (let [result (js-execute *driver* "return 42;")]
