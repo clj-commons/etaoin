@@ -486,10 +486,9 @@
 
 (deftest test-page-source
   (let [src (get-source *driver*)]
-    (if (or (firefox? *driver*)
-            (safari? *driver*))
-      (is (str/starts-with? src "<html><head>"))
-      (is (str/starts-with? src "<!DOCTYPE html>")))))
+    (if (phantom? *driver*)
+      (is (str/starts-with? src "<!DOCTYPE html>"))
+      (is (str/starts-with? src "<html><head>")))))
 
 (deftest test-screenshot
   (with-tmp-file "screenshot" ".png" path
