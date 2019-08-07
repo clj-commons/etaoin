@@ -298,7 +298,7 @@
 
 (deftest test-drag-n-drop
   (is 1)
-  (let [url "http://marcojakob.github.io/dart-dnd/basic/web/"
+  (let [url "https://marcojakob.github.io/dart-dnd/basic/"
         doc {:class :document}
         trash {:xpath "//div[contains(@class, 'trash')]"}]
     (when-not (or (firefox? *driver*)
