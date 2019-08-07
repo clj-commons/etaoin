@@ -328,7 +328,7 @@
     (is (numeric? x))
     (is (numeric? y))
     (set-window-position *driver* (+ x 10) (+ y 10))
-    (let [{:keys [x' y']} (get-window-position *driver*)]
+    (let [{x' :x y' :y} (get-window-position *driver*)]
       (is (not= x x'))
       (is (not= y y')))))
 
@@ -338,9 +338,9 @@
       (is (numeric? width))
       (is (numeric? height))
       (set-window-size *driver* (+ width 10) (+ height 10))
-      (let [{:keys [width' height']} (get-window-size *driver*)]
-        (not= width width')
-        (not= height height')))))
+      (let [{width' :width height' :height} (get-window-size *driver*)]
+        (is (not= width width'))
+        (is (not= height height'))))))
 
 (deftest test-active-element
   (testing "active element"
