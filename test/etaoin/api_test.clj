@@ -357,6 +357,11 @@
   (let [text (get-element-text *driver* {:id :element-text})]
     (is (= text "Element text goes here."))))
 
+(deftest test-element-size
+  (let [{:keys [width height]} (get-element-size *driver* {:id :element-text})]
+    (is (numeric? width))
+    (is (numeric? height))))
+
 (deftest test-cookies
   (testing "getting all cookies"
     (let [cookies (get-cookies *driver*)]
