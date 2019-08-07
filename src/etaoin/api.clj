@@ -2781,11 +2781,13 @@
 
   - `opt` a map of all possible parameters that `create-driver`,
   `run-driver` and `connect-driver` may accept."
-  [type & [opt]]
-  (-> type
-      (create-driver opt)
-      (run-driver opt)
-      (connect-driver opt)))
+  ([type]
+   (boot-driver type {}))
+  ([type opt]
+   (-> type
+       (create-driver opt)
+       (run-driver opt)
+       (connect-driver opt))))
 
 (defn quit
   "Closes the current session and stops the driver."
@@ -2813,13 +2815,24 @@
 
 (defn chrome-headless
   "Launches headless Chrome driver. A shortcut for `boot-driver`."
-  [& opt]
-  (boot-driver :chrome (assoc opt :headless true)))
+  ([]
+   (chrome-headless {}))
+  ([opt]
+   (boot-driver :chrome (assoc opt :headless true))))
 
 (defn firefox-headless
   "Launches headless Firefox driver. A shortcut for `boot-driver`."
-  [& opt]
-  (boot-driver :firefox (assoc opt :headless true)))
+  ([]
+   (firefox-headless {}))
+  ([opt]
+   (boot-driver :firefox (assoc opt :headless true))))
+
+(defn firefox-headless
+  "Launches headless Firefox driver. A shortcut for `boot-driver`."
+  ([]
+   (firefox-headless {}))
+  ([opt]
+   (boot-driver :firefox (assoc opt :headless true))))
 
 (defmacro with-driver
   "Performs the body within a driver session.
