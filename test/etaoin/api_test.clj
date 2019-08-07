@@ -31,8 +31,8 @@
 (defn get-drivers-from-prop []
   (case (first (str/split (System/getProperty "os.name") #"\s+"))
     "Linux" [:firefox :chrome :phantom]
-    "Mac" [:firefox :chrome :phantom :safari]
-    "Windows" [:firefox :chrome :phantom :safari]
+    "Mac" [:chrome :edge :firefox :phantom :safari]
+    "Windows" [:firefox :chrome :edge :phantom :safari]
     nil))
 
 (defn get-default-drivers []

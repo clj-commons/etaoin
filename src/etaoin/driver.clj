@@ -77,8 +77,8 @@
   [driver port]
   (set-args driver ["--port" port]))
 
-(defmethod set-port
-  :chrome
+(defmethods set-port
+  [:chrome :edge]
   [driver port]
   (set-args driver [(str "--port=" port)]))
 
