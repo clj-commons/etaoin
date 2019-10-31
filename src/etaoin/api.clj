@@ -2786,10 +2786,16 @@
 (defn disconnect-driver
   "Disconnects from a running Webdriver server.
 
-  Closes the current session that is stored in the driver. Removes the
-  session from the driver instance. Returns modified driver."
+  Closes the current session that is stored in the driver if it still exists.
+  Removes the session from the driver instance. Returns modified driver."
   [driver]
-  (delete-session driver)
+
+  (try (delete-session driver)
+       (catch Exception e
+         (if (not (= 404 (:status (ex-data e))))
+           ;; the exception was caused by something other than "session not found"
+           (throw e))))
+  
   (swap! driver dissoc
          :session :capabilities)
   driver)
