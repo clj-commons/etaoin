@@ -9,7 +9,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :profiles {:dev {:plugins [[autodoc/lein-autodoc "1.1.1"]]
+  :profiles {:dev {:plugins [[lein-codox "0.10.7"]]
                    :dependencies [[org.clojure/clojure "1.8.0"]
                                   [log4j/log4j "1.2.17"]]
 
@@ -36,9 +36,4 @@
   :plugins [[test2junit "1.1.2"]]
   :test2junit-output-dir "target/test2junit"
 
-  :autodoc {:name "Etaoin"
-            :page-title "Etaoin API Documentation"
-            :description "Pure Clojure Webdriver protocol implementation."
-            :web-src-dir "https://github.com/igrishaev/etaoin/blob/"
-            :web-home "https://igrishaev.github.io/etaoin"
-            :copyright "2018 Ivan Grishaev"})
+  :codox {:output-path "autodoc"})

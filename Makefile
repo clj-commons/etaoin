@@ -41,7 +41,7 @@ kill:
 
 .PHONY: autodoc
 autodoc:
-	lein autodoc
+	lein codox
 	cd autodoc && git checkout gh-pages
 	cd autodoc && git add -A
 	cd autodoc && git commit -m "Documentation updated"
