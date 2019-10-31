@@ -398,14 +398,12 @@
                          :value "test1",
                          :path "/",
                          :domain "",
-                         :expiry nil,
                          :secure false,
                          :httpOnly false}
                         {:name "cookie2",
                          :value "test2",
                          :path "/",
                          :domain "",
-                         :expiry nil,
                          :secure false,
                          :httpOnly false}])))
       (when-phantom *driver*
@@ -440,7 +438,6 @@
                 :value "test2"
                 :path "/"
                 :domain ""
-                :expiry nil
                 :secure false
                 :httpOnly false})))
       (when-phantom *driver*
@@ -451,24 +448,6 @@
                 :path "/"
                 :secure false
                 :value "test2"})))))
-  (testing "setting a cookie"
-    (when-not (or (phantom? *driver*)
-                  (safari? *driver*))
-      (set-cookie *driver* {:httponly false
-                            :name "cookie3"
-                            :domain ""
-                            :secure false
-                            :value "test3"})
-      (when-firefox *driver*
-        (let [cookie (get-cookie *driver* :cookie3)]
-          (is (= cookie)
-              {:name "cookie3"
-               :value "test3"
-               :path ""
-               :domain ""
-               :expiry nil
-               :secure false
-               :httpOnly false})))))
   (testing "deleting a cookie"
     (when-not-phantom
         *driver*
@@ -601,9 +580,10 @@
         (is false "should be caught")
         (catch Exception e
           (is true "caught")
-          (let [files (file-seq (io/file dir-tmp))]
+          (let [files (file-seq (io/file dir-tmp))
+                expected-file-count (if (supports-logs? *driver*) 3 2)]
             (is (= (-> files rest count)
-                   2))))))))
+                   expected-file-count))))))))
 
 (deftest test-find-quotes-in-text
   (doto *driver*

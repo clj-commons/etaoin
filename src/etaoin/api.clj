@@ -267,7 +267,8 @@
   [driver]
   (-> (execute {:driver driver
                 :method :get
-                :path [:session (:session @driver) :window :size]})
+                :path [:session (:session @driver) :window :rect]})
+      :value
       (select-keys [:width :height])))
 
 (defmethod get-window-size :default
@@ -289,7 +290,8 @@
   [driver]
   (-> (execute {:driver driver
                 :method :get
-                :path [:session (:session @driver) :window :position]})
+                :path [:session (:session @driver) :window :rect]})
+      :value
       (select-keys [:x :y])))
 
 (defmethod get-window-position :default
@@ -813,6 +815,7 @@
   (-> (execute {:driver driver
                 :method :get
                 :path [:session (:session @driver) :element el :rect]})
+      :value
       (select-keys [:x :y])))
 
 (defn get-element-location
