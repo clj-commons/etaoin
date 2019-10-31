@@ -233,13 +233,13 @@
                   :foo :bar "baz")]
       (is (every? nil? result)))))
 
-(deftest test-wait-text
+(deftest test-wait-has-text
   (testing "wait for text simple"
     (doto *driver*
       (refresh)
       (wait-visible {:id :document-end})
       (click {:id :wait-button})
-      (wait-has-text :wait-span "-secret-" {:message "wait simiple"}))
+      (wait-has-text :wait-span "-secret-"))
     (is true "text found"))
   (testing "wait for text timeout"
     (doto *driver*
@@ -250,16 +250,15 @@
      (wait-has-text *driver*
                     :wait-span
                     "-secret-"
-                    {:timeout 1
-                     :message "No -secret- text on the page"})
-     (is false "should not be executd")
+                    {:timeout 1})
+     (is false "should not be executed")
      (catch [:type :etaoin/timeout] data
        (is (= (-> data (dissoc :predicate :time-rest))
               {:type :etaoin/timeout
-               :message "No -secret- text on the page"
+               :message "Wait for :wait-span element has text -secret-"
                :timeout 1
-               :interval 0.1
-               :times 11})))))
+               :interval 0.33
+               :times 4})))))
   (testing "wait for non-existing text"
     (doto *driver*
       (refresh)
@@ -268,16 +267,15 @@
      (wait-has-text *driver*
                     :wait-span
                     "-dunno-whatever-foo-bar-"
-                    {:timeout 2
-                     :message "wait non-existing"})
+                    {:timeout 2})
      (is false "should not be executed")
      (catch [:type :etaoin/timeout] data
        (is (= (-> data (dissoc :predicate :time-rest))
               {:type :etaoin/timeout
-               :message "wait non-existing"
+               :message "Wait for :wait-span element has text -dunno-whatever-foo-bar-"
                :timeout 2
-               :interval 0.1
-               :times 20}))))))
+               :interval 0.33
+               :times 7}))))))
 
 (deftest test-wait-has-class
   (is 1)
