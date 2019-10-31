@@ -31,8 +31,8 @@
 (defn get-drivers-from-prop []
   (case (first (str/split (System/getProperty "os.name") #"\s+"))
     "Linux" [:firefox :chrome :phantom]
-    "Mac" [:firefox :chrome :phantom :safari]
-    "Windows" [:firefox :chrome :phantom :safari]
+    "Mac" [:chrome :edge :firefox :phantom :safari]
+    "Windows" [:firefox :chrome :edge :phantom :safari]
     nil))
 
 (defn get-default-drivers []
@@ -233,13 +233,13 @@
                   :foo :bar "baz")]
       (is (every? nil? result)))))
 
-(deftest test-wait-text
+(deftest test-wait-has-text
   (testing "wait for text simple"
     (doto *driver*
       (refresh)
       (wait-visible {:id :document-end})
       (click {:id :wait-button})
-      (wait-has-text :wait-span "-secret-" {:message "wait simiple"}))
+      (wait-has-text :wait-span "-secret-"))
     (is true "text found"))
   (testing "wait for text timeout"
     (doto *driver*
@@ -250,9 +250,8 @@
      (wait-has-text *driver*
                     :wait-span
                     "-secret-"
-                    {:timeout 1
-                     :message "No -secret- text on the page"})
-     (is false "should not be executd")
+                    {:timeout 1})
+     (is false "should not be executed")
      (catch [:type :etaoin/timeout] data
        (is (= (-> data (dissoc :predicate :time-rest))
               {:type :etaoin/timeout
@@ -268,8 +267,7 @@
      (wait-has-text *driver*
                     :wait-span
                     "-dunno-whatever-foo-bar-"
-                    {:timeout 2
-                     :message "wait non-existing"})
+                    {:timeout 2})
      (is false "should not be executed")
      (catch [:type :etaoin/timeout] data
        (is (= (-> data (dissoc :predicate :time-rest))
@@ -298,7 +296,7 @@
 
 (deftest test-drag-n-drop
   (is 1)
-  (let [url "http://marcojakob.github.io/dart-dnd/basic/"
+  (let [url "https://marcojakob.github.io/dart-dnd/basic/"
         doc {:class :document}
         trash {:xpath "//div[contains(@class, 'trash')]"}]
     (when-not (or (firefox? *driver*)
@@ -328,7 +326,7 @@
     (is (numeric? x))
     (is (numeric? y))
     (set-window-position *driver* (+ x 10) (+ y 10))
-    (let [{:keys [x' y']} (get-window-position *driver*)]
+    (let [{x' :x y' :y} (get-window-position *driver*)]
       (is (not= x x'))
       (is (not= y y')))))
 
@@ -338,9 +336,21 @@
       (is (numeric? width))
       (is (numeric? height))
       (set-window-size *driver* (+ width 10) (+ height 10))
-      (let [{:keys [width' height']} (get-window-size *driver*)]
-        (not= width width')
-        (not= height height')))))
+      (let [{width' :width height' :height} (get-window-size *driver*)]
+        (is (not= width width'))
+        (is (not= height height'))))))
+
+(deftest test-maximize
+  (testing "maximize"
+    (let [{:keys [x y]} (get-window-position *driver*)
+          {:keys [width height]} (get-window-size *driver*)]
+      (maximize *driver*)
+      (let [{x' :x y' :y} (get-window-position *driver*)
+            {width' :width height' :height} (get-window-size *driver*)]
+        (is (not= x x'))
+        (is (not= y y'))
+        (is (not= width width'))
+        (is (not= height height'))))))
 
 (deftest test-active-element
   (testing "active element"
@@ -356,6 +366,11 @@
 (deftest test-element-text
   (let [text (get-element-text *driver* {:id :element-text})]
     (is (= text "Element text goes here."))))
+
+(deftest test-element-size
+  (let [{:keys [width height]} (get-element-size *driver* {:id :element-text})]
+    (is (numeric? width))
+    (is (numeric? height))))
 
 (deftest test-cookies
   (testing "getting all cookies"
@@ -448,10 +463,9 @@
 
 (deftest test-page-source
   (let [src (get-source *driver*)]
-    (if (or (firefox? *driver*)
-            (safari? *driver*))
-      (is (str/starts-with? src "<html><head>"))
-      (is (str/starts-with? src "<!DOCTYPE html>")))))
+    (if (phantom? *driver*)
+      (is (str/starts-with? src "<!DOCTYPE html>"))
+      (is (str/starts-with? src "<html><head>")))))
 
 (deftest test-screenshot
   (with-tmp-file "screenshot" ".png" path
@@ -460,6 +474,16 @@
         io/file
         ImageIO/read
         is)))
+
+(deftest test-screenshot-element
+  (when (or (chrome? *driver*)
+            (firefox? *driver*))
+    (with-tmp-file "screenshot" ".png" path
+      (screenshot-element *driver* {:id :css-test} path)
+      (-> path
+          io/file
+          ImageIO/read
+          is))))
 
 (deftest test-js-execute
   (testing "simple result"

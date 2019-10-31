@@ -8,7 +8,7 @@
   https://www.w3.org/TR/webdriver/
 
   Chrome:
-  https://github.com/bayandin/chromedriver/
+  https://chromium.googlesource.com/chromium/src/+/master/chrome/test/chromedriver/
 
   Firefox (Geckodriver):
   https://github.com/mozilla/geckodriver
@@ -18,22 +18,25 @@
   https://github.com/detro/ghostdriver/blob/
   "
   (:require [etaoin.legacy] ;; patch legacy clojure.string first
-            [etaoin.proc :as proc]
+            [etaoin.proc   :as proc]
             [etaoin.client :as client]
-            [etaoin.keys :as keys]
-            [etaoin.query :as query]
-            [etaoin.util :as util :refer [defmethods]]
+            [etaoin.keys   :as keys]
+            [etaoin.query  :as query]
+            [etaoin.util   :as util :refer [defmethods]]
             [etaoin.driver :as drv]
-            [etaoin.xpath :as xpath]
+            [etaoin.xpath  :as xpath]
+
             [clojure.data.codec.base64 :as b64]
-            [clojure.tools.logging :as log]
-            [clojure.java.io :as io]
-            [clojure.string :as str]
-            [cheshire.core :refer [generate-stream]]
+            [clojure.tools.logging     :as log]
+            [clojure.java.io           :as io]
+            [clojure.string            :as str]
+
+            [cheshire.core       :refer [generate-stream]]
             [slingshot.slingshot :refer [try+ throw+]])
+
   (:import java.util.Date
-           java.net.ConnectException
-           java.text.SimpleDateFormat))
+           java.text.SimpleDateFormat
+           (java.io IOException)))
 
 ;;
 ;; defaults
@@ -47,7 +50,9 @@
    :phantom {:port 8910
              :path "phantomjs"}
    :safari {:port 4445
-            :path "safaridriver"}})
+            :path "safaridriver"}
+   :edge {:port 17556
+          :path "msedgedriver"}})
 
 (def default-locator "xpath")
 (def locator-xpath "xpath")
@@ -99,7 +104,7 @@
   Example:
 
   (def driver (firefox))
-  (println (execute {:driver driver 
+  (println (execute {:driver driver
                      :method :get
                      :path [:session (:session @driver) :element :active])))
   "
@@ -118,6 +123,7 @@
                     :method :get
                     :path [:status]})))
 
+;; TODO safari: "Request body does not contain required parameter 'capabilities'."
 (defn create-session
   "Initiates a new session for a driver. Opens a browser window as a
   side-effect. All the further requests are made within specific
@@ -131,19 +137,12 @@
     (or (:sessionId result)               ;; default
         (:sessionId (:value result)))))   ;; firefox
 
-(defn delete-session [driver]
+(defn delete-session
   "Deletes a session. Closes a browser window."
-  (try+
-    (execute {:driver driver
-              :method :delete
-              :path [:session (:session @driver)]})
-    (catch [:type :etaoin/http-error] {:keys [status response]}
-      (if (and (= status 404)
-               (= (-> response :value :error) "invalid session id"))
-        (log/debug "Attempted to close driver session. Session has already been deleted")
-        (throw+)))
-    (finally driver)))
-
+  [driver]
+  (execute {:driver driver
+            :method :delete
+            :path [:session (:session @driver)]}))
 
 ;;
 ;; active element
@@ -162,12 +161,12 @@
       :value first second))
 
 (defmethods get-active-element*
-  [:chrome :phantom :safari]
+  [:chrome :edge :phantom :safari]
   [driver]
   (-> (execute {:driver driver
                 :method :post
                 :path [:session (:session @driver) :element :active]})
-      :value 
+      :value
       :ELEMENT))
 
 ;;
@@ -203,7 +202,7 @@
                     :path [:session (:session @driver) :window :handles]})))
 
 (defmethods get-window-handles
-  [:chrome :phantom]
+  [:chrome :edge :phantom]
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -214,13 +213,21 @@
   {:arglists '([driver handle])}
   dispatch-driver)
 
-(defmethods switch-window
-  [:default :chrome]
+(defmethod switch-window
+  :default
   [driver handle]
   (execute {:driver driver
             :method :post
             :path [:session (:session @driver) :window]
             :data {:handle handle}}))
+
+(defmethod switch-window
+  :chrome
+  [driver handle]
+  (execute {:driver driver
+            :method :post
+            :path [:session (:session @driver) :window]
+            :data {:name handle}}))
 
 (defmulti close-window
   "Closes the current browser window."
@@ -244,7 +251,7 @@
             :path [:session (:session @driver) :window :maximize]}))
 
 (defmethods maximize
-  [:chrome :safari]
+  [:chrome :edge :safari]
   [driver]
   (let [h (get-window-handle driver)]
     (execute {:driver driver
@@ -270,7 +277,7 @@
     (-> (execute {:driver driver
                   :method :get
                   :path [:session (:session @driver) :window h :size]})
-        :value 
+        :value
         (select-keys [:width :height]))))
 
 (defmulti get-window-position
@@ -293,7 +300,7 @@
     (-> (execute {:driver driver
                   :method :get
                   :path [:session (:session @driver) :window h :position]})
-        :value 
+        :value
         (select-keys [:x :y]))))
 
 (defmulti ^:private set-window-size* dispatch-driver)
@@ -335,8 +342,7 @@
      (execute {:driver driver
                :method :post
                :path [:session (:session @driver) :window h :position]
-               :data {:x x :y y}
-               }))))
+               :data {:x x :y y}}))))
 
 (defn set-window-position
   "Sets new position for a window. Absolute precision is not
@@ -417,8 +423,8 @@
                 :method :post
                 :path [:session (:session @driver) :element]
                 :data {:using locator :value term}})
-      :value 
-      first 
+      :value
+      first
       second))
 
 (defmethod find-element* :default
@@ -437,7 +443,7 @@
                  :method :post
                  :path [:session (:session @driver) :elements]
                  :data {:using locator :value term}})
-       :value 
+       :value
        (mapv (comp second first))))
 
 (defmulti find-element-from* dispatch-driver)
@@ -448,8 +454,8 @@
                 :method :post
                 :path [:session (:session @driver) :element el :element]
                 :data {:using locator :value term}})
-      :value 
-      first 
+      :value
+      first
       second))
 
 (defmethod find-element-from* :default
@@ -458,7 +464,7 @@
                 :method :post
                 :path [:session (:session @driver) :element el :element]
                 :data {:using locator :value term}})
-      :value 
+      :value
       :ELEMENT))
 
 (defmulti find-elements-from* dispatch-driver)
@@ -469,7 +475,7 @@
                  :method :post
                  :path [:session (:session @driver) :element el :elements]
                  :data {:using locator :value term}})
-       :value 
+       :value
        (mapv (comp second first))))
 
 ;;
@@ -531,13 +537,14 @@
          el (apply query driver q (butlast more))]
      (find-elements-from* driver el loc term))))
 
-(defn child 
+
+(defn child
   "Finds a single element under given root element."
   [driver ancestor-el q]
   (let [[loc term] (query/expand driver q)]
     (find-element-from* driver ancestor-el loc term)))
 
-(defn children 
+(defn children
   "Finds multiple elements under given root element."
   [driver ancestor-el q]
   (let [[loc term] (query/expand driver q)]
@@ -553,7 +560,7 @@
   dispatch-driver)
 
 (defmethods mouse-btn-down
-  [:chrome :phantom :safari]
+  [:chrome :edge :phantom :safari]
   [driver]
   (execute {:driver driver
             :method :post
@@ -565,7 +572,7 @@
   dispatch-driver)
 
 (defmethods mouse-btn-up
-  [:chrome :phantom :safari]
+  [:chrome :edge :phantom :safari]
   [driver]
   (execute {:driver driver
             :method :post
@@ -578,7 +585,7 @@
   dispatch-driver)
 
 (defmethods mouse-move-to
-  [:chrome :phantom :safari]
+  [:chrome :edge :phantom :safari :firefox]
   ([driver q]
    (execute {:driver driver
              :method :post
@@ -629,10 +636,13 @@
     (mouse-move-to driver q-to)))
 
 ;;
-;; click
+;; Clicking
 ;;
 
-(defn click-el [driver el]
+
+(defn click-el
+  "Click on an element having its system id."
+  [driver el]
   (execute {:driver driver
             :method :post
             :path [:session (:session @driver) :element el :click]}))
@@ -641,6 +651,23 @@
   "Clicks on an element (a link, a button, etc)."
   [driver q]
   (click-el driver (query driver q)))
+
+
+(defn click-single
+  "
+  Click on an element checking that there is only one element found.
+  Throw an exception otherwise.
+  "
+  [driver q]
+  (let [elements (query-all driver q)]
+    (if (> (count elements) 1)
+      (throw (Exception.
+              (format "Multiple elements found: %s, query %s"
+                      (count elements) q)))
+      (click-el driver (first elements)))))
+
+
+;; Double click
 
 (defmulti double-click-el dispatch-driver)
 
@@ -662,19 +689,97 @@
   [driver q]
   (double-click-el driver (query driver q)))
 
+
+;; Blind click
+
+(defmulti mouse-click
+  "
+  Click on a mouse button using the *current* mouse position.
+  The `btn` is a mouse button code. See `keys/mouse-*` constants.
+  "
+  {:arglists '([driver btn])}
+  dispatch-driver)
+
+(defmethod mouse-click
+  :default
+  [driver btn]
+  (let [{driver-type :type} @driver]
+    (throw (ex-info "Mouse click is not supported for that browser"
+                    {:button btn
+                     :driver-type driver-type}))))
+
+(defmethod mouse-click
+  :chrome ;; TODO: try safari once the issue with it is solved
+  [driver btn]
+  (execute {:driver driver
+            :method :post
+            :path [:session (:session @driver) :click]
+            :data {:button btn}}))
+
+(defn left-click
+  "A shortcut for `mouse-click` with the left button."
+  [driver]
+  (mouse-click driver keys/mouse-left))
+
+(defn right-click
+  "A shortcut for `mouse-click` with the right button."
+  [driver]
+  (mouse-click driver keys/mouse-right))
+
+(defn middle-click
+  "A shortcut for `mouse-click` with the middle button."
+  [driver]
+  (mouse-click driver keys/mouse-middle))
+
+(defn mouse-click-on
+  "
+  Mouse click on a specific element and a button.
+  Moves the mouse pointer to the element first.
+  "
+  [driver btn q]
+  (doto driver
+    (mouse-move-to q)
+    (mouse-click btn)))
+
+(defn left-click-on
+  "
+  Left mouse click on an element. Probably don't need
+  that one, use `click` instead.
+  "
+  [driver q]
+  (mouse-click-on driver keys/mouse-left q))
+
+(defn right-click-on
+  "
+  Move pointer to an element found with a query
+  and right click on it.
+  "
+  [driver q]
+  (mouse-click-on driver keys/mouse-right q))
+
+(defn middle-click-on
+  "
+  Move pointer to an element found with a query
+  and middle click on it. Useful for opening links
+  in a new tab.
+  "
+  [driver q]
+  (mouse-click-on driver keys/mouse-middle q))
+
+
 ;;
-;; element size
+;; Element size
 ;;
 
 (defmulti get-element-size-el dispatch-driver)
 
 (defmethods get-element-size-el
-  [:chrome :phantom :safari]
+  [:chrome :edge :phantom :safari]
   [driver el]
   (-> (execute {:driver driver
                 :method :get
                 :path [:session (:session @driver) :element el :size]})
-      :value 
+      :value
       (select-keys [:width :height])))
 
 (defmethod get-element-size-el :firefox
@@ -682,6 +787,7 @@
   (-> (execute {:driver driver
                 :method :get
                 :path [:session (:session @driver) :element el :rect]})
+      :value
       (select-keys [:width :height])))
 
 (defn get-element-size
@@ -696,12 +802,12 @@
 (defmulti get-element-location-el dispatch-driver)
 
 (defmethods get-element-location-el
-  [:chrome :phantom :safari]
+  [:chrome :edge :phantom :safari]
   [driver el]
   (-> (execute {:driver driver
                 :method :get
                 :path [:session (:session @driver) :element el :location]})
-      :value 
+      :value
       (select-keys [:x :y])))
 
 (defmethod get-element-location-el :firefox
@@ -712,8 +818,9 @@
       :value
       (select-keys [:x :y])))
 
-(defn get-element-location [driver q]
+(defn get-element-location
   "Returns an element location on a page as a map with :x and :x keys."
+  [driver q]
   (get-element-location-el driver (query driver q)))
 
 ;;
@@ -853,7 +960,7 @@
   (-> (execute {:driver driver
                 :method :get
                 :path [:session (:session @driver) :element el :css (name name*)]})
-      :value 
+      :value
       not-empty))
 
 (defn get-element-css
@@ -1302,7 +1409,7 @@
 (defn switch-frame*
   "Switches to an (i)frame by its index or an element reference."
   [driver id]
-  (execute {:driver driver 
+  (execute {:driver driver
             :method :post
             :path [:session (:session @driver) :frame]
             :data {:id id}}))
@@ -1350,13 +1457,13 @@
   dispatch-driver)
 
 (defmethods get-log-types
-  [:chrome :phantom]
+  [:chrome :edge :phantom]
   [driver]
   (:value (execute {:driver driver
                     :method :get
                     :path [:session (:session @driver) :log :types]})))
 
-(defn- process-log
+(defn process-log
   "Remaps some of the log's fields."
   [entry]
   (-> entry
@@ -1364,7 +1471,7 @@
       (update :source keyword)
       (assoc :datetime (java.util.Date. ^long (:timestamp entry)))))
 
-(defmulti get-logs
+(defmulti get-logs*
   "Returns Javascript log entries. Each log entry is a map
   with the following structure:
 
@@ -1389,23 +1496,32 @@
   - Entries about errors will have WARNING level, as coded here:
       https://github.com/detro/ghostdriver/blob/be7ffd9d47c1e76c7bfa1d47cdcde9164fd40db8/src/session.js#L494
 "
-  {:arglists '([driver])}
+  {:arglists '([driver logtype])}
   dispatch-driver)
 
-(defmethods get-logs
+(defmethods get-logs*
   [:chrome :phantom]
-  [driver]
+  [driver logtype]
   (->> (execute {:driver driver
                  :method :post
                  :path [:session (:session @driver) :log]
-                 :data {:type :browser}})
+                 :data {:type logtype}})
        :value
        (mapv process-log)))
+
+
+(defn get-logs
+  ([driver]
+   (get-logs driver "browser"))
+  ([driver logtype]
+   (get-logs* driver logtype)))
+
 
 (defn supports-logs?
   "Checks whether a driver supports getting console logs."
   [driver]
-  (implemented? driver get-logs))
+  (implemented? driver get-logs*))
+
 
 (defn- dump-logs
   [logs filename & [opt]]
@@ -1413,6 +1529,7 @@
    logs
    (io/writer filename)
    (merge {:pretty true} opt)))
+
 
 ;;
 ;; get/set hash
@@ -1495,7 +1612,7 @@
                     :path [:session (:session @driver) :alert :text]})))
 
 (defmethods get-alert-text
-  [:chrome :safari]
+  [:chrome :edge :safari]
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -1512,7 +1629,7 @@
             :path [:session (:session @driver) :alert :dismiss]}))
 
 (defmethods dismiss-alert
-  [:chrome :safari]
+  [:chrome :edge :safari]
   [driver]
   (execute {:driver driver
             :method :post
@@ -1529,7 +1646,7 @@
             :path [:session (:session @driver) :alert :accept]}))
 
 (defmethods accept-alert
-  [:chrome :safari]
+  [:chrome :edge :safari]
   [driver]
   (execute {:driver driver
             :method :post
@@ -1542,11 +1659,11 @@
 (defn connectable?
   "Checks whether it's possible to connect a given host/port pair."
   [host port]
-  (with-exception ConnectException false
+  (with-exception IOException false
     (let [socket (java.net.Socket. ^String host ^int port)]
       (if (.isConnected socket)
         (do
-          (.close socket)
+          (try (.close socket) (catch IOException _))
           true)
         false))))
 
@@ -1588,6 +1705,11 @@
   [driver]
   (driver? driver :chrome))
 
+(defn edge?
+  "Returns true if a driver is an Edge  instance."
+  [driver]
+  (driver? driver :edge))
+
 (defn firefox?
   "Returns true if a driver is a Firefox instance."
   [driver]
@@ -1618,7 +1740,7 @@
     (get-element-text driver q)
     true))
 
-(def ^{:doc "Oppsite to `exists?`."}
+(def ^{:doc "Opposite of `exists?`."}
   absent? (complement exists?))
 
 (defmulti displayed-el?
@@ -1747,7 +1869,7 @@
 
 (defn wait-predicate
   "Sleeps continuously calling a predicate until it returns true.
-  Rises a slingshot exception when timeout is reached.
+  Raises a slingshot exception when timeout is reached.
 
   Arguments:
 
@@ -1988,6 +2110,11 @@
   "Executes the body only if a browser is NOT Chrome."
   [driver & body]
   `(when-not-predicate #(chrome? ~driver) ~@body))
+
+(defmacro when-not-edge
+  "Executes the body only if a browser is NOT Edge."
+  [driver & body]
+  `(when-not-predicate #(edge? ~driver) ~@body))
 
 (defmacro when-not-phantom
   "Executes the body only if a browser is NOT Phantom.js."
@@ -2368,8 +2495,8 @@
   [driver q file]
   (util/error "This driver doesn't support screening elements."))
 
-(defmethod screenshot-element
-  :firefox
+(defmethods screenshot-element
+  [:chrome :edge :firefox]
   [driver q file]
   (let [el (query driver q)
         resp (execute {:driver driver
@@ -2407,7 +2534,7 @@
 
         file-tpl "%s-%s-%s-%s.%s"
 
-        date-format (or date-format "yyyy-MM-dd-hh-mm-ss")
+        date-format (or date-format "yyyy-MM-dd-HH-mm-ss")
         params [(-> @driver :type name)
                 (-> @driver :host)
                 (-> @driver :port)
@@ -2460,7 +2587,7 @@
   files with console logs. If `nil`, `:dir` value is used.
 
   -- `:date-format`: a string represents date(time) pattern to make
-  filenames unique. Default is \"yyyy-MM-dd-hh-mm-ss\". See Oracle
+  filenames unique. Default is \"yyyy-MM-dd-HH-mm-ss\". See Oracle
   Java `SimpleDateFormat` class manual for more patterns."
   [driver opt & body]
   `(try
@@ -2477,6 +2604,7 @@
   "Makes an Webdriver URL from a host and port."
   [host port]
   (format "http://%s:%s" host port))
+
 
 (defn create-driver
   "Creates a new driver instance.
@@ -2521,6 +2649,7 @@
     (log/debugf "Created driver: %s %s:%s" (name type) host port)
     driver))
 
+
 (defn run-driver
   "Runs a driver process locally.
 
@@ -2552,6 +2681,12 @@
   See the `Setting browser profile` section in `README.md` to know
   how to do it properly.
 
+  -- `:load-strategy` is a string or keyword with specifying
+  what strategy to use when load a page. Might be `:none`, `:eager`
+  or :`normal` (default). To not wait the page being loaded completely,
+  specify `:none`. The `:eager` option is still under development
+  in most of the browser.
+
   -- `headless` is a boolean flag to run the browser in headless mode
   (i.e. without GUI window). Useful when running tests on CI servers
   rather than local machine. Currently, only FF and Chrome support headless mode.
@@ -2569,7 +2704,8 @@
   upper-case strings."
   ;; todo: get rid of atom storage
   ;; todo: quite ugly
-  [driver & [{:keys [env
+  [driver & [{:keys [dev
+                     env
                      url
                      args
                      size
@@ -2580,28 +2716,46 @@
                      args-driver
                      path-driver
                      download-dir
-                     path-browser]}]]
+                     path-browser
+                     load-strategy]}]]
+
   (let [{:keys [type port]} @driver
         [with height] size
         log-level (or log-level :all)
         path-driver (or path-driver (get-in defaults [type :path]))
+
         _ (swap! driver drv/set-browser-log-level log-level)
         _ (swap! driver drv/set-path path-driver)
         _ (swap! driver drv/set-port port)
-        _ (when args-driver (swap! driver drv/set-args args-driver))
-        _ (when size (swap! driver drv/set-window-size with height))
-        _ (when url (swap! driver drv/set-url url))
-        _ (when headless (swap! driver drv/set-headless))
-        _ (when args (swap! driver drv/set-options-args args))
-        _ (when profile (swap! driver drv/set-profile profile))
-        _ (when path-browser (swap! driver drv/set-binary path-browser))
-        _ (when download-dir (swap! driver drv/set-download-dir download-dir))
+
+        _ (when dev
+            (let [{:keys [perf]} dev]
+              (swap! driver drv/set-perf-logging perf)))
+
+        _ (when load-strategy
+            (swap! driver drv/set-load-strategy load-strategy))
+        _ (when args-driver
+            (swap! driver drv/set-args args-driver))
+        _ (when size
+            (swap! driver drv/set-window-size with height))
+        _ (when url
+            (swap! driver drv/set-url url))
+        _ (when headless
+            (swap! driver drv/set-headless))
+        _ (when args
+            (swap! driver drv/set-options-args args))
+        _ (when profile
+            (swap! driver drv/set-profile profile))
+        _ (when path-browser
+            (swap! driver drv/set-binary path-browser))
+        _ (when download-dir
+            (swap! driver drv/set-download-dir download-dir))
         _ (when prefs (swap! driver drv/set-prefs prefs))
         proc-args (drv/get-args @driver)
         _ (log/debugf "Starting process: %s" (str/join \space proc-args))
         process (proc/run proc-args)]
     (swap! driver assoc
-           :env env  ;; todo process env
+           :env env ;; todo process env
            :process process)
     driver))
 
@@ -2624,7 +2778,8 @@
   [driver & [opt]] ;; move params here
   (wait-running driver)
   (let [type (:type @driver)
-        _ (swap! driver drv/set-capabilities (get-in defaults [type :capabilities]))
+        caps (get-in defaults [type :capabilities])
+        _ (swap! driver drv/set-capabilities caps)
         _ (swap! driver drv/set-capabilities (:capabilities opt))
         _ (swap! driver drv/set-capabilities (:desired-capabilities opt))
         caps (:capabilities @driver)
@@ -2635,10 +2790,16 @@
 (defn disconnect-driver
   "Disconnects from a running Webdriver server.
 
-  Closes the current session that is stored in the driver. Removes the
-  session from the driver instance. Returns modified driver."
+  Closes the current session that is stored in the driver if it still exists.
+  Removes the session from the driver instance. Returns modified driver."
   [driver]
-  (delete-session driver)
+
+  (try (delete-session driver)
+       (catch Exception e
+         (if (not (= 404 (:status (ex-data e))))
+           ;; the exception was caused by something other than "session not found"
+           (throw e))))
+
   (swap! driver dissoc
          :session :capabilities)
   driver)
@@ -2661,11 +2822,13 @@
 
   - `opt` a map of all possible parameters that `create-driver`,
   `run-driver` and `connect-driver` may accept."
-  [type & [opt]]
-  (-> type
-      (create-driver opt)
-      (run-driver opt)
-      (connect-driver opt)))
+  ([type]
+   (boot-driver type {}))
+  ([type opt]
+   (-> type
+       (create-driver opt)
+       (run-driver opt)
+       (connect-driver opt))))
 
 (defn quit
   "Closes the current session and stops the driver."
@@ -2678,6 +2841,9 @@
 (def firefox
   "Launches Firefox driver. A shortcut for `boot-driver`."
   (partial boot-driver :firefox))
+
+(def edge
+  (partial boot-driver :edge))
 
 (def chrome
   "Launches Chrome driver. A shortcut for `boot-driver`."
@@ -2693,13 +2859,17 @@
 
 (defn chrome-headless
   "Launches headless Chrome driver. A shortcut for `boot-driver`."
-  [& opt]
-  (boot-driver :chrome (assoc opt :headless true)))
+  ([]
+   (chrome-headless {}))
+  ([opt]
+   (boot-driver :chrome (assoc opt :headless true))))
 
 (defn firefox-headless
   "Launches headless Firefox driver. A shortcut for `boot-driver`."
-  [& opt]
-  (boot-driver :firefox (assoc opt :headless true)))
+  ([]
+   (firefox-headless {}))
+  ([opt]
+   (boot-driver :firefox (assoc opt :headless true))))
 
 (defmacro with-driver
   "Performs the body within a driver session.
@@ -2743,6 +2913,13 @@
   `with-driver`."
   [opt bind & body]
   `(with-driver :chrome ~opt ~bind
+     ~@body))
+
+(defmacro with-edge
+  "Performs the body with Edge session. A shortcut for
+  `with-driver`."
+  [opt bind & body]
+  `(with-driver :edge ~opt ~bind
      ~@body))
 
 (defmacro with-phantom

@@ -1,5 +1,25 @@
 [adam]: https://github.com/AdamFrey
 
+## 0.3.5
+  * devtools requests
+
+## 0.3.4
+  * misc fixes
+
+## 0.3.3
+  * date hours formatting
+  * typos fixed
+  * mouse click API/readme
+
+## 0.3.2
+  * chords
+
+## 0.3.1
+  * switching windows in chrome fix
+
+## 0.3.0
+  * eager page load
+
 ## 0.2.9
   * minor functions
 

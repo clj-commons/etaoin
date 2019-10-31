@@ -29,16 +29,20 @@ after a mysteries note was produced on it.
   * [Simple queries, XPath, CSS](#simple-queries-xpath-css)
   * [Map syntax for querying](#map-syntax-for-querying)
   * [Vector syntax for querying](#vector-syntax-for-querying)
+  * [Advanced queries](#advanced-queries)
+    + [Querying the *nth* element matched](#querying-the-nth-element-matched)
   * [Interacting with queried elements](#interacting-with-queried-elements)
-  * [Advanced Queries](#advanced-queries)
-    - [Querying the *nth* element matched](#querying-the-nth-element-matched)
+- [Mouse clicks](#mouse-clicks)
 - [File uploading](#file-uploading)
 - [Screenshots](#screenshots)
   * [Screening elements](#screening-elements)
 - [Using headless drivers](#using-headless-drivers)
+- [Devtools: tracking HTTP requests, XHR (Ajax)](#devtools-tracking-http-requests-xhr-ajax)
 - [Postmortem: auto-save artifacts in case of exception](#postmortem-auto-save-artifacts-in-case-of-exception)
 - [Reading browser's logs](#reading-browsers-logs)
 - [Additional parameters](#additional-parameters)
+- [Eager page load](#eager-page-load)
+- [Keyboard chords](#keyboard-chords)
 - [File download directory](#file-download-directory)
 - [Setting browser profile](#setting-browser-profile)
   * [Create and find a profile in Chrome](#create-and-find-a-profile-in-chrome)
@@ -84,9 +88,10 @@ after a mysteries note was produced on it.
 ## Who uses it?
 
 - [Flyerbee](https://www.flyerbee.com/)
-- [Room Key](https://www.roomkey.com/)
+- [Roomkey](https://www.roomkey.com/)
 - [Barrick Gold](http://www.barrick.com/)
 - [Doctor Evidence](http://drevidence.com/)
+- [Adzerk](https://adzerk.com/)
 
 You are welcome to submit your company into that list.
 
@@ -101,7 +106,7 @@ You are welcome to submit your company into that list.
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.2.9"]
+[etaoin "0.3.5"]
 ```
 
 Works with Clojure 1.7 and above.
@@ -303,8 +308,11 @@ leading dot in XPath expression:
 ```
 
 ### Advanced queries
+
 #### Querying the *nth* element matched
-Sometimes you may need to interact with the *nth* element of a query, for instance when wanting to click on the second link in this example:
+
+Sometimes you may need to interact with the *nth* element of a query, for
+instance when wanting to click on the second link in this example:
 
 ```html
 <ul>
@@ -320,22 +328,31 @@ Sometimes you may need to interact with the *nth* element of a query, for instan
 </ul>
 ```
 
-In this case you may either use the `:index` directive that is supported for XPath expressions like this:
+In this case you may either use the `:index` directive that is supported for
+XPath expressions like this:
+
 ```clojure
 (click driver [{:tag :li :class :search-result :index 2} {:tag :a}])
 ```
 
-or you can use the [nth-child trick](https://www.w3schools.com/CSSref/sel_nth-child.asp) with the CSS expression like this:
+[nth-child]: https://www.w3schools.com/CSSref/sel_nth-child.asp
+
+or you can use the [nth-child trick][nth-child] with the CSS expression like
+this:
+
 ```clojure
 (click driver {:css "li.search-result:nth-child(2) a"})
 ```
 
-Finally it is also possible to obtain the *nth* element directly by using `query-all`:
+Finally it is also possible to obtain the *nth* element directly by using
+`query-all`:
+
 ```clojure
 (click-el driver (nth (query-all driver {:css "li.search-result a"}) 2))
 ```
 
-Note the use of `click-el` here, as `query-all` returns an element, not a selector that can be passed to `click` directly.
+Note the use of `click-el` here, as `query-all` returns an element, not a
+selector that can be passed to `click` directly.
 
 ### Interacting with queried elements
 
@@ -355,6 +372,53 @@ at any time:
 (fill-el driver (first elements) "This is a test")
 (fill-el driver (rand-nth elements) "I like tests!")
 ```
+
+## Mouse clicks
+
+The `click` function triggers the left mouse click on an element found by a
+query term:
+
+```clojure
+(click driver {:tag :button})
+```
+
+The `click` function uses only the first element found by the query, which
+sometimes leads to clicking on the wrong items. To ensure there is one and only
+one element found, use the `click-single` function. It acts the same but raises
+an exception when querying the page returns multiple elements:
+
+```clojure
+(click-single driver {:tag :button :name "search"})
+```
+
+A double click is used rarely in web yet is possible with the `double-click`
+function (Chrome, Phantom.js):
+
+```clojure
+(double-click driver {:tag :dbl-click-btn})
+```
+
+There is also a bunch of "blind" clicking functions. They trigger mouse clicks
+on the current mouse position:
+
+```clojure
+(left-click driver)
+(middle-click driver)
+(right-click driver)
+```
+
+Another bunch of functions do the same but move the mouse pointer to a specified
+element before clicking on them:
+
+```clojure
+(left-click-on driver {:tag :img})
+(middle-click-on driver {:tag :img})
+(right-click-on driver {:tag :img})
+```
+
+A middle mouse click is useful when opening a link in a new background tab. The
+right click sometimes is used to imitate a context menu in web applications.
+
 
 ## File uploading
 
@@ -406,8 +470,8 @@ A native Java File object is also supported:
 
 ### Screening elements
 
-With Firefox, you may capture not the whole page but a single element, say a
-div, an input widget or whatever. It doesn't work with other browsers for
+With Firefox and Chrome, you may capture not the whole page but a single element,
+say a div, an input widget or whatever. It doesn't work with other browsers for
 now. Example:
 
 ```clojure
@@ -478,6 +542,175 @@ respectively:
   ... common actions for both versions)
 ```
 
+## Devtools: tracking HTTP requests, XHR (Ajax)
+
+With recent updates, the library brings a great feature. Now you can trace
+events which come from the DevTools panel. It means, everything you see in the
+developer console now is available through API. That works only with Google
+Chrome now.
+
+To start a driver with special development settings specified, just pass an
+empty map to the `:dev` field when running a driver:
+
+```clojure
+(def c (chrome {:dev {}}))
+```
+
+The value must not be `nil`. When it's an empty map, a special function takes
+defaults. Here is a full version of dev settings with all the possible values
+specified.
+
+```clojure
+(def c (chrome {:dev
+                {:perf
+                 {:level :all
+                  :network? true
+                  :page? true
+                  :interval 1000
+                  :categories [:devtools
+                               :devtools.network
+                               :devtools.timeline]}}}))
+```
+
+Under the hood, it fills a special `perfLoggingPrefs` dictionary inside the
+`chromeOptions` object.
+
+Now that your browser accumulates these events, you can read them using a
+special `dev` namespace.
+
+```clojure
+(go c "http://google.com")
+;; wait until the page gets loaded
+
+;; load the namespace
+(require '[etaoin.dev :as dev])
+```
+
+Let's have a list of ALL the HTTP requests happened during the page was loading.
+
+```clojure
+(def reqs (dev/get-requests c))
+
+;; reqs is a vector of maps
+(count reqs)
+;; 19
+
+;; what were their types?
+(set (map :type reqs))
+;; #{:script :other :document :image :xhr}
+;; we've got Js requests, images, AJAX and other stuff
+```
+
+```clojure
+;; check the last one request, it's an image named tia.png
+(-> reqs last clojure.pprint/pprint)
+
+{:state 4,
+ :id "1000052292.8",
+ :type :image,
+ :xhr? false,
+ :url "https://www.gstatic.com/inputtools/images/tia.png",
+ :with-data? nil,
+ :request
+ {:method :get,
+  :headers
+  {:Referer "https://www.google.com/",
+   :User-Agent
+   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36"}},
+ :response
+ {:status 200,
+  :headers {}, ;; truncated
+  :mime "image/png",
+  :remote-ip "173.194.73.94"},
+ :done? true}
+```
+
+Since we're mostly interested in AJAX requests, there is a function `get-ajax`
+that does the same but filters XHR requests:
+
+```clojure
+(-> c dev/get-ajax last clojure.pprint/pprint)
+
+{:state 4,
+ :id "1000051989.41",
+ :type :xhr,
+ :xhr? true,
+ :url
+ "https://www.google.com/complete/search?q=clojure%20spec&cp=12&client=psy-ab&xssi=t&gs_ri=gws-wiz&hl=ru&authuser=0&psi=4iUbXdapJsbmrgTVt7H4BA.1562060259137&ei=4iUbXdapJsbmrgTVt7H4BA",
+ :with-data? nil,
+ :request
+ {:method :get,
+  :headers
+  {:Referer "https://www.google.com/",
+   :User-Agent
+   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36"}},
+ :response
+ {:status 200,
+  :headers {}, ;; truncated
+  :mime "application/json",
+  :remote-ip "74.125.131.99"},
+ :done? true}
+```
+
+A typical pattern of `get-ajax` usage is the following. You'd like to check if a
+certain request has been fired to the server. So you press a button, wait for a
+while and then read the requests made by your browser.
+
+Having a list of requests, you search for the one you need (e.g. by its URL) and
+then check its state. The `:state` field's got the same semantics like the
+`XMLHttpRequest.readyState` has. It's an integer from 1 to 4 with the same
+behavior.
+
+To check if a request has been finished, done or failed, use these predicates:
+
+```clojure
+(def req (last reqs))
+
+(dev/request-done? req)
+;; true
+
+(dev/request-failed? req)
+;; false
+
+(dev/request-success? req)
+;; true
+```
+
+Note that `request-done?` doesn't mean the request has succeeded. It only means
+its pipeline has reached a final step.
+
+**Warning:** when you read dev logs, you consume them from an internal buffer
+which gets flushed. The second call to `get-requests` or `get-ajax` will return
+an empty list.
+
+Perhaps you want to collect these logs by your own. A function
+`dev/get-performance-logs` return a list of logs so you accumulate them in an
+atom or whatever:
+
+```clojure
+(def logs (atom []))
+
+;; repeat that form from time to time
+(do (swap! logs concat (dev/get-performance-logs c))
+    true)
+
+(count @logs)
+;; 76
+```
+
+There are `logs->requests` and `logs->ajax` functions that convert logs into
+requests. Unlike `get-requests` and `get-ajax`, they are pure functions and won't
+flush anything.
+
+```clojure
+(dev/logs->requests @logs)
+```
+
+When working with logs and requests, pay attention it their count and size. The
+maps have got plenty of keys and the amount of items in collections might be
+huge. Printing a whole bunch of events might freeze your editor. Consider using
+`clojure.pprint/pprint` function as it relies on max level and length limits.
+
 ## Postmortem: auto-save artifacts in case of exception
 
 Sometimes, it might be difficult to discover what went wrong during the last UI
@@ -520,7 +753,7 @@ absent.
  :dir-log "/home/ivan/UI-tests/console"
 
  ;; a string template to format a date; See SimpleDateFormat Java class
- :date-format "yyyy-MM-dd-hh-mm-ss"}
+ :date-format "yyyy-MM-dd-HH-mm-ss"}
 ```
 
 ## Reading browser's logs
@@ -600,6 +833,91 @@ skipped or have nil values. Some of them, if not passed, are taken from the
  ;; Driver-specific options. Make sure you have read the docs before setting them.
  :capabilities {:chromeOptions {:args ["--headless"]}}}
 ```
+
+## Eager page load
+
+When you navigate to a certain page, the driver waits until the whole page has
+been completely loaded. What's fine in most of the cases yet doesn't reflect the
+way human beings interact with the Internet.
+
+Change this default behavior with the `:load-strategy` option. There are three
+possible values for that: `:none`, `:eager` and `:normal` which is the default
+when not passed.
+
+When you pass `:none`, the driver responds immediately so you are welcome to
+execute next instructions. For example:
+
+```clojure
+(def c (chrome))
+(go c "http://some.slow.site.com")
+;; you'll hang on this line until the page loads
+(do-something)
+```
+
+Now when passing the load strategy option:
+
+```clojure
+(def c (chrome {:load-strategy :none}))
+(go c "http://some.slow.site.com")
+;; no pause, acts immediately
+(do-something)
+```
+
+For the `:eager` option, it works only with Firefox at the moment of adding the
+feature to the library.
+
+
+## Keyboard chords
+
+There is an option to input a series of keys simultaneously. That is useful to
+imitate holding a system key like Control, Shift or whatever when typing.
+
+The namespace `etaoin.keys` carries a bunch of key constants as well as a set of
+functions related to input.
+
+```clojure
+(require '[etaoin.keys :as keys])
+```
+
+A quick example of entering ordinary characters holding Shift:
+
+```clojure
+(def c (chrome))
+(go c "http://google.com")
+
+(fill-active c (keys/with-shift "caps is great"))
+```
+
+The main input gets populated with "CAPS IS GREAT". Now you'd like to delete the
+last word. In Chrome, this is done by pressing backspace holding Alt. Let's do
+that:
+
+```clojure
+(fill-active c (keys/with-alt keys/backspace))
+```
+
+Now you've got only "CAPS IS " in the input.
+
+Consider a more complex example which repeats real users' behaviour. You'd like
+to delete everything from the input. First, you move the caret at the very
+beginning. Then move it to the end holding shift so everything gets
+selected. Finally, you press delete to clear the selected text.
+
+The combo is:
+
+```clojure
+(fill-active c keys/home (keys/with-shift keys/end) keys/delete)
+```
+
+There are also `with-ctrl` and `with-command` functions that act the same.
+
+Pay attention, these functions do not apply to the global browser's
+shortcuts. For example, neither "Command + R" nor "Command + T" reload the page
+or open a new tab.
+
+All the `keys/with-*` functions are just wrappers upon the `keys/chord` function
+that might be used for complex cases.
+
 
 ## File download directory
 
@@ -1223,6 +1541,7 @@ Js execution, etc. So try to keep Chrome window active during test session.
 - [Miloslav Nenadál](https://github.com/nenadalm)
 - [Aleh Atsman](https://github.com/atsman)
 - [Marco Molteni](https://github.com/marco-m)
+- [Maxim Stasenkov](https://github.com/nebesnytihohod)
 
 The project is open for your improvements and ideas. If any of unit tests fall
 on your machine please submit an issue giving your OS version, browser and
