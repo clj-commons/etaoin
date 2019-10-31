@@ -375,11 +375,20 @@ at any time:
 
 ## Mouse clicks
 
-The `click` function triggers the left mouse click on an element found with the
+The `click` function triggers the left mouse click on an element found by a
 query term:
 
 ```clojure
 (click driver {:tag :button})
+```
+
+The `click` function uses only the first element found by the query, which
+sometimes leads to clicking on the wrong items. To ensure there is one and only
+one element found, use the `click-single` function. It acts the same but raises
+an exception when querying the page returns multiple elements:
+
+```clojure
+(click-single driver {:tag :button :name "search"})
 ```
 
 A double click is used rarely in web yet is possible with the `double-click`

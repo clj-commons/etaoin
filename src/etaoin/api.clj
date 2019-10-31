@@ -532,6 +532,7 @@
          el (apply query driver q (butlast more))]
      (find-elements-from* driver el loc term))))
 
+
 (defn child
   "Finds a single element under given root element."
   [driver ancestor-el q]
@@ -633,9 +634,10 @@
 ;; Clicking
 ;;
 
-;; Target click
 
-(defn click-el [driver el]
+(defn click-el
+  "Click on an element having its system id."
+  [driver el]
   (execute {:driver driver
             :method :post
             :path [:session (:session @driver) :element el :click]}))
@@ -644,6 +646,21 @@
   "Clicks on an element (a link, a button, etc)."
   [driver q]
   (click-el driver (query driver q)))
+
+
+(defn click-single
+  "
+  Click on an element checking that there is only one element found.
+  Throw an exception otherwise.
+  "
+  [driver q]
+  (let [elements (query-all driver q)]
+    (if (> (count elements) 1)
+      (throw (Exception.
+              (format "Multiple elements found: %s, query %s"
+                      (count elements) q)))
+      (click-el driver (first elements)))))
+
 
 ;; Double click
 
