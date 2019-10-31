@@ -50,7 +50,9 @@
    :phantom {:port 8910
              :path "phantomjs"}
    :safari {:port 4445
-            :path "safaridriver"}})
+            :path "safaridriver"}
+   :edge {:port 17556
+          :path "msedgedriver"}})
 
 (def default-locator "xpath")
 (def locator-xpath "xpath")
@@ -158,7 +160,7 @@
       :value first second))
 
 (defmethods get-active-element*
-  [:chrome :phantom :safari]
+  [:chrome :edge :phantom :safari]
   [driver]
   (-> (execute {:driver driver
                 :method :post
@@ -199,7 +201,7 @@
                     :path [:session (:session @driver) :window :handles]})))
 
 (defmethods get-window-handles
-  [:chrome :phantom]
+  [:chrome :edge :phantom]
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -248,7 +250,7 @@
             :path [:session (:session @driver) :window :maximize]}))
 
 (defmethods maximize
-  [:chrome :safari]
+  [:chrome :edge :safari]
   [driver]
   (let [h (get-window-handle driver)]
     (execute {:driver driver
@@ -555,7 +557,7 @@
   dispatch-driver)
 
 (defmethods mouse-btn-down
-  [:chrome :phantom :safari]
+  [:chrome :edge :phantom :safari]
   [driver]
   (execute {:driver driver
             :method :post
@@ -567,7 +569,7 @@
   dispatch-driver)
 
 (defmethods mouse-btn-up
-  [:chrome :phantom :safari]
+  [:chrome :edge :phantom :safari]
   [driver]
   (execute {:driver driver
             :method :post
@@ -580,7 +582,7 @@
   dispatch-driver)
 
 (defmethods mouse-move-to
-  [:chrome :phantom :safari :firefox]
+  [:chrome :edge :phantom :safari :firefox]
   ([driver q]
    (execute {:driver driver
              :method :post
@@ -769,7 +771,7 @@
 (defmulti get-element-size-el dispatch-driver)
 
 (defmethods get-element-size-el
-  [:chrome :phantom :safari]
+  [:chrome :edge :phantom :safari]
   [driver el]
   (-> (execute {:driver driver
                 :method :get
@@ -796,7 +798,7 @@
 (defmulti get-element-location-el dispatch-driver)
 
 (defmethods get-element-location-el
-  [:chrome :phantom :safari]
+  [:chrome :edge :phantom :safari]
   [driver el]
   (-> (execute {:driver driver
                 :method :get
@@ -1449,7 +1451,7 @@
   dispatch-driver)
 
 (defmethods get-log-types
-  [:chrome :phantom]
+  [:chrome :edge :phantom]
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -1604,7 +1606,7 @@
                     :path [:session (:session @driver) :alert :text]})))
 
 (defmethods get-alert-text
-  [:chrome :safari]
+  [:chrome :edge :safari]
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -1621,7 +1623,7 @@
             :path [:session (:session @driver) :alert :dismiss]}))
 
 (defmethods dismiss-alert
-  [:chrome :safari]
+  [:chrome :edge :safari]
   [driver]
   (execute {:driver driver
             :method :post
@@ -1638,7 +1640,7 @@
             :path [:session (:session @driver) :alert :accept]}))
 
 (defmethods accept-alert
-  [:chrome :safari]
+  [:chrome :edge :safari]
   [driver]
   (execute {:driver driver
             :method :post
@@ -1696,6 +1698,11 @@
   "Returns true if a driver is a Chrome instance."
   [driver]
   (driver? driver :chrome))
+
+(defn edge?
+  "Returns true if a driver is an Edge  instance."
+  [driver]
+  (driver? driver :edge))
 
 (defn firefox?
   "Returns true if a driver is a Firefox instance."
@@ -2098,6 +2105,11 @@
   [driver & body]
   `(when-not-predicate #(chrome? ~driver) ~@body))
 
+(defmacro when-not-edge
+  "Executes the body only if a browser is NOT Edge."
+  [driver & body]
+  `(when-not-predicate #(edge? ~driver) ~@body))
+
 (defmacro when-not-phantom
   "Executes the body only if a browser is NOT Phantom.js."
   [driver & body]
@@ -2478,7 +2490,7 @@
   (util/error "This driver doesn't support screening elements."))
 
 (defmethods screenshot-element
-  [:chrome :firefox]
+  [:chrome :edge :firefox]
   [driver q file]
   (let [el (query driver q)
         resp (execute {:driver driver
@@ -2816,6 +2828,9 @@
   "Launches Firefox driver. A shortcut for `boot-driver`."
   (partial boot-driver :firefox))
 
+(def edge
+  (partial boot-driver :edge))
+
 (def chrome
   "Launches Chrome driver. A shortcut for `boot-driver`."
   (partial boot-driver :chrome))
@@ -2880,6 +2895,13 @@
   `with-driver`."
   [opt bind & body]
   `(with-driver :chrome ~opt ~bind
+     ~@body))
+
+(defmacro with-edge
+  "Performs the body with Edge session. A shortcut for
+  `with-driver`."
+  [opt bind & body]
+  `(with-driver :edge ~opt ~bind
      ~@body))
 
 (defmacro with-phantom
