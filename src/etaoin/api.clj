@@ -785,6 +785,7 @@
   (-> (execute {:driver driver
                 :method :get
                 :path [:session (:session @driver) :element el :rect]})
+      :value
       (select-keys [:width :height])))
 
 (defn get-element-size
