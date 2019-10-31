@@ -2796,7 +2796,7 @@
          (if (not (= 404 (:status (ex-data e))))
            ;; the exception was caused by something other than "session not found"
            (throw e))))
-  
+
   (swap! driver dissoc
          :session :capabilities)
   driver)
@@ -2860,13 +2860,6 @@
    (chrome-headless {}))
   ([opt]
    (boot-driver :chrome (assoc opt :headless true))))
-
-(defn firefox-headless
-  "Launches headless Firefox driver. A shortcut for `boot-driver`."
-  ([]
-   (firefox-headless {}))
-  ([opt]
-   (boot-driver :firefox (assoc opt :headless true))))
 
 (defn firefox-headless
   "Launches headless Firefox driver. A shortcut for `boot-driver`."
