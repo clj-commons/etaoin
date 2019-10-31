@@ -87,6 +87,7 @@ after a mysteries note was produced on it.
 
 ## Who uses it?
 
+- [Exoscale](https://www.exoscale.com/)
 - [Flyerbee](https://www.flyerbee.com/)
 - [Roomkey](https://www.roomkey.com/)
 - [Barrick Gold](http://www.barrick.com/)
@@ -106,7 +107,7 @@ You are welcome to submit your company into that list.
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.3.5"]
+[etaoin "0.3.6"]
 ```
 
 Works with Clojure 1.7 and above.

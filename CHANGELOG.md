@@ -1,5 +1,11 @@
 [adam]: https://github.com/AdamFrey
 
+## 0.3.6
+  * merged all the pending PRs
+  * tests fixed
+  * window functions for Firefox
+  * click-single function
+
 ## 0.3.5
   * devtools requests
 
