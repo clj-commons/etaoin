@@ -2544,9 +2544,9 @@
         file-src (apply format file-tpl (conj params "html"))
         file-log (apply format file-tpl (conj params "json"))
 
-        path-img (join-path dir-src file-img)
+        path-img (join-path dir-img file-img)
         path-src (join-path dir-src file-src)
-        path-log (join-path dir-src file-log)]
+        path-log (join-path dir-log file-log)]
 
     (log/debugf "Writing screenshot: %s" path-img)
     (screenshot driver path-img)
