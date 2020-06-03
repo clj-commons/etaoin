@@ -24,7 +24,9 @@ after a mysteries note was produced on it.
 - [Who uses it?](#who-uses-it)
 - [Documentation](#documentation)
 - [Installation](#installation)
-- [Getting stated](#getting-stated)
+  * [Installing the `etaoin` library](#installing-the-etaoin-library)
+  * [Installing the Browser Drivers](#installing-the-browser-drivers)
+- [Getting started](#getting-started)
 - [Querying elements](#querying-elements)
   * [Simple queries, XPath, CSS](#simple-queries-xpath-css)
   * [Map syntax for querying](#map-syntax-for-querying)
@@ -59,7 +61,6 @@ after a mysteries note was produced on it.
   * [Postmortem Handler To Collect Artifacts](#postmortem-handler-to-collect-artifacts)
   * [Running Tests By Tag](#running-tests-by-tag)
   * [Check whether a file has been downloaded](#check-whether-a-file-has-been-downloaded)
-- [Installing Drivers](#installing-drivers)
 - [Troubleshooting](#troubleshooting)
   * [Calling maximize function throws an error](#calling-maximize-function-throws-an-error)
   * [Querying wrong elements with XPath expressions](#querying-wrong-elements-with-xpath-expressions)
@@ -104,6 +105,11 @@ You are welcome to submit your company into that list.
 
 ## Installation
 
+There are two steps to installation:
+ 1. Install the library `etaoin` into your clojure code
+ 2. Install the drivers for each browser
+
+### Installing the etaoin library
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
@@ -112,7 +118,69 @@ Add the following into `:dependencies` vector in your `project.clj` file:
 
 Works with Clojure 1.7 and above.
 
-## Getting stated
+### Installing the Browser Drivers
+
+[url-webdriver]: https://www.w3.org/TR/webdriver/
+[url-tests]: https://github.com/igrishaev/etaoin/blob/master/test/etaoin/api_test.clj
+[url-chromedriver]: https://sites.google.com/a/chromium.org/chromedriver/
+[url-chromedriver-dl]: https://sites.google.com/a/chromium.org/chromedriver/downloads
+[url-geckodriver-dl]: https://github.com/mozilla/geckodriver/releases
+[url-phantom-dl]: http://phantomjs.org/download.html
+[url-webkit]: https://webkit.org/blog/6900/webdriver-support-in-safari-10/
+
+This page provides instructions on how to install drivers you need to automate
+your browser.
+
+Install Chrome and Firefox browsers downloading them from the official
+sites. There won't be a problem on all the platforms.
+
+Install specific drivers you need:
+
+- Google [Chrome driver][url-chromedriver]:
+
+  - `brew cask install chromedriver` for Mac users
+  - or download compiled binaries from the [official site][url-chromedriver-dl].
+  - ensure you have at least `2.28` version installed. `2.27` and below has a
+    bug related to maximizing a window (see [[Troubleshooting]]).
+
+- Geckodriver, a driver for Firefox:
+
+  - `brew install geckodriver` for Mac users
+  - or download it from the official [Mozilla site][url-geckodriver-dl].
+
+- Phantom.js browser:
+
+  - `brew install phantomjs` For Mac users
+  - or download it from the [official site][url-phantom-dl].
+
+- Safari Driver (for Mac only):
+
+  - update your Mac OS to El Captain using App Store;
+  - set up Safari options as the [Webkit page][url-webkit] says (scroll down to
+    "Running the Example in Safari" section).
+
+Now, check your installation launching any of these commands. For each command,
+an endless process with a local HTTP server should start.
+
+```bash
+chromedriver
+geckodriver
+phantomjs --wd
+safaridriver -p 0
+```
+
+You may run tests for this library launching:
+
+```bash
+lein test
+```
+
+You'll see browser windows open and close in series. The tests use a local HTML
+file with a special layout to validate the most of the cases.
+
+See below for the [Troubleshooting section](https://github.com/igrishaev/etaoin#troubleshooting) if you have problems
+
+## Getting started
 
 The good news you may automate your browser directly from the REPL:
 
@@ -1402,67 +1470,7 @@ Example:
   (is found (format "No *.xlsx file found in %s directory." DL-DIR)))
 ```
 
-## Installing Drivers
 
-[url-webdriver]: https://www.w3.org/TR/webdriver/
-[url-tests]: https://github.com/igrishaev/etaoin/blob/master/test/etaoin/api_test.clj
-[url-chromedriver]: https://sites.google.com/a/chromium.org/chromedriver/
-[url-chromedriver-dl]: https://sites.google.com/a/chromium.org/chromedriver/downloads
-[url-geckodriver-dl]: https://github.com/mozilla/geckodriver/releases
-[url-phantom-dl]: http://phantomjs.org/download.html
-[url-webkit]: https://webkit.org/blog/6900/webdriver-support-in-safari-10/
-
-This page provides instructions on how to install drivers you need to automate
-your browser.
-
-Install Chrome and Firefox browsers downloading them from the official
-sites. There won't be a problem on all the platforms.
-
-Install specific drivers you need:
-
-- Google [Chrome driver][url-chromedriver]:
-
-  - `brew cask install chromedriver` for Mac users
-  - or download compiled binaries from the [official site][url-chromedriver-dl].
-  - ensure you have at least `2.28` version installed. `2.27` and below has a
-    bug related to maximizing a window (see [[Troubleshooting]]).
-
-- Geckodriver, a driver for Firefox:
-
-  - `brew install geckodriver` for Mac users
-  - or download it from the official [Mozilla site][url-geckodriver-dl].
-
-- Phantom.js browser:
-
-  - `brew install phantomjs` For Mac users
-  - or download it from the [official site][url-phantom-dl].
-
-- Safari Driver (for Mac only):
-
-  - update your Mac OS to El Captain using App Store;
-  - set up Safari options as the [Webkit page][url-webkit] says (scroll down to
-    "Running the Example in Safari" section).
-
-Now, check your installation launching any of these commands. For each command,
-an endless process with a local HTTP server should start.
-
-```bash
-chromedriver
-geckodriver
-phantomjs --wd
-safaridriver -p 0
-```
-
-You may run tests for this library launching:
-
-```bash
-lein test
-```
-
-You'll see browser windows open and close in series. The tests use a local HTML
-file with a special layout to validate the most of the cases.
-
-This page holds common troubles you might face during webdriver automation.
 
 ## Troubleshooting
 
