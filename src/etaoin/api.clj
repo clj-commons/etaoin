@@ -51,7 +51,7 @@
              :path "phantomjs"}
    :safari {:port 4445
             ;; :path "/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"} ;; tests failed in safari 13.1.1 https://bugs.webkit.org/show_bug.cgi?id=202589 use STP newest
-            :path "safaridriver"
+            :path "safaridriver"}
    :edge {:port 17556
           :path "msedgedriver"}})
 
