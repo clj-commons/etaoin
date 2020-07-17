@@ -15,7 +15,6 @@ jobs:
             firefox --version
             google-chrome --version
             chromedriver --version
-            phantomjs --version
       - run:
           name: Update firefox and install geckodriver
           command: .circleci/firefox.sh
@@ -58,7 +57,7 @@ jobs:
           name: lein test2junit etaoin.api-test (all but firefox)
           when: always
           environment:
-            ETAOIN_TEST_DRIVERS: "[:chrome :phantom]"
+            ETAOIN_TEST_DRIVERS: "[:chrome]"
           command: lein test2junit etaoin.api-test
 
       - run:
