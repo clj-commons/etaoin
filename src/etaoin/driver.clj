@@ -82,11 +82,6 @@
   [driver port]
   (set-args driver [(str "--port=" port)]))
 
-(defmethod set-port
-  :phantom
-  [driver port]
-  (set-args driver ["--webdriver" port]))
-
 ;;
 ;; capabilities
 ;;
@@ -246,11 +241,6 @@
   :default
   [driver]
   (:headless driver))
-
-(defmethod is-headless?
-  :phantom
-  [driver]
-  true)
 
 ;;
 ;; Custom preferences

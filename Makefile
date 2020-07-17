@@ -36,7 +36,6 @@ kill:
 	pkill chromedriver || true
 	pkill geckodriver || true
 	pkill safaridriver || true
-	pkill phantomjs || true
 
 
 .PHONY: autodoc

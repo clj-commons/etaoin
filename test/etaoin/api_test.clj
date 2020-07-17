@@ -30,13 +30,13 @@
 
 (defn get-drivers-from-prop []
   (case (first (str/split (System/getProperty "os.name") #"\s+"))
-    "Linux" [:firefox :chrome :phantom]
-    "Mac" [:chrome :edge :firefox :phantom :safari]
-    "Windows" [:firefox :chrome :edge :phantom :safari]
+    "Linux" [:firefox :chrome]
+    "Mac" [:chrome :edge :firefox :safari]
+    "Windows" [:firefox :chrome :edge :safari]
     nil))
 
 (defn get-default-drivers []
-  [:firefox :chrome :phantom :safari])
+  [:firefox :chrome :safari])
 
 (def drivers
   (or (get-drivers-from-env)
@@ -45,15 +45,19 @@
 
 (def ^:dynamic *driver*)
 
+;; tests failed in safari 13.1.1 https://bugs.webkit.org/show_bug.cgi?id=202589 use STP newest
 (defn fixture-browsers [f]
   (let [url (-> "html/test.html" io/resource str)]
     (doseq [type drivers]
-      (with-driver type {} driver
+      (let [opt (if (= type :safari)
+                  {:path-driver "/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"}
+                  {})]
+      (with-driver type opt driver
         (go driver url)
         (wait-visible driver {:id :document-end})
         (binding [*driver* driver]
           (testing (name type)
-            (f)))))))
+            (f))))))))
 
 (use-fixtures
   :each
@@ -127,22 +131,20 @@
 
 ;; In Safari, alerts work quite slow, so we add some delays.
 (deftest test-alert
-  (when-not-phantom
-    *driver*
-    (doto *driver*
-      (click {:id :button-alert})
-      (when-safari (wait 1))
-      (-> get-alert-text (= "Hello!") is)
-      (-> has-alert? is)
-      (accept-alert)
-      (when-safari (wait 1))
-      (-> has-alert? not is)
-      (click {:id :button-alert})
-      (when-safari (wait 1))
-      (-> has-alert? is)
-      (dismiss-alert)
-      (when-safari (wait 1))
-      (-> has-alert? not is))))
+  (doto *driver*
+    (click {:id :button-alert})
+    (when-safari (wait 1))
+    (-> get-alert-text (= "Hello!") is)
+    (-> has-alert? is)
+    (accept-alert)
+    (when-safari (wait 1))
+    (-> has-alert? not is)
+    (click {:id :button-alert})
+    (when-safari (wait 1))
+    (-> has-alert? is)
+    (dismiss-alert)
+    (when-safari (wait 1))
+    (-> has-alert? not is)))
 
 (deftest test-properties
   (when-firefox *driver*
@@ -345,7 +347,8 @@
       (let [{x' :x y' :y} (get-window-position *driver*)
             {width' :width height' :height} (get-window-size *driver*)]
         (is (not= x x'))
-        (is (not= y y'))
+        (when (not= :firefox (dispatch-driver *driver*))
+            (is (not= y y')))
         (is (not= width width'))
         (is (not= height height'))))))
 
@@ -400,20 +403,7 @@
                          :path "/",
                          :domain "",
                          :secure false,
-                         :httpOnly false}])))
-      (when-phantom *driver*
-        (is (= cookies [{:domain "",
-                         :httponly false,
-                         :name "cookie2",
-                         :path "/",
-                         :secure false,
-                         :value "test2"}
-                        {:domain "",
-                         :httponly false,
-                         :name "cookie1",
-                         :path "/",
-                         :secure false,
-                         :value "test1"}])))))
+                         :httpOnly false}])))))
   (testing "getting a cookie"
     (let [cookie (get-cookie *driver* :cookie2)]
       (when-safari *driver*
@@ -433,21 +423,11 @@
                 :path "/"
                 :domain ""
                 :secure false
-                :httpOnly false})))
-      (when-phantom *driver*
-        (is (= cookie
-               {:domain ""
-                :httponly false
-                :name "cookie2"
-                :path "/"
-                :secure false
-                :value "test2"})))))
+                :httpOnly false})))))
   (testing "deleting a cookie"
-    (when-not-phantom
-        *driver*
       (delete-cookie *driver* :cookie3)
       (let [cookie (get-cookie *driver* :cookie3)]
-        (is (nil? cookie)))))
+        (is (nil? cookie))))
   (testing "deleting all cookies"
     (doto *driver*
       delete-cookies
@@ -457,9 +437,7 @@
 
 (deftest test-page-source
   (let [src (get-source *driver*)]
-    (if (phantom? *driver*)
-      (is (str/starts-with? src "<!DOCTYPE html>"))
-      (is (str/starts-with? src "<html><head>")))))
+    (is (str/starts-with? src "<html><head>"))))
 
 (deftest test-screenshot
   (with-tmp-file "screenshot" ".png" path
