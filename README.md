@@ -1239,9 +1239,7 @@ point to the target driver during the tests.
   (:require [clojure.test :refer :all]
             [etaoin.api :refer :all]))
 
-(def ^:dynamic
-  "Current driver"
-  *driver*)
+(def ^:dynamic *driver*)
 
 (defn fixture-driver
   "Executes a test running a driver. Bounds a driver
