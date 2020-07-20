@@ -344,15 +344,15 @@
 
 (deftest test-maximize
   (when-not-several-drivers [:firefox :phantom] *driver*
-       (let [{:keys [x y]}          (get-window-position *driver*)
-             {:keys [width height]} (get-window-size *driver*)]
-         (maximize *driver*)
-         (let [{x' :x y' :y}                   (get-window-position *driver*)
-               {width' :width height' :height} (get-window-size *driver*)]
-           (is (not= x x'))
-           (is (not= y y'))
-           (is (not= width width'))
-           (is (not= height height'))))))
+    (let [{:keys [x y]}          (get-window-position *driver*)
+          {:keys [width height]} (get-window-size *driver*)]
+      (maximize *driver*)
+      (let [{x' :x y' :y}                   (get-window-position *driver*)
+            {width' :width height' :height} (get-window-size *driver*)]
+        (is (not= x x'))
+        (is (not= y y'))
+        (is (not= width width'))
+        (is (not= height height'))))))
 
 (deftest test-active-element
   (testing "active element"
