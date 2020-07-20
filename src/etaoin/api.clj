@@ -50,6 +50,7 @@
    :phantom {:port 8910
              :path "phantomjs"}
    :safari {:port 4445
+            ;; :path "/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"} ;; tests failed in safari 13.1.1 https://bugs.webkit.org/show_bug.cgi?id=202589 use STP newest
             :path "safaridriver"}
    :edge {:port 17556
           :path "msedgedriver"}})
@@ -130,10 +131,13 @@
   session. Some drivers may work with only one active session. Returns
   a long string identifier."
   [driver & [capabilities]]
-  (let [result (execute {:driver driver
+  (let [data (if (= (dispatch-driver driver) :safari) ;; tmp
+               {:capabilities {}}
+               {:desiredCapabilities (or capabilities {})})
+        result (execute {:driver driver
                          :method :post
                          :path [:session]
-                         :data {:desiredCapabilities (or capabilities {})}})]
+                         :data  data})]
     (or (:sessionId result)               ;; default
         (:sessionId (:value result)))))   ;; firefox
 
@@ -160,8 +164,15 @@
                 :path [:session (:session @driver) :element :active]})
       :value first second))
 
+(defmethod get-active-element* :safari
+  [driver]
+  (-> (execute {:driver driver
+                :method :get
+                :path [:session (:session @driver) :element :active]})
+      :value first second))
+
 (defmethods get-active-element*
-  [:chrome :edge :phantom :safari]
+  [:chrome :edge :phantom]
   [driver]
   (-> (execute {:driver driver
                 :method :post
@@ -184,6 +195,12 @@
                     :method :get
                     :path [:session (:session @driver) :window_handle]})))
 
+(defmethod get-window-handle :safari
+  [driver]
+  (:value (execute {:driver driver
+                    :method :get
+                    :path [:session (:session @driver) :window]})))
+
 (defmethod get-window-handle :firefox
   [driver]
   (:value (execute {:driver driver
@@ -196,6 +213,12 @@
   dispatch-driver)
 
 (defmethod get-window-handles :firefox
+  [driver]
+  (:value (execute {:driver driver
+                    :method :get
+                    :path [:session (:session @driver) :window :handles]})))
+
+(defmethod get-window-handles :safari
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -250,8 +273,14 @@
             :method :post
             :path [:session (:session @driver) :window :maximize]}))
 
+(defmethod maximize :safari
+ [driver]
+  (execute {:driver driver
+            :method :post
+            :path [:session (:session @driver) :window :maximize]}))
+
 (defmethods maximize
-  [:chrome :edge :safari]
+  [:chrome :edge]
   [driver]
   (let [h (get-window-handle driver)]
     (execute {:driver driver
@@ -264,6 +293,14 @@
   dispatch-driver)
 
 (defmethod get-window-size :firefox
+  [driver]
+  (-> (execute {:driver driver
+                :method :get
+                :path [:session (:session @driver) :window :rect]})
+      :value
+      (select-keys [:width :height])))
+
+(defmethod get-window-size :safari
   [driver]
   (-> (execute {:driver driver
                 :method :get
@@ -285,6 +322,14 @@
   `:x` and `:y` keys."
   {:arglists '([driver])}
   dispatch-driver)
+
+(defmethod get-window-position :safari
+  [driver]
+  (-> (execute {:driver driver
+                :method :get
+                :path [:session (:session @driver) :window :rect]})
+      :value
+      (select-keys [:x :y])))
 
 (defmethod get-window-position :firefox
   [driver]
@@ -312,6 +357,13 @@
             :path [:session (:session @driver) :window :size]
             :data {:width width :height height}}))
 
+(defmethod set-window-size* :safari
+  [driver width height]
+  (execute {:driver driver
+            :method :post
+            :path [:session (:session @driver) :window :rect]
+            :data {:width width :height height}}))
+
 (defmethod set-window-size* :default
   [driver width height]
   (let [h (get-window-handle driver)]
@@ -334,6 +386,13 @@
    (execute {:driver driver
              :method :post
              :path [:session (:session @driver) :window :position]
+             :data {:x x :y y}})))
+
+(defmethod set-window-position* :safari
+  ([driver x y]
+   (execute {:driver driver
+             :method :post
+             :path [:session (:session @driver) :window :rect]
              :data {:x x :y y}})))
 
 (defmethod set-window-position* :default
@@ -427,6 +486,16 @@
       first
       second))
 
+(defmethod find-element* :safari
+  [driver locator term]
+  (-> (execute {:driver driver
+                :method :post
+                :path [:session (:session @driver) :element]
+                :data {:using locator :value term}})
+      :value
+      first
+      second))
+
 (defmethod find-element* :default
   [driver locator term]
   (-> (execute {:driver driver
@@ -449,6 +518,16 @@
 (defmulti find-element-from* dispatch-driver)
 
 (defmethod find-element-from* :firefox
+  [driver el locator term]
+  (-> (execute {:driver driver
+                :method :post
+                :path [:session (:session @driver) :element el :element]
+                :data {:using locator :value term}})
+      :value
+      first
+      second))
+
+(defmethod find-element-from* :safari
   [driver el locator term]
   (-> (execute {:driver driver
                 :method :post
@@ -560,7 +639,7 @@
   dispatch-driver)
 
 (defmethods mouse-btn-down
-  [:chrome :edge :phantom :safari]
+  [:chrome :edge :phantom]
   [driver]
   (execute {:driver driver
             :method :post
@@ -572,7 +651,7 @@
   dispatch-driver)
 
 (defmethods mouse-btn-up
-  [:chrome :edge :phantom :safari]
+  [:chrome :edge :phantom]
   [driver]
   (execute {:driver driver
             :method :post
@@ -585,7 +664,7 @@
   dispatch-driver)
 
 (defmethods mouse-move-to
-  [:chrome :edge :phantom :safari :firefox]
+  [:chrome :edge :phantom :firefox]
   ([driver q]
    (execute {:driver driver
              :method :post
@@ -774,7 +853,7 @@
 (defmulti get-element-size-el dispatch-driver)
 
 (defmethods get-element-size-el
-  [:chrome :edge :phantom :safari]
+  [:chrome :edge :phantom]
   [driver el]
   (-> (execute {:driver driver
                 :method :get
@@ -783,6 +862,14 @@
       (select-keys [:width :height])))
 
 (defmethod get-element-size-el :firefox
+  [driver el]
+  (-> (execute {:driver driver
+                :method :get
+                :path [:session (:session @driver) :element el :rect]})
+      :value
+      (select-keys [:width :height])))
+
+(defmethod get-element-size-el :safari
   [driver el]
   (-> (execute {:driver driver
                 :method :get
@@ -802,7 +889,7 @@
 (defmulti get-element-location-el dispatch-driver)
 
 (defmethods get-element-location-el
-  [:chrome :edge :phantom :safari]
+  [:chrome :edge :phantom]
   [driver el]
   (-> (execute {:driver driver
                 :method :get
@@ -811,6 +898,14 @@
       (select-keys [:x :y])))
 
 (defmethod get-element-location-el :firefox
+  [driver el]
+  (-> (execute {:driver driver
+                :method :get
+                :path [:session (:session @driver) :element el :rect]})
+      :value
+      (select-keys [:x :y])))
+
+(defmethod get-element-location-el :safari
   [driver el]
   (-> (execute {:driver driver
                 :method :get
@@ -1072,12 +1167,17 @@
   (get-element-value-el driver (query driver q)))
 
 (defmethods get-element-value
-  [:safari :phantom]
+  [:phantom]
   [driver q]
   (get-element-attr driver q :value))
 
 (defmethod get-element-value
   :firefox
+  [driver q]
+  (get-element-property driver q :value))
+
+(defmethod get-element-value
+  :safari
   [driver q]
   (get-element-property driver q :value))
 
@@ -1152,6 +1252,7 @@
             :method :delete
             :path [:session (:session @driver) :cookie]}))
 
+;; TODO test & delete
 (defmethod delete-cookies :safari
   ;; For some reason, Safari hangs forever when trying to delete
   ;; all cookies. Currently we delete them in cycle.
@@ -1244,6 +1345,13 @@
                     :path [:session (:session @driver) :execute :sync]
                     :data {:script script :args (vec args)}})))
 
+(defmethod js-execute :safari
+  [driver script & args]
+  (:value (execute {:driver driver
+                    :method :post
+                    :path [:session (:session @driver) :execute :sync]
+                    :data {:script script :args (vec args)}})))
+
 (defmulti js-async
   "Executes an asynchronous script in the browser and returns the result.
   An asynchronous script is a such one that performs any kind of IO operations,
@@ -1298,6 +1406,14 @@
                     :method :post
                     :path [:session (:session @driver) :execute :async]
                     :data {:script script :args (vec args)}})))
+
+(defmethod js-async :safari
+  [driver script & args]
+  (:value (execute {:driver driver
+                    :method :post
+                    :path [:session (:session @driver) :execute :async]
+                    :data {:script script :args (vec args)}})))
+
 ;;
 ;; Javascript helpers
 ;;
@@ -1457,7 +1573,7 @@
   dispatch-driver)
 
 (defmethods get-log-types
-  [:chrome :edge :phantom]
+  [:chrome :edge :phantom] ;;TODO only jwp edge not supported
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -1611,8 +1727,14 @@
                     :method :get
                     :path [:session (:session @driver) :alert :text]})))
 
+(defmethod get-alert-text :safari
+  [driver]
+  (:value (execute {:driver driver
+                    :method :get
+                    :path [:session (:session @driver) :alert :text]})))
+
 (defmethods get-alert-text
-  [:chrome :edge :safari]
+  [:chrome :edge]
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -1628,8 +1750,14 @@
             :method :post
             :path [:session (:session @driver) :alert :dismiss]}))
 
+(defmethod dismiss-alert :safari
+  [driver]
+  (execute {:driver driver
+            :method :post
+            :path [:session (:session @driver) :alert :dismiss]}))
+
 (defmethods dismiss-alert
-  [:chrome :edge :safari]
+  [:chrome :edge]
   [driver]
   (execute {:driver driver
             :method :post
@@ -1645,8 +1773,14 @@
             :method :post
             :path [:session (:session @driver) :alert :accept]}))
 
+(defmethod accept-alert :safari
+  [driver]
+  (execute {:driver driver
+            :method :post
+            :path [:session (:session @driver) :alert :accept]}))
+
 (defmethods accept-alert
-  [:chrome :edge :safari]
+  [:chrome :edge]
   [driver]
   (execute {:driver driver
             :method :post
@@ -1753,7 +1887,7 @@
   Returns true or false."
   dispatch-driver)
 
-(defmethod displayed-el? :default
+(defmethod displayed-el? :default ;;TODO it's only for jwp
   [driver el]
   (:value (execute {:driver driver
                     :method :get
@@ -2202,6 +2336,14 @@
             :path [:session (:session @driver) :element el :value]
             :data {:text (str/join (apply make-input* text more))}}))
 
+(defmethod fill-el
+  :safari
+  [driver el text & more]
+  (execute {:driver driver
+            :method :post
+            :path [:session (:session @driver) :element el :value]
+            :data {:text (str/join (apply make-input* text more))}}))
+
 (defmulti fill-active*
   {:arglists '([driver text & more])}
   dispatch-driver)
@@ -2216,6 +2358,12 @@
 
 (defmethod fill-active*
   :firefox
+  [driver text & more]
+  (let [el (get-active-element* driver)]
+    (apply fill-el driver el text more)))
+
+(defmethod fill-active*
+  :safari
   [driver text & more]
   (let [el (get-active-element* driver)]
     (apply fill-el driver el text more)))
@@ -2485,6 +2633,7 @@
       (b64-to-file b64str file)
       (util/error "Empty screenshot"))))
 
+;; TODO add w3c screenshot
 (defmulti screenshot-element
 
   {:arglists '([driver q file])}

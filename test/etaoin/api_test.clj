@@ -175,13 +175,10 @@
               "bar"])
           is)))
   (testing "event attributes"
-    (let [safari-val "function onclick(event) {\nalert(123)\n}"
-          val (get-element-attr *driver*
+    (let [val (get-element-attr *driver*
                                 {:id :input-attr}
                                 :onclick)]
-      (if (safari? *driver*)
-        (is (= val safari-val))
-        (is (= val "alert(123)")))))
+        (is (= val "alert(123)"))))
   (testing "missing attributes"
     (doto *driver*
       (-> (get-element-attrs
@@ -379,14 +376,12 @@
         (is (= cookies
                [{:domain ".^filecookies^"
                  :secure false
-                 :expiry 0
                  :httpOnly false
                  :value "test1"
                  :path "/"
                  :name "cookie1"}
                 {:domain ".^filecookies^"
                  :secure false
-                 :expiry 0
                  :httpOnly false
                  :value "test2"
                  :path "/"
@@ -425,7 +420,6 @@
         (is (= cookie
                {:domain ".^filecookies^"
                 :secure false
-                :expiry 0
                 :httpOnly false
                 :value "test2"
                 :path "/"
@@ -547,14 +541,14 @@
     (let [q {:xpath ".//div[@id='operate-multiple-elements']//*"}
           elements (query-all *driver* q)
           tag-names (for [el elements]
-                      (get-element-tag-el *driver* el))]
+                      (str/lower-case (get-element-tag-el *driver* el)))]
       (is (= (vec tag-names)
              ["div" "b" "p" "span"])))))
 
 (deftest test-child
   (let [parent-el (query *driver* {:css "#wc3-barks"})
         child-el (child *driver* parent-el {:css ".crypt-lord"})
-        tag-name (get-element-tag-el *driver* child-el)
+        tag-name (str/lower-case (get-element-tag-el *driver* child-el))
         tag-text (get-element-text-el *driver* child-el)]
     (is (= "span" tag-name))
     (is (str/includes? tag-text "From the depths I've come!"))))
@@ -563,7 +557,7 @@
   (let [parent-el (query *driver* {:css "#wc3-barks"})
         children-els (children *driver* parent-el {:css "p"})
         children-texts (map #(get-element-text-el *driver* %) children-els)]
-    (is (= ["p" "p"] (map #(get-element-tag-el *driver* %) children-els)))
+    (is (= ["p" "p"] (map #(str/lower-case (get-element-tag-el *driver* %)) children-els)))
     (is (str/includes? (first children-texts) "From the depths I've come!"))
     (is (str/includes? (last children-texts) "I've come from the darkness of the pit!"))))
 
