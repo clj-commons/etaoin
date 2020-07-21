@@ -50,7 +50,6 @@
    :phantom {:port 8910
              :path "phantomjs"}
    :safari {:port 4445
-            ;; :path "/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"} ;; tests failed in safari 13.1.1 https://bugs.webkit.org/show_bug.cgi?id=202589 use STP newest
             :path "safaridriver"}
    :edge {:port 17556
           :path "msedgedriver"}})
@@ -132,7 +131,7 @@
   a long string identifier."
   [driver & [capabilities]]
   (let [data (if (= (dispatch-driver driver) :safari) ;; tmp
-               {:capabilities {}}
+               {:capabilities (or capabilities {})}
                {:desiredCapabilities (or capabilities {})})
         result (execute {:driver driver
                          :method :post
@@ -2239,6 +2238,11 @@
 (defmacro when-not-predicate [predicate & body]
   `(when-not (~predicate)
      ~@body))
+
+(defmacro when-not-drivers
+  "Executes the body only if a browsers is NOT in set #{:browser1 :browser2}"
+  [browsers driver & body]
+  `(when-not-predicate #((set ~browsers) (dispatch-driver ~driver)) ~@body))
 
 (defmacro when-not-chrome
   "Executes the body only if a browser is NOT Chrome."

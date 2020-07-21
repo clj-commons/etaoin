@@ -5,20 +5,15 @@ jobs:
       # This Docker image contains a very old firefox and no geckodriver,
       # due to Selenium compatibility. Since we don't use Selenium, we take
       # care of installing a recent firefox and geckodriver (see below).
-      - image: circleci/clojure:lein-2.8.1-browsers
+      - image: circleci/clojure:lein-2.9.3-browsers
     steps:
       - checkout
       - run:
           name: Environment information
           command: |
-            lsb_release --all
             firefox --version
             google-chrome --version
             chromedriver --version
-            phantomjs --version
-      - run:
-          name: Update firefox and install geckodriver
-          command: .circleci/firefox.sh
 
       # We want to share the results of "lein deps" between runs.
       # We assume that the maven cache can change only if "project.clj"
@@ -58,7 +53,7 @@ jobs:
           name: lein test2junit etaoin.api-test (all but firefox)
           when: always
           environment:
-            ETAOIN_TEST_DRIVERS: "[:chrome :phantom]"
+            ETAOIN_TEST_DRIVERS: "[:chrome]"
           command: lein test2junit etaoin.api-test
 
       - run:

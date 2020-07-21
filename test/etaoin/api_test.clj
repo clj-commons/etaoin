@@ -45,15 +45,19 @@
 
 (def ^:dynamic *driver*)
 
+;; tests failed in safari 13.1.1 https://bugs.webkit.org/show_bug.cgi?id=202589 use STP newest
 (defn fixture-browsers [f]
   (let [url (-> "html/test.html" io/resource str)]
     (doseq [type drivers]
-      (with-driver type {} driver
-        (go driver url)
-        (wait-visible driver {:id :document-end})
-        (binding [*driver* driver]
-          (testing (name type)
-            (f)))))))
+      (let [opt (if (= type :safari)
+                  {:path-driver "/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"}
+                  {})]
+        (with-driver type opt driver
+          (go driver url)
+          (wait-visible driver {:id :document-end})
+          (binding [*driver* driver]
+            (testing (name type)
+              (f))))))))
 
 (use-fixtures
   :each
@@ -319,13 +323,14 @@
 ;; monitor, the next two test will fail due to window error.
 
 (deftest test-window-position
-  (let [{:keys [x y]} (get-window-position *driver*)]
-    (is (numeric? x))
-    (is (numeric? y))
-    (set-window-position *driver* (+ x 10) (+ y 10))
-    (let [{x' :x y' :y} (get-window-position *driver*)]
-      (is (not= x x'))
-      (is (not= y y')))))
+  (when-not-phantom *driver*
+    (let [{:keys [x y]} (get-window-position *driver*)]
+      (is (numeric? x))
+      (is (numeric? y))
+      (set-window-position *driver* (+ x 10) (+ y 10))
+      (let [{x' :x y' :y} (get-window-position *driver*)]
+        (is (not= x x'))
+        (is (not= y y'))))))
 
 (deftest test-window-size
   (testing "getting size"
@@ -338,11 +343,11 @@
         (is (not= height height'))))))
 
 (deftest test-maximize
-  (testing "maximize"
-    (let [{:keys [x y]} (get-window-position *driver*)
+  (when-not-drivers [:firefox :phantom] *driver*
+    (let [{:keys [x y]}          (get-window-position *driver*)
           {:keys [width height]} (get-window-size *driver*)]
       (maximize *driver*)
-      (let [{x' :x y' :y} (get-window-position *driver*)
+      (let [{x' :x y' :y}                   (get-window-position *driver*)
             {width' :width height' :height} (get-window-size *driver*)]
         (is (not= x x'))
         (is (not= y y'))
