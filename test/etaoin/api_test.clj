@@ -38,6 +38,11 @@
 (defn get-default-drivers []
   [:firefox :chrome :phantom :safari])
 
+(def default-opts
+  {:chrome {:args ["--headless" "--no-sandbox"]}
+   :firefox {:args ["--headless"]}
+   :safari {:path-driver "/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"}})
+
 (def drivers
   (or (get-drivers-from-env)
       (get-drivers-from-prop)
@@ -49,15 +54,12 @@
 (defn fixture-browsers [f]
   (let [url (-> "html/test.html" io/resource str)]
     (doseq [type drivers]
-      (let [opt (if (= type :safari)
-                  {:path-driver "/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"}
-                  {})]
-        (with-driver type opt driver
+        (with-driver type (get default-opts type {}) driver
           (go driver url)
           (wait-visible driver {:id :document-end})
           (binding [*driver* driver]
             (testing (name type)
-              (f))))))))
+              (f)))))))
 
 (use-fixtures
   :each
@@ -343,7 +345,7 @@
         (is (not= height height'))))))
 
 (deftest test-maximize
-  (when-not-drivers [:firefox :phantom] *driver*
+  (when-not-drivers [:chrome :firefox :phantom] *driver*
     (let [{:keys [x y]}          (get-window-position *driver*)
           {:keys [width height]} (get-window-size *driver*)]
       (maximize *driver*)

@@ -46,3 +46,17 @@ autodoc:
 	cd autodoc && git add -A
 	cd autodoc && git commit -m "Documentation updated"
 	cd autodoc && git push
+
+IMAGE := etaoin
+
+.PHONY: docker-build
+docker-build:
+	docker build -t ${IMAGE}:latest .
+
+
+.PHONY: docker-test
+docker-test:
+	docker run -it --rm \
+	-v $(CURDIR)/:/etaoin \
+	-w /etaoin ${IMAGE}:latest \
+	lein test
