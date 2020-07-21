@@ -619,10 +619,10 @@ Example:
 
 ```clojure
 ;; Chrome
-(def driver (create-driver :chrome {:port 9515})) ;; 9515 is default port, use own
+(def driver (create-driver :chrome {:host "127.0.0.1" :port 9515})) ;; localhost and 9515 port is default setting, use own
 
 ;; Firefox
-(def driver (create-driver :firefox {:port 4444})) ;; 4444 is default port, use own
+(def driver (create-driver :firefox {:host "127.0.0.1" :port 4444})) ;; localhost and 4444 port is default setting, use own
 ```
 
 Then pass the `capabilities` to the browser with `chromeOptions` or `:moz:firefoxOptions` for Chrome or Firefox respectively:
