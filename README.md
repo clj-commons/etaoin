@@ -39,6 +39,7 @@ after a mysteries note was produced on it.
 - [Screenshots](#screenshots)
   * [Screening elements](#screening-elements)
 - [Using headless drivers](#using-headless-drivers)
+- [Connection to remote webdriver](#connection-to-remote-webdriver)
 - [Devtools: tracking HTTP requests, XHR (Ajax)](#devtools-tracking-http-requests-xhr-ajax)
 - [Postmortem: auto-save artifacts in case of exception](#postmortem-auto-save-artifacts-in-case-of-exception)
 - [Reading browser's logs](#reading-browsers-logs)
@@ -610,6 +611,23 @@ respectively:
     ... some actions that might be not available in headless mode)
   ... common actions for both versions)
 ```
+## Connection to remote webdriver
+
+To create a connection with an existing webdriver, you must first create the driver manually.
+Example for Chrome:
+
+```clojure
+(def driver (create-driver :chrome {:port 9515})) ;; 9515 is default port, use own
+```
+
+Then pass the `capabilities` to the browser in `chromeOptions` or `:moz:firefoxOptions` for Chrome or Firefox respectively:
+
+```clojure
+(connect-driver driver
+  {:capabilities
+   {:chromeOptions {:args ["--no-sandbox" "--headless"]}}})
+```
+
 
 ## Devtools: tracking HTTP requests, XHR (Ajax)
 
