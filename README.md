@@ -611,6 +611,7 @@ respectively:
     ... some actions that might be not available in headless mode)
   ... common actions for both versions)
 ```
+
 ## Connection to remote webdriver
 
 To create a connection with an existing webdriver, you must first create the driver manually.
@@ -627,7 +628,6 @@ Then pass the `capabilities` to the browser in `chromeOptions` or `:moz:firefoxO
   {:capabilities
    {:chromeOptions {:args ["--no-sandbox" "--headless"]}}})
 ```
-
 
 ## Devtools: tracking HTTP requests, XHR (Ajax)
 
