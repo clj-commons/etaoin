@@ -343,7 +343,7 @@
         (is (not= height height'))))))
 
 (deftest test-maximize
-  (when-not-several-drivers [:firefox :phantom] *driver*
+  (when-not-drivers [:firefox :phantom] *driver*
     (let [{:keys [x y]}          (get-window-position *driver*)
           {:keys [width height]} (get-window-size *driver*)]
       (maximize *driver*)

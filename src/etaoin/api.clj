@@ -2239,7 +2239,7 @@
   `(when-not (~predicate)
      ~@body))
 
-(defmacro when-not-several-drivers
+(defmacro when-not-drivers
   "Executes the body only if a browsers is NOT in set #{:browser1 :browser2}"
   [browsers driver & body]
   `(when-not-predicate #((set ~browsers) (dispatch-driver ~driver)) ~@body))
