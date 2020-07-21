@@ -615,18 +615,28 @@ respectively:
 ## Connection to remote webdriver
 
 To create a connection with an existing webdriver, you must first create the driver manually.
-Example for Chrome:
+Example:
 
 ```clojure
+;; Chrome
 (def driver (create-driver :chrome {:port 9515})) ;; 9515 is default port, use own
+
+;; Firefox
+(def driver (create-driver :firefox {:port 4444})) ;; 4444 is default port, use own
 ```
 
-Then pass the `capabilities` to the browser in `chromeOptions` or `:moz:firefoxOptions` for Chrome or Firefox respectively:
+Then pass the `capabilities` to the browser with `chromeOptions` or `:moz:firefoxOptions` for Chrome or Firefox respectively:
 
 ```clojure
+;; Chrome
 (connect-driver driver
   {:capabilities
    {:chromeOptions {:args ["--no-sandbox" "--headless"]}}})
+
+;; Firefox
+(connect-driver driver
+  {:capabilities
+   {:moz:firefoxOptions {:args ["--headless"]}}})
 ```
 
 ## Devtools: tracking HTTP requests, XHR (Ajax)
