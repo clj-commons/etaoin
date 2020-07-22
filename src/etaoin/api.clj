@@ -2449,7 +2449,7 @@
 
   - `text`: a string to input."
   [driver q text]
-  (let [el (query driver q {:fn/has-text text})]
+  (let [el (query driver q {:tag :option :fn/has-text text})]
     (click-el driver el)))
 
 (defn clear-el
