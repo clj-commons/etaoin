@@ -1571,6 +1571,7 @@ Js execution, etc. So try to keep Chrome window active during test session.
 ## Contributors
 
 - [Ivan Grishaev](https://github.com/igrishaev)
+- [Alexey Shipilov](https://github.com/Uunnamed)
 - [Adam Frey](https://github.com/AdamFrey)
 - [JW Koelewijn](https://github.com/jwkoelewijn)
 - [Miloslav Nenadál](https://github.com/nenadalm)
