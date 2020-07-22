@@ -1,9 +1,10 @@
 (ns etaoin.api-test
-  (:require [clojure.string :as str]
+  (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [slingshot.slingshot :refer [try+]]
+            [clojure.string :as str]
             [clojure.test :refer :all]
-            [etaoin.api :refer :all])
+            [etaoin.api :refer :all]
+            [slingshot.slingshot :refer [try+]])
   (:import javax.imageio.ImageIO))
 
 (defmacro with-tmp-file [prefix suffix bind & body]
@@ -26,7 +27,7 @@
 
 (defn get-drivers-from-env []
   (when-let [override (System/getenv "ETAOIN_TEST_DRIVERS")]
-    (clojure.edn/read-string override)))
+    (edn/read-string override)))
 
 (defn get-drivers-from-prop []
   (case (first (str/split (System/getProperty "os.name") #"\s+"))
