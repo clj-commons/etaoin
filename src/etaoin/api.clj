@@ -2438,6 +2438,20 @@
   [driver q text]
   (fill-human-el driver (query driver q) text))
 
+(defn select
+  "Select element in select-box by visible text on click.
+
+  Arguments:
+
+  - `driver`: a driver instance,
+
+  - `q`: a query term, see `query` function for more info,
+
+  - `text`: a string to input."
+  [driver q text]
+  (let [el (query driver q {:tag :option :fn/has-text text})]
+    (click-el driver el)))
+
 (defn clear-el
   "Clears an element by its identifier."
   [driver el]

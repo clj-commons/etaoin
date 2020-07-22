@@ -73,6 +73,14 @@
     (-> (invisible? {:id :div-hidden}) is)
     (-> (invisible? {:id :dunno-foo-bar}) is)))
 
+(deftest test-select
+  (testing "test `select` on select-box"
+    (let [default-val (get-element-value *driver* :simple-country)
+          _ (select *driver* :simple-country "France")
+          selected-val (get-element-value *driver* :simple-country)]
+      (is (= "rf" default-val))
+      (is (= "fr" selected-val)))))
+
 (deftest test-input
   (testing "fill multiple imputs"
     (doto *driver*
