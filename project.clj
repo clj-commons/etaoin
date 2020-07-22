@@ -23,8 +23,8 @@
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]]}}
                                   ;[nrepl "0.6.0"]]}}
 
-  :dependencies [[clj-http "2.3.0"]
-                 [cheshire "5.6.3"]
+  :dependencies [[clj-http "3.10.1"]
+                 [cheshire "5.9.0"]
                  [org.clojure/tools.logging "0.3.1"]
                  [org.clojure/data.codec "0.1.0"]]
 
