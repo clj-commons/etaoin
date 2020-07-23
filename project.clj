@@ -7,13 +7,15 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
+  :deploy-repositories {"releases" {:url "https://repo.clojars.org" :creds :gpg}}
+
   :release-tasks [
                   ;; ["vcs" "assert-committed"]
                   ;; ["shell" "make" "docker-test"]
                   ["change" "version" "leiningen.release/bump-version" "release"]
                   ["vcs" "commit"]
                   ["vcs" "tag" "--no-sign"]
-                  ["deploy" "clojars"]
+                  ["deploy"]
                   ["change" "version" "leiningen.release/bump-version"]
                   ["vcs" "commit"]
                   ["vcs" "push"]
