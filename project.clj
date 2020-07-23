@@ -7,16 +7,19 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :release-tasks [["vcs" "assert-committed"]
-                  ["shell" "make" "docker-test"]
-                  ["sub" "change" "version" "leiningen.release/bump-version" "release"]
+  :deploy-repositories {"releases" {:url "https://repo.clojars.org" :creds :gpg}}
+
+  :release-tasks [
+                  ;; ["vcs" "assert-committed"]
+                  ;; ["shell" "make" "docker-test"]
                   ["change" "version" "leiningen.release/bump-version" "release"]
                   ["vcs" "commit"]
                   ["vcs" "tag" "--no-sign"]
-                  ["sub" "change" "version" "leiningen.release/bump-version"]
+                  ["deploy"]
                   ["change" "version" "leiningen.release/bump-version"]
                   ["vcs" "commit"]
-                  ["vcs" "push"]]
+                  ["vcs" "push"]
+                  ]
 
   :profiles {:dev {:plugins [[lein-codox "0.10.7"]]
                    :dependencies [[org.clojure/clojure "1.8.0"]
