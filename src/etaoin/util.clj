@@ -43,7 +43,7 @@
 (defn connectable?
   "Checks whether it's possible to connect a given host/port pair."
   [host port]
-  (when-let [socket
+  (when-let [^java.net.Socket socket
              (try
                (java.net.Socket. ^String host ^int port)
                (catch java.io.IOException _))]

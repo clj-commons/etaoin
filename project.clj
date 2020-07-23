@@ -5,7 +5,7 @@
   :url "https://github.com/igrishaev/etaoin"
 
   :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
+            :url  "http://www.eclipse.org/legal/epl-v10.html"}
 
   :deploy-repositories {"releases" {:url "https://repo.clojars.org" :creds :gpg}}
 
@@ -19,14 +19,14 @@
                   ["vcs" "commit"]
                   ["vcs" "push"]]
 
-  :profiles {:dev {:plugins [[lein-codox "0.10.7"]]
+  :profiles {:dev {:plugins      [[lein-codox "0.10.7"]]
                    :dependencies [[org.clojure/clojure "1.8.0"]
                                   [log4j/log4j "1.2.17"]]
 
                    :resource-paths ["env/dev/resources"]
 
-                   :global-vars    {*warn-on-reflection* true
-                                    *assert*             true}}
+                   :global-vars {*warn-on-reflection* true
+                                 *assert*             true}}
 
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}
