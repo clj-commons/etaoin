@@ -39,3 +39,14 @@
   (let [socket (java.net.ServerSocket. 0)]
     (.close socket)
     (.getLocalPort socket)))
+
+(defn connectable?
+  "Checks whether it's possible to connect a given host/port pair."
+  [host port]
+  (when-let [socket
+             (try
+               (java.net.Socket. ^String host ^int port)
+               (catch java.io.IOException _))]
+      (when (.isConnected socket)
+        (.close socket)
+          true)))
