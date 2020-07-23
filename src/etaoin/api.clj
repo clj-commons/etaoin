@@ -1821,9 +1821,9 @@
   Returns a port as an integer."
   [type host]
   (loop [port (or (get-in defaults [type :port])
-                  (util/random-port))]
+                  (util/get-free-port))]
     (if (connectable? host port)
-      (recur (util/random-port))
+      (recur (util/get-free-port))
       port)))
 
 ;;
