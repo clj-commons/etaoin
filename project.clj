@@ -7,7 +7,8 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :deploy-repositories {"releases" {:url "https://repo.clojars.org" :creds :gpg}}
+  :repositories {"releases" {:url "https://repo.clojars.org" :creds :gpg}}
+  ;; :deploy-repositories {"releases" {:url "https://repo.clojars.org" :creds :gpg}}
 
   :release-tasks [
                   ;; ["vcs" "assert-committed"]
