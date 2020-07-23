@@ -8,7 +8,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
   ;; :repositories {"releases" {:url "https://repo.clojars.org" :creds :gpg}}
-  :deploy-repositories {"releases" {:url "https://repo.clojars.org" :creds :gpg}}
+  :deploy-repositories {"releases" {:url "https://repo.clojars.org"}}
 
   :release-tasks [
                   ;; ["vcs" "assert-committed"]
