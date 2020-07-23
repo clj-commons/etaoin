@@ -1793,7 +1793,7 @@
   "Check whether a driver runs HTTP server."
   [driver]
   (util/connectable? (:host @driver)
-                (:port @driver)))
+                     (:port @driver)))
 
 (defn discover-port
   "Finds a port for a driver type.
