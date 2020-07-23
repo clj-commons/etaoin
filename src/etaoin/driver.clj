@@ -33,7 +33,7 @@
 
   Selenium Python source code for Firefox
   https://github.com/SeleniumHQ/selenium/blob/master/py/selenium/webdriver/firefox/options.py
-"
+  "
   (:require [etaoin.util :refer [defmethods deep-merge]]
             [clojure.string :as string]
             [clojure.tools.logging :as log]))
@@ -152,7 +152,7 @@
   ;; To prevent duplication, let's clear the given path manually.
   [driver profile]
   (let [default #"(\\|/)Default$"
-        p (string/replace profile default "")]
+        p       (string/replace profile default "")]
     (set-options-args driver [(format "--user-data-dir=%s" p)])))
 
 (defmethod set-profile
@@ -165,9 +165,9 @@
   (-> driver
       (set-options-args ["-profile" profile])
       ((fn [driver]
-          (if (some #(= "--marionette-port" %) (get-args driver))
-            driver
-            (set-args driver ["--marionette-port" 2828]))))))
+         (if (some #(= "--marionette-port" %) (get-args driver))
+           driver
+           (set-args driver ["--marionette-port" 2828]))))))
 
 ;;
 ;; window size
@@ -299,11 +299,11 @@
 (defmethod set-download-dir
   :chrome
   [driver path]
-  (set-prefs driver {:download.default_directory (add-trailing-slash path)
+  (set-prefs driver {:download.default_directory   (add-trailing-slash path)
                      :download.prompt_for_download false}))
 
 (def ^{:private true
-       :doc "A set of content types that should be downloaded without asking a user."}
+       :doc     "A set of content types that should be downloaded without asking a user."}
   ff-content-types
   #{"application/gzip"
     "application/json"
@@ -340,8 +340,8 @@
 (defmethod set-download-dir
   :firefox
   [driver path]
-  (set-prefs driver {:browser.download.dir path
-                     :browser.download.folderList 2
+  (set-prefs driver {:browser.download.dir            path
+                     :browser.download.folderList     2
                      :browser.download.useDownloadDir true
                      :browser.helperApps.neverAsk.saveToDisk
                      (string/join ";" ff-content-types)}))
@@ -370,8 +370,8 @@
   [level]
   (case level
     (nil
-     :off
-     :none)     "OFF"
+      :off
+      :none)    "OFF"
     :debug      "DEBUG"
     :info       "INFO"
     (:warn
@@ -409,18 +409,18 @@
   [:browser :devtools :devtools.timeline]
   "
   [driver & [{:keys [level network? page? categories interval]
-              :or    {level      :all
-                      network?   true
-                      page?      false
-                      categories [:devtools.network]
-                      interval   1000}}]]
+              :or   {level      :all
+                     network?   true
+                     page?      false
+                     categories [:devtools.network]
+                     interval   1000}}]]
   (update driver :capabilities
           (fn [capabilities]
             (-> capabilities
                 (assoc-in [:loggingPrefs :performance]
                           (remap-log-level level))
                 (assoc-in [(options-name driver) :perfLoggingPrefs]
-                          {:enableNetwork network?
-                           :enablePage page?
-                           :traceCategories (string/join "," (map name categories))
+                          {:enableNetwork                network?
+                           :enablePage                   page?
+                           :traceCategories              (string/join "," (map name categories))
                            :bufferUsageReportingInterval interval})))))

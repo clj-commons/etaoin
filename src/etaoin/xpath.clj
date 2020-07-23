@@ -64,8 +64,8 @@
 (defmethod clause :fn/has-classes
   [[_ classes]]
   (node-join
-   (for [class classes]
-     (node-contains "@class" class))))
+    (for [class classes]
+      (node-contains "@class" class))))
 
 (defmethod clause :fn/disabled
   [[_ bool]]
@@ -87,9 +87,9 @@
 
 (defn expand
   [q]
-  (let [[tag q] (pop-map q :tag)
-        tag (or tag :*)
-        idx-key :index
+  (let [[tag q]   (pop-map q :tag)
+        tag       (or tag :*)
+        idx-key   :index
         [index q] (pop-map q idx-key)
-        nodes (concat (into [] q) {idx-key index})]
+        nodes     (concat (into [] q) {idx-key index})]
     (node-join (concat [".//" (to-str tag)] (map clause nodes)))))

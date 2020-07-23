@@ -8,7 +8,7 @@
   (:import javax.imageio.ImageIO))
 
 (defmacro with-tmp-file [prefix suffix bind & body]
-  `(let [tmp# (java.io.File/createTempFile ~prefix ~suffix)
+  `(let [tmp#  (java.io.File/createTempFile ~prefix ~suffix)
          ~bind (.getAbsolutePath tmp#)]
      (try
        ~@body
@@ -19,11 +19,11 @@
   (or (instance? Double val)
       (instance? Integer val)))
 
-; By default we run the tests with all the drivers supported on the current OS.
-; To override this, you can set the environment variable ETAOIN_TEST_DRIVERS
-; to a Clojure vector encoded as a string; for example:
-;
-;   ETAOIN_TEST_DRIVERS="[:firefox]" lein test
+;; By default we run the tests with all the drivers supported on the current OS.
+;; To override this, you can set the environment variable ETAOIN_TEST_DRIVERS
+;; to a Clojure vector encoded as a string; for example:
+;;
+;;  ETAOIN_TEST_DRIVERS="[:firefox]" lein test
 
 (defn get-drivers-from-env []
   (when-let [override (System/getenv "ETAOIN_TEST_DRIVERS")]
@@ -31,8 +31,8 @@
 
 (defn get-drivers-from-prop []
   (case (first (str/split (System/getProperty "os.name") #"\s+"))
-    "Linux" [:firefox :chrome :phantom]
-    "Mac" [:chrome :edge :firefox :phantom :safari]
+    "Linux"   [:firefox :chrome :phantom]
+    "Mac"     [:chrome :edge :firefox :phantom :safari]
     "Windows" [:firefox :chrome :edge :phantom :safari]
     nil))
 
@@ -40,9 +40,9 @@
   [:firefox :chrome :phantom :safari])
 
 (def default-opts
-  {:chrome {:args ["--headless" "--no-sandbox"]}
+  {:chrome  {:args ["--headless" "--no-sandbox"]}
    :firefox {:args ["--headless"]}
-   :safari {:path-driver "/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"}})
+   :safari  {:path-driver "/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"}})
 
 (def drivers
   (or (get-drivers-from-env)
@@ -55,12 +55,12 @@
 (defn fixture-browsers [f]
   (let [url (-> "html/test.html" io/resource str)]
     (doseq [type drivers]
-        (with-driver type (get default-opts type {}) driver
-          (go driver url)
-          (wait-visible driver {:id :document-end})
-          (binding [*driver* driver]
-            (testing (name type)
-              (f)))))))
+      (with-driver type (get default-opts type {}) driver
+        (go driver url)
+        (wait-visible driver {:id :document-end})
+        (binding [*driver* driver]
+          (testing (name type)
+            (f)))))))
 
 (use-fixtures
   :each
@@ -75,8 +75,8 @@
 
 (deftest test-select
   (testing "test `select` on select-box"
-    (let [default-val (get-element-value *driver* :simple-country)
-          _ (select *driver* :simple-country "France")
+    (let [default-val  (get-element-value *driver* :simple-country)
+          _            (select *driver* :simple-country "France")
           selected-val (get-element-value *driver* :simple-country)]
       (is (= "rf" default-val))
       (is (= "fr" selected-val)))))
@@ -84,7 +84,7 @@
 (deftest test-input
   (testing "fill multiple imputs"
     (doto *driver*
-      (fill-multi {:simple-input 1
+      (fill-multi {:simple-input    1
                    :simple-password 2
                    :simple-textarea 3})
       (click :simple-submit)
@@ -114,7 +114,7 @@
 
   (testing "multiple clear"
     (doto *driver*
-      (fill-multi {:simple-input 1
+      (fill-multi {:simple-input    1
                    :simple-password 2
                    :simple-textarea 3})
       (clear :simple-input
@@ -131,8 +131,8 @@
     (-> (enabled? {:id :input-not-disabled}) is)
     (-> (disabled? {:id :textarea-disabled}) is))
   (is (thrown?
-       clojure.lang.ExceptionInfo
-       (enabled? *driver* {:id :dunno-foo-bar}))))
+        clojure.lang.ExceptionInfo
+        (enabled? *driver* {:id :dunno-foo-bar}))))
 
 (deftest test-exists
   (doto *driver*
@@ -142,8 +142,7 @@
 
 ;; In Safari, alerts work quite slow, so we add some delays.
 (deftest test-alert
-  (when-not-phantom
-    *driver*
+  (when-not-phantom  *driver*
     (doto *driver*
       (click {:id :button-alert})
       (when-safari (wait 1))
@@ -162,24 +161,24 @@
 (deftest test-properties
   (when-firefox *driver*
     (let [result (get-element-properties
-                  *driver*
-                  :input-property
-                  :value)]
+                   *driver*
+                   :input-property
+                   :value)]
       (is (= ["val"] result)))))
 
 (deftest test-element-value
   (let [result (get-element-value
-                *driver*
-                :input-property)]
+                 *driver*
+                 :input-property)]
     (is (= "val" result))))
 
 (deftest test-attributes
   (testing "common attributes"
     (doto *driver*
       (-> (get-element-attrs
-           {:id :input-attr}
-           :id :type :value :name :style
-           "disabled" "data-foo" "data-bar")
+            {:id :input-attr}
+            :id :type :value :name :style
+            "disabled" "data-foo" "data-bar")
           (= ["input-attr"
               "text"
               "hello"
@@ -193,12 +192,12 @@
     (let [val (get-element-attr *driver*
                                 {:id :input-attr}
                                 :onclick)]
-        (is (= val "alert(123)"))))
+      (is (= val "alert(123)"))))
   (testing "missing attributes"
     (doto *driver*
       (-> (get-element-attrs
-           {:id :input-attr}
-           :foo "bar" :baz "dunno")
+            {:id :input-attr}
+            :foo "bar" :baz "dunno")
           (= [nil nil nil nil])
           is))))
 
@@ -220,9 +219,9 @@
           is)))
   (testing "multiple css"
     (let [result (get-element-csss
-                  *driver*
-                  {:id :div-css-simple}
-                  :display :background-color "width" "height")
+                   *driver*
+                   {:id :div-css-simple}
+                    :display :background-color "width" "height")
           [display background-color width height] result]
       (is (= display "block"))
       (is (or (= background-color "rgb(204, 204, 204)")
@@ -231,18 +230,18 @@
       (is (= height "250px"))))
   (testing "styled css"
     (let [result (get-element-csss
-                  *driver*
-                  {:id :div-css-styled}
-                  :display :width :height)
+                   *driver*
+                   {:id :div-css-styled}
+                    :display :width :height)
           [display width height] result]
       (is (= display "block"))
       (is (= width "333px"))
       (is (= height "111px"))))
   (testing "missing css"
     (let [result (get-element-csss
-                  *driver*
-                  {:id :div-css-styled}
-                  :foo :bar "baz")]
+                   *driver*
+                   {:id :div-css-styled}
+                   :foo :bar "baz")]
       (is (every? nil? result)))))
 
 (deftest test-wait-has-text
@@ -259,35 +258,35 @@
       (wait-visible {:id :document-end})
       (click {:id :wait-button}))
     (try+
-     (wait-has-text *driver*
-                    :wait-span
-                    "-secret-"
-                    {:timeout 1})
-     (is false "should not be executed")
-     (catch [:type :etaoin/timeout] data
-       (is (= (-> data (dissoc :predicate :time-rest))
-              {:type :etaoin/timeout
-               :message "Wait for :wait-span element has text -secret-"
-               :timeout 1
-               :interval 0.33
-               :times 4})))))
+      (wait-has-text *driver*
+                     :wait-span
+                     "-secret-"
+                     {:timeout 1})
+      (is false "should not be executed")
+      (catch [:type :etaoin/timeout] data
+        (is (= (-> data (dissoc :predicate :time-rest))
+               {:type     :etaoin/timeout
+                :message  "Wait for :wait-span element has text -secret-"
+                :timeout  1
+                :interval 0.33
+                :times    4})))))
   (testing "wait for non-existing text"
     (doto *driver*
       (refresh)
       (wait-visible {:id :document-end}))
     (try+
-     (wait-has-text *driver*
-                    :wait-span
-                    "-dunno-whatever-foo-bar-"
-                    {:timeout 2})
-     (is false "should not be executed")
-     (catch [:type :etaoin/timeout] data
-       (is (= (-> data (dissoc :predicate :time-rest))
-              {:type :etaoin/timeout
-               :message "Wait for :wait-span element has text -dunno-whatever-foo-bar-"
-               :timeout 2
-               :interval 0.33
-               :times 7}))))))
+      (wait-has-text *driver*
+                     :wait-span
+                     "-dunno-whatever-foo-bar-"
+                     {:timeout 2})
+      (is false "should not be executed")
+      (catch [:type :etaoin/timeout] data
+        (is (= (-> data (dissoc :predicate :time-rest))
+               {:type     :etaoin/timeout
+                :message  "Wait for :wait-span element has text -dunno-whatever-foo-bar-"
+                :timeout  2
+                :interval 0.33
+                :times    7}))))))
 
 (deftest test-wait-has-class
   (is 1)
@@ -297,9 +296,9 @@
       (click :wait-add-class-trigger)
       (wait-has-class :wait-add-class-target
                       :new-one
-                      {:timeout 20
+                      {:timeout  20
                        :interval 1
-                       :message "No 'new-one' class found."}))))
+                       :message  "No 'new-one' class found."}))))
 
 (deftest test-close-window
   (is 1)
@@ -308,8 +307,8 @@
 
 (deftest test-drag-n-drop
   (is 1)
-  (let [url "https://marcojakob.github.io/dart-dnd/basic/"
-        doc {:class :document}
+  (let [url   "https://marcojakob.github.io/dart-dnd/basic/"
+        doc   {:class :document}
         trash {:xpath "//div[contains(@class, 'trash')]"}]
     (when-not (or (firefox? *driver*)
                   (safari? *driver*))
@@ -322,8 +321,8 @@
         (-> (absent? doc) is)))))
 
 (deftest test-element-location
-  (let [q {:id :el-location-input}
-        loc (get-element-location *driver* q)
+  (let [q             {:id :el-location-input}
+        loc           (get-element-location *driver* q)
         {:keys [x y]} loc]
     (is (numeric? x))
     (is (numeric? y))))
@@ -354,16 +353,17 @@
         (is (not= height height'))))))
 
 (deftest test-maximize
-  (when-not-drivers [:chrome :firefox :phantom] *driver*
-    (let [{:keys [x y]}          (get-window-position *driver*)
-          {:keys [width height]} (get-window-size *driver*)]
-      (maximize *driver*)
-      (let [{x' :x y' :y}                   (get-window-position *driver*)
-            {width' :width height' :height} (get-window-size *driver*)]
-        (is (not= x x'))
-        (is (not= y y'))
-        (is (not= width width'))
-        (is (not= height height'))))))
+  (when-not-drivers
+      [:chrome :firefox :phantom] *driver*
+      (let [{:keys [x y]}          (get-window-position *driver*)
+            {:keys [width height]} (get-window-size *driver*)]
+        (maximize *driver*)
+        (let [{x' :x y' :y}                   (get-window-position *driver*)
+              {width' :width height' :height} (get-window-size *driver*)]
+          (is (not= x x'))
+          (is (not= y y'))
+          (is (not= width width'))
+          (is (not= height height'))))))
 
 (deftest test-active-element
   (testing "active element"
@@ -390,74 +390,74 @@
     (let [cookies (get-cookies *driver*)]
       (when-safari *driver*
         (is (= cookies
-               [{:domain ".^filecookies^"
-                 :secure false
+               [{:domain   ".^filecookies^"
+                 :secure   false
                  :httpOnly false
-                 :value "test1"
-                 :path "/"
-                 :name "cookie1"}
-                {:domain ".^filecookies^"
-                 :secure false
+                 :value    "test1"
+                 :path     "/"
+                 :name     "cookie1"}
+                {:domain   ".^filecookies^"
+                 :secure   false
                  :httpOnly false
-                 :value "test2"
-                 :path "/"
-                 :name "cookie2"}])))
+                 :value    "test2"
+                 :path     "/"
+                 :name     "cookie2"}])))
       (when-chrome *driver*
         (is (= cookies [])))
       (when-firefox *driver*
-        (is (= cookies [{:name "cookie1",
-                         :value "test1",
-                         :path "/",
-                         :domain "",
-                         :secure false,
+        (is (= cookies [{:name     "cookie1",
+                         :value    "test1",
+                         :path     "/",
+                         :domain   "",
+                         :secure   false,
                          :httpOnly false}
-                        {:name "cookie2",
-                         :value "test2",
-                         :path "/",
-                         :domain "",
-                         :secure false,
+                        {:name     "cookie2",
+                         :value    "test2",
+                         :path     "/",
+                         :domain   "",
+                         :secure   false,
                          :httpOnly false}])))
       (when-phantom *driver*
-        (is (= cookies [{:domain "",
+        (is (= cookies [{:domain   "",
                          :httponly false,
-                         :name "cookie2",
-                         :path "/",
-                         :secure false,
-                         :value "test2"}
-                        {:domain "",
+                         :name     "cookie2",
+                         :path     "/",
+                         :secure   false,
+                         :value    "test2"}
+                        {:domain   "",
                          :httponly false,
-                         :name "cookie1",
-                         :path "/",
-                         :secure false,
-                         :value "test1"}])))))
+                         :name     "cookie1",
+                         :path     "/",
+                         :secure   false,
+                         :value    "test1"}])))))
   (testing "getting a cookie"
     (let [cookie (get-cookie *driver* :cookie2)]
       (when-safari *driver*
         (is (= cookie
-               {:domain ".^filecookies^"
-                :secure false
+               {:domain   ".^filecookies^"
+                :secure   false
                 :httpOnly false
-                :value "test2"
-                :path "/"
-                :name "cookie2"})))
+                :value    "test2"
+                :path     "/"
+                :name     "cookie2"})))
       (when-chrome *driver*
         (is (nil? cookie)))
       (when-firefox *driver*
         (is (= cookie
-               {:name "cookie2"
-                :value "test2"
-                :path "/"
-                :domain ""
-                :secure false
+               {:name     "cookie2"
+                :value    "test2"
+                :path     "/"
+                :domain   ""
+                :secure   false
                 :httpOnly false})))
       (when-phantom *driver*
         (is (= cookie
-               {:domain ""
+               {:domain   ""
                 :httponly false
-                :name "cookie2"
-                :path "/"
-                :secure false
-                :value "test2"})))))
+                :name     "cookie2"
+                :path     "/"
+                :secure   false
+                :value    "test2"})))))
   (testing "deleting a cookie"
     (when-not-phantom
         *driver*
@@ -533,29 +533,29 @@
       (is (= text "target-1"))))
   (let [text (get-element-text *driver* {:css ".target"})]
     (is (= text "target-1")))
-  (let [q [{:css ".bar"} ".//div[@class='inside']" {:tag :span}]
+  (let [q    [{:css ".bar"} ".//div[@class='inside']" {:tag :span}]
         text (get-element-text *driver* q)]
     (is (= text "target-3"))))
 
 (deftest test-find-elements-more
   (testing "simple case"
-    (let [q {:class :find-elements-target}
+    (let [q        {:class :find-elements-target}
           elements (query-all *driver* q)]
       (is (= (count elements) 4))))
   (testing "nested case"
-    (let [q [{:id :find-elements-nested}
-             {:class :nested}
-             {:class :target}]
+    (let [q        [{:id :find-elements-nested}
+                    {:class :nested}
+                    {:class :target}]
           elements (query-all *driver* q)
-          texts (for [el elements]
-                  (get-element-text-el *driver* el))]
+          texts    (for [el elements]
+                     (get-element-text-el *driver* el))]
       (is (= (count elements) 2))
       (is (= texts ["1" "2"])))))
 
 (deftest test-multiple-elements
   (testing "tag names"
-    (let [q {:xpath ".//div[@id='operate-multiple-elements']//*"}
-          elements (query-all *driver* q)
+    (let [q         {:xpath ".//div[@id='operate-multiple-elements']//*"}
+          elements  (query-all *driver* q)
           tag-names (for [el elements]
                       (str/lower-case (get-element-tag-el *driver* el)))]
       (is (= (vec tag-names)
@@ -563,15 +563,15 @@
 
 (deftest test-child
   (let [parent-el (query *driver* {:css "#wc3-barks"})
-        child-el (child *driver* parent-el {:css ".crypt-lord"})
-        tag-name (str/lower-case (get-element-tag-el *driver* child-el))
-        tag-text (get-element-text-el *driver* child-el)]
+        child-el  (child *driver* parent-el {:css ".crypt-lord"})
+        tag-name  (str/lower-case (get-element-tag-el *driver* child-el))
+        tag-text  (get-element-text-el *driver* child-el)]
     (is (= "span" tag-name))
     (is (str/includes? tag-text "From the depths I've come!"))))
 
 (deftest test-children
-  (let [parent-el (query *driver* {:css "#wc3-barks"})
-        children-els (children *driver* parent-el {:css "p"})
+  (let [parent-el      (query *driver* {:css "#wc3-barks"})
+        children-els   (children *driver* parent-el {:css "p"})
         children-texts (map #(get-element-text-el *driver* %) children-els)]
     (is (= ["p" "p"] (map #(str/lower-case (get-element-tag-el *driver* %)) children-els)))
     (is (str/includes? (first children-texts) "From the depths I've come!"))
@@ -579,9 +579,9 @@
 
 (deftest test-postmortem
   (let [dir-tmp (format
-                 "%s/%s"
-                 (System/getProperty "java.io.tmpdir")
-                 (System/currentTimeMillis))]
+                  "%s/%s"
+                  (System/getProperty "java.io.tmpdir")
+                  (System/currentTimeMillis))]
     (io/make-parents (format "%s/%s" dir-tmp "_"))
     (testing "postmortem"
       (try
@@ -590,7 +590,7 @@
         (is false "should be caught")
         (catch Exception e
           (is true "caught")
-          (let [files (file-seq (io/file dir-tmp))
+          (let [files               (file-seq (io/file dir-tmp))
                 expected-file-count (if (supports-logs? *driver*) 3 2)]
             (is (= (-> files rest count)
                    expected-file-count))))))))

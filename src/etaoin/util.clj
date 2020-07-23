@@ -47,6 +47,6 @@
              (try
                (java.net.Socket. ^String host ^int port)
                (catch java.io.IOException _))]
-      (when (.isConnected socket)
-        (.close socket)
-          true)))
+    (when (.isConnected socket)
+      (.close socket)
+      true)))
