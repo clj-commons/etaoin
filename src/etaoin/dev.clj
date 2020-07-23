@@ -41,8 +41,8 @@
   [log]
 
   (let [{:keys [message]} log
-        message (parse-json message)
-        _type (some-> message :message :method parse-method)]
+        message           (parse-json message)
+        _type             (some-> message :message :method parse-method)]
 
     (-> log
         (merge message)
@@ -63,9 +63,9 @@
   "
   [logs]
   (group-by
-   (fn [log]
-     (some-> log :message :params :requestId))
-   logs))
+    (fn [log]
+      (some-> log :message :params :requestId))
+    logs))
 
 
 (defn log->request
@@ -76,15 +76,20 @@
   [acc log]
 
   (let [{:keys [_type message]} log
-        {:keys [params]} message]
+        {:keys [params]}        message]
 
     (case _type
 
       :network/requestwillbesent
-      (let [{:keys [request requestId type]} params
-            {:keys [method headers url hasPostData]} request
-            type (some-> type str/lower-case keyword)
-            xhr? (identical? type :xhr)]
+      (let [{:keys [request
+                    requestId
+                    type]}        params
+            {:keys [method
+                    headers
+                    url
+                    hasPostData]} request
+            type                  (some-> type str/lower-case keyword)
+            xhr?                  (identical? type :xhr)]
         (assoc acc
                :state 1
                :id requestId
@@ -92,18 +97,18 @@
                :xhr? xhr?
                :url url
                :with-data? hasPostData
-               :request {:method (some-> method str/lower-case keyword)
+               :request {:method  (some-> method str/lower-case keyword)
                          :headers headers}))
 
       :network/responsereceived
-      (let [{:keys [response]} params
+      (let [{:keys [response]}                                params
             {:keys [method headers mimeType remoteIPAddress]} response
-            {:keys [status]} headers]
+            {:keys [status]}                                  headers]
         (assoc acc
                :state 2
-               :response {:status (try-parse-int status)
-                          :headers headers
-                          :mime mimeType
+               :response {:status    (try-parse-int status)
+                          :headers   headers
+                          :mime      mimeType
                           :remote-ip remoteIPAddress}))
 
       :network/loadingfinished

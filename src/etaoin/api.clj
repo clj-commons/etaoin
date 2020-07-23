@@ -45,14 +45,14 @@
 (def defaults
   {:firefox {:port 4444
              :path "geckodriver"}
-   :chrome {:port 9515
-            :path "chromedriver"}
+   :chrome  {:port 9515
+             :path "chromedriver"}
    :phantom {:port 8910
              :path "phantomjs"}
-   :safari {:port 4445
-            :path "safaridriver"}
-   :edge {:port 17556
-          :path "msedgedriver"}})
+   :safari  {:port 4445
+             :path "safaridriver"}
+   :edge    {:port 17556
+             :path "msedgedriver"}})
 
 (def default-locator "xpath")
 (def locator-xpath "xpath")
@@ -121,7 +121,7 @@
   [driver]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:status]})))
+                    :path   [:status]})))
 
 ;; TODO safari: "Request body does not contain required parameter 'capabilities'."
 (defn create-session
@@ -130,13 +130,13 @@
   session. Some drivers may work with only one active session. Returns
   a long string identifier."
   [driver & [capabilities]]
-  (let [data (if (= (dispatch-driver driver) :safari) ;; tmp
-               {:capabilities (or capabilities {})}
-               {:desiredCapabilities (or capabilities {})})
+  (let [data   (if (= (dispatch-driver driver) :safari) ;; tmp
+                 {:capabilities (or capabilities {})}
+                 {:desiredCapabilities (or capabilities {})})
         result (execute {:driver driver
                          :method :post
-                         :path [:session]
-                         :data  data})]
+                         :path   [:session]
+                         :data   data})]
     (or (:sessionId result)               ;; default
         (:sessionId (:value result)))))   ;; firefox
 
@@ -145,7 +145,7 @@
   [driver]
   (execute {:driver driver
             :method :delete
-            :path [:session (:session @driver)]}))
+            :path   [:session (:session @driver)]}))
 
 ;;
 ;; active element
@@ -160,14 +160,14 @@
   [driver]
   (-> (execute {:driver driver
                 :method :get
-                :path [:session (:session @driver) :element :active]})
+                :path   [:session (:session @driver) :element :active]})
       :value first second))
 
 (defmethod get-active-element* :safari
   [driver]
   (-> (execute {:driver driver
                 :method :get
-                :path [:session (:session @driver) :element :active]})
+                :path   [:session (:session @driver) :element :active]})
       :value first second))
 
 (defmethods get-active-element*
@@ -175,7 +175,7 @@
   [driver]
   (-> (execute {:driver driver
                 :method :post
-                :path [:session (:session @driver) :element :active]})
+                :path   [:session (:session @driver) :element :active]})
       :value
       :ELEMENT))
 
@@ -192,19 +192,19 @@
   [driver]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :window_handle]})))
+                    :path   [:session (:session @driver) :window_handle]})))
 
 (defmethod get-window-handle :safari
   [driver]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :window]})))
+                    :path   [:session (:session @driver) :window]})))
 
 (defmethod get-window-handle :firefox
   [driver]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :window]})))
+                    :path   [:session (:session @driver) :window]})))
 
 (defmulti get-window-handles
   "Returns a vector of all window handlers."
@@ -215,20 +215,20 @@
   [driver]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :window :handles]})))
+                    :path   [:session (:session @driver) :window :handles]})))
 
 (defmethod get-window-handles :safari
   [driver]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :window :handles]})))
+                    :path   [:session (:session @driver) :window :handles]})))
 
 (defmethods get-window-handles
   [:chrome :edge :phantom]
   [driver]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :window_handles]})))
+                    :path   [:session (:session @driver) :window_handles]})))
 
 (defmulti switch-window
   "Switches a browser to another window."
@@ -240,16 +240,16 @@
   [driver handle]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :window]
-            :data {:handle handle}}))
+            :path   [:session (:session @driver) :window]
+            :data   {:handle handle}}))
 
 (defmethod switch-window
   :chrome
   [driver handle]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :window]
-            :data {:name handle}}))
+            :path   [:session (:session @driver) :window]
+            :data   {:name handle}}))
 
 (defmulti close-window
   "Closes the current browser window."
@@ -259,7 +259,7 @@
   [driver]
   (execute {:driver driver
             :method :delete
-            :path [:session (:session @driver) :window]}))
+            :path   [:session (:session @driver) :window]}))
 
 (defmulti maximize
   "Makes the browser window as wide as your screen allows."
@@ -270,13 +270,13 @@
   [driver]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :window :maximize]}))
+            :path   [:session (:session @driver) :window :maximize]}))
 
 (defmethod maximize :safari
- [driver]
+  [driver]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :window :maximize]}))
+            :path   [:session (:session @driver) :window :maximize]}))
 
 (defmethods maximize
   [:chrome :edge]
@@ -284,7 +284,7 @@
   (let [h (get-window-handle driver)]
     (execute {:driver driver
               :method :post
-              :path [:session (:session @driver) :window h :maximize]})))
+              :path   [:session (:session @driver) :window h :maximize]})))
 
 (defmulti get-window-size
   "Returns a window size a map with `:width` and `:height` keys."
@@ -295,7 +295,7 @@
   [driver]
   (-> (execute {:driver driver
                 :method :get
-                :path [:session (:session @driver) :window :rect]})
+                :path   [:session (:session @driver) :window :rect]})
       :value
       (select-keys [:width :height])))
 
@@ -303,7 +303,7 @@
   [driver]
   (-> (execute {:driver driver
                 :method :get
-                :path [:session (:session @driver) :window :rect]})
+                :path   [:session (:session @driver) :window :rect]})
       :value
       (select-keys [:width :height])))
 
@@ -312,7 +312,7 @@
   (let [h (get-window-handle driver)]
     (-> (execute {:driver driver
                   :method :get
-                  :path [:session (:session @driver) :window h :size]})
+                  :path   [:session (:session @driver) :window h :size]})
         :value
         (select-keys [:width :height]))))
 
@@ -326,7 +326,7 @@
   [driver]
   (-> (execute {:driver driver
                 :method :get
-                :path [:session (:session @driver) :window :rect]})
+                :path   [:session (:session @driver) :window :rect]})
       :value
       (select-keys [:x :y])))
 
@@ -334,7 +334,7 @@
   [driver]
   (-> (execute {:driver driver
                 :method :get
-                :path [:session (:session @driver) :window :rect]})
+                :path   [:session (:session @driver) :window :rect]})
       :value
       (select-keys [:x :y])))
 
@@ -343,7 +343,7 @@
   (let [h (get-window-handle driver)]
     (-> (execute {:driver driver
                   :method :get
-                  :path [:session (:session @driver) :window h :position]})
+                  :path   [:session (:session @driver) :window h :position]})
         :value
         (select-keys [:x :y]))))
 
@@ -353,23 +353,23 @@
   [driver width height]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :window :size]
-            :data {:width width :height height}}))
+            :path   [:session (:session @driver) :window :size]
+            :data   {:width width :height height}}))
 
 (defmethod set-window-size* :safari
   [driver width height]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :window :rect]
-            :data {:width width :height height}}))
+            :path   [:session (:session @driver) :window :rect]
+            :data   {:width width :height height}}))
 
 (defmethod set-window-size* :default
   [driver width height]
   (let [h (get-window-handle driver)]
     (execute {:driver driver
               :method :post
-              :path [:session (:session @driver) :window h :size]
-              :data {:width width :height height}})))
+              :path   [:session (:session @driver) :window h :size]
+              :data   {:width width :height height}})))
 
 (defn set-window-size
   "Sets new size for a window. Absolute precision is not guaranteed."
@@ -384,23 +384,23 @@
   ([driver x y]
    (execute {:driver driver
              :method :post
-             :path [:session (:session @driver) :window :position]
-             :data {:x x :y y}})))
+             :path   [:session (:session @driver) :window :position]
+             :data   {:x x :y y}})))
 
 (defmethod set-window-position* :safari
   ([driver x y]
    (execute {:driver driver
              :method :post
-             :path [:session (:session @driver) :window :rect]
-             :data {:x x :y y}})))
+             :path   [:session (:session @driver) :window :rect]
+             :data   {:x x :y y}})))
 
 (defmethod set-window-position* :default
   ([driver x y]
    (let [h (get-window-handle driver)]
      (execute {:driver driver
                :method :post
-               :path [:session (:session @driver) :window h :position]
-               :data {:x x :y y}}))))
+               :path   [:session (:session @driver) :window h :position]
+               :data   {:x x :y y}}))))
 
 (defn set-window-position
   "Sets new position for a window. Absolute precision is not
@@ -425,22 +425,22 @@
   [driver url]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :url]
-            :data {:url url}}))
+            :path   [:session (:session @driver) :url]
+            :data   {:url url}}))
 
 (defn back
   "Move backwards in a browser's history."
   [driver]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :back]}))
+            :path   [:session (:session @driver) :back]}))
 
 (defn refresh
   "Reloads the current window."
   [driver]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :refresh]}))
+            :path   [:session (:session @driver) :refresh]}))
 
 (def reload refresh) ;; just an alias
 
@@ -449,7 +449,7 @@
   [driver]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :forward]}))
+            :path   [:session (:session @driver) :forward]}))
 
 ;;
 ;; URL and title
@@ -460,14 +460,14 @@
   [driver]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :url]})))
+                    :path   [:session (:session @driver) :url]})))
 
 (defn get-title
   "Returns the current window's title."
   [driver]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :title]})))
+                    :path   [:session (:session @driver) :title]})))
 
 ;;
 ;; Finding element(s)
@@ -479,8 +479,8 @@
   [driver locator term]
   (-> (execute {:driver driver
                 :method :post
-                :path [:session (:session @driver) :element]
-                :data {:using locator :value term}})
+                :path   [:session (:session @driver) :element]
+                :data   {:using locator :value term}})
       :value
       first
       second))
@@ -489,8 +489,8 @@
   [driver locator term]
   (-> (execute {:driver driver
                 :method :post
-                :path [:session (:session @driver) :element]
-                :data {:using locator :value term}})
+                :path   [:session (:session @driver) :element]
+                :data   {:using locator :value term}})
       :value
       first
       second))
@@ -499,8 +499,8 @@
   [driver locator term]
   (-> (execute {:driver driver
                 :method :post
-                :path [:session (:session @driver) :element]
-                :data {:using locator :value term}})
+                :path   [:session (:session @driver) :element]
+                :data   {:using locator :value term}})
       :value :ELEMENT))
 
 (defmulti find-elements* dispatch-driver)
@@ -509,8 +509,8 @@
   [driver locator term]
   (->> (execute {:driver driver
                  :method :post
-                 :path [:session (:session @driver) :elements]
-                 :data {:using locator :value term}})
+                 :path   [:session (:session @driver) :elements]
+                 :data   {:using locator :value term}})
        :value
        (mapv (comp second first))))
 
@@ -520,8 +520,8 @@
   [driver el locator term]
   (-> (execute {:driver driver
                 :method :post
-                :path [:session (:session @driver) :element el :element]
-                :data {:using locator :value term}})
+                :path   [:session (:session @driver) :element el :element]
+                :data   {:using locator :value term}})
       :value
       first
       second))
@@ -530,8 +530,8 @@
   [driver el locator term]
   (-> (execute {:driver driver
                 :method :post
-                :path [:session (:session @driver) :element el :element]
-                :data {:using locator :value term}})
+                :path   [:session (:session @driver) :element el :element]
+                :data   {:using locator :value term}})
       :value
       first
       second))
@@ -540,8 +540,8 @@
   [driver el locator term]
   (-> (execute {:driver driver
                 :method :post
-                :path [:session (:session @driver) :element el :element]
-                :data {:using locator :value term}})
+                :path   [:session (:session @driver) :element el :element]
+                :data   {:using locator :value term}})
       :value
       :ELEMENT))
 
@@ -551,8 +551,8 @@
   [driver el locator term]
   (->> (execute {:driver driver
                  :method :post
-                 :path [:session (:session @driver) :element el :elements]
-                 :data {:using locator :value term}})
+                 :path   [:session (:session @driver) :element el :elements]
+                 :data   {:using locator :value term}})
        :value
        (mapv (comp second first))))
 
@@ -612,7 +612,7 @@
 
   ([driver q & more]
    (let [[loc term] (query/expand driver (last more))
-         el (apply query driver q (butlast more))]
+         el         (apply query driver q (butlast more))]
      (find-elements-from* driver el loc term))))
 
 
@@ -642,7 +642,7 @@
   [driver]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :buttondown]}))
+            :path   [:session (:session @driver) :buttondown]}))
 
 (defmulti mouse-btn-up
   "Puts up a button of a virtual mouse."
@@ -654,7 +654,7 @@
   [driver]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :buttonup]}))
+            :path   [:session (:session @driver) :buttonup]}))
 
 (defmulti mouse-move-to
   "Moves a virtual mouse pointer either to an element
@@ -667,13 +667,13 @@
   ([driver q]
    (execute {:driver driver
              :method :post
-             :path [:session (:session @driver) :moveto]
-             :data {:element (query driver q)}}))
+             :path   [:session (:session @driver) :moveto]
+             :data   {:element (query driver q)}}))
   ([driver x y]
    (execute {:driver driver
              :method :post
-             :path [:session (:session @driver) :moveto]
-             :data {:xoffset x :yoffset y}})))
+             :path   [:session (:session @driver) :moveto]
+             :data   {:xoffset x :yoffset y}})))
 
 (defmacro with-mouse-btn
   "Performs the body keeping mouse botton pressed."
@@ -723,7 +723,7 @@
   [driver el]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :element el :click]}))
+            :path   [:session (:session @driver) :element el :click]}))
 
 (defn click
   "Clicks on an element (a link, a button, etc)."
@@ -740,8 +740,8 @@
   (let [elements (query-all driver q)]
     (if (> (count elements) 1)
       (throw (Exception.
-              (format "Multiple elements found: %s, query %s"
-                      (count elements) q)))
+               (format "Multiple elements found: %s, query %s"
+                       (count elements) q)))
       (click-el driver (first elements)))))
 
 
@@ -754,7 +754,7 @@
   [driver el]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :element el :doubleclick]}))
+            :path   [:session (:session @driver) :element el :doubleclick]}))
 
 (defn double-click
   "Performs double click on an element.
@@ -783,7 +783,7 @@
   [driver btn]
   (let [{driver-type :type} @driver]
     (throw (ex-info "Mouse click is not supported for that browser"
-                    {:button btn
+                    {:button      btn
                      :driver-type driver-type}))))
 
 (defmethod mouse-click
@@ -791,8 +791,8 @@
   [driver btn]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :click]
-            :data {:button btn}}))
+            :path   [:session (:session @driver) :click]
+            :data   {:button btn}}))
 
 (defn left-click
   "A shortcut for `mouse-click` with the left button."
@@ -856,7 +856,7 @@
   [driver el]
   (-> (execute {:driver driver
                 :method :get
-                :path [:session (:session @driver) :element el :size]})
+                :path   [:session (:session @driver) :element el :size]})
       :value
       (select-keys [:width :height])))
 
@@ -864,7 +864,7 @@
   [driver el]
   (-> (execute {:driver driver
                 :method :get
-                :path [:session (:session @driver) :element el :rect]})
+                :path   [:session (:session @driver) :element el :rect]})
       :value
       (select-keys [:width :height])))
 
@@ -872,7 +872,7 @@
   [driver el]
   (-> (execute {:driver driver
                 :method :get
-                :path [:session (:session @driver) :element el :rect]})
+                :path   [:session (:session @driver) :element el :rect]})
       :value
       (select-keys [:width :height])))
 
@@ -892,7 +892,7 @@
   [driver el]
   (-> (execute {:driver driver
                 :method :get
-                :path [:session (:session @driver) :element el :location]})
+                :path   [:session (:session @driver) :element el :location]})
       :value
       (select-keys [:x :y])))
 
@@ -900,7 +900,7 @@
   [driver el]
   (-> (execute {:driver driver
                 :method :get
-                :path [:session (:session @driver) :element el :rect]})
+                :path   [:session (:session @driver) :element el :rect]})
       :value
       (select-keys [:x :y])))
 
@@ -908,7 +908,7 @@
   [driver el]
   (-> (execute {:driver driver
                 :method :get
-                :path [:session (:session @driver) :element el :rect]})
+                :path   [:session (:session @driver) :element el :rect]})
       :value
       (select-keys [:x :y])))
 
@@ -934,14 +934,14 @@
   - `:height`: height as a difference b/w `:y2` and `:y1`.
 "
   [driver q]
-  (let [el (query driver q)
+  (let [el                     (query driver q)
         {:keys [width height]} (get-element-size-el driver el)
-        {:keys [x y]} (get-element-location-el driver el)]
-    {:x1 x
-     :x2 (+ x width)
-     :y1 y
-     :y2 (+ y height)
-     :width width
+        {:keys [x y]}          (get-element-location-el driver el)]
+    {:x1     x
+     :x2     (+ x width)
+     :y1     y
+     :y2     (+ y height)
+     :width  width
      :height height}))
 
 (defn intersects?
@@ -973,7 +973,7 @@
   [driver el property]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :element el :property (name property)]})))
+                    :path   [:session (:session @driver) :element el :property (name property)]})))
 
 (defn get-element-property
   "Returns a property of an element (value, etc).
@@ -997,8 +997,8 @@
   [driver q & props]
   (let [el (query driver q)]
     (vec
-     (for [prop props]
-       (get-element-property-el driver el prop)))))
+      (for [prop props]
+        (get-element-property-el driver el prop)))))
 
 ;;
 ;; attributes
@@ -1008,7 +1008,7 @@
   [driver el attr]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :element el :attribute (name attr)]})))
+                    :path   [:session (:session @driver) :element el :attribute (name attr)]})))
 
 (defn get-element-attr
   "Returns an HTTP attribute of an element (class, id, href, etc).
@@ -1042,8 +1042,8 @@
   [driver q & attrs]
   (let [el (query driver q)]
     (vec
-     (for [attr attrs]
-       (get-element-attr-el driver el attr)))))
+      (for [attr attrs]
+        (get-element-attr-el driver el attr)))))
 
 ;;
 ;; css
@@ -1053,7 +1053,7 @@
   [driver el name*]
   (-> (execute {:driver driver
                 :method :get
-                :path [:session (:session @driver) :element el :css (name name*)]})
+                :path   [:session (:session @driver) :element el :css (name name*)]})
       :value
       not-empty))
 
@@ -1090,8 +1090,8 @@
   [driver q & props]
   (let [el (query driver q)]
     (vec
-     (for [prop props]
-       (get-element-css-el driver el prop)))))
+      (for [prop props]
+        (get-element-css-el driver el prop)))))
 
 ;;
 ;; element inner HTML
@@ -1102,7 +1102,7 @@
   [driver el]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :element el :property :innerHTML]})))
+                    :path   [:session (:session @driver) :element el :property :innerHTML]})))
 
 (defn get-element-inner-html
   "Returns element's inner HTML.
@@ -1122,7 +1122,7 @@
   [driver el]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :element el :name]})))
+                    :path   [:session (:session @driver) :element el :name]})))
 
 (defn get-element-tag
   "Returns element's tag name (\"div\", \"input\", etc)."
@@ -1134,7 +1134,7 @@
   [driver el]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :element el :text]})))
+                    :path   [:session (:session @driver) :element el :text]})))
 
 (defn get-element-text
   "Returns inner element's text.
@@ -1153,7 +1153,7 @@
   [driver el]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :element el :value]})))
+                    :path   [:session (:session @driver) :element el :value]})))
 
 (defmulti get-element-value
   "Returns the current element's value (input text)."
@@ -1200,7 +1200,7 @@
   [driver]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :cookie]})))
+                    :path   [:session (:session @driver) :cookie]})))
 
 (defn get-cookie
   "Returns the first cookie with such name.
@@ -1230,15 +1230,15 @@
   [driver cookie]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :cookie]
-            :data {:cookie cookie}}))
+            :path   [:session (:session @driver) :cookie]
+            :data   {:cookie cookie}}))
 
 (defn delete-cookie
   "Deletes a cookie by its name."
   [driver cookie-name]
   (execute {:driver driver
             :method :delete
-            :path [:session (:session @driver) :cookie (name cookie-name)]}))
+            :path   [:session (:session @driver) :cookie (name cookie-name)]}))
 
 (defmulti delete-cookies
   "Deletes all the cookies for all domains."
@@ -1249,7 +1249,7 @@
   [driver]
   (execute {:driver driver
             :method :delete
-            :path [:session (:session @driver) :cookie]}))
+            :path   [:session (:session @driver) :cookie]}))
 
 ;; TODO test & delete
 (defmethod delete-cookies :safari
@@ -1268,7 +1268,7 @@
   [driver]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :source]})))
+                    :path   [:session (:session @driver) :source]})))
 
 ;;
 ;; Javascript
@@ -1291,7 +1291,7 @@
   (js-execute driver \"arguments[0].scrollIntoView()\", (el->ref el))
   "
   [el]
-  {:ELEMENT el
+  {:ELEMENT                             el
    :element-6066-11e4-a52e-4f735466cecf el})
 
 (defmulti js-execute
@@ -1334,22 +1334,22 @@
   [driver script & args]
   (:value (execute {:driver driver
                     :method :post
-                    :path [:session (:session @driver) :execute]
-                    :data {:script script :args (vec args)}})))
+                    :path   [:session (:session @driver) :execute]
+                    :data   {:script script :args (vec args)}})))
 
 (defmethod js-execute :firefox
   [driver script & args]
   (:value (execute {:driver driver
                     :method :post
-                    :path [:session (:session @driver) :execute :sync]
-                    :data {:script script :args (vec args)}})))
+                    :path   [:session (:session @driver) :execute :sync]
+                    :data   {:script script :args (vec args)}})))
 
 (defmethod js-execute :safari
   [driver script & args]
   (:value (execute {:driver driver
                     :method :post
-                    :path [:session (:session @driver) :execute :sync]
-                    :data {:script script :args (vec args)}})))
+                    :path   [:session (:session @driver) :execute :sync]
+                    :data   {:script script :args (vec args)}})))
 
 (defmulti js-async
   "Executes an asynchronous script in the browser and returns the result.
@@ -1396,22 +1396,22 @@
   [driver script & args]
   (:value (execute {:driver driver
                     :method :post
-                    :path [:session (:session @driver) :execute_async]
-                    :data {:script script :args (vec args)}})))
+                    :path   [:session (:session @driver) :execute_async]
+                    :data   {:script script :args (vec args)}})))
 
 (defmethod js-async :firefox
   [driver script & args]
   (:value (execute {:driver driver
                     :method :post
-                    :path [:session (:session @driver) :execute :async]
-                    :data {:script script :args (vec args)}})))
+                    :path   [:session (:session @driver) :execute :async]
+                    :data   {:script script :args (vec args)}})))
 
 (defmethod js-async :safari
   [driver script & args]
   (:value (execute {:driver driver
                     :method :post
-                    :path [:session (:session @driver) :execute :async]
-                    :data {:script script :args (vec args)}})))
+                    :path   [:session (:session @driver) :execute :async]
+                    :data   {:script script :args (vec args)}})))
 
 ;;
 ;; Javascript helpers
@@ -1478,7 +1478,7 @@
 (defn scroll-bottom
   "Scrolls to bottom of the page keeping current horizontal position."
   [driver]
-  (let [y-max (js-execute driver "return document.body.scrollHeight;")
+  (let [y-max         (js-execute driver "return document.body.scrollHeight;")
         {:keys [x y]} (get-scroll driver)]
     (scroll driver x y-max)))
 
@@ -1526,8 +1526,8 @@
   [driver id]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :frame]
-            :data {:id id}}))
+            :path   [:session (:session @driver) :frame]
+            :data   {:id id}}))
 
 (defn switch-frame
   "Switches to an (i)frame quering the page for it."
@@ -1545,7 +1545,7 @@
   [driver]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :frame :parent]}))
+            :path   [:session (:session @driver) :frame :parent]}))
 
 (defn switch-frame-top
   "Switches to the most top of the page."
@@ -1576,7 +1576,7 @@
   [driver]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :log :types]})))
+                    :path   [:session (:session @driver) :log :types]})))
 
 (defn process-log
   "Remaps some of the log's fields."
@@ -1619,8 +1619,8 @@
   [driver logtype]
   (->> (execute {:driver driver
                  :method :post
-                 :path [:session (:session @driver) :log]
-                 :data {:type logtype}})
+                 :path   [:session (:session @driver) :log]
+                 :data   {:type logtype}})
        :value
        (mapv process-log)))
 
@@ -1641,9 +1641,9 @@
 (defn- dump-logs
   [logs filename & [opt]]
   (generate-stream
-   logs
-   (io/writer filename)
-   (merge {:pretty true} opt)))
+    logs
+    (io/writer filename)
+    (merge {:pretty true} opt)))
 
 
 ;;
@@ -1659,7 +1659,7 @@
   on single page applications."
   [driver hash]
   (let [[url _] (split-hash (get-url driver))
-        new (format "%s#%s" url hash)]
+        new     (format "%s#%s" url hash)]
     (go driver new)))
 
 (defn get-hash
@@ -1674,9 +1674,9 @@
 
 (defmacro with-exception [catch fallback & body]
   `(try+
-    ~@body
-    (catch ~catch ~(quote _)
-      ~fallback)))
+     ~@body
+     (catch ~catch ~(quote _)
+       ~fallback)))
 
 (defmacro with-http-error [& body]
   `(with-exception [:type :etaoin/http-error] false
@@ -1724,20 +1724,20 @@
   [driver]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :alert :text]})))
+                    :path   [:session (:session @driver) :alert :text]})))
 
 (defmethod get-alert-text :safari
   [driver]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :alert :text]})))
+                    :path   [:session (:session @driver) :alert :text]})))
 
 (defmethods get-alert-text
   [:chrome :edge]
   [driver]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :alert_text]})))
+                    :path   [:session (:session @driver) :alert_text]})))
 
 (defmulti dismiss-alert
   "Simulates cancelling an alert dialog (pressing cross button)."
@@ -1747,20 +1747,20 @@
   [driver]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :alert :dismiss]}))
+            :path   [:session (:session @driver) :alert :dismiss]}))
 
 (defmethod dismiss-alert :safari
   [driver]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :alert :dismiss]}))
+            :path   [:session (:session @driver) :alert :dismiss]}))
 
 (defmethods dismiss-alert
   [:chrome :edge]
   [driver]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :dismiss_alert]}))
+            :path   [:session (:session @driver) :dismiss_alert]}))
 
 (defmulti accept-alert
   "Simulates submitting an alert dialog (pressing OK button)."
@@ -1770,20 +1770,20 @@
   [driver]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :alert :accept]}))
+            :path   [:session (:session @driver) :alert :accept]}))
 
 (defmethod accept-alert :safari
   [driver]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :alert :accept]}))
+            :path   [:session (:session @driver) :alert :accept]}))
 
 (defmethods accept-alert
   [:chrome :edge]
   [driver]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :accept_alert]}))
+            :path   [:session (:session @driver) :accept_alert]}))
 
 ;;
 ;; network
@@ -1879,7 +1879,7 @@
   [driver el]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :element el :displayed]})))
+                    :path   [:session (:session @driver) :element el :displayed]})))
 
 (defmethod displayed-el? :safari
   [driver el]
@@ -1909,7 +1909,7 @@
 (defn enabled-el? [driver el]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :element el :enabled]})))
+                    :path   [:session (:session @driver) :element el :enabled]})))
 
 (defn enabled?
   "Checks whether an element is enabled."
@@ -1925,15 +1925,15 @@
   ([driver text]
    (with-http-error
      (boolean
-      (query driver {:xpath (xpath/node-by-text text)}))))
+       (query driver {:xpath (xpath/node-by-text text)}))))
 
   ([driver q text]
    (let [x {:xpath (xpath/node-by-text text)}]
      (with-http-error
        (boolean
-        (if (vector? q)
-          (apply query driver (conj q x))
-          (query driver q x)))))))
+         (if (vector? q)
+           (apply query driver (conj q x))
+           (query driver q x)))))))
 
 (defn has-class-el?
   [driver el class]
@@ -2004,25 +2004,25 @@
   ([pred]
    (wait-predicate pred {}))
   ([pred opt]
-   (let [timeout (get opt :timeout default-timeout) ;; refactor this (call for java millisec)
+   (let [timeout   (get opt :timeout default-timeout) ;; refactor this (call for java millisec)
          time-rest (get opt :time-rest timeout)
-         interval (get opt :interval default-interval)
-         times (get opt :times 0)
-         message (get opt :message)]
+         interval  (get opt :interval default-interval)
+         times     (get opt :times 0)
+         message   (get opt :message)]
      (when (< time-rest 0)
-       (throw+ {:type :etaoin/timeout
-                :message message
-                :timeout timeout
-                :interval interval
-                :times times
+       (throw+ {:type      :etaoin/timeout
+                :message   message
+                :timeout   timeout
+                :interval  interval
+                :times     times
                 :predicate pred}))
      (when-not (with-http-error
                  (pred))
        (wait interval)
        (recur pred (assoc
-                    opt
-                    :time-rest (- time-rest interval)
-                    :times (inc times)))))))
+                     opt
+                     :time-rest (- time-rest interval)
+                     :times (inc times)))))))
 
 (defn wait-exists
   "Waits until an element exists on a page (but may not be visible though).
@@ -2175,8 +2175,8 @@
   [driver q]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :touch :click]
-            :data {:element (query driver q)}}))
+            :path   [:session (:session @driver) :touch :click]
+            :data   {:element (query driver q)}}))
 
 (defmulti touch-down dispatch-driver)
 
@@ -2189,8 +2189,8 @@
   ([driver x y]
    (execute {:driver driver
              :method :post
-             :path [:session (:session @driver) :touch :down]
-             :data {:x (int x) :y (int y)}})))
+             :path   [:session (:session @driver) :touch :down]
+             :data   {:x (int x) :y (int y)}})))
 
 (defmulti touch-up dispatch-driver)
 
@@ -2203,8 +2203,8 @@
   ([driver x y]
    (execute {:driver driver
              :method :post
-             :path [:session (:session @driver) :touch :up]
-             :data {:x (int x) :y (int y)}})))
+             :path   [:session (:session @driver) :touch :up]
+             :data   {:x (int x) :y (int y)}})))
 
 (defmulti touch-move dispatch-driver)
 
@@ -2217,8 +2217,8 @@
   ([driver x y]
    (execute {:driver driver
              :method :post
-             :path [:session (:session @driver) :touch :move]
-             :data {:x (int x) :y (int y)}})))
+             :path   [:session (:session @driver) :touch :move]
+             :data   {:x (int x) :y (int y)}})))
 
 ;;
 ;; skip/when driver
@@ -2318,24 +2318,24 @@
   [driver el text & more]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :element el :value]
-            :data {:value (apply make-input* text more)}}))
+            :path   [:session (:session @driver) :element el :value]
+            :data   {:value (apply make-input* text more)}}))
 
 (defmethod fill-el
   :firefox ;; todo support the old version for :default
   [driver el text & more]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :element el :value]
-            :data {:text (str/join (apply make-input* text more))}}))
+            :path   [:session (:session @driver) :element el :value]
+            :data   {:text (str/join (apply make-input* text more))}}))
 
 (defmethod fill-el
   :safari
   [driver el text & more]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :element el :value]
-            :data {:text (str/join (apply make-input* text more))}}))
+            :path   [:session (:session @driver) :element el :value]
+            :data   {:text (str/join (apply make-input* text more))}}))
 
 (defmulti fill-active*
   {:arglists '([driver text & more])}
@@ -2346,8 +2346,8 @@
   [driver text & more]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :keys]
-            :data {:value (apply make-input* text more)}}))
+            :path   [:session (:session @driver) :keys]
+            :data   {:value (apply make-input* text more)}}))
 
 (defmethod fill-active*
   :firefox
@@ -2393,18 +2393,18 @@
     (vector? q-text)
     (recur driver (apply hash-map q-text))
 
-    :else (throw+ {:type :etaoin/argument
+    :else (throw+ {:type    :etaoin/argument
                    :message "Wrong argument type"
-                   :arg q-text})))
+                   :arg     q-text})))
 
 (defn fill-human-el
   ;; todo opt params
   [driver el text]
   (let [mistake-prob 0.1
-        pause-max 0.2
-        rand-char #(-> 26 rand-int (+ 97) char)
-        wait-key #(let [r (rand)]
-                    (wait (if (> r pause-max) pause-max r)))]
+        pause-max    0.2
+        rand-char    #(-> 26 rand-int (+ 97) char)
+        wait-key     #(let [r (rand)]
+                        (wait (if (> r pause-max) pause-max r)))]
     (doseq [key text]
       (when (< (rand) mistake-prob)
         (fill-el driver el (rand-char))
@@ -2446,7 +2446,7 @@
   [driver el]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :element el :clear]}))
+            :path   [:session (:session @driver) :element el :clear]}))
 
 (defn clear
   "Clears an element (input, textarea) found with a query.
@@ -2480,13 +2480,13 @@
 
 (defmethod upload-file java.io.File
   [driver q ^java.io.File file]
-  (let [path (.getAbsolutePath file)
+  (let [path    (.getAbsolutePath file)
         message (format "File %s does not exist" path)]
     (if (.exists file)
       (fill driver q path)
-      (throw+ {:type :etaoin/file
+      (throw+ {:type    :etaoin/file
                :message message
-               :driver @driver}))))
+               :driver  @driver}))))
 
 ;;
 ;; submit
@@ -2512,16 +2512,16 @@
   [driver type sec]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :timeouts]
-            :data {type (util/sec->ms sec)}}))
+            :path   [:session (:session @driver) :timeouts]
+            :data   {type (util/sec->ms sec)}}))
 
 (defmethod set-timeout*
   :chrome
   [driver type sec]
   (execute {:driver driver
             :method :post
-            :path [:session (:session @driver) :timeouts]
-            :data {:type type :ms (util/sec->ms sec)}}))
+            :path   [:session (:session @driver) :timeouts]
+            :data   {:type type :ms (util/sec->ms sec)}}))
 
 (defmulti set-script-timeout
   "Sets timeout for executing JS sctipts."
@@ -2568,7 +2568,7 @@
   [driver]
   (:value (execute {:driver driver
                     :method :get
-                    :path [:session (:session @driver) :timeouts]})))
+                    :path   [:session (:session @driver) :timeouts]})))
 
 (defn get-script-timeout
   "Returns the current script timeout in seconds."
@@ -2632,9 +2632,9 @@
 
 (defmethod screenshot :default
   [driver file]
-  (let [resp (execute {:driver driver
-                       :method :get
-                       :path [:session (:session @driver) :screenshot]})
+  (let [resp   (execute {:driver driver
+                         :method :get
+                         :path   [:session (:session @driver) :screenshot]})
         b64str (-> resp :value not-empty)]
     (if b64str
       (b64-to-file b64str file)
@@ -2654,10 +2654,10 @@
 (defmethods screenshot-element
   [:chrome :edge :firefox]
   [driver q file]
-  (let [el (query driver q)
-        resp (execute {:driver driver
-                       :method :get
-                       :path [:session (:session @driver) :element el :screenshot]})
+  (let [el     (query driver q)
+        resp   (execute {:driver driver
+                         :method :get
+                         :path   [:session (:session @driver) :element el :screenshot]})
         b64str (-> resp :value not-empty)]
     (if b64str
       (b64-to-file b64str file)
@@ -2691,10 +2691,10 @@
         file-tpl "%s-%s-%s-%s.%s"
 
         date-format (or date-format "yyyy-MM-dd-HH-mm-ss")
-        params [(-> @driver :type name)
-                (-> @driver :host)
-                (-> @driver :port)
-                (format-date (Date.) date-format)]
+        params      [(-> @driver :type name)
+                     (-> @driver :host)
+                     (-> @driver :port)
+                     (format-date (Date.) date-format)]
 
         file-img (apply format file-tpl (conj params "png"))
         file-src (apply format file-tpl (conj params "html"))
@@ -2790,11 +2790,11 @@
   when finding elements on a page. `default-locator` variable is used
   if not passed."
   [type & [opt]] ;; todo move port and host to create-driver
-  (let [driver (atom {})
-        host (or (:host opt) "127.0.0.1")
-        port (or (:port opt)
-                 (discover-port type host))
-        url (make-url host port)
+  (let [driver  (atom {})
+        host    (or (:host opt) "127.0.0.1")
+        port    (or (:port opt)
+                    (discover-port type host))
+        url     (make-url host port)
         locator (or (:locator opt) default-locator)]
     (swap! driver assoc
            :type type
@@ -2876,9 +2876,9 @@
                      load-strategy]}]]
 
   (let [{:keys [type port]} @driver
-        [with height] size
-        log-level (or log-level :all)
-        path-driver (or path-driver (get-in defaults [type :path]))
+        [with height]       size
+        log-level           (or log-level :all)
+        path-driver         (or path-driver (get-in defaults [type :path]))
 
         _ (swap! driver drv/set-browser-log-level log-level)
         _ (swap! driver drv/set-path path-driver)
@@ -2907,9 +2907,10 @@
         _ (when download-dir
             (swap! driver drv/set-download-dir download-dir))
         _ (when prefs (swap! driver drv/set-prefs prefs))
+
         proc-args (drv/get-args @driver)
-        _ (log/debugf "Starting process: %s" (str/join \space proc-args))
-        process (proc/run proc-args)]
+        _         (log/debugf "Starting process: %s" (str/join \space proc-args))
+        process   (proc/run proc-args)]
     (swap! driver assoc
            :env env ;; todo process env
            :process process)
@@ -2933,12 +2934,12 @@
   See https://www.w3.org/TR/webdriver/#capabilities"
   [driver & [opt]] ;; move params here
   (wait-running driver)
-  (let [type (:type @driver)
-        caps (get-in defaults [type :capabilities])
-        _ (swap! driver drv/set-capabilities caps)
-        _ (swap! driver drv/set-capabilities (:capabilities opt))
-        _ (swap! driver drv/set-capabilities (:desired-capabilities opt))
-        caps (:capabilities @driver)
+  (let [type    (:type @driver)
+        caps    (get-in defaults [type :capabilities])
+        _       (swap! driver drv/set-capabilities caps)
+        _       (swap! driver drv/set-capabilities (:capabilities opt))
+        _       (swap! driver drv/set-capabilities (:desired-capabilities opt))
+        caps    (:capabilities @driver)
         session (create-session driver caps)]
     (swap! driver assoc :session session)
     driver))
