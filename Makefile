@@ -56,7 +56,7 @@ docker-build:
 
 .PHONY: docker-test
 docker-test:
-	docker run -it --rm \
+	docker run --rm \
 	-v $(CURDIR)/:/etaoin \
 	-w /etaoin ${IMAGE}:latest \
 	lein test
