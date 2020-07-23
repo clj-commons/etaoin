@@ -25,6 +25,10 @@ tags:
 deploy:
 	lein deploy clojars
 
+.PHONY: release
+release:
+	lein release
+
 toc-install:
 	npm install --save markdown-toc
 
@@ -56,7 +60,7 @@ docker-build:
 
 .PHONY: docker-test
 docker-test:
-	docker run -it --rm \
+	docker run --rm \
 	-v $(CURDIR)/:/etaoin \
 	-w /etaoin ${IMAGE}:latest \
 	lein test

@@ -1,6 +1,4 @@
-(def VERSION (.trim (slurp "VERSION")))
-
-(defproject etaoin VERSION
+(defproject etaoin "0.3.8-SNAPSHOT"
 
   :description "Pure Clojure Webdriver protocol implementation."
 
@@ -8,6 +6,18 @@
 
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
+
+  :deploy-repositories {"releases" {:url "https://repo.clojars.org" :creds :gpg}}
+
+  :release-tasks [["vcs" "assert-committed"]
+                  ["shell" "make" "docker-test"]
+                  ["change" "version" "leiningen.release/bump-version" "release"]
+                  ["vcs" "commit"]
+                  ["vcs" "tag" "--no-sign"]
+                  ["deploy"]
+                  ["change" "version" "leiningen.release/bump-version"]
+                  ["vcs" "commit"]
+                  ["vcs" "push"]]
 
   :profiles {:dev {:plugins [[lein-codox "0.10.7"]]
                    :dependencies [[org.clojure/clojure "1.8.0"]
@@ -21,7 +31,6 @@
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]]}}
-                                  ;[nrepl "0.6.0"]]}}
 
   :dependencies [[clj-http "3.10.1"]
                  [cheshire "5.9.0"]
@@ -33,7 +42,8 @@
   ;; emit XUNIT test reports to enable CircleCI
   ;; to collect statistics over time
   ;;
-  :plugins [[test2junit "1.1.2"]]
+  :plugins [[test2junit "1.1.2"]
+            [lein-shell "0.5.0"]]
   :test2junit-output-dir "target/test2junit"
 
   :codox {:output-path "autodoc"})
