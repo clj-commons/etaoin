@@ -25,6 +25,10 @@ tags:
 deploy:
 	lein deploy clojars
 
+.PHONY: release
+release:
+	lein release
+
 toc-install:
 	npm install --save markdown-toc
 

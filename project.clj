@@ -1,4 +1,4 @@
-(defproject etaoin "0.3.7"
+(defproject etaoin "0.3.6"
 
   :description "Pure Clojure Webdriver protocol implementation."
 
@@ -7,15 +7,13 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :deploy-repositories {"releases" {:url "https://repo.clojars.org" :creds :gpg}}
-
   :release-tasks [
                   ;; ["vcs" "assert-committed"]
                   ;; ["shell" "make" "docker-test"]
                   ["change" "version" "leiningen.release/bump-version" "release"]
                   ["vcs" "commit"]
                   ["vcs" "tag" "--no-sign"]
-                  ["deploy"]
+                  ["deploy" "clojars"]
                   ["change" "version" "leiningen.release/bump-version"]
                   ["vcs" "commit"]
                   ["vcs" "push"]
