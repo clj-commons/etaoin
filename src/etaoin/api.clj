@@ -1789,24 +1789,13 @@
 ;; network
 ;;
 
-(defn connectable?
-  "Checks whether it's possible to connect a given host/port pair."
-  [host port]
-  (with-exception IOException false
-    (let [socket (java.net.Socket. ^String host ^int port)]
-      (if (.isConnected socket)
-        (do
-          (try (.close socket) (catch IOException _))
-          true)
-        false))))
-
 (defn running?
   "Check whether a driver runs HTTP server."
   [driver]
-  (connectable? (:host @driver)
-                (:port @driver)))
+  (util/connectable? (:host @driver)
+                     (:port @driver)))
 
-(defn discover-port ;; todo move to utils
+(defn discover-port
   "Finds a port for a driver type.
 
   Takes a default one from `defaults` map. If it's already taken,
@@ -1821,9 +1810,9 @@
   Returns a port as an integer."
   [type host]
   (loop [port (or (get-in defaults [type :port])
-                  (util/random-port))]
-    (if (connectable? host port)
-      (recur (util/random-port))
+                  (util/get-free-port))]
+    (if (util/connectable? host port)
+      (recur (util/get-free-port))
       port)))
 
 ;;

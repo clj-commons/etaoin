@@ -35,12 +35,18 @@
   ([tpl & args]
    (error (apply format tpl args))))
 
-(defn random-port
-  "Returns a random port skiping the first 1024 ones."
-  []
-  (let [max-port 65536
-        offset 1024]
-    (-> max-port
-        (- offset)
-        (rand-int)
-        (+ offset))))
+(defn get-free-port []
+  (let [socket (java.net.ServerSocket. 0)]
+    (.close socket)
+    (.getLocalPort socket)))
+
+(defn connectable?
+  "Checks whether it's possible to connect a given host/port pair."
+  [host port]
+  (when-let [socket
+             (try
+               (java.net.Socket. ^String host ^int port)
+               (catch java.io.IOException _))]
+      (when (.isConnected socket)
+        (.close socket)
+          true)))
