@@ -18,7 +18,7 @@
                     ["geckodriver" "--port" 1234 "--marionette-port" 2828])))
            (testing "Custom `--marionette-port` is assigned when `:profile` is specified"
              (-> (create-driver :firefox {:port 1234})
-                 (run-driver {:profile "/tmp/firefox-profile/1"
+                 (run-driver {:profile     "/tmp/firefox-profile/1"
                               :args-driver ["--marionette-port" 2821]}))
              (is (= @args
                     ["geckodriver" "--port" 1234 "--marionette-port" 2821])))))))
