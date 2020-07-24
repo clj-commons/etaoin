@@ -2958,7 +2958,7 @@
            (throw e))))
 
   (swap! driver dissoc
-         :session :capabilities)
+         :session)
   driver)
 
 (defn stop-driver
@@ -2966,7 +2966,7 @@
   instance. Returns a modified driver."
   [driver]
   (proc/kill (:process @driver))
-  (swap! driver dissoc :process :args :env)
+  (swap! driver dissoc :process :args :env :capabilities)
   driver)
 
 (defn boot-driver
