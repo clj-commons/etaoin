@@ -1361,6 +1361,43 @@ point to the target driver during the tests.
     ))
 ```
 
+If for some reason you want to use a single instance, you can use fixtures like this:
+
+
+```clojure
+(ns project.test.integration
+  "A module for integration tests"
+  (:require [clojure.test :refer :all]
+            [etaoin.api :refer :all]))
+
+(def ^:dynamic *driver*)
+
+(defn fixture-browser [f]
+  (let [driver (chrome-headless)]
+    (binding [*driver* driver]
+      (f))
+    (quit driver)))
+
+;; if you want reset some changes (delete cookie, refresh page and etc), or Vice versa,
+;; make pre-settings before test you can use fixture like this:
+(defn fixture-clear-browser [f]
+  (delete-cookies *driver*)
+  (go *driver* "https://google.com")
+    (f))
+
+;; this is run `once` before running the tests
+(use-fixtures
+  :once
+  fixture-browser)
+
+;;this is run `every` time before each test
+(use-fixtures
+  :each
+  fixture-clear-browser)
+
+...some tests
+```
+
 ### Multi-Driver Fixtures
 
 In the example above, we examined a case when you run tests against a single
