@@ -1381,9 +1381,10 @@ If for some reason you want to use a single instance, you can use fixtures like 
 ;; if you want reset some changes (delete cookie, refresh page and etc), or Vice versa,
 ;; make pre-settings before test you can use fixture like this:
 (defn fixture-clear-browser [f]
-  (delete-cookies *driver*)
-  (go *driver* "https://google.com")
-    (f))
+  (connect-driver *driver*)
+  (go *driver* "http://google.com")
+  (f)
+  (disconnect-driver *driver*))
 
 ;; this is run `once` before running the tests
 (use-fixtures
