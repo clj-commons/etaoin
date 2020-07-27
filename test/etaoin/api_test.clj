@@ -29,6 +29,10 @@
   (when-let [override (System/getenv "ETAOIN_TEST_DRIVERS")]
     (edn/read-string override)))
 
+(def tests-fast?
+  (when-let [arg (System/getenv "ETAOIN_FAST_TEST")]
+    (= 1 (edn/read-string arg))))
+
 (defn get-drivers-from-prop []
   (case (first (str/split (System/getProperty "os.name") #"\s+"))
     "Linux"   [:firefox :chrome :phantom]
@@ -62,9 +66,30 @@
           (testing (name type)
             (f)))))))
 
+(defn fast-fixture-browser [f]
+  (let [type (first drivers)
+        driver (boot-driver  type (type default-opts))]
+    (binding [*driver* driver]
+      (f))
+    (quit driver)))
+
+(defn fixture-clear-browser [f]
+  (delete-cookies *driver*)
+  (go *driver* (-> "html/test.html" io/resource str))
+  (wait-visible *driver* {:id :document-end})
+  (f))
+
+(use-fixtures
+  :once
+  (if tests-fast?
+    fast-fixture-browser
+    #(%)))
+
 (use-fixtures
   :each
-  fixture-browsers)
+  (if tests-fast?
+    fixture-clear-browser
+    fixture-browsers))
 
 (deftest test-visible
   (doto *driver*
@@ -301,9 +326,10 @@
                        :message  "No 'new-one' class found."}))))
 
 (deftest test-close-window
-  (is 1)
-  (doto *driver*
-    (close-window)))
+  (when-not tests-fast?
+    (is 1)
+    (doto *driver*
+      (close-window))))
 
 (deftest test-drag-n-drop
   (is 1)
@@ -333,7 +359,7 @@
 ;; monitor, the next two test will fail due to window error.
 
 (deftest test-window-position
-  (when-not-phantom *driver*
+  (when-not-headless *driver*
     (let [{:keys [x y]} (get-window-position *driver*)]
       (is (numeric? x))
       (is (numeric? y))
@@ -353,17 +379,16 @@
         (is (not= height height'))))))
 
 (deftest test-maximize
-  (when-not-drivers
-      [:chrome :firefox :phantom] *driver*
-      (let [{:keys [x y]}          (get-window-position *driver*)
-            {:keys [width height]} (get-window-size *driver*)]
-        (maximize *driver*)
-        (let [{x' :x y' :y}                   (get-window-position *driver*)
-              {width' :width height' :height} (get-window-size *driver*)]
-          (is (not= x x'))
-          (is (not= y y'))
-          (is (not= width width'))
-          (is (not= height height'))))))
+  (when-not-headless *driver*
+    (let [{:keys [x y]}          (get-window-position *driver*)
+          {:keys [width height]} (get-window-size *driver*)]
+      (maximize *driver*)
+      (let [{x' :x y' :y}                   (get-window-position *driver*)
+            {width' :width height' :height} (get-window-size *driver*)]
+        (is (not= x x'))
+        (is (not= y y'))
+        (is (not= width width'))
+        (is (not= height height'))))))
 
 (deftest test-active-element
   (testing "active element"
@@ -510,6 +535,7 @@
   (let [js-url (-> "js/inject.js" io/resource str)]
     (testing "adding a script"
       (add-script *driver* js-url)
+      (wait 1) ;;for fast test
       (let [result (js-execute *driver* "return injected_func();")]
         (is (= result "I was injected"))))))
 

@@ -15,9 +15,11 @@ repl-1.9:
 test:
 	lein test
 
+# only single driver (first driver from ETAOIN_TEST_DRIVERS
+# or defaults drivers) and single session
 .PHONY: fast-test
 fast-test:
-	lein test :only etaoin.fast-api-test #only chrome and single session
+	ETAOIN_FAST_TEST=1 lein test
 
 orig:
 	find . -name '*.orig' -delete

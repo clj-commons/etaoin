@@ -1401,6 +1401,8 @@ If for some reason you want to use a single instance, you can use fixtures like 
 ...some tests
 ```
 
+You can also explore etaoin [tests](https://github.com/igrishaev/etaoin/blob/master/test/etaoin/api_test.clj)
+
 ### Multi-Driver Fixtures
 
 In the example above, we examined a case when you run tests against a single
