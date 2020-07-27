@@ -30,8 +30,8 @@
     (edn/read-string override)))
 
 (def tests-fast?
-  (when-let [arg (System/getenv "ETAOIN_FAST_TEST")]
-    (= 1 (edn/read-string arg))))
+  (when-let [arg (some-> "ETAOIN_FAST_TEST" System/getenv str/lower-case)]
+    (contains? #{"1" "true"} arg)))
 
 (defn get-drivers-from-prop []
   (case (first (str/split (System/getProperty "os.name") #"\s+"))
@@ -57,39 +57,36 @@
 
 ;; tests failed in safari 13.1.1 https://bugs.webkit.org/show_bug.cgi?id=202589 use STP newest
 (defn fixture-browsers [f]
-  (let [url (-> "html/test.html" io/resource str)]
-    (doseq [type drivers]
-      (with-driver type (get default-opts type {}) driver
-        (go driver url)
-        (wait-visible driver {:id :document-end})
-        (binding [*driver* driver]
-          (testing (name type)
-            (f)))))))
-
-(defn fast-fixture-browser [f]
-  (let [type (first drivers)
-        driver (boot-driver  type (type default-opts))]
-    (binding [*driver* driver]
-      (f))
-    (quit driver)))
+  (doseq [type drivers]
+    (with-driver type (get default-opts type {}) driver
+      (binding [*driver* driver]
+        (testing (name type)
+          (f))))))
 
 (defn fixture-clear-browser [f]
-  (delete-cookies *driver*)
-  (go *driver* (-> "html/test.html" io/resource str))
-  (wait-visible *driver* {:id :document-end})
-  (f))
+  (let [url (-> "html/test.html" io/resource str)]
+    (delete-cookies *driver*)
+    (go *driver* url)
+    (wait-visible *driver* {:id :document-end})
+    (f)))
 
 (use-fixtures
   :once
   (if tests-fast?
-    fast-fixture-browser
+    fixture-browsers
     #(%)))
 
 (use-fixtures
   :each
   (if tests-fast?
-    fixture-clear-browser
-    fixture-browsers))
+    #(%)
+    fixture-browsers) fixture-clear-browser)
+
+;; (use-fixtures
+;;   :each
+;;   (if tests-fast?
+;;     fixture-browsers
+;;      #(%)))
 
 (deftest test-visible
   (doto *driver*
