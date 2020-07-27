@@ -3,7 +3,7 @@ FROM clojure:lein-2.9.3
 RUN apt-get -yqq update && \
     apt-get -yqq upgrade && \
     apt-get -yqq install gnupg2 && \
-    apt-get -yqq install curl unzip && \
+    apt-get -yqq install curl unzip make && \
     apt-get -yqq install fonts-ipafont-gothic xfonts-100dpi xfonts-75dpi xfonts-scalable xfonts-cyrillic && \
     apt-get install -y jq libgconf-2-4 && \
     rm -rf /var/lib/apt/lists/*

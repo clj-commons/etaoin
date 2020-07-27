@@ -15,6 +15,10 @@ repl-1.9:
 test:
 	lein test
 
+.PHONY: fast-test
+fast-test:
+	lein test :only etaoin.fast-api-test #only chrome and single session
+
 orig:
 	find . -name '*.orig' -delete
 
@@ -57,10 +61,14 @@ IMAGE := etaoin
 docker-build:
 	docker build -t ${IMAGE}:latest .
 
+BASE_DOCKER = docker run --rm \
+	-v $(CURDIR)/:/etaoin \
+	-w /etaoin ${IMAGE}:latest
 
 .PHONY: docker-test
 docker-test:
-	docker run --rm \
-	-v $(CURDIR)/:/etaoin \
-	-w /etaoin ${IMAGE}:latest \
-	lein test
+	${BASE_DOCKER} make test
+
+.PHONY: docker-fast-test
+docker-fast-test:
+	${BASE_DOCKER} make fast-test

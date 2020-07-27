@@ -1374,8 +1374,8 @@ If for some reason you want to use a single instance, you can use fixtures like 
 
 (defn fixture-browser [f]
   (let [driver (chrome-headless)]
+    (disconnect-driver driver)
     (binding [*driver* driver]
-      (disconnect-driver driver)
       (f))
     (connect-driver driver)
     (quit driver)))

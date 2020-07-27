@@ -37,6 +37,8 @@
                  [org.clojure/tools.logging "0.3.1"]
                  [org.clojure/data.codec "0.1.0"]]
 
+  :test-selectors {:default #(not (clojure.string/includes? (str (:ns %)) "etaoin.fast-api-test"))}
+
   ;;
   ;; When running the tests as `lein test2junit`,
   ;; emit XUNIT test reports to enable CircleCI
