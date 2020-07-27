@@ -246,7 +246,7 @@
   :default
   [driver]
   (if-let [args (get-in driver [:capabilities (options-name driver) :args])]
-    (boolean (some #(= % "--headless") args))
+    (contains? (set args) "--headless")
     (:headless driver)))
 
 (defmethod is-headless?
