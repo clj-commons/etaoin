@@ -1409,8 +1409,8 @@ For faster testing you can use this example:
     (binding [*driver* driver]
       (f))))
 
-;; here you need to clear the resources yourself every time (delete cookies,
-;; refresh the page etc.) therefore, the tests may not be clean
+;; note that resources, such as cookies, are deleted manually, 
+;; so this does not guarantee that the tests are clean
 (defn fixture-clear-browser [f]
   (delete-cookies *driver*)
   (go *driver* "http://google.com")
