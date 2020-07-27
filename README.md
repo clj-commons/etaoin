@@ -1373,15 +1373,13 @@ If for some reason you want to use a single instance, you can use fixtures like 
 (def ^:dynamic *driver*)
 
 (defn fixture-browser [f]
-  (let [driver (chrome-headless)]
+  (with-chrome-headless {:args ["--no-sandbox"]} driver
+    (disconnect-driver driver)
     (binding [*driver* driver]
-      (disconnect-driver driver)
       (f))
-    (connect-driver driver)
-    (quit driver)))
+    (connect-driver driver)))
 
-;; if you want reset some changes (delete cookie, refresh page and etc), or Vice versa,
-;; make pre-settings before test you can use fixture like this:
+;; creating a session every time that automatically erases resources
 (defn fixture-clear-browser [f]
   (connect-driver *driver*)
   (go *driver* "http://google.com")
@@ -1393,12 +1391,32 @@ If for some reason you want to use a single instance, you can use fixtures like 
   :once
   fixture-browser)
 
-;;this is run `every` time before each test
+;; this is run `every` time before each test
 (use-fixtures
   :each
   fixture-clear-browser)
 
 ...some tests
+```
+
+For faster testing you can use this example:
+
+```clojure
+.....
+
+(defn fixture-browser [f]
+  (with-chrome-headless {:args ["--no-sandbox"]} driver
+    (binding [*driver* driver]
+      (f))))
+
+;; note that resources, such as cookies, are deleted manually, 
+;; so this does not guarantee that the tests are clean
+(defn fixture-clear-browser [f]
+  (delete-cookies *driver*)
+  (go *driver* "http://google.com")
+  (f))
+
+......
 ```
 
 ### Multi-Driver Fixtures
