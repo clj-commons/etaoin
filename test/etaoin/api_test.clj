@@ -42,7 +42,8 @@
 (def default-opts
   {:chrome  {:args ["--headless" "--no-sandbox"]}
    :firefox {:args ["--headless"]}
-   :safari  {:path-driver "/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"}})
+   :safari  {:path-driver "/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"}
+   :edge {:args ["--headless"]}})
 
 (def drivers
   (or (get-drivers-from-env)
@@ -333,14 +334,15 @@
 ;; monitor, the next two test will fail due to window error.
 
 (deftest test-window-position
-  (when-not-phantom *driver*
-    (let [{:keys [x y]} (get-window-position *driver*)]
-      (is (numeric? x))
-      (is (numeric? y))
-      (set-window-position *driver* (+ x 10) (+ y 10))
-      (let [{x' :x y' :y} (get-window-position *driver*)]
-        (is (not= x x'))
-        (is (not= y y'))))))
+  (when-not-drivers
+      [:phantom :edge] *driver*
+      (let [{:keys [x y]} (get-window-position *driver*)]
+        (is (numeric? x))
+        (is (numeric? y))
+        (set-window-position *driver* (+ x 10) (+ y 10))
+        (let [{x' :x y' :y} (get-window-position *driver*)]
+          (is (not= x x'))
+          (is (not= y y'))))))
 
 (deftest test-window-size
   (testing "getting size"
@@ -353,17 +355,16 @@
         (is (not= height height'))))))
 
 (deftest test-maximize
-  (when-not-drivers
-      [:chrome :firefox :phantom] *driver*
-      (let [{:keys [x y]}          (get-window-position *driver*)
-            {:keys [width height]} (get-window-size *driver*)]
-        (maximize *driver*)
-        (let [{x' :x y' :y}                   (get-window-position *driver*)
-              {width' :width height' :height} (get-window-size *driver*)]
-          (is (not= x x'))
-          (is (not= y y'))
-          (is (not= width width'))
-          (is (not= height height'))))))
+  (when-not-headless *driver*
+    (let [{:keys [x y]}          (get-window-position *driver*)
+          {:keys [width height]} (get-window-size *driver*)]
+      (maximize *driver*)
+      (let [{x' :x y' :y}                   (get-window-position *driver*)
+            {width' :width height' :height} (get-window-size *driver*)]
+        (is (not= x x'))
+        (is (not= y y'))
+        (is (not= width width'))
+        (is (not= height height'))))))
 
 (deftest test-active-element
   (testing "active element"
@@ -510,6 +511,7 @@
   (let [js-url (-> "js/inject.js" io/resource str)]
     (testing "adding a script"
       (add-script *driver* js-url)
+      (wait 1)
       (let [result (js-execute *driver* "return injected_func();")]
         (is (= result "I was injected"))))))
 
