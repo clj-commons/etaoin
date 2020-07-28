@@ -1572,7 +1572,7 @@
   dispatch-driver)
 
 (defmethods get-log-types
-  [:chrome :edge :phantom] ;;TODO only jwp edge not supported
+  [:chrome :phantom]
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -2291,6 +2291,11 @@
   [driver & body]
   `(when-predicate #(firefox? ~driver) ~@body))
 
+(defmacro when-edge
+  "Executes the body only if the driver is Edge."
+  [driver & body]
+  `(when-predicate #(edge? ~driver) ~@body))
+
 (defmacro when-safari
   "Executes the body only if the driver is Safari."
   [driver & body]
@@ -3000,6 +3005,7 @@
   (partial boot-driver :firefox))
 
 (def edge
+  "Launches Edge driver. A shortcut for `boot-driver`."
   (partial boot-driver :edge))
 
 (def chrome
@@ -3028,6 +3034,13 @@
   ([opt]
    (boot-driver :firefox (assoc opt :headless true))))
 
+(defn edge-headless
+  "Launches headless Edge driver. A shortcut for `boot-driver`."
+  ([]
+   (edge-headless {}))
+  ([opt]
+   (boot-driver :edge (assoc opt :headless true))))
+
 (defmacro with-driver
   "Performs the body within a driver session.
 
@@ -3049,7 +3062,7 @@
 
   (with-driver :firefox {} driver
     (go driver \"http://example.com\"))
-"
+  "
   [type opt bind & body]
   `(client/with-pool {}
      (let [~bind (boot-driver ~type ~opt)]
@@ -3105,4 +3118,11 @@
   `with-driver`."
   [opt bind & body]
   `(with-driver :firefox (assoc ~opt :headless true) ~bind
+     ~@body))
+
+(defmacro with-edge-headless
+  "Performs the body with headless Edge session. A shortcut for
+  `with-driver`."
+  [opt bind & body]
+  `(with-driver :edge (assoc ~opt :headless true) ~bind
      ~@body))

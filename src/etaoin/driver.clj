@@ -28,6 +28,9 @@
   Safari endpoints
   https://developer.apple.com/library/content/documentation/NetworkingInternetWeb/Conceptual/WebDriverEndpointDoc/Commands/Commands.html
 
+  Edge capabilities and endpoints
+  https://docs.microsoft.com/en-us/microsoft-edge/webdriver
+
   JSON Wire protocol (obsolete)
   https://github.com/SeleniumHQ/selenium/wiki/JsonWireProtocol
 
@@ -120,7 +123,12 @@
 (defmethod options-name
   :safari
   [driver]
-  :safariOptions) ;; todo check
+  :safariOptions)
+
+(defmethod options-name
+  :edge
+  [driver]
+  :edgeOptions)
 
 (defmethod options-name
   :opera
@@ -232,7 +240,7 @@
   driver)
 
 (defmethods set-headless
-  [:chrome :firefox]
+  [:edge :chrome :firefox]
   [driver]
   (-> driver
       (assoc :headless true)
