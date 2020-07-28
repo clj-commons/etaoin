@@ -40,6 +40,7 @@ after a mysteries note was produced on it.
   * [Screening elements](#screening-elements)
 - [Using headless drivers](#using-headless-drivers)
 - [Connection to remote webdriver](#connection-to-remote-webdriver)
+- [Webdriver in Docker](#webdriver-in-docker)
 - [Devtools: tracking HTTP requests, XHR (Ajax)](#devtools-tracking-http-requests-xhr-ajax)
 - [Postmortem: auto-save artifacts in case of exception](#postmortem-auto-save-artifacts-in-case-of-exception)
 - [Reading browser's logs](#reading-browsers-logs)
@@ -619,10 +620,10 @@ Example:
 
 ```clojure
 ;; Chrome
-(def driver (create-driver :chrome {:host "127.0.0.1" :port 9515})) ;; localhost and 9515 port is default setting, use own
+(def driver (create-driver :chrome {:host "127.0.0.1" :port 9515})) ;; 127.0.0.1 is default host, use own
 
 ;; Firefox
-(def driver (create-driver :firefox {:host "127.0.0.1" :port 4444})) ;; localhost and 4444 port is default setting, use own
+(def driver (create-driver :firefox {:host "127.0.0.1" :port 4444}))
 ```
 
 Then pass the `capabilities` to the browser with `chromeOptions` or `:moz:firefoxOptions` for Chrome or Firefox respectively:
@@ -637,6 +638,22 @@ Then pass the `capabilities` to the browser with `chromeOptions` or `:moz:firefo
 (connect-driver driver
   {:capabilities
    {:moz:firefoxOptions {:args ["--headless"]}}})
+```
+
+## Webdriver in Docker
+
+To work with the driver in Docker, you can take ready-made images and explore the section [Connection to remote webdriver](#connection-to-remote-webdriver)
+
+Example for [Chrome](https://hub.docker.com/r/robcherry/docker-chromedriver/):
+
+```
+docker run --name chromedriver -p 9515:4444 -d -e CHROMEDRIVER_WHITELISTED_IPS='' robcherry/docker-chromedriver:latest
+```
+
+for [Firefox](https://hub.docker.com/r/instrumentisto/geckodriver):
+
+```
+docker run --name geckodriver -p 4444:4444 -d instrumentisto/geckodriver
 ```
 
 ## Devtools: tracking HTTP requests, XHR (Ajax)
