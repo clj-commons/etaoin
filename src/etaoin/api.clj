@@ -2811,6 +2811,14 @@
     driver))
 
 
+(defn proxy-env
+  [proxy]
+  (let [http (System/getenv "HTTP_PROXY")
+        ssl  (System/getenv "HTTPS_PROXY")]
+    (cond-> proxy
+      http (assoc :http http)
+      ssl  (assoc :ssl ssl))))
+
 (defn run-driver
   "Runs a driver process locally.
 
@@ -2896,12 +2904,7 @@
         [with height]       size
         log-level           (or log-level :all)
         path-driver         (or path-driver (get-in defaults [type :path]))
-        proxy               (or proxy
-                                (let [http (System/getenv "HTTP_PROXY")
-                                      ssl  (System/getenv "HTTPS_PROXY")]
-                                  (cond-> nil
-                                    http (assoc :http http)
-                                    ssl  (assoc :ssl ssl))))
+        proxy               (proxy-env proxy)
 
         _ (swap! driver drv/set-browser-log-level log-level)
         _ (swap! driver drv/set-path path-driver)

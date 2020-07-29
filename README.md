@@ -659,20 +659,22 @@ docker run --name geckodriver -p 4444:4444 -d instrumentisto/geckodriver
 
 ## HTTP Proxy
 
-To set proxy settings use environment variables `HTTP_PROXY`/`"HTTPS_PROXY"` or pass a map of the following type:
+To set proxy settings use environment variables `HTTP_PROXY`/`HTTPS_PROXY` or pass a map of the following type:
 
 ``` clojure
 {:proxy {:http "some.proxy.com:8080"
-         :pac-url "localhost:8888" ;; explore this for using proxy in safari
          :ftp "some.proxy.com:8080"
          :ssl "some.proxy.com:8080"
-         :socks {:host "myproxy:8080" :version 5}
-         :bypass ["http://this.url" "http://that.url"]}}
+         :socks {:host "myproxy:1080" :version 5}
+         :bypass ["http://this.url" "http://that.url"]
+         :pac-url "localhost:8888"}}
 
 ;; example
 (chrome {:proxy {:http "some.proxy.com:8080"
                  :ssl "some.proxy.com:8080"}})
 ```
+Note: A :pac-url for a [proxy autoconfiguration file](https://en.wikipedia.org/wiki/Proxy_auto-config#The_PAC_File). 
+Used with Safari as the other proxy options do not work in that browser.
 
 To fine tune the proxy you can use the original [object](https://www.w3.org/TR/webdriver/#proxy) and pass it to capabilities:
 
@@ -682,7 +684,7 @@ To fine tune the proxy you can use the original [object](https://www.w3.org/TR/w
                         :ftpProxy "some.proxy.com:8080"
                         :httpProxy "some.proxy.com:8080"
                         :noProxy ["http://this.url" "http://that.url"]
-                        :sslProxy "some.proxy.com:8080"
+                        :sslProxy "some.proxy.com:1080"
                         :socksProxy "some.proxy.com:8080"
                         :socksVersion 5}}}
 
