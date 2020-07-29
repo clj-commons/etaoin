@@ -684,8 +684,8 @@ To fine tune the proxy you can use the original [object](https://www.w3.org/TR/w
                         :ftpProxy "some.proxy.com:8080"
                         :httpProxy "some.proxy.com:8080"
                         :noProxy ["http://this.url" "http://that.url"]
-                        :sslProxy "some.proxy.com:1080"
-                        :socksProxy "some.proxy.com:8080"
+                        :sslProxy "some.proxy.com:8080"
+                        :socksProxy "some.proxy.com:1080"
                         :socksVersion 5}}}
 
 (chrome {:capabilities {:proxy {...}}})
