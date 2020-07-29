@@ -41,6 +41,7 @@ after a mysteries note was produced on it.
 - [Using headless drivers](#using-headless-drivers)
 - [Connection to remote webdriver](#connection-to-remote-webdriver)
 - [Webdriver in Docker](#webdriver-in-docker)
+- [HTTP Proxy](#http-proxy)
 - [Devtools: tracking HTTP requests, XHR (Ajax)](#devtools-tracking-http-requests-xhr-ajax)
 - [Postmortem: auto-save artifacts in case of exception](#postmortem-auto-save-artifacts-in-case-of-exception)
 - [Reading browser's logs](#reading-browsers-logs)
@@ -654,6 +655,38 @@ for [Firefox](https://hub.docker.com/r/instrumentisto/geckodriver):
 
 ```
 docker run --name geckodriver -p 4444:4444 -d instrumentisto/geckodriver
+```
+
+## HTTP Proxy
+
+To set proxy settings use environment variables `HTTP_PROXY`/`"HTTPS_PROXY"` or pass a map of the following type:
+
+``` clojure
+{:proxy {:http "some.proxy.com:8080"
+         :pac-url "localhost:8888" ;; explore this for using proxy in safari
+         :ftp "some.proxy.com:8080"
+         :ssl "some.proxy.com:8080"
+         :socks {:host "myproxy:8080" :version 5}
+         :bypass ["http://this.url" "http://that.url"]}}
+
+;; example
+(chrome {:proxy {:http "some.proxy.com:8080"
+                 :ssl "some.proxy.com:8080"}})
+```
+
+To fine tune the proxy you can use the original [object](https://www.w3.org/TR/webdriver/#proxy) and pass it to capabilities:
+
+``` clojure
+{:capabilities {:proxy {:proxyType "manual"
+                        :proxyAutoconfigUrl "some.proxy.com:8080"
+                        :ftpProxy "some.proxy.com:8080"
+                        :httpProxy "some.proxy.com:8080"
+                        :noProxy ["http://this.url" "http://that.url"]
+                        :sslProxy "some.proxy.com:8080"
+                        :socksProxy "some.proxy.com:8080"
+                        :socksVersion 5}}}
+
+(chrome {:capabilities {:proxy {...}}})
 ```
 
 ## Devtools: tracking HTTP requests, XHR (Ajax)
