@@ -2410,7 +2410,7 @@
                 pause-max    0.2}} opt
 
         rand-char (fn [] (-> 26 rand-int (+ 97) char))
-        wait-key  (fn [] (wait (max (rand) pause-max)))]
+        wait-key  (fn [] (wait (min (rand) pause-max)))]
     (doseq [key text]
       (when (< (rand) mistake-prob)
         (fill-el driver el (rand-char))
