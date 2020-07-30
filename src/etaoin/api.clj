@@ -2405,20 +2405,20 @@
 (defn fill-human-el
   ;; todo opt params
   [driver el text opt]
-  (let [{:keys [mistake-prob pause-max rand-char-fn wait-key-fn]
+  (let [{:keys [mistake-prob pause-max]
          :or   {mistake-prob 0.1
-                pause-max    0.2
-                rand-char-fn #(-> 26 rand-int (+ 97) char)
-                wait-key-fn  #(let [r (rand)]
-                                (wait (if (> r %) % r)))}} opt]
+                pause-max    0.2}} opt
+
+        rand-char (fn [] (-> 26 rand-int (+ 97) char))
+        wait-key  (fn [] (wait (max (rand) pause-max)))]
     (doseq [key text]
       (when (< (rand) mistake-prob)
-        (fill-el driver el (rand-char-fn))
-        (wait-key-fn pause-max)
+        (fill-el driver el (rand-char))
+        (wait-key)
         (fill-el driver el keys/backspace)
-        (wait-key-fn pause-max))
+        (wait-key))
       (fill-el driver el key)
-      (wait-key-fn pause-max))))
+      (wait-key))))
 
 (defn fill-human
   "Fills text like humans do: with error, corrections and pauses.
