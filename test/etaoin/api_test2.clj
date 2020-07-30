@@ -22,3 +22,10 @@
                               :args-driver ["--marionette-port" 2821]}))
              (is (= @args
                     ["geckodriver" "--port" 1234 "--marionette-port" 2821])))))))
+
+
+(deftest test-fail-run-driver
+  (is (thrown-with-msg?
+        clojure.lang.ExceptionInfo
+        #"wrong-driver-path"
+        (chrome {:path-driver "wrong-driver-path"}))))
