@@ -2404,20 +2404,21 @@
 
 (defn fill-human-el
   ;; todo opt params
-  [driver el text]
-  (let [mistake-prob 0.1
-        pause-max    0.2
-        rand-char    #(-> 26 rand-int (+ 97) char)
-        wait-key     #(let [r (rand)]
-                        (wait (if (> r pause-max) pause-max r)))]
+  [driver el text opt]
+  (let [{:keys [mistake-prob pause-max rand-char-fn wait-key-fn]
+         :or   {mistake-prob 0.1
+                pause-max    0.2
+                rand-char-fn #(-> 26 rand-int (+ 97) char)
+                wait-key-fn  #(let [r (rand)]
+                                (wait (if (> r %) % r)))}} opt]
     (doseq [key text]
       (when (< (rand) mistake-prob)
-        (fill-el driver el (rand-char))
-        (wait-key)
+        (fill-el driver el (rand-char-fn))
+        (wait-key-fn pause-max)
         (fill-el driver el keys/backspace)
-        (wait-key))
+        (wait-key-fn pause-max))
       (fill-el driver el key)
-      (wait-key))))
+      (wait-key-fn pause-max))))
 
 (defn fill-human
   "Fills text like humans do: with error, corrections and pauses.
@@ -2429,8 +2430,9 @@
   - `q`: a query term, see `query` function for more info,
 
   - `text`: a string to input."
-  [driver q text]
-  (fill-human-el driver (query driver q) text))
+  ([driver q text]  (fill-human driver q text {}))
+  ([driver q text opt]
+   (fill-human-el driver (query driver q) text opt)))
 
 (defn select
   "Select element in select-box by visible text on click.
