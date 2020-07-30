@@ -2811,6 +2811,14 @@
     driver))
 
 
+(defn proxy-env
+  [proxy]
+  (let [http (System/getenv "HTTP_PROXY")
+        ssl  (System/getenv "HTTPS_PROXY")]
+    (cond-> proxy
+      http (assoc :http http)
+      ssl  (assoc :ssl ssl))))
+
 (defn run-driver
   "Runs a driver process locally.
 
@@ -2853,6 +2861,17 @@
   rather than local machine. Currently, only FF and Chrome support headless mode.
   Phantom.js is headless by its nature.
 
+  -- `proxy` is a map of proxy server connection settings.
+
+  --- `http` is a string. Defines the proxy host for HTTP traffic.
+  --- `ssl` is a string. Defines the proxy host for encrypted TLS traffic.
+  --- `ftp` is a string. Defines the proxy host for FTP traffic.
+  --- `pac-url` is a string. Defines the URL for a proxy auto-config file.
+  --- `bypass` is a vector. Lists the address for which the proxy should be bypassed.
+  --- `socks` is a map.
+  ---- `host` is a string. Defines the proxy host for a SOCKS proxy.
+  ---- `version` Any integer between 0 and 255 inclusive. Defines the SOCKS proxy version.
+
   -- `:args` is a vector of additional command line arguments
   to the browser's process.
 
@@ -2871,6 +2890,7 @@
                      args
                      size
                      prefs
+                     proxy
                      profile
                      headless
                      log-level
@@ -2884,6 +2904,7 @@
         [with height]       size
         log-level           (or log-level :all)
         path-driver         (or path-driver (get-in defaults [type :path]))
+        proxy               (proxy-env proxy)
 
         _ (swap! driver drv/set-browser-log-level log-level)
         _ (swap! driver drv/set-path path-driver)
@@ -2905,6 +2926,8 @@
             (swap! driver drv/set-headless))
         _ (when args
             (swap! driver drv/set-options-args args))
+        _ (when proxy
+            (swap! driver drv/set-proxy proxy))
         _ (when profile
             (swap! driver drv/set-profile profile))
         _ (when path-browser

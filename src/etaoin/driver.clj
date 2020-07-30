@@ -263,6 +263,30 @@
   true)
 
 ;;
+;; HTTP proxy
+;;
+
+(defn proxy->w3c
+  [proxy]
+  (let [{:keys [http ssl ftp socks pac-url bypass]} proxy]
+    (cond-> nil
+      (or ssl http
+          ftp socks) (assoc :proxyType "manual")
+      pac-url        (assoc :proxyType "pac"
+                            :proxyAutoconfigUrl pac-url)
+      http           (assoc :httpProxy http)
+      ssl            (assoc :sslProxy ssl)
+      ftp            (assoc :ftpProxy ftp)
+      socks          (assoc :socksProxy (:host socks)
+                            :socksVersion (or (:version socks) 5))
+      bypass         (assoc :noProxy bypass))))
+
+(defn set-proxy
+  [driver proxy]
+  (let [proxy-w3c (proxy->w3c proxy)]
+    (set-capabilities driver {:proxy proxy-w3c})))
+
+;;
 ;; Custom preferences
 ;;
 
