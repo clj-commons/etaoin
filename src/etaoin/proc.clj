@@ -10,10 +10,19 @@
        (into-array String)))
 
 (defn run [args]
-  (let [pb (java.lang.ProcessBuilder. (java-params args))]
+  (let [binary      (first args)
+        readme-link "https://github.com/igrishaev/etaoin#installing-the-browser-drivers"
+        pb          (java.lang.ProcessBuilder. (java-params args))]
     (.redirectOutput pb (java.io.File/createTempFile "driver.out" ".log"))
     (.redirectError pb (java.io.File/createTempFile "driver.err" ".log"))
-    (.start pb)))
+    (try
+      (.start pb)
+      (catch java.io.IOException e
+        (throw (ex-info
+                 (format "Cannot find a binary file `%s` for the driver.
+Please ensure you have the driver installed and specify the path to it.
+For driver installation, check out the official readme file from Etaoin: %s" binary readme-link)
+                 {:args args} e))))))
 
 ;; todo store those streams
 
