@@ -2403,7 +2403,6 @@
                    :arg     q-text})))
 
 (defn fill-human-el
-  ;; todo opt params
   [driver el text opt]
   (let [{:keys [mistake-prob pause-max]
          :or   {mistake-prob 0.1
