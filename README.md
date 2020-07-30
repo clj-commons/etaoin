@@ -34,6 +34,7 @@ after a mysteries note was produced on it.
   * [Advanced queries](#advanced-queries)
     + [Querying the *nth* element matched](#querying-the-nth-element-matched)
   * [Interacting with queried elements](#interacting-with-queried-elements)
+- [Emulation of human input](#emulation-of-human-input)
 - [Mouse clicks](#mouse-clicks)
 - [File uploading](#file-uploading)
 - [Screenshots](#screenshots)
@@ -444,6 +445,28 @@ at any time:
 (fill-el driver (first elements) "This is a test")
 (fill-el driver (rand-nth elements) "I like tests!")
 ```
+
+
+## Emulation of human input
+
+For the purpose of emulating human input, you can use the `fill-human` function.
+The following options are enabled by default:
+
+``` clojure
+{:mistake-prob 0.1 ;; a real number from 0.1 to 0.9, the smaller the number, the more typos will be made
+ :pause-max    0.2} ;; max typing delay in seconds
+```
+
+and you can redefine them:
+
+``` clojure
+(fill-human driver q text {:mistake-prob 0.5
+                           :pause-max 1})
+
+;; or just use default opts by omitting them
+(fill-human driver q text)
+```
+
 
 ## Mouse clicks
 
