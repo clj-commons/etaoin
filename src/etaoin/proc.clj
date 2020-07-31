@@ -4,16 +4,19 @@
   (:import  java.lang.IllegalThreadStateException
             java.io.IOException))
 
+(def windows? (str/starts-with?  (System/getProperty "os.name") "Windows"))
+
 (defn get-null-file ^java.io.File
   []
-  (if-let [windows? (str/starts-with?  (System/getProperty "os.name") "Windows")]
+  (if windows?
     (io/file "NUL")
     (io/file "/dev/null")))
 
-(defn get-log-file
+(defn get-log-file ^java.io.File
   [file-path]
-  (if file-path (io/file file-path)
-      (get-null-file)))
+  (if file-path
+    (io/file file-path)
+    (get-null-file)))
 
 (defn java-params ^"[Ljava.lang.String;" [params]
   (->> params
