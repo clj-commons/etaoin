@@ -4,7 +4,7 @@
   (:import  java.lang.IllegalThreadStateException
             java.io.IOException))
 
-(def windows? (str/starts-with?  (System/getProperty "os.name") "Windows"))
+(def windows? (str/starts-with? (System/getProperty "os.name") "Windows"))
 
 (defn get-null-file ^java.io.File
   []
