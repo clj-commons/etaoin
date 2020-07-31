@@ -1,28 +1,44 @@
 (ns etaoin.proc
-  (:require [clojure.java.io :as io])
-  (:import java.lang.Runtime
-           java.lang.IllegalThreadStateException
-           java.io.IOException))
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str])
+  (:import  java.lang.IllegalThreadStateException
+            java.io.IOException))
+
+(def windows? (str/starts-with? (System/getProperty "os.name") "Windows"))
+
+(defn get-null-file ^java.io.File
+  []
+  (if windows?
+    (io/file "NUL")
+    (io/file "/dev/null")))
+
+(defn get-log-file ^java.io.File
+  [file-path]
+  (if file-path
+    (io/file file-path)
+    (get-null-file)))
 
 (defn java-params ^"[Ljava.lang.String;" [params]
   (->> params
        (map str)
        (into-array String)))
 
-(defn run [args]
-  (let [binary      (first args)
-        readme-link "https://github.com/igrishaev/etaoin#installing-the-browser-drivers"
-        pb          (java.lang.ProcessBuilder. (java-params args))]
-    (.redirectOutput pb (java.io.File/createTempFile "driver.out" ".log"))
-    (.redirectError pb (java.io.File/createTempFile "driver.err" ".log"))
-    (try
-      (.start pb)
-      (catch java.io.IOException e
-        (throw (ex-info
-                 (format "Cannot find a binary file `%s` for the driver.
+(defn run
+  ([args] (run args {}))
+  ([args {:keys [log-stdout log-stderr]}]
+   (let [binary      (first args)
+         readme-link "https://github.com/igrishaev/etaoin#installing-the-browser-drivers"
+         pb          (java.lang.ProcessBuilder. (java-params args))]
+     (.redirectOutput pb (get-log-file log-stdout))
+     (.redirectError pb  (get-log-file log-stderr))
+     (try
+       (.start pb)
+       (catch java.io.IOException e
+         (throw (ex-info
+                  (format "Cannot find a binary file `%s` for the driver.
 Please ensure you have the driver installed and specify the path to it.
 For driver installation, check out the official readme file from Etaoin: %s" binary readme-link)
-                 {:args args} e))))))
+                  {:args args} e)))))))
 
 ;; todo store those streams
 

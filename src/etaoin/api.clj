@@ -2895,6 +2895,8 @@
                      profile
                      headless
                      log-level
+                     log-stdout
+                     log-stderr
                      args-driver
                      path-driver
                      download-dir
@@ -2939,7 +2941,8 @@
 
         proc-args (drv/get-args @driver)
         _         (log/debugf "Starting process: %s" (str/join \space proc-args))
-        process   (proc/run proc-args)]
+        process   (proc/run proc-args {:log-stdout  log-stdout
+                                       :log-sttderr log-stderr})]
     (swap! driver assoc
            :env env ;; todo process env
            :process process)

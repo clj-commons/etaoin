@@ -986,6 +986,11 @@ skipped or have nil values. Some of them, if not passed, are taken from the
  ;; :err (aliases :error, :severe, :crit, :critical), :all. When not passed,
  ;; :all is set.
  :log-level :err ;; to show only errors but not debug
+ 
+ ;; Paths to the driver's log files as strings.
+ ;; When not set, the output goes to /dev/null (or NUL on Windows)
+ :log-stdout
+ :log-stderr
 
  ;; Path to a custorm browser profile. See the section below.
  :profile "/Users/ivan/Library/Application Support/Firefox/Profiles/iy4iitbg.Test"
