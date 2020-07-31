@@ -5,7 +5,7 @@
 
 (deftest test-firefox-driver-args
   (let [args (atom [])]
-    (with-redefs-fn {#'etaoin.proc/run #(reset! args %)}
+    (with-redefs-fn {#'etaoin.proc/run (fn [a _] (reset! args a))}
       #(do (testing "No custom args"
              (-> (create-driver :firefox {:port 1234})
                  (run-driver {}))
