@@ -2894,6 +2894,7 @@
                      proxy
                      profile
                      headless
+                     log-files
                      log-level
                      args-driver
                      path-driver
@@ -2939,7 +2940,7 @@
 
         proc-args (drv/get-args @driver)
         _         (log/debugf "Starting process: %s" (str/join \space proc-args))
-        process   (proc/run proc-args)]
+        process   (proc/run proc-args log-files)]
     (swap! driver assoc
            :env env ;; todo process env
            :process process)
