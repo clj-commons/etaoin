@@ -25,10 +25,13 @@
 
 (defn run
   ([args] (run args {}))
-  ([args {:keys [log-stdout log-stderr]}]
+  ([args {:keys [log-stdout log-stderr env]}]
    (let [binary      (first args)
          readme-link "https://github.com/igrishaev/etaoin#installing-the-browser-drivers"
-         pb          (java.lang.ProcessBuilder. (java-params args))]
+         pb          (java.lang.ProcessBuilder. (java-params args))
+         _           (doto (.environment pb)
+                       (.clear)
+                       (.putAll env))]
      (.redirectOutput pb (get-log-file log-stdout))
      (.redirectError pb  (get-log-file log-stderr))
      (try
