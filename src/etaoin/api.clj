@@ -2820,6 +2820,7 @@
       http (assoc :http http)
       ssl  (assoc :ssl ssl))))
 
+
 (defn run-driver
   "Runs a driver process locally.
 
@@ -2941,10 +2942,11 @@
 
         proc-args (drv/get-args @driver)
         _         (log/debugf "Starting process: %s" (str/join \space proc-args))
-        process   (proc/run proc-args {:log-stdout  log-stdout
-                                       :log-sttderr log-stderr})]
+        process   (proc/run proc-args {:log-stdout log-stdout
+                                       :log-stderr log-stderr
+                                       :env        env})]
     (swap! driver assoc
-           :env env ;; todo process env
+           :env env
            :process process)
     driver))
 
