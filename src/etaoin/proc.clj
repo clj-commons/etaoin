@@ -29,10 +29,10 @@
    (let [binary      (first args)
          readme-link "https://github.com/igrishaev/etaoin#installing-the-browser-drivers"
          pb          (java.lang.ProcessBuilder. (java-params args))
-         pb-env      (.environment pb)
-         _           (when env
-                       (doseq [[k v] env]
-                         (.put pb-env (name k) (str v))))]
+         pb-env      (.environment pb)]
+     (when env
+       (doseq [[k v] env]
+         (.put pb-env (name k) (str v))))
      (.redirectOutput pb (get-log-file log-stdout))
      (.redirectError pb  (get-log-file log-stderr))
      (try
