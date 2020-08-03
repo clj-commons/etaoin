@@ -2942,9 +2942,9 @@
 
         proc-args (drv/get-args @driver)
         _         (log/debugf "Starting process: %s" (str/join \space proc-args))
-        process   (proc/run proc-args {:log-stdout  log-stdout
-                                       :log-sttderr log-stderr
-                                       :env         env})]
+        process   (proc/run proc-args {:log-stdout log-stdout
+                                       :log-stderr log-stderr
+                                       :env        env})]
     (swap! driver assoc
            :env env
            :process process)
