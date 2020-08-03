@@ -2820,11 +2820,6 @@
       http (assoc :http http)
       ssl  (assoc :ssl ssl))))
 
-(defn get-env
-  [env]
-  (let [sys-env (into {} (System/getenv))
-        env     (reduce-kv (fn [acc k v] (assoc acc (name k) (str v))) sys-env env)]
-    env))
 
 (defn run-driver
   "Runs a driver process locally.
@@ -2914,7 +2909,6 @@
         log-level           (or log-level :all)
         path-driver         (or path-driver (get-in defaults [type :path]))
         proxy               (proxy-env proxy)
-        env                 (get-env env)
 
         _ (swap! driver drv/set-browser-log-level log-level)
         _ (swap! driver drv/set-path path-driver)
@@ -2952,7 +2946,7 @@
                                        :log-sttderr log-stderr
                                        :env         env})]
     (swap! driver assoc
-           :env env ;; todo process env
+           :env env
            :process process)
     driver))
 

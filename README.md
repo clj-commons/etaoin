@@ -995,7 +995,7 @@ skipped or have nil values. Some of them, if not passed, are taken from the
  ;; Path to a custorm browser profile. See the section below.
  :profile "/Users/ivan/Library/Application Support/Firefox/Profiles/iy4iitbg.Test"
 
- ;; Env variables sent to the driver's process. Not processed yet.
+ ;; Env variables sent to the driver's process.
  :env {:MOZ_CRASHREPORTER_URL "http://test.com"}
 
  ;; Initial window size.

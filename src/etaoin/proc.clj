@@ -23,15 +23,22 @@
        (map str)
        (into-array String)))
 
+(defn get-env
+  [env]
+  (let [sys-env (into {} (System/getenv))
+        env     (reduce-kv (fn [acc k v] (assoc acc (name k) (str v))) sys-env env)]
+    env))
+
 (defn run
   ([args] (run args {}))
   ([args {:keys [log-stdout log-stderr env]}]
    (let [binary      (first args)
          readme-link "https://github.com/igrishaev/etaoin#installing-the-browser-drivers"
          pb          (java.lang.ProcessBuilder. (java-params args))
-         _           (doto (.environment pb)
-                       (.clear)
-                       (.putAll env))]
+         _           (when env
+                       (doto (.environment pb)
+                         (.clear)
+                         (.putAll (get-env env))))]
      (.redirectOutput pb (get-log-file log-stdout))
      (.redirectError pb  (get-log-file log-stderr))
      (try
