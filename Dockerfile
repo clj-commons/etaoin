@@ -32,10 +32,9 @@ RUN FIREFOX_URI="https://download.mozilla.org/?product=firefox-latest&os=linux64
     ln -s /usr/local/firefox/firefox /usr/local/bin/firefox
 
 # Install Geckodriver
-RUN GECKODRIVER_URL=https://github.com/mozilla/geckodriver/releases/download && \
-    VERSION=$(curl -sL https://api.github.com/repos/mozilla/geckodriver/releases/latest | \
-    grep tag_name | cut -d '"' -f 4) && \
-    curl -sL "$GECKODRIVER_URL/$VERSION/geckodriver-$VERSION-linux64.tar.gz" | \
+ENV GECKODRIVER_VERSION="v0.27.0"
+ENV GECKODRIVER_URL="https://github.com/mozilla/geckodriver/releases/download"
+RUN curl -sL "$GECKODRIVER_URL/$GECKODRIVER_VERSION/geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz" | \
     tar -xz -C /usr/local/bin
 
 WORKDIR /etaoin
