@@ -43,7 +43,7 @@
   {:chrome  {:args ["--headless" "--no-sandbox"]}
    :firefox {:args ["--headless"]}
    :safari  {:path-driver "/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"}
-   :edge {:args ["--headless"]}})
+   :edge    {:args ["--headless"]}})
 
 (def drivers
   (or (get-drivers-from-env)
@@ -222,7 +222,7 @@
     (let [result (get-element-csss
                    *driver*
                    {:id :div-css-simple}
-                    :display :background-color "width" "height")
+                   :display :background-color "width" "height")
           [display background-color width height] result]
       (is (= display "block"))
       (is (or (= background-color "rgb(204, 204, 204)")
@@ -233,7 +233,7 @@
     (let [result (get-element-csss
                    *driver*
                    {:id :div-css-styled}
-                    :display :width :height)
+                   :display :width :height)
           [display width height] result]
       (is (= display "block"))
       (is (= width "333px"))
@@ -353,6 +353,15 @@
       (let [{width' :width height' :height} (get-window-size *driver*)]
         (is (not= width width'))
         (is (not= height height'))))))
+
+(deftest test-switch-window
+  (let [prev-handles  (get-window-handles *driver*)
+        _             (js-execute *driver* "window.open(\"\")")
+        new-handles   (get-window-handles *driver*)
+        new-handle    (first (clojure.set/difference (set new-handles) (set prev-handles)))
+        _             (switch-window *driver* new-handle)
+        target-handle (get-window-handle *driver*)]
+    (is (= new-handle target-handle))))
 
 (deftest test-maximize
   (when-not-headless *driver*
