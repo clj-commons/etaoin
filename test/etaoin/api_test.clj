@@ -388,7 +388,8 @@
 
 (deftest test-cookies
   (testing "getting all cookies"
-    (let [cookies (get-cookies *driver*)]
+    (let [cookies    (get-cookies *driver*)
+          cookies-ff (map #(dissoc % :sameSite) cookies)]
       (when-safari *driver*
         (is (= cookies
                [{:domain   ".^filecookies^"
@@ -406,18 +407,18 @@
       (when-chrome *driver*
         (is (= cookies [])))
       (when-firefox *driver*
-        (is (= cookies [{:name     "cookie1",
-                         :value    "test1",
-                         :path     "/",
-                         :domain   "",
-                         :secure   false,
-                         :httpOnly false}
-                        {:name     "cookie2",
-                         :value    "test2",
-                         :path     "/",
-                         :domain   "",
-                         :secure   false,
-                         :httpOnly false}])))
+        (is (= cookies-ff [{:name     "cookie1",
+                            :value    "test1",
+                            :path     "/",
+                            :domain   "",
+                            :secure   false,
+                            :httpOnly false}
+                           {:name     "cookie2",
+                            :value    "test2",
+                            :path     "/",
+                            :domain   "",
+                            :secure   false,
+                            :httpOnly false}])))
       (when-phantom *driver*
         (is (= cookies [{:domain   "",
                          :httponly false,
@@ -432,7 +433,8 @@
                          :secure   false,
                          :value    "test1"}])))))
   (testing "getting a cookie"
-    (let [cookie (get-cookie *driver* :cookie2)]
+    (let [cookie    (get-cookie *driver* :cookie2)
+          cookie-ff (dissoc cookie :sameSite)]
       (when-safari *driver*
         (is (= cookie
                {:domain   ".^filecookies^"
@@ -444,7 +446,7 @@
       (when-chrome *driver*
         (is (nil? cookie)))
       (when-firefox *driver*
-        (is (= cookie
+        (is (= cookie-ff
                {:name     "cookie2"
                 :value    "test2"
                 :path     "/"
