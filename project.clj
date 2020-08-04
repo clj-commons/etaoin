@@ -9,8 +9,8 @@
 
   :deploy-repositories {"releases" {:url "https://repo.clojars.org" :creds :gpg}}
 
-  :release-tasks [
-
+  :release-tasks [["vcs" "assert-committed"]
+                  ["shell" "make" "docker-test"]
                   ["change" "version" "leiningen.release/bump-version" "release"]
                   ["vcs" "commit"]
                   ["vcs" "tag" "--no-sign"]

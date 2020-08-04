@@ -117,7 +117,7 @@ There are two steps to installation:
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.3.7"]
+[etaoin "0.3.8"]
 ```
 
 Works with Clojure 1.7 and above.
@@ -696,7 +696,7 @@ To set proxy settings use environment variables `HTTP_PROXY`/`HTTPS_PROXY` or pa
 (chrome {:proxy {:http "some.proxy.com:8080"
                  :ssl "some.proxy.com:8080"}})
 ```
-Note: A :pac-url for a [proxy autoconfiguration file](https://en.wikipedia.org/wiki/Proxy_auto-config#The_PAC_File). 
+Note: A :pac-url for a [proxy autoconfiguration file](https://en.wikipedia.org/wiki/Proxy_auto-config#The_PAC_File).
 Used with Safari as the other proxy options do not work in that browser.
 
 To fine tune the proxy you can use the original [object](https://www.w3.org/TR/webdriver/#proxy) and pass it to capabilities:
@@ -986,7 +986,7 @@ skipped or have nil values. Some of them, if not passed, are taken from the
  ;; :err (aliases :error, :severe, :crit, :critical), :all. When not passed,
  ;; :all is set.
  :log-level :err ;; to show only errors but not debug
- 
+
  ;; Paths to the driver's log files as strings.
  ;; When not set, the output goes to /dev/null (or NUL on Windows)
  :log-stdout
@@ -1489,7 +1489,7 @@ For faster testing you can use this example:
     (binding [*driver* driver]
       (f))))
 
-;; note that resources, such as cookies, are deleted manually, 
+;; note that resources, such as cookies, are deleted manually,
 ;; so this does not guarantee that the tests are clean
 (defn fixture-clear-browser [f]
   (delete-cookies *driver*)
