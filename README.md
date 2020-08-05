@@ -912,7 +912,8 @@ The handler takes a map of options with the following keys. All of them might be
 absent.
 
 ```clojure
-{;; default directory where to store artifacts; pwd is used when not passed
+{;; default directory where to store artifacts
+ ;; might not exist, will be created otherwise. pwd is used when not passed
  :dir "/home/ivan/UI-tests"
 
  ;; a directory where to store screenshots; :dir is used when not passed

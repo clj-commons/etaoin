@@ -2791,7 +2791,8 @@
   - `opt`: a map of options, where:
 
   -- `:dir` path to a directory where to store artifacts by default.
-  When not passed, the current working directory (`pwd`) is used.
+  Might not exist, will be created otherwise. When not passed,
+  the current working directory (`pwd`) is used.
 
   -- `:dir-img`: path to a directory where to store `.png`
   files (screenshots). If `nil`, `:dir` value is used.
