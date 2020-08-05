@@ -2760,6 +2760,10 @@
         path-src (join-path dir-src file-src)
         path-log (join-path dir-log file-log)]
 
+    (clojure.java.io/make-parents path-img)
+    (clojure.java.io/make-parents path-src)
+    (clojure.java.io/make-parents path-log)
+
     (log/debugf "Writing screenshot: %s" path-img)
     (screenshot driver path-img)
 
