@@ -481,7 +481,7 @@
 ;; Finding element(s)
 ;;
 
-(defmulti find-element* dispatch-driver)
+(defmulti ^:private find-element* dispatch-driver)
 
 (defmethod find-element* :firefox
   [driver locator term]
@@ -511,7 +511,7 @@
                 :data   {:using locator :value term}})
       :value :ELEMENT))
 
-(defmulti find-elements* dispatch-driver)
+(defmulti ^:private find-elements* dispatch-driver)
 
 (defmethod find-elements* :default
   [driver locator term]
@@ -522,7 +522,7 @@
        :value
        (mapv (comp second first))))
 
-(defmulti find-element-from* dispatch-driver)
+(defmulti ^:private find-element-from* dispatch-driver)
 
 (defmethod find-element-from* :firefox
   [driver el locator term]
@@ -556,7 +556,7 @@
       :value
       :ELEMENT))
 
-(defmulti find-elements-from* dispatch-driver)
+(defmulti ^:private find-elements-from* dispatch-driver)
 
 (defmethod find-elements-from* :default
   [driver el locator term]
@@ -1561,7 +1561,7 @@
 ;; iframes
 ;;
 
-(defn switch-frame*
+(defn- switch-frame*
   "Switches to an (i)frame by its index or an element reference."
   [driver id]
   (execute {:driver driver
@@ -1626,7 +1626,7 @@
       (update :source keyword)
       (assoc :datetime (java.util.Date. ^long (:timestamp entry)))))
 
-(defmulti get-logs*
+(defmulti ^:private get-logs*
   "Returns Javascript log entries. Each log entry is a map
   with the following structure:
 
@@ -1650,7 +1650,7 @@
   - JS console logs have nil for `:source` field.
   - Entries about errors will have WARNING level, as coded here:
       https://github.com/detro/ghostdriver/blob/be7ffd9d47c1e76c7bfa1d47cdcde9164fd40db8/src/session.js#L494
-"
+  "
   {:arglists '([driver logtype])}
   dispatch-driver)
 
@@ -2390,7 +2390,7 @@
             :path   [:session (:session @driver) :element el :value]
             :data   {:text (str/join (apply make-input* text more))}}))
 
-(defmulti fill-active*
+(defmulti ^:private fill-active*
   {:arglists '([driver text & more])}
   dispatch-driver)
 
