@@ -202,6 +202,11 @@
           (= [nil nil nil nil])
           is))))
 
+(deftest test-get-inner-html
+  (let [inner-html "<div>Inner HTML</div>"
+        result     (get-element-inner-html *driver* :element-props)]
+    (is (= inner-html result))))
+
 (deftest test-title
   (doto *driver*
     (-> get-title (= "Webdriver Test Document") is)))
