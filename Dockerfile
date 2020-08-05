@@ -5,7 +5,7 @@ RUN apt-get -yqq update && \
     apt-get -yqq install gnupg2 && \
     apt-get -yqq install curl unzip && \
     apt-get -yqq install fonts-ipafont-gothic xfonts-100dpi xfonts-75dpi xfonts-scalable xfonts-cyrillic && \
-    apt-get install -y jq libgconf-2-4 && \
+    apt-get install -y ca-certificates jq libfontconfig libgconf-2-4 && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Chrome WebDriver
@@ -40,6 +40,18 @@ RUN GECKODRIVER_META="https://api.github.com/repos/mozilla/geckodriver/releases/
     chmod +x geckodriver && \
     mv geckodriver /usr/local/bin/
 
+# Install PhantomJS
+RUN PHANTOMJS_VERSION=phantomjs-2.1.1-linux-x86_64 && \
+    wget --quiet --content-disposition https://bitbucket.org/ariya/phantomjs/downloads/$PHANTOMJS_VERSION.tar.bz2 && \
+    tar xf $PHANTOMJS_VERSION.tar.bz2 -C /usr/local && \
+    ln -s /usr/local/$PHANTOMJS_VERSION/bin/phantomjs /usr/local/bin/phantomjs && \
+    rm  $PHANTOMJS_VERSION.tar.bz2
+
+# PhantomJS requires  an OpenSSL config even if it's an empty one,
+# else it'll complain about "libssl_conf.so: cannot open shared object file"
+# which seems to be a recent bug.
+ENV OPENSSL_CONF=/opt/openssl.cnf
+
 WORKDIR /etaoin
 COPY ./ ./
 RUN lein deps
@@ -47,4 +59,4 @@ RUN lein deps
 WORKDIR /
 RUN rm -rf /etaoin
 
-ENV ETAOIN_TEST_DRIVERS="[:firefox :chrome]"
+ENV ETAOIN_TEST_DRIVERS="[:firefox :chrome :phantom]"

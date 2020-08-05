@@ -6,14 +6,30 @@ jobs:
       # due to Selenium compatibility. Since we don't use Selenium, we take
       # care of installing a recent firefox and geckodriver (see below).
       - image: circleci/clojure:lein-2.9.3-browsers
+
+    environment:
+      # PhantomJS requires  an OpenSSL config even if it's an empty one,
+      # else it'll complain about "libssl_conf.so: cannot open shared object file"
+      # which seems to be a recent bug.
+      OPENSSL_CONF: /opt/openssl.cnf
+
     steps:
       - checkout
+      - run:
+          name: Install phantomjs
+          command: |
+            PHANTOMJS_VERSION=phantomjs-2.1.1-linux-x86_64 && \
+            wget --quiet --content-disposition https://bitbucket.org/ariya/phantomjs/downloads/$PHANTOMJS_VERSION.tar.bz2 && \
+            sudo tar xf $PHANTOMJS_VERSION.tar.bz2 -C /usr/local && \
+            sudo ln -s /usr/local/$PHANTOMJS_VERSION/bin/phantomjs /usr/local/bin/phantomjs && \
+            rm  $PHANTOMJS_VERSION.tar.bz2
       - run:
           name: Environment information
           command: |
             firefox --version
             google-chrome --version
             chromedriver --version
+            phantomjs --version
 
       # We want to share the results of "lein deps" between runs.
       # We assume that the maven cache can change only if "project.clj"
@@ -50,10 +66,17 @@ jobs:
           command: lein test2junit etaoin.api-test
 
       - run:
-          name: lein test2junit etaoin.api-test (all but firefox)
+          name: lein test2junit etaoin.api-test (chrome)
           when: always
           environment:
             ETAOIN_TEST_DRIVERS: "[:chrome]"
+          command: lein test2junit etaoin.api-test
+
+      - run:
+          name: lein test2junit etaoin.api-test (phantom)
+          when: always
+          environment:
+            ETAOIN_TEST_DRIVERS: "[:phantom]"
           command: lein test2junit etaoin.api-test
 
       - run:
