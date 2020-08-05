@@ -518,6 +518,7 @@
 
 (defmethod find-element-from* :firefox
   [driver el locator term]
+  {:pre [(some? el)]}
   (-> (execute {:driver driver
                 :method :post
                 :path   [:session (:session @driver) :element el :element]
@@ -528,6 +529,7 @@
 
 (defmethod find-element-from* :safari
   [driver el locator term]
+  {:pre [(some? el)]}
   (-> (execute {:driver driver
                 :method :post
                 :path   [:session (:session @driver) :element el :element]
@@ -538,6 +540,7 @@
 
 (defmethod find-element-from* :default
   [driver el locator term]
+  {:pre [(some? el)]}
   (-> (execute {:driver driver
                 :method :post
                 :path   [:session (:session @driver) :element el :element]
@@ -549,6 +552,7 @@
 
 (defmethod find-elements-from* :default
   [driver el locator term]
+  {:pre [(some? el)]}
   (->> (execute {:driver driver
                  :method :post
                  :path   [:session (:session @driver) :element el :elements]
@@ -619,12 +623,14 @@
 (defn child
   "Finds a single element under given root element."
   [driver ancestor-el q]
+  {:pre [(some? ancestor-el)]}
   (let [[loc term] (query/expand driver q)]
     (find-element-from* driver ancestor-el loc term)))
 
 (defn children
   "Finds multiple elements under given root element."
   [driver ancestor-el q]
+  {:pre [(some? ancestor-el)]}
   (let [[loc term] (query/expand driver q)]
     (find-elements-from* driver ancestor-el loc term)))
 
@@ -721,6 +727,7 @@
 (defn click-el
   "Click on an element having its system id."
   [driver el]
+  {:pre [(some? el)]}
   (execute {:driver driver
             :method :post
             :path   [:session (:session @driver) :element el :click]}))
@@ -752,6 +759,7 @@
 (defmethods double-click-el
   [:chrome :phantom]
   [driver el]
+  {:pre [(some? el)]}
   (execute {:driver driver
             :method :post
             :path   [:session (:session @driver) :element el :doubleclick]}))
@@ -854,6 +862,7 @@
 (defmethods get-element-size-el
   [:chrome :edge :phantom]
   [driver el]
+  {:pre [(some? el)]}
   (-> (execute {:driver driver
                 :method :get
                 :path   [:session (:session @driver) :element el :size]})
@@ -862,6 +871,7 @@
 
 (defmethod get-element-size-el :firefox
   [driver el]
+  {:pre [(some? el)]}
   (-> (execute {:driver driver
                 :method :get
                 :path   [:session (:session @driver) :element el :rect]})
@@ -870,6 +880,7 @@
 
 (defmethod get-element-size-el :safari
   [driver el]
+  {:pre [(some? el)]}
   (-> (execute {:driver driver
                 :method :get
                 :path   [:session (:session @driver) :element el :rect]})
@@ -890,6 +901,7 @@
 (defmethods get-element-location-el
   [:chrome :edge :phantom]
   [driver el]
+  {:pre [(some? el)]}
   (-> (execute {:driver driver
                 :method :get
                 :path   [:session (:session @driver) :element el :location]})
@@ -898,6 +910,7 @@
 
 (defmethod get-element-location-el :firefox
   [driver el]
+  {:pre [(some? el)]}
   (-> (execute {:driver driver
                 :method :get
                 :path   [:session (:session @driver) :element el :rect]})
@@ -906,6 +919,7 @@
 
 (defmethod get-element-location-el :safari
   [driver el]
+  {:pre [(some? el)]}
   (-> (execute {:driver driver
                 :method :get
                 :path   [:session (:session @driver) :element el :rect]})
@@ -971,6 +985,7 @@
 
 (defn- get-element-property-el
   [driver el property]
+  {:pre [(some? el)]}
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session @driver) :element el :property (name property)]})))
@@ -1006,6 +1021,7 @@
 
 (defn get-element-attr-el
   [driver el attr]
+  {:pre [(some? el)]}
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session @driver) :element el :attribute (name attr)]})))
@@ -1051,6 +1067,7 @@
 
 (defn- get-element-css-el
   [driver el name*]
+  {:pre [(some? el)]}
   (-> (execute {:driver driver
                 :method :get
                 :path   [:session (:session @driver) :element el :css (name name*)]})
@@ -1100,6 +1117,7 @@
 (defn get-element-inner-html-el
   "Returns element's inner text by its identifier."
   [driver el]
+  {:pre [(some? el)]}
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session @driver) :element el :property :innerHTML]})))
@@ -1120,6 +1138,7 @@
 (defn get-element-tag-el
   "Returns element's tag name by its identifier."
   [driver el]
+  {:pre [(some? el)]}
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session @driver) :element el :name]})))
@@ -1132,6 +1151,7 @@
 (defn get-element-text-el
   "Returns element's inner text by its identifier."
   [driver el]
+  {:pre [(some? el)]}
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session @driver) :element el :text]})))
@@ -1151,6 +1171,7 @@
 (defn- get-element-value-el
   "Low level: returns element's value by its identifier."
   [driver el]
+  {:pre [(some? el)]}
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session @driver) :element el :value]})))
@@ -1877,12 +1898,14 @@
 
 (defmethod displayed-el? :default ;;TODO it's only for jwp
   [driver el]
+  {:pre [(some? el)]}
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session @driver) :element el :displayed]})))
 
 (defmethod displayed-el? :safari
   [driver el]
+  {:pre [(some? el)]}
   (cond
     (= (get-element-css-el driver el :display)
        "none")
@@ -1906,7 +1929,9 @@
 (def ^{:doc "Oppsite to `visible?`."}
   invisible? (complement visible?))
 
-(defn enabled-el? [driver el]
+(defn enabled-el? 
+  [driver el]
+  {:pre [(some? el)]}
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session @driver) :element el :enabled]})))
@@ -1937,6 +1962,7 @@
 
 (defn has-class-el?
   [driver el class]
+  {:pre [(some? el)]}
   (let [classes (get-element-attr-el driver el "class")]
     (cond
       (nil? classes) false
@@ -2321,6 +2347,7 @@
 (defmethod fill-el
   :default
   [driver el text & more]
+  {:pre [(some? el)]}
   (execute {:driver driver
             :method :post
             :path   [:session (:session @driver) :element el :value]
@@ -2329,6 +2356,7 @@
 (defmethod fill-el
   :firefox ;; todo support the old version for :default
   [driver el text & more]
+  {:pre [(some? el)]}
   (execute {:driver driver
             :method :post
             :path   [:session (:session @driver) :element el :value]
@@ -2337,6 +2365,7 @@
 (defmethod fill-el
   :safari
   [driver el text & more]
+  {:pre [(some? el)]}
   (execute {:driver driver
             :method :post
             :path   [:session (:session @driver) :element el :value]
@@ -2404,6 +2433,7 @@
 
 (defn fill-human-el
   [driver el text opt]
+  {:pre [(some? el)]}
   (let [{:keys [mistake-prob pause-max]
          :or   {mistake-prob 0.1
                 pause-max    0.2}} opt
@@ -2450,6 +2480,7 @@
 (defn clear-el
   "Clears an element by its identifier."
   [driver el]
+  {:pre [(some? el)]}
   (execute {:driver driver
             :method :post
             :path   [:session (:session @driver) :element el :clear]}))
