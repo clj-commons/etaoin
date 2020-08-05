@@ -1121,14 +1121,25 @@
 ;;
 ;; element inner HTML
 ;;
-
-(defn get-element-inner-html-el
+(defmulti get-element-inner-html-el
   "Returns element's inner text by its identifier."
+  dispatch-driver)
+
+(defmethod get-element-inner-html-el
+  :default
   [driver el]
   {:pre [(some? el)]}
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session @driver) :element el :property :innerHTML]})))
+
+(defmethod get-element-inner-html-el
+  :phantom
+  [driver el]
+  {:pre [(some? el)]}
+  (:value (execute {:driver driver
+                    :method :get
+                    :path   [:session (:session @driver) :element el :attribute :innerHTML]})))
 
 (defn get-element-inner-html
   "Returns element's inner HTML.
