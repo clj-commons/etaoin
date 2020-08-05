@@ -355,13 +355,18 @@
         (is (not= height height'))))))
 
 (deftest test-switch-window
-  (let [prev-handles  (get-window-handles *driver*)
-        _             (js-execute *driver* "window.open(\"\")")
+  (let [init-handle   (get-window-handle *driver*)
+        init-url      (get-url *driver*)
+        _             (click *driver* :switch-window)
         new-handles   (get-window-handles *driver*)
-        new-handle    (first (clojure.set/difference (set new-handles) (set prev-handles)))
+        new-handle    (first (filter #(not= % init-handle) new-handles))
         _             (switch-window *driver* new-handle)
-        target-handle (get-window-handle *driver*)]
-    (is (= new-handle target-handle))))
+        target-handle (get-window-handle *driver*)
+        target-url    (get-url *driver*)]
+    (is (not= init-handle target-handle))
+    (is (= 2 (count new-handles)))
+    (is (= new-handle target-handle))
+    (is (not= init-url target-url))))
 
 (deftest test-maximize
   (when-not-headless *driver*
