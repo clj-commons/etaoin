@@ -627,6 +627,26 @@
          el         (apply query driver q (butlast more))]
      (find-elements-from* driver el loc term))))
 
+(defn query-tree
+  "Takes selectors and acts like a tree.
+
+  {:tag :div} {:tag :a}
+  means
+  {:tag :div} -> [div1 div2 div3]
+  div1 -> [a1 a2 a3]
+  div2 -> [a4 a5 a6]
+  div3 -> [a7 a8 a9]
+  so the result will be [a1 ... a9]
+  "
+  [driver q & qs]
+  (reduce (fn [elements q]
+            (let [[loc term] (query/expand driver q)]
+              (set (mapcat (fn [e]
+                             (find-elements-from* driver e loc term))
+                           elements))))
+          (let [[loc term] (query/expand driver q)]
+            (find-elements* driver loc term))
+          qs))
 
 (defn child
   "Finds a single element under given root element."
@@ -721,7 +741,7 @@
   - does not work in Phantom.js since it does not have a virtual mouse API;
 
   - does not work in Safari.
-"
+  "
   [driver q-from q-to]
   (mouse-move-to driver q-from)
   (with-mouse-btn driver
@@ -954,7 +974,7 @@
   - `:y2`: bottom right `y` coordinate;
   - `:width`: width as a difference b/w `:x2` and `:x1`;
   - `:height`: height as a difference b/w `:y2` and `:y1`.
-"
+  "
   [driver q]
   (let [el                     (query driver q)
         {:keys [width height]} (get-element-size-el driver el)
@@ -978,7 +998,7 @@
   intersection.
 
   Returns true or false.
-"
+  "
   [driver q1 q2]
   (let [a (get-element-box driver q1)
         b (get-element-box driver q2)]
@@ -1056,7 +1076,7 @@
   (def driver (firefox))
   (get-element-attr driver {:tag :a} :class)
   >> \"link link__external link__button\" ;; see note above
-"
+  "
   [driver q name]
   (get-element-attr-el driver (query driver q) name))
 
@@ -1104,7 +1124,7 @@
   (def driver (firefox))
   (get-element-css driver {:id :content} :background-color)
   >> \"rgb(204, 204, 204)\" ;; or \"rgba(204, 204, 204, 1)\"
-"
+  "
   [driver q prop]
   (get-element-css-el driver (query driver q) prop))
 
@@ -1146,7 +1166,7 @@
 
   For element `el` in `<div id=\"el\"><p class=\"foo\">hello</p></div>` it will
   be \"<p class=\"foo\">hello</p>\" string.
-"
+  "
   [driver q]
   (get-element-inner-html-el driver (query driver q)))
 
@@ -1179,7 +1199,7 @@
   "Returns inner element's text.
 
   For `<p class=\"foo\">hello</p>` it will be \"hello\" string.
-"
+  "
   [driver q]
   (get-element-text-el driver (query driver q)))
 
@@ -1250,7 +1270,7 @@
   - `driver`: a driver instance,
 
   - `cookie-name`: a string/keyword witn a cookie name.
-"
+  "
   [driver cookie-name]
   (->> driver
        get-cookies
@@ -2682,7 +2702,7 @@
   - `driver`: driver instance,
 
   - `file`: either a path to a file or a native `java.io.File` instance.
-"
+  "
   {:arglists '([driver file])}
   dispatch-driver)
 

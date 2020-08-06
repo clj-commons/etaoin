@@ -584,6 +584,19 @@
       (is (= (vec tag-names)
              ["div" "b" "p" "span"])))))
 
+(deftest test-query-tree
+  (let [url            (-> "html/test2.html" io/resource str)
+        _              (go *driver* url)
+        all-div        (query-tree *driver* {:tag :div})
+        all-li         (query-tree *driver* {:tag :li})
+        li-three-level (query-tree
+                         *driver* {:tag :div} {:tag :div} {:tag :div} {:tag :li})
+        tag-a          (query-tree *driver* {:tag :div} {:tag :div} {:tag :a})]
+    (is (= 6 (count all-div)))
+    (is (= 8 (count all-li)))
+    (is (= 5 (count li-three-level)))
+    (is (= 1 (count tag-a)))))
+
 (deftest test-child
   (let [parent-el (query *driver* {:css "#wc3-barks"})
         child-el  (child *driver* parent-el {:css ".crypt-lord"})
