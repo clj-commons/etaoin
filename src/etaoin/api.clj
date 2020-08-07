@@ -2514,7 +2514,7 @@
 
   - `q`: a query term, see `query` function for more info,
 
-  - `text`: a string to input."
+  - `text`: a string, text in the option you want to select"
   [driver q text]
   (let [el (query driver q {:tag :option :fn/has-text text})]
     (click-el driver el)))

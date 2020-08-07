@@ -33,6 +33,7 @@ after a mysteries note was produced on it.
   * [Vector syntax for querying](#vector-syntax-for-querying)
   * [Advanced queries](#advanced-queries)
     + [Querying the *nth* element matched](#querying-the-nth-element-matched)
+    + [Getting elements like in a tree](getting-elements-like-in-a-tree)
   * [Interacting with queried elements](#interacting-with-queried-elements)
 - [Emulation of human input](#emulation-of-human-input)
 - [Mouse clicks](#mouse-clicks)
@@ -202,6 +203,9 @@ The good news you may automate your browser directly from the REPL:
 (fill driver {:tag :input :name :search} "Clojure programming language")
 (fill driver {:tag :input :name :search} k/enter)
 (wait-visible driver {:class :mw-search-results})
+
+;; select an `option` in select-box by visible text
+(select driver {:tag :select} "Some Visible Text")
 
 ;; I'm sure the first link is what I was looking for
 (click driver [{:class :mw-search-results} {:class :mw-search-result-heading} {:tag :a}])
