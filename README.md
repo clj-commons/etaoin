@@ -212,7 +212,7 @@ The good news you may automate your browser directly from the REPL:
 ;;    <option value="fr">France</option>
 ;;</select>
 (select driver :country "France")
-(get-elemet-value driver :country)
+(get-element-value driver :country)
 ;;=> "fr"
 
 ;; I'm sure the first link is what I was looking for
