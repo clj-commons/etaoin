@@ -205,7 +205,15 @@ The good news you may automate your browser directly from the REPL:
 (wait-visible driver {:class :mw-search-results})
 
 ;; select an `option` in select-box by visible text
-(select driver {:tag :select} "Some Visible Text")
+;; <select id="country">
+;;    <option value="rf">Russia</option>
+;;    <option value="usa">United States</option>
+;;    <option value="uk">United Kingdom</option>
+;;    <option value="fr">France</option>
+;;</select>
+(select driver :country "France")
+(get-elemet-value driver :country)
+;;=> "fr"
 
 ;; I'm sure the first link is what I was looking for
 (click driver [{:class :mw-search-results} {:class :mw-search-result-heading} {:tag :a}])
