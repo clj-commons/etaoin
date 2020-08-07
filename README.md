@@ -427,6 +427,26 @@ Finally it is also possible to obtain the *nth* element directly by using
 Note the use of `click-el` here, as `query-all` returns an element, not a
 selector that can be passed to `click` directly.
 
+#### Getting elements like in a tree
+
+`query-tree` takes selectors and acts like a tree.
+Every next selector queries elements from the previous ones.
+The fist selector relies on find-elements, and the rest ones use find-elements-from
+
+  ```clojure
+  (query-tree driver {:tag :div} {:tag :a})
+  ```
+
+  means
+
+  ```
+  {:tag :div} -> [div1 div2 div3]
+  div1 -> [a1 a2 a3]
+  div2 -> [a4 a5 a6]
+  div3 -> [a7 a8 a9]
+  ```
+  so the result will be [a1 ... a9]
+
 ### Interacting with queried elements
 
 To interact with elements found via a query you have to pass the query result to

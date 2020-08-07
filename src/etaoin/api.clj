@@ -629,6 +629,9 @@
 
 (defn query-tree
   "Takes selectors and acts like a tree.
+  Every next selector queries elements from the previous ones.
+  The fist selector relies on find-elements,
+  and the rest ones use find-elements-from
 
   {:tag :div} {:tag :a}
   means
