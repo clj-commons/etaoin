@@ -256,7 +256,7 @@
       (refresh)
       (wait-visible {:id :document-end})
       (click {:id :wait-button})
-      (wait-has-text :wait-span "-secret-"))
+      (wait-has-text "-secret-"))
     (is true "text found"))
   (testing "wait for text timeout"
     (doto *driver*
