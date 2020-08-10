@@ -256,7 +256,7 @@
       (refresh)
       (wait-visible {:id :document-end})
       (click {:id :wait-button})
-      (wait-has-text "-secret-"))
+      (wait-has-text :wait-span "-secret-"))
     (is true "text found"))
   (testing "wait for text timeout"
     (doto *driver*
@@ -290,6 +290,48 @@
         (is (= (-> data (dissoc :predicate :time-rest))
                {:type     :etaoin/timeout
                 :message  "Wait for :wait-span element has text -dunno-whatever-foo-bar-"
+                :timeout  2
+                :interval 0.33
+                :times    7}))))))
+
+(deftest test-wait-has-text-everywhere
+  (testing "wait for text simple"
+    (doto *driver*
+      (refresh)
+      (wait-visible {:id :document-end})
+      (click {:id :wait-button})
+      (wait-has-text-everywhere "-secret-"))
+    (is true "text found"))
+  (testing "wait for text timeout"
+    (doto *driver*
+      (refresh)
+      (wait-visible {:id :document-end})
+      (click {:id :wait-button}))
+    (try+
+      (wait-has-text-everywhere *driver*
+                                "-secret-"
+                                {:timeout 1})
+      (is false "should not be executed")
+      (catch [:type :etaoin/timeout] data
+        (is (= (-> data (dissoc :predicate :time-rest))
+               {:type     :etaoin/timeout
+                :message  "Wait for {:xpath \"*\"} element has text -secret-"
+                :timeout  1
+                :interval 0.33
+                :times    4})))))
+  (testing "wait for non-existing text"
+    (doto *driver*
+      (refresh)
+      (wait-visible {:id :document-end}))
+    (try+
+      (wait-has-text-everywhere *driver*
+                                "-dunno-whatever-foo-bar-"
+                                {:timeout 2})
+      (is false "should not be executed")
+      (catch [:type :etaoin/timeout] data
+        (is (= (-> data (dissoc :predicate :time-rest))
+               {:type     :etaoin/timeout
+                :message  "Wait for {:xpath \"*\"} element has text -dunno-whatever-foo-bar-"
                 :timeout  2
                 :interval 0.33
                 :times    7}))))))
