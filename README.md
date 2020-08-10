@@ -254,6 +254,23 @@ may simplify it using `doto` macros:
   (quit))
 ```
 
+You can use `fill-multi` to shorten the code like:
+
+``` clojure
+(fill driver :login "login")
+(fill driver :password "pass")
+(fill driver :textarea "some text")
+```
+
+into
+
+``` clojure
+(fill-multi driver {:login "login"
+                    :password "pass"
+                    :textarea "some text"})
+```
+
+
 In that case, your code looks like a DSL designed just for such purposes.
 
 If any exception occurs during a browser session, the external process might
@@ -332,6 +349,25 @@ rules are:
 
 Examples:
 
+- find the first `div` tag
+  ```clojure
+  (query driver {:tag :div})
+  ;; expands into .//div
+  ```
+
+- find the first `div` tag
+  ```clojure
+  (query driver {:tag :div :index 1})
+  ;; expands into .//div[1]
+  ```
+
+- find the tag `a` with the class attribute equals to `active`
+
+``` clojure
+  (query driver {:tag :a :class "active"})
+  ;; ".//a[@class=\"active\"]"
+```
+
 - find a form by its attributes:
 
   ```clojure
@@ -367,11 +403,13 @@ Examples:
   ;; .//*[contains(@class, "active")][contains(@class, "sticky")][contains(@class, "marked")]
   ```
 
-- find all the disabled input widgets:
+- find all the enabled/disabled input widgets:
 
   ```clojure
   (query driver {:tag :input :fn/disabled true})
   ;; .//input[@disabled=true()]
+  (query driver {:tag :input :fn/enabled true})
+  ;; .//input[@enabled=true()]
   ```
 
 ### Vector syntax for querying
