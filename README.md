@@ -254,6 +254,8 @@ may simplify it using `doto` macros:
   (quit))
 ```
 
+In that case, your code looks like a DSL designed just for such purposes.
+
 You can use `fill-multi` to shorten the code like:
 
 ``` clojure
@@ -269,9 +271,6 @@ into
                     :password "pass"
                     :textarea "some text"})
 ```
-
-
-In that case, your code looks like a DSL designed just for such purposes.
 
 If any exception occurs during a browser session, the external process might
 hang forever until you kill it manually. To prevent it, use `with-<browser>`
