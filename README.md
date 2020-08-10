@@ -1431,14 +1431,17 @@ The final form would be something like this:
     ...etc))
 ```
 
-In additional to functions `with-wait` and `do-wait` there are a number of waiting functions:
-`wait-visible`, `wait-has-alert`, `wait-predicate` and etc (full list see [here](http://etaoin.grishaev.me/etaoin.api.html#var-wait)). They have default timeout/interval values and can be redefined using the `with-default-timeout`, `with-default-interval` macros, respectively.
+In addition to `with-wait` and `do-wait` there are a number of waiting functions:
+`wait-visible`, `wait-has-alert`, `wait-predicate`, etc (see the full list in the
+[corresponsing section](http://etaoin.grishaev.me/etaoin.api.html#var-wait)). They
+accept default timeout/interval values that can be redefined using the
+`with-wait-timeout` and `with-wait-interval` macros, respectively.
 
 Example from etaoin test:
 ``` clojure
 (deftest test-wait-has-text
   (testing "wait for text simple"
-    (with-default-timeout 15 ;; time in seconds
+    (with-wait-timeout 15 ;; time in seconds
       (doto *driver*
         (refresh)
         (wait-visible {:id :document-end})
