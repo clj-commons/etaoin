@@ -1431,6 +1431,25 @@ The final form would be something like this:
     ...etc))
 ```
 
+In addition to `with-wait` and `do-wait` there are a number of waiting functions:
+`wait-visible`, `wait-has-alert`, `wait-predicate`, etc (see the full list in the
+[corresponsing section](http://etaoin.grishaev.me/etaoin.api.html#var-wait)). They
+accept default timeout/interval values that can be redefined using the
+`with-wait-timeout` and `with-wait-interval` macros, respectively.
+
+Example from etaoin test:
+``` clojure
+(deftest test-wait-has-text
+  (testing "wait for text simple"
+    (with-wait-timeout 15 ;; time in seconds
+      (doto *driver*
+        (refresh)
+        (wait-visible {:id :document-end})
+        (click {:id :wait-button})
+        (wait-has-text :wait-span "-secret-"))
+      (is true "text found"))))
+```
+
 ## Writing Integration Tests For Your Application
 
 ### Basic fixture

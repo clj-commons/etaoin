@@ -2033,8 +2033,19 @@
 ;; wait functions
 ;;
 
-(def default-timeout 20)
-(def default-interval 0.33)
+(def ^:dynamic *wait-timeout* 20)
+(def ^:dynamic *wait-interval* 0.33)
+
+
+(defmacro with-wait-timeout
+  [sec & body]
+  `(binding [*wait-timeout* ~sec]
+     ~@body))
+
+(defmacro with-wait-interval
+  [sec & body]
+  `(binding [*wait-interval* ~sec]
+     ~@body))
 
 (defn wait
   "Sleeps for N seconds."
@@ -2072,9 +2083,9 @@
   ([pred]
    (wait-predicate pred {}))
   ([pred opt]
-   (let [timeout   (get opt :timeout default-timeout) ;; refactor this (call for java millisec)
+   (let [timeout   (get opt :timeout *wait-timeout*) ;; refactor this (call for java millisec)
          time-rest (get opt :time-rest timeout)
-         interval  (get opt :interval default-interval)
+         interval  (get opt :interval *wait-interval*)
          times     (get opt :times 0)
          message   (get opt :message)]
      (when (< time-rest 0)
