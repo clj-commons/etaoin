@@ -354,7 +354,7 @@ Examples:
   ;; expands into .//div
   ```
 
-- find the first `div` tag
+- find the n-th `div` tag
   ```clojure
   (query driver {:tag :div :index 1})
   ;; expands into .//div[1]
