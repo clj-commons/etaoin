@@ -395,6 +395,13 @@ Examples:
   ;; .//div[contains(@class, "overlay")]
   ```
 
+- find an element that has the following domain in a href:
+
+  ```clojure
+  (query driver {:tag :a :fn/link "google.com"})
+  ;; .//a[contains(@href, "google.com")]
+  ```
+
 - find an element that has the following classes at once:
 
   ```clojure

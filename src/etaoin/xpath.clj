@@ -81,6 +81,10 @@
     (node-index idx)
     ""))
 
+(defmethod clause :fn/link
+  [[_ text]]
+  (node-contains "@href" text))
+
 (defn pop-map
   [m k]
   [(get m k) (dissoc m k)])

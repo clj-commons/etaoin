@@ -21,6 +21,7 @@
 
    [{:tag :input :fn/enabled false} ".//input[@enabled=false()]"]
 
+   [{:tag :a :fn/link "yandex"} ".//a[contains(@href, \"yandex\")]"]
    ])
 
 (deftest test-xpath-expand
