@@ -2033,7 +2033,7 @@
 ;; wait functions
 ;;
 
-(def ^:dynamic *wait-timeout* 20)
+(def ^:dynamic *wait-timeout* 7)
 (def ^:dynamic *wait-interval* 0.33)
 
 
