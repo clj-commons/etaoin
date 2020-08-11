@@ -2504,6 +2504,8 @@
 
         rand-char (fn [] (-> 26 rand-int (+ 97) char))
         wait-key  (fn [] (wait (min (rand) pause-max)))]
+    (click-el driver el)
+    (wait-key)
     (doseq [key text]
       (when (< (rand) mistake-prob)
         (fill-el driver el (rand-char))
