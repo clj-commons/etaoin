@@ -93,6 +93,16 @@
       (-> get-url
           (str/ends-with? "?login=1&password=2&message=3")
           is)))
+  (testing "fill human multiple imputs"
+    (doto *driver*
+      (fill-human-multi {:simple-input    "login"
+                         :simple-password "123"
+                         :simple-textarea "text"})
+      (click :simple-submit)
+      (when-safari (wait 3))
+      (-> get-url
+          (str/ends-with? "?login=login&password=123&message=text")
+          is)))
   (testing "fill multiple vars"
     (doto *driver*
       (fill :simple-input 1 "test" 2 \space \A)

@@ -2527,6 +2527,22 @@
   ([driver q text opt]
    (fill-human-el driver (query driver q) text opt)))
 
+(defn fill-human-multi
+  "`fill-human` + `fill-multi`"
+  ([driver q-text]  (fill-human-multi driver q-text {}))
+  ([driver q-text opt]
+   (cond
+     (map? q-text)
+     (doseq [[q text] q-text]
+       (fill-human driver q text opt))
+
+     (vector? q-text)
+     (recur driver (apply hash-map q-text) opt)
+
+     :else (throw+ {:type    :etaoin/argument
+                    :message "Wrong argument type"
+                    :arg     q-text}))))
+
 (defn select
   "Select element in select-box by visible text on click.
 
