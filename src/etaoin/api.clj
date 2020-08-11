@@ -2197,15 +2197,26 @@
   Arguments:
 
   - `driver`: a driver instance;
-  - `q`: a query term (see `query`);
+  - `q`: a query term (see `query`).
   - `text`: a string to search;
   - `opt`: a map of options (see `wait-predicate`)."
-
   [driver q text & [opt]]
   (let [message (format "Wait for %s element has text %s"
                         q text)]
     (wait-predicate #(has-text? driver q text)
                     (assoc opt :message message))))
+
+(defn wait-has-text-everywhere
+  "Like `wait-has-text` but searches for text across the entire page.
+
+  Arguments:
+
+  - `driver`: a driver instance;
+  - `text`: a string to search;
+  - `opt`: a map of options (see `wait-predicate`)."
+  [driver text & [opt]]
+  (let [q {:xpath "*"}]
+    (wait-has-text driver q text opt)))
 
 (defn wait-has-class
   "Waits until an element has specific class.
