@@ -1501,9 +1501,6 @@ Wait text:
   (wait-has-text-everywhere driver "-secret-")
   ```
 
-
-
-
 ## Writing Integration Tests For Your Application
 
 ### Basic fixture
