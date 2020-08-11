@@ -2215,11 +2215,8 @@
   - `text`: a string to search;
   - `opt`: a map of options (see `wait-predicate`)."
   [driver text & [opt]]
-  (let [q       {:xpath "*"}
-        message (format "Wait for %s element has text %s"
-                        q text)]
-    (wait-predicate #(has-text? driver q text)
-                    (assoc opt :message message))))
+  (let [q {:xpath "*"}]
+    (wait-has-text driver q text opt)))
 
 (defn wait-has-class
   "Waits until an element has specific class.

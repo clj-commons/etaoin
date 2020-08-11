@@ -1487,6 +1487,23 @@ Example from etaoin test:
       (is true "text found"))))
 ```
 
+Wait text:
+
+- `wait-has-text` waits until an element has text anywhere inside it (including inner HTML).
+
+  ``` clojure
+  (wait-has-text driver :wait-span "-secret-")
+  ```
+
+- `wait-has-text-everywhere` like `wait-has-text` but searches for text across the entire page
+
+  ``` clojure
+  (wait-has-text-everywhere driver "-secret-")
+  ```
+
+
+
+
 ## Writing Integration Tests For Your Application
 
 ### Basic fixture
