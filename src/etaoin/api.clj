@@ -2962,10 +2962,6 @@
   browser's logs. Possible values are: `:off`, `:debug`, `:warn`, `:info`,
   `:error`, `:all`. When not passed, `:all` is set.
 
-  -- `:profile` is a string path that points on profile folder.
-  See the `Setting browser profile` section in `README.md` to know
-  how to do it properly.
-
   -- `:args-driver` is a vector of additional arguments to the
   driver's process.
 
@@ -2975,7 +2971,6 @@
   ;; todo: quite ugly
   [driver & [{:keys [dev
                      env
-                     profile
                      log-level
                      log-stdout
                      log-stderr
@@ -2998,8 +2993,6 @@
 
         _ (when args-driver
             (swap! driver drv/set-args args-driver))
-        _ (when profile
-            (swap! driver drv/set-profile profile))
         _ (when path-browser
             (swap! driver drv/set-binary path-browser))
         _ (when download-dir
@@ -3047,6 +3040,10 @@
 
   -- `:prefs` is a map of browser-specific preferences.
 
+  -- `:profile` is a string path that points on profile folder.
+  See the `Setting browser profile` section in `README.md` to know
+  how to do it properly.
+
   -- `proxy` is a map of proxy server connection settings.
 
   --- `http` is a string. Defines the proxy host for HTTP traffic.
@@ -3067,6 +3064,7 @@
                      args
                      prefs
                      proxy
+                     profile
                      headless
                      capabilities
                      load-strategy
@@ -3089,6 +3087,8 @@
         _             (when load-strategy
                         (swap! driver drv/set-load-strategy load-strategy))
         _             (when prefs (swap! driver drv/set-prefs prefs))
+        _             (when profile
+                        (swap! driver drv/set-profile profile))
         _             (swap! driver drv/set-capabilities caps)
         _             (swap! driver drv/set-capabilities capabilities)
         _             (swap! driver drv/set-capabilities desired-capabilities)
