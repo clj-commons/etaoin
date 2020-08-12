@@ -2958,10 +2958,6 @@
   -- `:path-browser` is a string path to the browser's binary
   file. When not passed, the driver discovers it by its own.
 
-  -- `:size` is a vector of two integers specifying initial window size.
-
-  -- `:url` is a string with the default URL opened by default (FF only for now).
-
   -- `:log-level` a keyword to set browser's log level. Used when fetching
   browser's logs. Possible values are: `:off`, `:debug`, `:warn`, `:info`,
   `:error`, `:all`. When not passed, `:all` is set.
@@ -2969,14 +2965,6 @@
   -- `:profile` is a string path that points on profile folder.
   See the `Setting browser profile` section in `README.md` to know
   how to do it properly.
-
-  -- `:load-strategy` is a string or keyword with specifying
-  what strategy to use when load a page. Might be `:none`, `:eager`
-  or :`normal` (default). To not wait the page being loaded completely,
-  specify `:none`. The `:eager` option is still under development
-  in most of the browser.
-
-  -- `:prefs` is a map of browser-specific preferences.
 
   -- `:args-driver` is a vector of additional arguments to the
   driver's process.
@@ -2987,9 +2975,6 @@
   ;; todo: quite ugly
   [driver & [{:keys [dev
                      env
-                     url
-                     size
-                     prefs
                      profile
                      log-level
                      log-stdout
@@ -2997,11 +2982,9 @@
                      args-driver
                      path-driver
                      download-dir
-                     path-browser
-                     load-strategy]}]]
+                     path-browser]}]]
 
   (let [{:keys [type port]} @driver
-        [with height]       size
         log-level           (or log-level :all)
         path-driver         (or path-driver (get-in defaults [type :path]))
 
@@ -3013,21 +2996,14 @@
             (let [{:keys [perf]} dev]
               (swap! driver drv/set-perf-logging perf)))
 
-        _ (when load-strategy
-            (swap! driver drv/set-load-strategy load-strategy))
         _ (when args-driver
             (swap! driver drv/set-args args-driver))
-        _ (when size
-            (swap! driver drv/set-window-size with height))
-        _ (when url
-            (swap! driver drv/set-url url))
         _ (when profile
             (swap! driver drv/set-profile profile))
         _ (when path-browser
             (swap! driver drv/set-binary path-browser))
         _ (when download-dir
             (swap! driver drv/set-download-dir download-dir))
-        _ (when prefs (swap! driver drv/set-prefs prefs))
 
         proc-args (drv/get-args @driver)
         _         (log/debugf "Starting process: %s" (str/join \space proc-args))
@@ -3059,6 +3035,18 @@
   rather than local machine. Currently, only FF and Chrome support headless mode.
   Phantom.js is headless by its nature.
 
+  -- `:size` is a vector of two integers specifying initial window size.
+
+  -- `:url` is a string with the default URL opened by default (FF only for now).
+
+  -- `:load-strategy` is a string or keyword with specifying
+  what strategy to use when load a page. Might be `:none`, `:eager`
+  or :`normal` (default). To not wait the page being loaded completely,
+  specify `:none`. The `:eager` option is still under development
+  in most of the browser.
+
+  -- `:prefs` is a map of browser-specific preferences.
+
   -- `proxy` is a map of proxy server connection settings.
 
   --- `http` is a string. Defines the proxy host for HTTP traffic.
@@ -3074,26 +3062,38 @@
   to the browser's process.
 
   See https://www.w3.org/TR/webdriver/#capabilities"
-  [driver & [{:keys [capabilities
-                     desired-capabilities
-                     headless
+  [driver & [{:keys [url
+                     size
+                     args
+                     prefs
                      proxy
-                     args]}]]
+                     headless
+                     capabilities
+                     load-strategy
+                     desired-capabilities]}]]
   (wait-running driver)
-  (let [type    (:type @driver)
-        caps    (get-in defaults [type :capabilities])
-        proxy   (proxy-env proxy)
-        _       (when headless
-                  (swap! driver drv/set-headless))
-        _       (when args
-                  (swap! driver drv/set-options-args args))
-        _       (when proxy
-                  (swap! driver drv/set-proxy proxy))
-        _       (swap! driver drv/set-capabilities caps)
-        _       (swap! driver drv/set-capabilities capabilities)
-        _       (swap! driver drv/set-capabilities desired-capabilities)
-        caps    (:capabilities @driver)
-        session (create-session driver caps)]
+  (let [type          (:type @driver)
+        caps          (get-in defaults [type :capabilities])
+        proxy         (proxy-env proxy)
+        [with height] size
+        _             (when size
+                        (swap! driver drv/set-window-size with height))
+        _             (when url
+                        (swap! driver drv/set-url url))
+        _             (when headless
+                        (swap! driver drv/set-headless))
+        _             (when args
+                        (swap! driver drv/set-options-args args))
+        _             (when proxy
+                        (swap! driver drv/set-proxy proxy))
+        _             (when load-strategy
+                        (swap! driver drv/set-load-strategy load-strategy))
+        _             (when prefs (swap! driver drv/set-prefs prefs))
+        _             (swap! driver drv/set-capabilities caps)
+        _             (swap! driver drv/set-capabilities capabilities)
+        _             (swap! driver drv/set-capabilities desired-capabilities)
+        caps          (:capabilities @driver)
+        session       (create-session driver caps)]
     (swap! driver assoc :session session)
     driver))
 
