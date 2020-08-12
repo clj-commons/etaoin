@@ -688,6 +688,10 @@
     (-> (has-text? "'quote") is)))
 
 (deftest test-has-text
+  (testing "test :fn/text"
+    (is (boolean (query *driver* {:fn/text "From the depths I've come"}))))
+  (testing "test :fn/has-text"
+    (is (boolean (query *driver* {:fn/has-text "From the depth"}))))
   (testing "gloval"
     (is (has-text? *driver* "From the depths I've come!"))
     (is (has-text? *driver* "I've come from the dark")))
