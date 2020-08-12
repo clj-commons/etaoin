@@ -51,7 +51,7 @@
 
 (defmethod clause :fn/text
   [[_ text]]
-  (node-equals "string()" text))
+  (node-equals "text()" text))
 
 (defmethod clause :fn/has-text
   [[_ text]]
