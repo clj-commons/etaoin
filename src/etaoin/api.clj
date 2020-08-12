@@ -2976,25 +2976,6 @@
   specify `:none`. The `:eager` option is still under development
   in most of the browser.
 
-  -- `headless` is a boolean flag to run the browser in headless mode
-  (i.e. without GUI window). Useful when running tests on CI servers
-  rather than local machine. Currently, only FF and Chrome support headless mode.
-  Phantom.js is headless by its nature.
-
-  -- `proxy` is a map of proxy server connection settings.
-
-  --- `http` is a string. Defines the proxy host for HTTP traffic.
-  --- `ssl` is a string. Defines the proxy host for encrypted TLS traffic.
-  --- `ftp` is a string. Defines the proxy host for FTP traffic.
-  --- `pac-url` is a string. Defines the URL for a proxy auto-config file.
-  --- `bypass` is a vector. Lists the address for which the proxy should be bypassed.
-  --- `socks` is a map.
-  ---- `host` is a string. Defines the proxy host for a SOCKS proxy.
-  ---- `version` Any integer between 0 and 255 inclusive. Defines the SOCKS proxy version.
-
-  -- `:args` is a vector of additional command line arguments
-  to the browser's process.
-
   -- `:prefs` is a map of browser-specific preferences.
 
   -- `:args-driver` is a vector of additional arguments to the
@@ -3007,12 +2988,9 @@
   [driver & [{:keys [dev
                      env
                      url
-                     args
                      size
                      prefs
-                     proxy
                      profile
-                     headless
                      log-level
                      log-stdout
                      log-stderr
@@ -3026,7 +3004,6 @@
         [with height]       size
         log-level           (or log-level :all)
         path-driver         (or path-driver (get-in defaults [type :path]))
-        proxy               (proxy-env proxy)
 
         _ (swap! driver drv/set-browser-log-level log-level)
         _ (swap! driver drv/set-path path-driver)
@@ -3044,12 +3021,6 @@
             (swap! driver drv/set-window-size with height))
         _ (when url
             (swap! driver drv/set-url url))
-        _ (when headless
-            (swap! driver drv/set-headless))
-        _ (when args
-            (swap! driver drv/set-options-args args))
-        _ (when proxy
-            (swap! driver drv/set-proxy proxy))
         _ (when profile
             (swap! driver drv/set-profile profile))
         _ (when path-browser
@@ -3083,14 +3054,44 @@
 
   -- `:desired-capabilities`: an alias for `:capabilities`.
 
+  -- `headless` is a boolean flag to run the browser in headless mode
+  (i.e. without GUI window). Useful when running tests on CI servers
+  rather than local machine. Currently, only FF and Chrome support headless mode.
+  Phantom.js is headless by its nature.
+
+  -- `proxy` is a map of proxy server connection settings.
+
+  --- `http` is a string. Defines the proxy host for HTTP traffic.
+  --- `ssl` is a string. Defines the proxy host for encrypted TLS traffic.
+  --- `ftp` is a string. Defines the proxy host for FTP traffic.
+  --- `pac-url` is a string. Defines the URL for a proxy auto-config file.
+  --- `bypass` is a vector. Lists the address for which the proxy should be bypassed.
+  --- `socks` is a map.
+  ---- `host` is a string. Defines the proxy host for a SOCKS proxy.
+  ---- `version` Any integer between 0 and 255 inclusive. Defines the SOCKS proxy version.
+
+  -- `:args` is a vector of additional command line arguments
+  to the browser's process.
+
   See https://www.w3.org/TR/webdriver/#capabilities"
-  [driver & [opt]] ;; move params here
+  [driver & [{:keys [capabilities
+                     desired-capabilities
+                     headless
+                     proxy
+                     args]}]]
   (wait-running driver)
   (let [type    (:type @driver)
         caps    (get-in defaults [type :capabilities])
+        proxy   (proxy-env proxy)
+        _       (when headless
+                  (swap! driver drv/set-headless))
+        _       (when args
+                  (swap! driver drv/set-options-args args))
+        _       (when proxy
+                  (swap! driver drv/set-proxy proxy))
         _       (swap! driver drv/set-capabilities caps)
-        _       (swap! driver drv/set-capabilities (:capabilities opt))
-        _       (swap! driver drv/set-capabilities (:desired-capabilities opt))
+        _       (swap! driver drv/set-capabilities capabilities)
+        _       (swap! driver drv/set-capabilities desired-capabilities)
         caps    (:capabilities @driver)
         session (create-session driver caps)]
     (swap! driver assoc :session session)
