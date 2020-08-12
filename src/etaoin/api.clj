@@ -2958,44 +2958,9 @@
   -- `:path-browser` is a string path to the browser's binary
   file. When not passed, the driver discovers it by its own.
 
-  -- `:size` is a vector of two integers specifying initial window size.
-
-  -- `:url` is a string with the default URL opened by default (FF only for now).
-
   -- `:log-level` a keyword to set browser's log level. Used when fetching
   browser's logs. Possible values are: `:off`, `:debug`, `:warn`, `:info`,
   `:error`, `:all`. When not passed, `:all` is set.
-
-  -- `:profile` is a string path that points on profile folder.
-  See the `Setting browser profile` section in `README.md` to know
-  how to do it properly.
-
-  -- `:load-strategy` is a string or keyword with specifying
-  what strategy to use when load a page. Might be `:none`, `:eager`
-  or :`normal` (default). To not wait the page being loaded completely,
-  specify `:none`. The `:eager` option is still under development
-  in most of the browser.
-
-  -- `headless` is a boolean flag to run the browser in headless mode
-  (i.e. without GUI window). Useful when running tests on CI servers
-  rather than local machine. Currently, only FF and Chrome support headless mode.
-  Phantom.js is headless by its nature.
-
-  -- `proxy` is a map of proxy server connection settings.
-
-  --- `http` is a string. Defines the proxy host for HTTP traffic.
-  --- `ssl` is a string. Defines the proxy host for encrypted TLS traffic.
-  --- `ftp` is a string. Defines the proxy host for FTP traffic.
-  --- `pac-url` is a string. Defines the URL for a proxy auto-config file.
-  --- `bypass` is a vector. Lists the address for which the proxy should be bypassed.
-  --- `socks` is a map.
-  ---- `host` is a string. Defines the proxy host for a SOCKS proxy.
-  ---- `version` Any integer between 0 and 255 inclusive. Defines the SOCKS proxy version.
-
-  -- `:args` is a vector of additional command line arguments
-  to the browser's process.
-
-  -- `:prefs` is a map of browser-specific preferences.
 
   -- `:args-driver` is a vector of additional arguments to the
   driver's process.
@@ -3006,27 +2971,17 @@
   ;; todo: quite ugly
   [driver & [{:keys [dev
                      env
-                     url
-                     args
-                     size
-                     prefs
-                     proxy
-                     profile
-                     headless
                      log-level
                      log-stdout
                      log-stderr
                      args-driver
                      path-driver
                      download-dir
-                     path-browser
-                     load-strategy]}]]
+                     path-browser]}]]
 
   (let [{:keys [type port]} @driver
-        [with height]       size
         log-level           (or log-level :all)
         path-driver         (or path-driver (get-in defaults [type :path]))
-        proxy               (proxy-env proxy)
 
         _ (swap! driver drv/set-browser-log-level log-level)
         _ (swap! driver drv/set-path path-driver)
@@ -3036,27 +2991,12 @@
             (let [{:keys [perf]} dev]
               (swap! driver drv/set-perf-logging perf)))
 
-        _ (when load-strategy
-            (swap! driver drv/set-load-strategy load-strategy))
         _ (when args-driver
             (swap! driver drv/set-args args-driver))
-        _ (when size
-            (swap! driver drv/set-window-size with height))
-        _ (when url
-            (swap! driver drv/set-url url))
-        _ (when headless
-            (swap! driver drv/set-headless))
-        _ (when args
-            (swap! driver drv/set-options-args args))
-        _ (when proxy
-            (swap! driver drv/set-proxy proxy))
-        _ (when profile
-            (swap! driver drv/set-profile profile))
         _ (when path-browser
             (swap! driver drv/set-binary path-browser))
         _ (when download-dir
             (swap! driver drv/set-download-dir download-dir))
-        _ (when prefs (swap! driver drv/set-prefs prefs))
 
         proc-args (drv/get-args @driver)
         _         (log/debugf "Starting process: %s" (str/join \space proc-args))
@@ -3083,16 +3023,77 @@
 
   -- `:desired-capabilities`: an alias for `:capabilities`.
 
+  -- `headless` is a boolean flag to run the browser in headless mode
+  (i.e. without GUI window). Useful when running tests on CI servers
+  rather than local machine. Currently, only FF and Chrome support headless mode.
+  Phantom.js is headless by its nature.
+
+  -- `:size` is a vector of two integers specifying initial window size.
+
+  -- `:url` is a string with the default URL opened by default (FF only for now).
+
+  -- `:load-strategy` is a string or keyword with specifying
+  what strategy to use when load a page. Might be `:none`, `:eager`
+  or :`normal` (default). To not wait the page being loaded completely,
+  specify `:none`. The `:eager` option is still under development
+  in most of the browser.
+
+  -- `:prefs` is a map of browser-specific preferences.
+
+  -- `:profile` is a string path that points on profile folder.
+  See the `Setting browser profile` section in `README.md` to know
+  how to do it properly.
+
+  -- `proxy` is a map of proxy server connection settings.
+
+  --- `http` is a string. Defines the proxy host for HTTP traffic.
+  --- `ssl` is a string. Defines the proxy host for encrypted TLS traffic.
+  --- `ftp` is a string. Defines the proxy host for FTP traffic.
+  --- `pac-url` is a string. Defines the URL for a proxy auto-config file.
+  --- `bypass` is a vector. Lists the address for which the proxy should be bypassed.
+  --- `socks` is a map.
+  ---- `host` is a string. Defines the proxy host for a SOCKS proxy.
+  ---- `version` Any integer between 0 and 255 inclusive. Defines the SOCKS proxy version.
+
+  -- `:args` is a vector of additional command line arguments
+  to the browser's process.
+
   See https://www.w3.org/TR/webdriver/#capabilities"
-  [driver & [opt]] ;; move params here
+  [driver & [{:keys [url
+                     size
+                     args
+                     prefs
+                     proxy
+                     profile
+                     headless
+                     capabilities
+                     load-strategy
+                     desired-capabilities]}]]
   (wait-running driver)
-  (let [type    (:type @driver)
-        caps    (get-in defaults [type :capabilities])
-        _       (swap! driver drv/set-capabilities caps)
-        _       (swap! driver drv/set-capabilities (:capabilities opt))
-        _       (swap! driver drv/set-capabilities (:desired-capabilities opt))
-        caps    (:capabilities @driver)
-        session (create-session driver caps)]
+  (let [type          (:type @driver)
+        caps          (get-in defaults [type :capabilities])
+        proxy         (proxy-env proxy)
+        [with height] size
+        _             (when size
+                        (swap! driver drv/set-window-size with height))
+        _             (when url
+                        (swap! driver drv/set-url url))
+        _             (when headless
+                        (swap! driver drv/set-headless))
+        _             (when args
+                        (swap! driver drv/set-options-args args))
+        _             (when proxy
+                        (swap! driver drv/set-proxy proxy))
+        _             (when load-strategy
+                        (swap! driver drv/set-load-strategy load-strategy))
+        _             (when prefs (swap! driver drv/set-prefs prefs))
+        _             (when profile
+                        (swap! driver drv/set-profile profile))
+        _             (swap! driver drv/set-capabilities caps)
+        _             (swap! driver drv/set-capabilities capabilities)
+        _             (swap! driver drv/set-capabilities desired-capabilities)
+        caps          (:capabilities @driver)
+        session       (create-session driver caps)]
     (swap! driver assoc :session session)
     driver))
 
