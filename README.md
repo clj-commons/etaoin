@@ -409,13 +409,18 @@ Examples:
   ;; .//*[contains(@class, "active")][contains(@class, "sticky")][contains(@class, "marked")]
   ```
 
-- find all the enabled/disabled input widgets:
+- find the enabled/disabled input widgets:
 
   ```clojure
+  ;; first input
   (query driver {:tag :input :fn/disabled true})
   ;; .//input[@disabled=true()]
   (query driver {:tag :input :fn/enabled true})
   ;; .//input[@enabled=true()]
+
+  ;; all inputs
+  (query-all driver {:tag :input :fn/disabled true})
+  ;; .//input[@disabled=true()]
   ```
 
 ### Vector syntax for querying
