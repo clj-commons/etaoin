@@ -756,7 +756,7 @@ Then pass the `capabilities` to the browser with `chromeOptions` or `:moz:firefo
 
 ## Webdriver in Docker
 
-To work with the driver in Docker, you can take ready-made images and explore the section [Connection to remote webdriver](#connection-to-remote-webdriver)
+To work with the driver in Docker, you can take ready-made images:
 
 Example for [Chrome](https://hub.docker.com/r/robcherry/docker-chromedriver/):
 
@@ -768,6 +768,12 @@ for [Firefox](https://hub.docker.com/r/instrumentisto/geckodriver):
 
 ```
 docker run --name geckodriver -p 4444:4444 -d instrumentisto/geckodriver
+```
+to connect to the driver you just need to specify the port on which it is running
+
+``` clojure
+(def driver (chrome-headles {:port 9515 :args ["--no-sandbox"]}))
+(def driver (firefox-headles {:port 4444}))
 ```
 
 ## HTTP Proxy
