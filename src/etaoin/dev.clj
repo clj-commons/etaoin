@@ -197,7 +197,7 @@
   was set (see the `:dev` key when running a driver).
   "
   [driver]
-  (->> (api/get-logs* driver "performance")
+  (->> (api/get-logs driver "performance")
        (mapv (comp process-log api/process-log))))
 
 
