@@ -3,9 +3,6 @@
             [etaoin.proc]
             [clojure.test :refer :all]))
 
-
-
-
 (deftest test-firefox-driver-args
   (with-redefs
     [etaoin.proc/run  (fn [_ _])
@@ -31,7 +28,6 @@
                      :args-driver ["--marionette-port" 2821]} driver
         (is (= ["geckodriver" "--port" 1234 "--marionette-port" 2821]
                (:args @driver)))))))
-
 
 (deftest test-fail-run-driver
   (is (thrown-with-msg?
