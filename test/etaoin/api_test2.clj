@@ -1,7 +1,8 @@
 (ns etaoin.api-test2
   (:require [etaoin.api :refer :all]
             [etaoin.proc]
-            [clojure.test :refer :all]))
+            [clojure.test :refer :all]
+            [clojure.java.io :as io]))
 
 (deftest test-firefox-driver-args
   (with-redefs
@@ -28,6 +29,13 @@
                      :args-driver ["--marionette-port" 2821]} driver
         (is (= ["geckodriver" "--port" 1234 "--marionette-port" 2821]
                (:args @driver)))))))
+
+(deftest test-chrome-profile
+  (let [profile-path (str (io/resource "chrome-profile"))]
+    (with-chrome {:profile profile-path} driver
+      (go driver "chrome://version")
+      (is profile-path
+          (get-element-text driver :profile_path)))))
 
 (deftest test-fail-run-driver
   (is (thrown-with-msg?

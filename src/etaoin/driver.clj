@@ -159,9 +159,14 @@
   ;; Chrome adds the trailing `/Default` part to the profile path.
   ;; To prevent duplication, let's clear the given path manually.
   [driver profile]
-  (let [default #"(\\|/)Default$"
-        p       (string/replace profile default "")]
-    (set-options-args driver [(format "--user-data-dir=%s" p)])))
+  (let [profile       (java.io.File. profile)
+        profile       (if (= "Default" (.getName profile))
+                        (.getParent profile)
+                        profile)
+        user-data-dir (str (.getParent profile))
+        profile-dir   (str  (.getName profile))]
+    (set-options-args driver [(format "--user-data-dir=%s" user-data-dir)
+                              (format "--profile-directory=%s" profile-dir)])))
 
 (defmethod set-profile
   :firefox
