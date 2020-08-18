@@ -2962,8 +2962,8 @@
   browser's logs. Possible values are: `:off`, `:debug`, `:warn`, `:info`,
   `:error`, `:all`. When not passed, `:all` is set.
 
-  -- `:driver-log-level` a string to set driver's log level.
-  Possible values are:
+  -- `:driver-log-level` a keyword to set driver's log level.
+  The value is a string. Possible values are:
   chrome: [ALL, DEBUG, INFO, WARNING, SEVERE, OFF]
   phantomjs: [ERROR, WARN, INFO, DEBUG] (default INFO)
   firefox [fatal, error, warn, info, config, debug, trace]

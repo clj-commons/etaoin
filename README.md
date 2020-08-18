@@ -1085,7 +1085,7 @@ skipped or have nil values. Some of them, if not passed, are taken from the
  :log-level :err ;; to show only errors but not debug
 
  ;; Sets driver's log level.
- ;; A string. Possible values are:
+ ;; The value is a string. Possible values are:
  ;; chrome: [ALL, DEBUG, INFO, WARNING, SEVERE, OFF]
  ;; phantomjs: [ERROR, WARN, INFO, DEBUG] (default INFO)
  ;; firefox [fatal, error, warn, info, config, debug, trace]
