@@ -463,3 +463,27 @@
                            :enablePage                   page?
                            :traceCategories              (string/join "," (map name categories))
                            :bufferUsageReportingInterval interval})))))
+
+(defmulti set-driver-log-level
+  dispatch-driver)
+
+(defmethod set-driver-log-level
+  :default
+  [driver _]
+  (log/debugf "For this driver, the log level setting is not implemented.")
+  driver)
+
+(defmethod set-driver-log-level
+  :chrome
+  [driver log-level]
+  (set-args driver [(format "--log-level=%s" log-level)]))
+
+(defmethod set-driver-log-level
+  :firefox
+  [driver log-level]
+  (set-args driver ["--log" log-level]))
+
+(defmethod set-driver-log-level
+  :phantom
+  [driver log-level]
+  (set-args driver [(format "--webdriver-loglevel=%s" log-level)]))

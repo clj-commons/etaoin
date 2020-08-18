@@ -1084,6 +1084,13 @@ skipped or have nil values. Some of them, if not passed, are taken from the
  ;; :all is set.
  :log-level :err ;; to show only errors but not debug
 
+ ;; Sets driver's log level.
+ ;; The value is a string. Possible values are:
+ ;; chrome: [ALL, DEBUG, INFO, WARNING, SEVERE, OFF]
+ ;; phantomjs: [ERROR, WARN, INFO, DEBUG] (default INFO)
+ ;; firefox [fatal, error, warn, info, config, debug, trace]
+ :driver-log-level
+
  ;; Paths to the driver's log files as strings.
  ;; When not set, the output goes to /dev/null (or NUL on Windows)
  :log-stdout

@@ -2962,6 +2962,15 @@
   browser's logs. Possible values are: `:off`, `:debug`, `:warn`, `:info`,
   `:error`, `:all`. When not passed, `:all` is set.
 
+  -- `:driver-log-level` a keyword to set driver's log level.
+  The value is a string. Possible values are:
+  chrome: [ALL, DEBUG, INFO, WARNING, SEVERE, OFF]
+  phantomjs: [ERROR, WARN, INFO, DEBUG] (default INFO)
+  firefox [fatal, error, warn, info, config, debug, trace]
+
+  -- `:log-stdout` and `:log-stderr`. Paths to the driver's log files as strings.
+  When not set, the output goes to /dev/null (or NUL on Windows)
+
   -- `:args-driver` is a vector of additional arguments to the
   driver's process.
 
@@ -2977,7 +2986,8 @@
                      args-driver
                      path-driver
                      download-dir
-                     path-browser]}]]
+                     path-browser
+                     driver-log-level]}]]
 
   (let [{:keys [type port]} @driver
         log-level           (or log-level :all)
@@ -2991,6 +3001,8 @@
             (let [{:keys [perf]} dev]
               (swap! driver drv/set-perf-logging perf)))
 
+        _ (when driver-log-level
+            (swap! driver drv/set-driver-log-level driver-log-level))
         _ (when args-driver
             (swap! driver drv/set-args args-driver))
         _ (when path-browser
