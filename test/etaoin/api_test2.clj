@@ -31,7 +31,9 @@
                (:args @driver)))))))
 
 (deftest test-chrome-profile
-  (let [profile-path (str (io/resource "chrome-profile"))]
+  (let [profile-path (str (java.nio.file.Files/createTempDirectory
+                            "chrome-profile"
+                            (into-array java.nio.file.attribute.FileAttribute [])))]
     (with-chrome {:profile profile-path} driver
       (go driver "chrome://version")
       (is profile-path
