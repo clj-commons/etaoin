@@ -160,7 +160,7 @@
   ;; Chrome adds the trailing `/Default` part to the profile path.
   ;; To prevent duplication, let's clear the given path manually.
   [driver ^String profile]
-  (let [profile       (java.io.File. profile)
+  (let [profile       (File. profile)
         ^File profile (if (= "Default" (.getName profile))
                         (.getParent profile)
                         profile)
