@@ -119,7 +119,7 @@ There are two steps to installation:
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.3.8"]
+[etaoin "0.3.9"]
 ```
 
 Works with Clojure 1.7 and above.
