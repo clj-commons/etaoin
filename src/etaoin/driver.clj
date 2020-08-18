@@ -39,7 +39,8 @@
   "
   (:require [etaoin.util :refer [defmethods deep-merge]]
             [clojure.string :as string]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log])
+  (:import (java.io File)))
 
 (defn dispatch-driver
   [driver & _]
@@ -158,9 +159,9 @@
   :chrome
   ;; Chrome adds the trailing `/Default` part to the profile path.
   ;; To prevent duplication, let's clear the given path manually.
-  [driver profile]
-  (let [profile       (java.io.File. profile)
-        profile       (if (= "Default" (.getName profile))
+  [driver ^String profile]
+  (let [profile       (File. profile)
+        ^File profile (if (= "Default" (.getName profile))
                         (.getParent profile)
                         profile)
         user-data-dir (str (.getParent profile))

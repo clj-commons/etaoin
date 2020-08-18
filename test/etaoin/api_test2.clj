@@ -1,8 +1,9 @@
 (ns etaoin.api-test2
   (:require [etaoin.api :refer :all]
             [etaoin.proc]
-            [clojure.test :refer :all]
-            [clojure.java.io :as io]))
+            [clojure.test :refer :all])
+  (:import (java.nio.file Files)
+           (java.nio.file.attribute FileAttribute)))
 
 (deftest test-firefox-driver-args
   (with-redefs
@@ -31,7 +32,9 @@
                (:args @driver)))))))
 
 (deftest test-chrome-profile
-  (let [profile-path (str (io/resource "chrome-profile"))]
+  (let [profile-path (str (Files/createTempDirectory
+                            "chrome-profile"
+                            (into-array FileAttribute [])))]
     (with-chrome {:profile profile-path} driver
       (go driver "chrome://version")
       (is profile-path
