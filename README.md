@@ -71,6 +71,7 @@ after a mysteries note was produced on it.
   * [Querying wrong elements with XPath expressions](#querying-wrong-elements-with-xpath-expressions)
   * [Clicking On Non-Visible Element](#clicking-on-non-visible-element)
   * [Unpredictable errors in Chrome when window is not active](#unpredictable-errors-in-chrome-when-window-is-not-active)
+  * [Invalid argument: can't kill an exited process](#invalid-argument:-can't-kill-an-exited-process)
 - [Contributors](#contributors)
 - [Other materials](#other-materials)
 - [License](#license)
@@ -1842,6 +1843,28 @@ Google Chrome fails.
 **Solution:** Google Chrome may suspend a tab when it has been inactive for some
 time. When the page is suspended, no operation could be done on it. No clicks,
 Js execution, etc. So try to keep Chrome window active during test session.
+
+### Invalid argument: can't kill an exited process
+
+**Problem:** When you try to start the driver you get an error:
+
+```clojure
+user=> (use 'etaoin.api)
+user=> (def driver (firefox {:headless true}))
+```
+> Syntax error (ExceptionInfo) compiling at (REPL:1:13).
+throw+: {:response {:value {:error "unknown error", :message "invalid argument: can't kill an exited process"....
+
+Possible cause: "Running Firefox as root in a regular user's session is not supported"
+
+**Solution:** To check, run the driver with the path to the log files and the "trace" log level and explore their output.
+
+``` clojure
+(def driver (firefox {:log-stdout "ffout.log" :log-stderr "fferr.log" :driver-log-level "trace"}))
+```
+
+Similar problem: https://github.com/mozilla/geckodriver/issues/1655
+
 
 ## Contributors
 
