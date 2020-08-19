@@ -57,6 +57,24 @@ IMAGE := etaoin
 docker-build:
 	docker build -t ${IMAGE}:latest .
 
+# before running test on Mac with x11 run this command: `export HOST=$HOST`
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+	DISPLAY := $(DISPLAY)
+endif
+ifeq ($(UNAME_S),Darwin)
+	DISPLAY := $(HOST):0
+endif
+
+.PHONY: docker-test-display
+docker-test-display:
+	xhost +
+	docker run --rm \
+	-v ${CURDIR}:/etaoin \
+	-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=${DISPLAY} \
+	-w /etaoin ${IMAGE}:latest \
+	lein test || \
+	xhost -
 
 .PHONY: docker-test
 docker-test:
