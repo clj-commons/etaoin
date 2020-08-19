@@ -61,6 +61,6 @@ docker-build:
 .PHONY: docker-test
 docker-test:
 	docker run --rm \
-	-v $(CURDIR)/:/etaoin \
-	-w /etaoin ${IMAGE}:latest \
-	lein test
+	-v ${PWD}:/home/automation/etaoin \
+	-w /home/automation/etaoin \
+	${IMAGE}:latest lein test
