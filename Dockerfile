@@ -3,7 +3,7 @@ FROM clojure:lein-2.9.3
 RUN apt-get -yqq update && \
     apt-get -yqq upgrade && \
     apt-get -yqq install gnupg2 && \
-    apt-get -yqq install curl unzip && \
+    apt-get -yqq install xvfb curl unzip && \
     apt-get -yqq install fonts-ipafont-gothic xfonts-100dpi xfonts-75dpi xfonts-scalable xfonts-cyrillic && \
     apt-get install -y ca-certificates jq libfontconfig libgconf-2-4 && \
     rm -rf /var/lib/apt/lists/*
@@ -52,11 +52,14 @@ RUN PHANTOMJS_VERSION=phantomjs-2.1.1-linux-x86_64 && \
 # which seems to be a recent bug.
 ENV OPENSSL_CONF=/opt/openssl.cnf
 
-WORKDIR /etaoin
-COPY ./ ./
-RUN lein deps
+COPY ./ /etaoin
+RUN cd /etaoin && lein deps && rm -rf /etaoin
 
-WORKDIR /
-RUN rm -rf /etaoin
+ENV DISPLAY :99
+RUN printf '#!/bin/sh\nXvfb :99 -screen 0 1280x1024x24 &\nexec "$@"\n' > /tmp/entrypoint \
+    && chmod +x /tmp/entrypoint \
+    && mv /tmp/entrypoint /entrypoint.sh
 
 ENV ETAOIN_TEST_DRIVERS="[:firefox :chrome :phantom]"
+
+ENTRYPOINT ["/entrypoint.sh"]

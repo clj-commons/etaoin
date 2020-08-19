@@ -33,12 +33,11 @@
 
 
 ;; TODO: https://github.com/igrishaev/etaoin/issues/296
-#_
 (deftest test-chrome-profile
   (let [profile-path (str (Files/createTempDirectory
-                           "chrome-profile"
-                           (into-array FileAttribute [])))]
-    (with-chrome-headless {:profile profile-path :args ["--no-sandbox"]} driver
+                            "chrome-profile"
+                            (into-array FileAttribute [])))]
+    (with-chrome {:profile profile-path :args ["--no-sandbox"]} driver
       (go driver "chrome://version")
       (is profile-path
           (get-element-text driver :profile_path)))))
