@@ -65,8 +65,7 @@ endif
 
 # works only on mac + quartz
 .PHONY: docker-test-display
-docker-test-display:
-	check-host
+docker-test-display: check-host
 	xhost +
 	docker run --rm \
 	-v ${CURDIR}:/etaoin \
