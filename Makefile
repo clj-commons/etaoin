@@ -57,24 +57,20 @@ IMAGE := etaoin
 docker-build:
 	docker build -t ${IMAGE}:latest .
 
-UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),Linux)
-	DISPLAY := $(DISPLAY)
-endif
-ifeq ($(UNAME_S),Darwin)
-	DISPLAY := $(HOST):0
+.PHONY: check-host
+check-host:
+ifndef HOST
+ $(error The HOST variable is not set, please do `export HOST=$$HOST` first)
 endif
 
+# works only on mac + quartz
 .PHONY: docker-test-display
 docker-test-display:
-# before running test on Mac with x11 run this command: `export HOST=$HOST`
-	@if [ ${HOST} =  -a $(UNAME_S) = Darwin ]; then\
-		echo "Do export HOST=\$$HOST"; exit 1;\
-	fi
+	check-host
 	xhost +
 	docker run --rm \
 	-v ${CURDIR}:/etaoin \
-	-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=${DISPLAY} \
+	-v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$(HOST):0 \
 	-w /etaoin ${IMAGE}:latest \
 	lein test || \
 	xhost -
