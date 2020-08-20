@@ -31,8 +31,6 @@
         (is (= ["geckodriver" "--port" 1234 "--marionette-port" 2821]
                (:args @driver)))))))
 
-
-;; TODO: https://github.com/igrishaev/etaoin/issues/296
 (deftest test-chrome-profile
   (let [profile-path (str (Files/createTempDirectory
                             "chrome-profile"
