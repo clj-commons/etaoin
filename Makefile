@@ -57,7 +57,6 @@ IMAGE := etaoin
 docker-build:
 	docker build -t ${IMAGE}:latest .
 
-# before running test on Mac with x11 run this command: `export HOST=$HOST`
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
 	DISPLAY := $(DISPLAY)
@@ -68,6 +67,10 @@ endif
 
 .PHONY: docker-test-display
 docker-test-display:
+# before running test on Mac with x11 run this command: `export HOST=$HOST`
+	@if [ ${HOST} =  -a $(UNAME_S) = Darwin ]; then\
+		echo "Do export HOST=\$$HOST"; exit 1;\
+	fi
 	xhost +
 	docker run --rm \
 	-v ${CURDIR}:/etaoin \
