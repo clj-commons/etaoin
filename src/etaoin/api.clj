@@ -3146,11 +3146,17 @@
   `run-driver` and `connect-driver` may accept."
   ([type]
    (boot-driver type {}))
-  ([type {host :host :as opt}]
-   (cond-> type
-     true       (create-driver opt)
-     (not host) (run-driver opt)
-     true       (connect-driver opt))))
+  ([type {:keys [host port] :as opt}]
+   (let [port (when host
+                (or port
+                    (get-in defaults [type :port])))
+         opt  (if port
+                (assoc opt :port port)
+                opt)]
+     (cond-> type
+       true       (create-driver opt)
+       (not host) (run-driver opt)
+       true       (connect-driver opt)))))
 
 (defn quit
   "Closes the current session and stops the driver."
