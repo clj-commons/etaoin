@@ -2899,7 +2899,7 @@
                     (if host
                       (get-in defaults [type :port])
                       (util/get-free-port)))
-        host    (or :host "127.0.0.1")
+        host    (or host "127.0.0.1")
         url     (make-url host port)
         locator (or locator default-locator)]
     (swap! driver assoc
