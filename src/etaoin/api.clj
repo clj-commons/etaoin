@@ -1858,26 +1858,6 @@
   (util/connectable? (:host @driver)
                      (:port @driver)))
 
-(defn discover-port
-  "Finds a port for a driver type.
-
-  Takes a default one from `defaults` map. If it's already taken,
-  continues to take random ports until if finds non-busy one.
-
-  Arguments:
-
-  - `type`: a keyword, browser type (:chrome, :firefox, etc),
-
-  - `host`: a string, hostname or IP.
-
-  Returns a port as an integer."
-  [type host]
-  (loop [port (or (get-in defaults [type :port])
-                  (util/get-free-port))]
-    (if (util/connectable? host port)
-      (recur (util/get-free-port))
-      port)))
-
 ;;
 ;; predicates
 ;;
@@ -2913,13 +2893,15 @@
   -- `:locator` is a string determs what algorithm to use by default
   when finding elements on a page. `default-locator` variable is used
   if not passed."
-  [type & [opt]] ;; todo move port and host to create-driver
+  [type & [{:keys [port host locator]}]]
   (let [driver  (atom {})
-        host    (or (:host opt) "127.0.0.1")
-        port    (or (:port opt)
-                    (discover-port type host))
+        port    (or port
+                    (if host
+                      (get-in defaults [type :port])
+                      (util/get-free-port)))
+        host    (or host "127.0.0.1")
         url     (make-url host port)
-        locator (or (:locator opt) default-locator)]
+        locator (or locator default-locator)]
     (swap! driver assoc
            :type type
            :host host
@@ -2989,9 +2971,15 @@
                      path-browser
                      driver-log-level]}]]
 
-  (let [{:keys [type port]} @driver
-        log-level           (or log-level :all)
-        path-driver         (or path-driver (get-in defaults [type :path]))
+  (let [{:keys [type port host]} @driver
+
+        _ (when (util/connectable? host port)
+            (throw (ex-info
+                     (format "Port %d already in use" port)
+                     {:port port})))
+
+        log-level   (or log-level :all)
+        path-driver (or path-driver (get-in defaults [type :path]))
 
         _ (swap! driver drv/set-browser-log-level log-level)
         _ (swap! driver drv/set-path path-driver)
@@ -3146,7 +3134,7 @@
   `run-driver` and `connect-driver` may accept."
   ([type]
    (boot-driver type {}))
-  ([type {host :host :as opt}]
+  ([type {:keys [host] :as opt}]
    (cond-> type
      true       (create-driver opt)
      (not host) (run-driver opt)
