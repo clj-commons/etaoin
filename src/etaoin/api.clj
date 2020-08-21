@@ -1872,8 +1872,7 @@
 
   Returns a port as an integer."
   [type host]
-  (loop [port (or (get-in defaults [type :port])
-                  (util/get-free-port))]
+  (loop [port (util/get-free-port)]
     (if (util/connectable? host port)
       (recur (util/get-free-port))
       port)))
@@ -2913,13 +2912,18 @@
   -- `:locator` is a string determs what algorithm to use by default
   when finding elements on a page. `default-locator` variable is used
   if not passed."
-  [type & [opt]] ;; todo move port and host to create-driver
-  (let [driver  (atom {})
-        host    (or (:host opt) "127.0.0.1")
-        port    (or (:port opt)
-                    (discover-port type host))
-        url     (make-url host port)
-        locator (or (:locator opt) default-locator)]
+  [type & [{:keys [port host] :as opt}]]
+  (let [driver     (atom {})
+        local-host "127.0.0.1"
+        port       (if host
+                     (or port
+                         (get-in defaults [type :port]))
+                     (if port
+                       port
+                       (discover-port type local-host)))
+        host       (or (:host opt) local-host)
+        url        (make-url host port)
+        locator    (or (:locator opt) default-locator)]
     (swap! driver assoc
            :type type
            :host host
@@ -2989,9 +2993,15 @@
                      path-browser
                      driver-log-level]}]]
 
-  (let [{:keys [type port]} @driver
-        log-level           (or log-level :all)
-        path-driver         (or path-driver (get-in defaults [type :path]))
+  (let [{:keys [type port host]} @driver
+
+        _ (when (util/connectable? host port)
+            (throw (ex-info
+                     (format "Port %d already in use" port)
+                     {:port port})))
+
+        log-level   (or log-level :all)
+        path-driver (or path-driver (get-in defaults [type :path]))
 
         _ (swap! driver drv/set-browser-log-level log-level)
         _ (swap! driver drv/set-path path-driver)
@@ -3146,17 +3156,11 @@
   `run-driver` and `connect-driver` may accept."
   ([type]
    (boot-driver type {}))
-  ([type {:keys [host port] :as opt}]
-   (let [port (when host
-                (or port
-                    (get-in defaults [type :port])))
-         opt  (if port
-                (assoc opt :port port)
-                opt)]
-     (cond-> type
-       true       (create-driver opt)
-       (not host) (run-driver opt)
-       true       (connect-driver opt)))))
+  ([type {:keys [host] :as opt}]
+   (cond-> type
+     true       (create-driver opt)
+     (not host) (run-driver opt)
+     true       (connect-driver opt))))
 
 (defn quit
   "Closes the current session and stops the driver."
