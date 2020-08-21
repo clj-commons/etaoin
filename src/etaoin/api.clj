@@ -2893,16 +2893,15 @@
   -- `:locator` is a string determs what algorithm to use by default
   when finding elements on a page. `default-locator` variable is used
   if not passed."
-  [type & [{:keys [port host locator] :as opt}]]
-  (let [driver     (atom {})
-        local-host "127.0.0.1"
-        port       (or port
-                       (if host
-                         (get-in defaults [type :port])
-                         (util/get-free-port)))
-        host       (or :host local-host)
-        url        (make-url host port)
-        locator    (or locator default-locator)]
+  [type & [{:keys [port host locator]}]]
+  (let [driver  (atom {})
+        port    (or port
+                    (if host
+                      (get-in defaults [type :port])
+                      (util/get-free-port)))
+        host    (or :host "127.0.0.1")
+        url     (make-url host port)
+        locator (or locator default-locator)]
     (swap! driver assoc
            :type type
            :host host
