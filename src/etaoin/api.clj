@@ -1858,25 +1858,6 @@
   (util/connectable? (:host @driver)
                      (:port @driver)))
 
-(defn discover-port
-  "Finds a port for a driver type.
-
-  Takes a default one from `defaults` map. If it's already taken,
-  continues to take random ports until if finds non-busy one.
-
-  Arguments:
-
-  - `type`: a keyword, browser type (:chrome, :firefox, etc),
-
-  - `host`: a string, hostname or IP.
-
-  Returns a port as an integer."
-  [type host]
-  (loop [port (util/get-free-port)]
-    (if (util/connectable? host port)
-      (recur (util/get-free-port))
-      port)))
-
 ;;
 ;; predicates
 ;;
@@ -2912,18 +2893,16 @@
   -- `:locator` is a string determs what algorithm to use by default
   when finding elements on a page. `default-locator` variable is used
   if not passed."
-  [type & [{:keys [port host] :as opt}]]
+  [type & [{:keys [port host locator] :as opt}]]
   (let [driver     (atom {})
         local-host "127.0.0.1"
-        port       (if host
-                     (or port
-                         (get-in defaults [type :port]))
-                     (if port
-                       port
-                       (discover-port type local-host)))
-        host       (or (:host opt) local-host)
+        port       (or port
+                       (if host
+                         (get-in defaults [type :port])
+                         (util/get-free-port)))
+        host       (or :host local-host)
         url        (make-url host port)
-        locator    (or (:locator opt) default-locator)]
+        locator    (or locator default-locator)]
     (swap! driver assoc
            :type type
            :host host
