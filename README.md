@@ -730,29 +730,17 @@ respectively:
 
 ## Connection to remote webdriver
 
-To create a connection with an existing webdriver, you must first create the driver manually.
+To connect to a driver already running on a local or remote host, you must specify the ip and port.
+If the port is not specified, the default port is set.
+
 Example:
 
 ```clojure
 ;; Chrome
-(def driver (create-driver :chrome {:host "127.0.0.1" :port 9515})) ;; 127.0.0.1 is default host, use own
+(def driver (chrome {:host "127.0.0.1" :port 9515})) ;; for connection to driver on localhost on port 9515
 
 ;; Firefox
-(def driver (create-driver :firefox {:host "127.0.0.1" :port 4444}))
-```
-
-Then pass the `capabilities` to the browser with `chromeOptions` or `:moz:firefoxOptions` for Chrome or Firefox respectively:
-
-```clojure
-;; Chrome
-(connect-driver driver
-  {:capabilities
-   {:chromeOptions {:args ["--no-sandbox" "--headless"]}}})
-
-;; Firefox
-(connect-driver driver
-  {:capabilities
-   {:moz:firefoxOptions {:args ["--headless"]}}})
+(def driver (firefox {:host "192.168.1.11"})) ;; the default port for firefox is 4444
 ```
 
 ## Webdriver in Docker
@@ -770,11 +758,13 @@ for [Firefox](https://hub.docker.com/r/instrumentisto/geckodriver):
 ```
 docker run --name geckodriver -p 4444:4444 -d instrumentisto/geckodriver
 ```
-to connect to the driver you just need to specify the port on which it is running
+
+To connect to the driver you just need to specify the host as `localhost` and the port on which it is running.
+If the port is not specified, the default port is set.
 
 ``` clojure
-(def driver (chrome-headles {:port 9515 :args ["--no-sandbox"]}))
-(def driver (firefox-headles {:port 4444}))
+(def driver (chrome-headles {:host "localhost" :port 9515 :args ["--no-sandbox"]}))
+(def driver (firefox-headles {:host "localhost"})) ;; will try to connect to port 4444
 ```
 
 ## HTTP Proxy
