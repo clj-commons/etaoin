@@ -730,7 +730,8 @@ respectively:
 
 ## Connection to remote webdriver
 
-To connect to a driver already running on a local or remote host, you must specify the ip and port.
+To connect to a driver already running on a local or remote host, you must specify the `:host` parameter 
+which might be either a hostname (localhost, some.remote.host.net) or an IP address (127.0.0.1, 183.102.156.31) and the `:port`.
 If the port is not specified, the default port is set.
 
 Example:
@@ -759,7 +760,7 @@ for [Firefox](https://hub.docker.com/r/instrumentisto/geckodriver):
 docker run --name geckodriver -p 4444:4444 -d instrumentisto/geckodriver
 ```
 
-To connect to the driver you just need to specify the host as `localhost` and the port on which it is running.
+To connect to the driver you just need to specify the `:host` parameter as `localhost` or `127.0.0.1` and the `:port` on which it is running.
 If the port is not specified, the default port is set.
 
 ``` clojure
