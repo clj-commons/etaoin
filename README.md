@@ -773,8 +773,8 @@ docker run --name geckodriver -p 4444:4444 -d instrumentisto/geckodriver
 to connect to the driver you just need to specify the port on which it is running
 
 ``` clojure
-(def driver (chrome-headles {:port 9515 :args ["--no-sandbox"]}))
-(def driver (firefox-headles {:port 4444}))
+(def driver (chrome-headless {:port 9515 :args ["--no-sandbox"]}))
+(def driver (firefox-headless {:port 4444}))
 ```
 
 ## HTTP Proxy
