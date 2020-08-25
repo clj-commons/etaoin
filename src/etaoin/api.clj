@@ -2866,7 +2866,7 @@
   (format "http://%s:%s" host port))
 
 
-(defn create-driver
+(defn- -create-driver
   "Creates a new driver instance.
 
   Returns an atom that represents driver's state. Some functions, for
@@ -2921,7 +2921,7 @@
       ssl  (assoc :ssl ssl))))
 
 
-(defn run-driver
+(defn- -run-driver
   "Runs a driver process locally.
 
   Creates a UNIX process with a Webdriver HTTP server. Host and port
@@ -2930,7 +2930,7 @@
 
   Arguments:
 
-  - `driver` is an atom created with `create-driver` function.
+  - `driver` is an atom created with `-create-driver` function.
 
   - `opt` is an optional map with the following possible parameters:
 
@@ -3008,7 +3008,7 @@
            :process process)
     driver))
 
-(defn connect-driver
+(defn- -connect-driver
   "Connects to a running Webdriver server.
 
   Creates a new session on Webdriver HTTP server. Sets the session to
@@ -3130,23 +3130,25 @@
 
   - `type` a keyword determines a driver type.
 
-  - `opt` a map of all possible parameters that `create-driver`,
-  `run-driver` and `connect-driver` may accept."
+  - `opt` a map of all possible parameters that `-create-driver`,
+  `-run-driver` and `-connect-driver` may accept."
   ([type]
    (boot-driver type {}))
   ([type {:keys [host] :as opt}]
    (cond-> type
-     true       (create-driver opt)
-     (not host) (run-driver opt)
-     true       (connect-driver opt))))
+     true       (-create-driver opt)
+     (not host) (-run-driver opt)
+     true       (-connect-driver opt))))
 
 (defn quit
   "Closes the current session and stops the driver."
   [driver]
-  (try
-    (disconnect-driver driver)
-    (finally
-      (stop-driver driver))))
+  (let [process (:process @driver)]
+    (try
+      (disconnect-driver driver)
+      (finally
+        (when process
+          (stop-driver driver))))))
 
 (def firefox
   "Launches Firefox driver. A shortcut for `boot-driver`."

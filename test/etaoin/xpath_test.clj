@@ -10,7 +10,9 @@
 
    [{:tag :button :fn/text "Press Me"} ".//button[text()=\"Press Me\"]"]
 
-   [{:fn/has-text "download"} ".//*[contains(string(), \"download\")]"]
+   [{:fn/has-text "download"} ".//*[contains(text(), \"download\")]"]
+
+   [{:fn/has-string "download"} ".//*[contains(string(), \"download\")]"]
 
    [{:tag :div :fn/has-class "overlay"} ".//div[contains(@class, \"overlay\")]"]
 

@@ -764,8 +764,8 @@ To connect to the driver you just need to specify the `:host` parameter as `loca
 If the port is not specified, the default port is set.
 
 ``` clojure
-(def driver (chrome-headles {:host "localhost" :port 9515 :args ["--no-sandbox"]}))
-(def driver (firefox-headles {:host "localhost"})) ;; will try to connect to port 4444
+(def driver (chrome-headless {:host "localhost" :port 9515 :args ["--no-sandbox"]}))
+(def driver (firefox-headless {:host "localhost"})) ;; will try to connect to port 4444
 ```
 
 ## HTTP Proxy

@@ -59,9 +59,9 @@ docker-build:
 
 .PHONY: check-host
 check-host:
-ifndef HOST
- $(error The HOST variable is not set, please do `export HOST=$$HOST` first)
-endif
+	ifndef HOST
+		$(error The HOST variable is not set, please do `export HOST=$$HOST` first)
+	endif
 
 # works only on mac + quartz
 .PHONY: docker-test-display
