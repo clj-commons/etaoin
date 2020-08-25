@@ -3143,10 +3143,12 @@
 (defn quit
   "Closes the current session and stops the driver."
   [driver]
-  (try
-    (disconnect-driver driver)
-    (finally
-      (stop-driver driver))))
+  (let [process (:process @driver)]
+    (try
+      (disconnect-driver driver)
+      (finally
+        (when process
+          (stop-driver driver))))))
 
 (def firefox
   "Launches Firefox driver. A shortcut for `boot-driver`."
