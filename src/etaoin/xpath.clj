@@ -55,6 +55,10 @@
 
 (defmethod clause :fn/has-text
   [[_ text]]
+  (node-contains "text()" text))
+
+(defmethod clause :fn/has-string
+  [[_ text]]
   (node-contains "string()" text))
 
 (defmethod clause :fn/has-class
