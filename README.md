@@ -120,7 +120,7 @@ There are two steps to installation:
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.3.9"]
+[etaoin "0.3.10"]
 ```
 
 Works with Clojure 1.7 and above.
@@ -731,7 +731,7 @@ respectively:
 
 ## Connection to remote webdriver
 
-To connect to a driver already running on a local or remote host, you must specify the `:host` parameter 
+To connect to a driver already running on a local or remote host, you must specify the `:host` parameter
 which might be either a hostname (localhost, some.remote.host.net) or an IP address (127.0.0.1, 183.102.156.31) and the `:port`.
 If the port is not specified, the default port is set.
 
