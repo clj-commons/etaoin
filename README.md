@@ -72,6 +72,7 @@ after a mysteries note was produced on it.
   * [Clicking On Non-Visible Element](#clicking-on-non-visible-element)
   * [Unpredictable errors in Chrome when window is not active](#unpredictable-errors-in-chrome-when-window-is-not-active)
   * [Invalid argument: can't kill an exited process](#invalid-argument:-can't-kill-an-exited-process)
+  * [DevToolsActivePort file doesn't exist](#devtoolsactiveport-file-doesn't-exis)
 - [Contributors](#contributors)
 - [Other materials](#other-materials)
 - [License](#license)
@@ -1856,6 +1857,24 @@ Possible cause: "Running Firefox as root in a regular user's session is not supp
 
 Similar problem: https://github.com/mozilla/geckodriver/issues/1655
 
+
+### DevToolsActivePort file doesn't exist
+
+**Problem:** When you try to start the chromedriver you get an error:
+
+>clojure.lang.ExceptionInfo: throw+: {:response {:sessionId ".....", :status 13, :value {:message "unknown error: Chrome failed to start: exited abnormally.\n  (unknown error: DevToolsActivePort file doesn't exist)...
+
+Possible cause:
+> A common cause for Chrome to crash during startup is running Chrome as root user (administrator) on Linux. While it is possible to work around this issue by passing --no-sandbox flag when creating your WebDriver session, such a configuration is unsupported and highly discouraged. You need to configure your environment to run Chrome as a regular user instead.
+
+**Solution:** Run driver with an argument `--no-sandbox`. Caution! This is a bypass OS security model.
+
+``` clojure
+(def driver (chrome {:args ["--no-sandbox"]}))
+```
+
+
+A similar problem is described [here](https://stackoverflow.com/questions/50642308/webdriverexception-unknown-error-devtoolsactiveport-file-doesnt-exist-while-t)
 
 ## Contributors
 
