@@ -3,7 +3,19 @@
             [etaoin.proc]
             [clojure.test :refer :all])
   (:import (java.nio.file Files)
+           (java.io File)
+           (org.apache.commons.io FileUtils)
            (java.nio.file.attribute FileAttribute)))
+
+(defmacro with-tmp-dir [prefix bind & body]
+  `(let [tmp#  (str (Files/createTempDirectory
+                      ~prefix
+                      (into-array FileAttribute [])))
+         ~bind tmp#]
+     (try
+       ~@body
+       (finally
+         (FileUtils/deleteDirectory (File. tmp#))))))
 
 (deftest test-firefox-driver-args
   (with-redefs
@@ -32,13 +44,12 @@
                (:args @driver)))))))
 
 (deftest test-chrome-profile
-  (let [profile-path (str (Files/createTempDirectory
-                            "chrome-profile"
-                            (into-array FileAttribute [])))]
-    (with-chrome {:profile profile-path :args ["--no-sandbox"]} driver
-      (go driver "chrome://version")
-      (is profile-path
-          (get-element-text driver :profile_path)))))
+  (with-tmp-dir "chrome-dir" chrome-dir
+    (let [profile-path (str (File. chrome-dir "chrome-profile"))]
+      (with-chrome {:profile profile-path :args ["--no-sandbox"]} driver
+        (go driver "chrome://version")
+        (is profile-path
+            (get-element-text driver :profile_path))))))
 
 (deftest test-fail-run-driver
   (is (thrown-with-msg?
