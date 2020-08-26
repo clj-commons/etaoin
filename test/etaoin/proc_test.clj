@@ -17,7 +17,7 @@
   (testing "certain driver port"
     (let [port    9999
           process (proc/run ["chromedriver" (format "--port=%d" port)])
-          _       (wait-running (atom {:port port :host "localhost"}))]
+          _       (wait-running {:port port :host "localhost"})]
       (is (= 1 (get-count-chromedriver-processes)))
       (is (thrown-with-msg?
             clojure.lang.ExceptionInfo
@@ -27,14 +27,14 @@
   (testing "random driver port"
     (let [port    9999
           process (proc/run ["chromedriver" (format "--port=%d" port)])
-          _       (wait-running (atom {:port port :host "localhost"}))]
+          _       (wait-running {:port port :host "localhost"})]
       (with-chrome {:args ["--no-sandbox"]} driver
         (is (= 2 (get-count-chromedriver-processes)))
         (proc/kill process))))
   (testing "connect to driver"
     (let [port    9999
           process (proc/run ["chromedriver" (format "--port=%d" port)])
-          _       (wait-running (atom {:port port :host "localhost"}))
+          _       (wait-running {:port port :host "localhost"})
           driver  (chrome {:host "localhost" :port port :args ["--no-sandbox"]})]
       (is (= 1 (get-count-chromedriver-processes)))
       (proc/kill process))))

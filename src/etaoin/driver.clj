@@ -1,10 +1,6 @@
 (ns etaoin.driver
   "Some utilities to work with driver's data structure.
 
-  Note: the functions below take not an atom but pure map
-  to be used with swap!. Our further goal is to reduce atom usage
-  everywhere it is possible.
-
   Links for development:
 
   Firefox command line flags:
