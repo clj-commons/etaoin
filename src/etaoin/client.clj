@@ -70,8 +70,8 @@
 
 (defn call
   [driver method path-args payload]
-  (let [host   (:host @driver)
-        port   (:port @driver)
+  (let [host   (:host driver)
+        port   (:port driver)
         path   (get-url-path path-args)
         url    (format "http://%s:%s/%s" host port path)
         params (merge default-api-params
@@ -81,9 +81,9 @@
                        :throw-exceptions false})
 
         _ (log/debugf "%s %s:%s %6s %s %s"
-                      (-> @driver :type name)
-                      (-> @driver :host)
-                      (-> @driver :port)
+                      (-> driver :type name)
+                      (-> driver :host)
+                      (-> driver :port)
                       (-> method name str/upper-case)
                       path
                       (-> payload (or "")))
@@ -92,7 +92,7 @@
         body  (:body resp)
         error (delay {:type     :etaoin/http-error
                       :status   (:status resp)
-                      :driver   @driver
+                      :driver   driver
                       :response (error-response body)
                       :host     host
                       :port     port

@@ -27,21 +27,21 @@
     (testing "Session"
       (with-firefox {} driver
         (is (= "session-key"
-               (:session @driver)))))
+               (:session driver)))))
     (testing "No custom args"
       (with-firefox {:port 1234} driver
         (is (= ["geckodriver" "--port" 1234]
-               (:args @driver)))))
+               (:args driver)))))
     (testing "Default `--marionette-port` is assigned when `:profile` is specified"
       (with-firefox {:port 1234 :profile "/tmp/firefox-profile/1"} driver
         (is (= ["geckodriver" "--port" 1234 "--marionette-port" 2828]
-               (:args @driver)))))
+               (:args driver)))))
     (testing "Custom `--marionette-port` is assigned when `:profile` is specified"
       (with-firefox {:port        1234
                      :profile     "/tmp/firefox-profile/1"
                      :args-driver ["--marionette-port" 2821]} driver
         (is (= ["geckodriver" "--port" 1234 "--marionette-port" 2821]
-               (:args @driver)))))))
+               (:args driver)))))))
 
 (deftest test-chrome-profile
   (with-tmp-dir "chrome-dir" chrome-dir

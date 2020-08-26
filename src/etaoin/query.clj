@@ -28,7 +28,7 @@
 
 (defmethod to-query java.lang.String
   [driver q]
-  (query (:locator @driver) q))
+  (query (:locator driver) q))
 
 (defmethod to-query clojure.lang.IPersistentMap
   [driver {:keys [xpath css] :as q}]
