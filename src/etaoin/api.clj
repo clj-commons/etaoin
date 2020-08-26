@@ -2896,12 +2896,11 @@
         host    (or host "127.0.0.1")
         url     (make-url host port)
         locator (or locator default-locator)
-        driver  (assoc {}
-                       :type type
-                       :host host
-                       :port port
-                       :url url
-                       :locator locator)]
+        driver  {:type    type
+                 :host    host
+                 :port    port
+                 :url     url
+                 :locator locator}]
     (log/debugf "Created driver: %s %s:%s" (name type) host port)
     driver))
 
@@ -2952,7 +2951,6 @@
 
   -- `:env` is a map with system ENV variables. Keys are turned into
   upper-case strings."
-  ;; todo: quite ugly
   [driver & [{:keys [dev
                      env
                      log-level
