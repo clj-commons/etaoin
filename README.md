@@ -33,7 +33,7 @@ after a mysteries note was produced on it.
   * [Vector syntax for querying](#vector-syntax-for-querying)
   * [Advanced queries](#advanced-queries)
     + [Querying the *nth* element matched](#querying-the-nth-element-matched)
-    + [Getting elements like in a tree](getting-elements-like-in-a-tree)
+    + [Getting elements like in a tree](#getting-elements-like-in-a-tree)
   * [Interacting with queried elements](#interacting-with-queried-elements)
 - [Emulation of human input](#emulation-of-human-input)
 - [Mouse clicks](#mouse-clicks)
@@ -71,8 +71,9 @@ after a mysteries note was produced on it.
   * [Querying wrong elements with XPath expressions](#querying-wrong-elements-with-xpath-expressions)
   * [Clicking On Non-Visible Element](#clicking-on-non-visible-element)
   * [Unpredictable errors in Chrome when window is not active](#unpredictable-errors-in-chrome-when-window-is-not-active)
-  * [Invalid argument: can't kill an exited process](#invalid-argument:-can't-kill-an-exited-process)
-  * [DevToolsActivePort file doesn't exist](#devtoolsactiveport-file-doesn't-exis)
+  * [Invalid argument: can't kill an exited process](#invalid-argument-cant-kill-an-exited-process)
+  * [DevToolsActivePort file doesn't exist](#devtoolsactiveport-file-doesnt-exist)
+- [Release Notes](#release-notes)
 - [Contributors](#contributors)
 - [Other materials](#other-materials)
 - [License](#license)
@@ -1764,8 +1765,6 @@ Example:
   (is found (format "No *.xlsx file found in %s directory." DL-DIR)))
 ```
 
-
-
 ## Troubleshooting
 
 ### Calling maximize function throws an error
@@ -1857,7 +1856,6 @@ Possible cause: "Running Firefox as root in a regular user's session is not supp
 
 Similar problem: https://github.com/mozilla/geckodriver/issues/1655
 
-
 ### DevToolsActivePort file doesn't exist
 
 **Problem:** When you try to start the chromedriver you get an error:
@@ -1873,8 +1871,11 @@ Possible cause:
 (def driver (chrome {:args ["--no-sandbox"]}))
 ```
 
-
 A similar problem is described [here](https://stackoverflow.com/questions/50642308/webdriverexception-unknown-error-devtoolsactiveport-file-doesnt-exist-while-t)
+
+## Release Notes
+- Since `[etaoin 0.3.11]` driver is a map. The previous implementation was an atom.
+ If you changed it manually, then refactoring is required.
 
 ## Contributors
 
