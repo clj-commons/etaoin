@@ -3247,3 +3247,126 @@
   `(with-driver :edge (assoc ~opt :headless true) ~bind
      ~@body))
 
+
+;; actions
+
+(defn get-id
+  []
+  (str (java.util.UUID/randomUUID)))
+
+(defn make-action-input
+  [type & [id]]
+  {:type (name type) :id (or id (get-id)) :actions []})
+
+(defn make-pointer
+  [type]
+  (assoc (make-action-input :pointer) :parameters {:pointerType type}))
+
+(defn make-mouse
+  []
+  (make-pointer :mouse))
+
+(defn make-touch
+  []
+  (make-pointer :touch))
+
+(defn make-pen
+  []
+  (make-pointer :pen))
+
+(defn make-key
+  []
+  (make-action-input :key))
+
+(defn add-action
+  [input action]
+  (update input :actions conj action))
+
+(defn add-pause
+  [input & [duration]]
+  (add-action input {:type "pause" :duration (or duration 0)}))
+
+(defn add-key-down
+  [input key]
+  (add-action input {:type "keyDown" :value key}))
+
+(defn add-key-up
+  [input key]
+  (add-action input {:type "keyUp" :value key}))
+
+(defn add-pointer-down
+  [input key]
+  (add-action input {:type "pointerDown" :duration 0 :button key}))
+
+(defn add-pointer-up
+  [input key]
+  (add-action input {:type "pointerUp" :duration 0 :button key}))
+
+(def default-duration 250)
+
+(defn add-pointer-move
+  [input & [{:keys [x y origin duration]}]]
+  (add-action input {:type    "pointerMove"
+                     :x       x
+                     :y       y
+                     :origin  origin
+                     :duraion (or duration default-duration)}))
+
+(defn add-pointer-cancel
+  [input]
+  (add-action input {:type "pointerCancel"}))
+
+(defmacro with-key [input key & body]
+  `(-> ~input
+       (add-key-down ~key)
+       ~@body
+       (add-key-up ~key)))
+
+
+(defn execute-actions
+  [driver & actions]
+  (execute {:driver driver
+            :method :post
+            :path   [:session (:session driver) :actions]
+            :data   {:actions actions}}))
+
+
+(comment
+  ;; print `HELLO`
+  (let [input1 (-> (make-key)
+                   (with-key keys/shift-left
+                     (with-key "h"))
+                   (with-key keys/shift-left
+                     (with-key "e"))
+                   (with-key keys/shift-left
+                     (with-key "l"))
+                   (with-key keys/shift-left
+                     (with-key "l"))
+                   (with-key keys/shift-left
+                     (with-key "o")))
+        driver (chrome)]
+    (go driver "https://google.com")
+    (execute-actions driver input1)
+    (wait 15)
+    (quit driver))
+
+  ;; print `A` and highlight it
+  (let [driver        (chrome)
+        _             (go driver "https://google.com")
+        {:keys [x y]} (get-element-location driver {:name :q})
+        keyboard      (-> (make-key)
+                          (with-key keys/shift-left
+                            (with-key "a")))
+        mouse         (-> (make-mouse)
+                          (add-pause)
+                          (add-pause)
+                          (add-pause)
+                          (add-pointer-move {:x (int x) :y (int y) :origin "viewport"})
+                          (add-pointer-down keys/mouse-left)
+                          (add-pointer-up keys/mouse-left)
+                          (add-pointer-down keys/mouse-left)
+                          (add-pointer-up keys/mouse-left))]
+    (execute-actions driver keyboard mouse)
+    (wait 15)
+    (quit driver))
+  )
