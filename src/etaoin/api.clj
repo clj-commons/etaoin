@@ -3260,7 +3260,8 @@
 
 (defn make-pointer-input
   [type]
-  (assoc (make-action-input :pointer) :parameters {:pointerType type}))
+  (-> (make-action-input :pointer)
+      (assoc-in [:parameters :pointerType] type)))
 
 (defn make-mouse-input
   []
@@ -3360,9 +3361,9 @@
 (defmacro with-pointer-btn-down
   [input button & body]
   `(-> ~input
-       (add-pointer-down button)
+       (add-pointer-down ~button)
        ~@body
-       (add-pointer-up button)))
+       (add-pointer-up ~button)))
 
 (defmacro with-pointer-left-btn-down
   [input & body]
