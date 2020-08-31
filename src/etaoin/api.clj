@@ -3250,31 +3250,31 @@
 
 ;; actions
 
-(defn get-id
+(defn rand-uuid
   []
   (str (java.util.UUID/randomUUID)))
 
 (defn make-action-input
-  [type & [id]]
-  {:type (name type) :id (or id (get-id)) :actions []})
+  [type]
+  {:type (name type) :id (rand-uuid) :actions []})
 
-(defn make-pointer
+(defn make-pointer-input
   [type]
   (assoc (make-action-input :pointer) :parameters {:pointerType type}))
 
-(defn make-mouse
+(defn make-mouse-input
   []
-  (make-pointer :mouse))
+  (make-pointer-input :mouse))
 
-(defn make-touch
+(defn make-touch-input
   []
-  (make-pointer :touch))
+  (make-pointer-input :touch))
 
-(defn make-pen
+(defn make-pen-input
   []
-  (make-pointer :pen))
+  (make-pointer-input :pen))
 
-(defn make-key
+(defn make-key-input
   []
   (make-action-input :key))
 
@@ -3295,78 +3295,155 @@
   (add-action input {:type "keyUp" :value key}))
 
 (defn add-pointer-down
-  [input key]
-  (add-action input {:type "pointerDown" :duration 0 :button key}))
+  [input & [button]]
+  (add-action input {:type     "pointerDown"
+                     :duration 0
+                     :button   (or button keys/mouse-left)}))
 
 (defn add-pointer-up
-  [input key]
-  (add-action input {:type "pointerUp" :duration 0 :button key}))
+  [input & [button]]
+  (add-action input {:type     "pointerUp"
+                     :duration 0
+                     :button   (or button keys/mouse-left)}))
+
+(defn add-pointer-click
+  [input & [button]]
+  (-> input
+      (add-pointer-down button)
+      (add-pointer-up button)))
+
+(defn add-pointer-click-el
+  [input el & [button]]
+  (-> input
+      (add-pointer-move-to-el el)
+      (add-pointer-click button)))
+
+(defn add-pointer-double-click
+  [input & [button]]
+  (-> input
+      (add-pointer-click button)
+      (add-pointer-click button)))
+
+(defn add-pointer-double-click-el
+  [input el & [button]]
+  (-> input
+      (add-pointer-move-to-el el)
+      (add-pointer-double-click button)))
 
 (def default-duration 250)
+(def default-origin "viewport")
 
 (defn add-pointer-move
   [input & [{:keys [x y origin duration]}]]
   (add-action input {:type    "pointerMove"
-                     :x       x
-                     :y       y
-                     :origin  origin
+                     :x       (or x 0)
+                     :y       (or y 0)
+                     :origin  (or origin default-origin)
                      :duraion (or duration default-duration)}))
+
+(defn add-pointer-move-to-el
+  [input el & [{:keys [duration]}]]
+  (add-pointer-move input {:duration duration
+                           :origin   (el->ref el)}))
 
 (defn add-pointer-cancel
   [input]
   (add-action input {:type "pointerCancel"}))
 
-(defmacro with-key [input key & body]
+(defmacro with-key-down
+  [input key & body]
   `(-> ~input
        (add-key-down ~key)
        ~@body
        (add-key-up ~key)))
 
+(defmacro with-pointer-btn-down
+  [input button & body]
+  `(-> ~input
+       (add-pointer-down button)
+       ~@body
+       (add-pointer-up button)))
 
-(defn execute-actions
-  [driver & actions]
+(defmacro with-pointer-left-btn-down
+  [input & body]
+  `(-> ~input
+       add-pointer-down
+       ~@body
+       add-pointer-up))
+
+(defmulti perform-actions dispatch-driver)
+
+(defmethod perform-actions
+  :default
+  [driver input & inputs]
   (execute {:driver driver
             :method :post
             :path   [:session (:session driver) :actions]
-            :data   {:actions actions}}))
+            :data   {:actions (cons input inputs)}}))
 
+(defmethod perform-actions
+  :phantom
+  [driver input & inputs]
+  (util/error "Phantom doesn't support w3c actions."))
+
+(defmulti release-actions dispatch-driver)
+
+(defmethod release-actions
+  :default
+  [driver]
+  (execute {:driver driver
+            :method :delete
+            :path   [:session (:session driver) :actions]}))
+
+
+(defmethod release-actions
+  :phantom
+  [driver input & inputs]
+  (util/error "Phantom doesn't support w3c actions."))
 
 (comment
+  ;; refactoring d-n-d
+  (defn drag-and-drop
+    [driver q-from q-to]
+    (let [el-from (query driver q-from)
+          el-to   (query driver q-to)
+          mouse   (-> (make-mouse-input)
+                      (add-pointer-move-to-el el-from)
+                      (with-pointer-btn-down
+                        (add-pointer-move-to-el el-to)))]
+      (perform-actions driver mouse)))
+
   ;; print `HELLO`
-  (let [input1 (-> (make-key)
-                   (with-key keys/shift-left
-                     (with-key "h"))
-                   (with-key keys/shift-left
-                     (with-key "e"))
-                   (with-key keys/shift-left
-                     (with-key "l"))
-                   (with-key keys/shift-left
-                     (with-key "l"))
-                   (with-key keys/shift-left
-                     (with-key "o")))
+  (let [input1 (-> (make-key-input)
+                   (with-key-down keys/shift-left
+                     (with-key-down "h"))
+                   (with-key-down keys/shift-left
+                     (with-key-down "e"))
+                   (with-key-down keys/shift-left
+                     (with-key-down "l"))
+                   (with-key-down keys/shift-left
+                     (with-key-down "l"))
+                   (with-key-down keys/shift-left
+                     (with-key-down "o")))
         driver (chrome)]
     (go driver "https://google.com")
-    (execute-actions driver input1)
+    (perform-actions driver input1)
     (wait 15)
     (quit driver))
 
   ;; print `A` and highlight it
-  (let [driver        (chrome)
-        _             (go driver "https://google.com")
-        {:keys [x y]} (get-element-location driver {:name :q})
-        keyboard      (-> (make-key)
-                          (with-key keys/shift-left
-                            (with-key "a")))
-        mouse         (-> (make-mouse)
-                          (add-pause)
-                          (add-pause)
-                          (add-pause)
-                          (add-pointer-move {:x (int x) :y (int y) :origin "viewport"})
-                          (add-pointer-down keys/mouse-left)
-                          (add-pointer-up keys/mouse-left)
-                          (add-pointer-down keys/mouse-left)
-                          (add-pointer-up keys/mouse-left))]
-    (execute-actions driver keyboard mouse)
+  (let [driver   (chrome)
+        _        (go driver "https://google.com")
+        el       (query driver {:name :q})
+        keyboard (-> (make-key-input)
+                     (with-key-down keys/shift-left
+                       (with-key-down "a")))
+        mouse    (-> (make-mouse-input)
+                     (add-pause)
+                     (add-pause)
+                     (add-pause)
+                     (add-pointer-double-click-el el))]
+    (perform-actions driver keyboard mouse)
     (wait 15)
     (quit driver))
   )
