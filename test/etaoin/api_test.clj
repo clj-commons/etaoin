@@ -365,7 +365,7 @@
 
 (deftest test-drag-n-drop
   (is 1)
-  (let [url   "https://marcojakob.github.io/dart-dnd/basic/"
+  (let [url   (-> "html/drag-n-drop/index.html" io/resource str)
         doc   {:class :document}
         trash {:xpath "//div[contains(@class, 'trash')]"}]
     (when-not (or (firefox? *driver*)
@@ -701,3 +701,52 @@
     (is (has-text? *driver* [:wc3-barks {:tag :span}] "ths I've")))
   (testing "wrong path"
     (is (not (has-text? *driver* [:wc3-barks {:tag :p} :pit-lord] "ths I've come!")))))
+
+
+;; actions
+
+(deftest test-actions
+  (testing "input key and mouse click"
+    (when-not-phantom *driver*
+      (let [input    (query *driver* :simple-input)
+            password (query *driver* :simple-password)
+            textarea (query *driver* :simple-textarea)
+            submit   (query *driver* :simple-submit)
+            keyboard (-> (make-key-input)
+                         add-double-pause
+                         (with-key-down "\uE01B")
+                         add-double-pause
+                         (with-key-down "\uE01C")
+                         add-double-pause
+                         (with-key-down "\uE01D"))
+            mouse    (-> (make-mouse-input)
+                         (add-pointer-click-el input)
+                         add-pause
+                         (add-pointer-click-el password)
+                         add-pause
+                         (add-pointer-click-el textarea)
+                         add-pause
+                         (add-pointer-click-el submit))]
+        (perform-actions *driver* keyboard mouse)
+        (wait 1)
+        (is (str/ends-with? (get-url *driver*) "?login=1&password=2&message=3")))))
+  (testing "drag-n-drop"
+    (when-not-phantom *driver*
+      (let [drag-and-drop (fn [driver q-from q-to]
+                            (let [el-from (query driver q-from)
+                                  el-to   (query driver q-to)
+                                  mouse   (-> (make-mouse-input)
+                                              (add-pointer-move-to-el el-from)
+                                              (with-pointer-left-btn-down
+                                                (add-pointer-move-to-el el-to)))]
+                              (perform-actions driver mouse)))
+            url           (-> "html/drag-n-drop/index.html" io/resource str)
+            doc           {:class :document}
+            trash         {:xpath "//div[contains(@class, 'trash')]"}]
+        (doto *driver*
+          (go url)
+          (drag-and-drop doc trash)
+          (drag-and-drop doc trash)
+          (drag-and-drop doc trash)
+          (drag-and-drop doc trash)
+          (-> (absent? doc) is))))))
