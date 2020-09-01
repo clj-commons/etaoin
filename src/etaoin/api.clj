@@ -665,6 +665,168 @@
   (let [[loc term] (query/expand driver q)]
     (find-elements-from* driver ancestor-el loc term)))
 
+;; actions
+
+(declare el->ref)
+
+(defn rand-uuid
+  []
+  (str (java.util.UUID/randomUUID)))
+
+(defn make-action-input
+  [type]
+  {:type (name type) :id (rand-uuid) :actions []})
+
+(defn make-pointer-input
+  [type]
+  (-> (make-action-input :pointer)
+      (assoc-in [:parameters :pointerType] type)))
+
+(defn make-mouse-input
+  []
+  (make-pointer-input :mouse))
+
+(defn make-touch-input
+  []
+  (make-pointer-input :touch))
+
+(defn make-pen-input
+  []
+  (make-pointer-input :pen))
+
+(defn make-key-input
+  []
+  (make-action-input :key))
+
+(defn add-action
+  [input action]
+  (update input :actions conj action))
+
+(defn add-pause
+  [input & [duration]]
+  (add-action input {:type "pause" :duration (or duration 0)}))
+
+(defn add-double-pause
+  [input & [duration]]
+  (-> input
+      (add-pause duration)
+      (add-pause duration)))
+
+(defn add-key-down
+  [input key]
+  (add-action input {:type "keyDown" :value key}))
+
+(defn add-key-up
+  [input key]
+  (add-action input {:type "keyUp" :value key}))
+
+(defn add-pointer-down
+  [input & [button]]
+  (add-action input {:type     "pointerDown"
+                     :duration 0
+                     :button   (or button keys/mouse-left)}))
+
+(defn add-pointer-up
+  [input & [button]]
+  (add-action input {:type     "pointerUp"
+                     :duration 0
+                     :button   (or button keys/mouse-left)}))
+
+(defn add-pointer-cancel
+  [input]
+  (add-action input {:type "pointerCancel"}))
+
+(def default-duration 250)
+(def default-origin "viewport")
+
+(defn add-pointer-move
+  [input & [{:keys [x y origin duration]}]]
+  (add-action input {:type    "pointerMove"
+                     :x       (or x 0)
+                     :y       (or y 0)
+                     :origin  (or origin default-origin)
+                     :duraion (or duration default-duration)}))
+
+(defn add-pointer-move-to-el
+  [input el & [{:keys [duration]}]]
+  (add-pointer-move input {:duration duration
+                           :origin   (el->ref el)}))
+
+(defn add-pointer-click
+  [input & [button]]
+  (-> input
+      (add-pointer-down button)
+      (add-pointer-up button)))
+
+(defn add-pointer-click-el
+  [input el & [button]]
+  (-> input
+      (add-pointer-move-to-el el)
+      (add-pointer-click button)))
+
+(defn add-pointer-double-click
+  [input & [button]]
+  (-> input
+      (add-pointer-click button)
+      (add-pointer-click button)))
+
+(defn add-pointer-double-click-el
+  [input el & [button]]
+  (-> input
+      (add-pointer-move-to-el el)
+      (add-pointer-double-click button)))
+
+(defmacro with-key-down
+  [input key & body]
+  `(-> ~input
+       (add-key-down ~key)
+       ~@body
+       (add-key-up ~key)))
+
+(defmacro with-pointer-btn-down
+  [input button & body]
+  `(-> ~input
+       (add-pointer-down ~button)
+       ~@body
+       (add-pointer-up ~button)))
+
+(defmacro with-pointer-left-btn-down
+  [input & body]
+  `(-> ~input
+       add-pointer-down
+       ~@body
+       add-pointer-up))
+
+(defmulti perform-actions dispatch-driver)
+
+(defmethod perform-actions
+  :default
+  [driver input & inputs]
+  (execute {:driver driver
+            :method :post
+            :path   [:session (:session driver) :actions]
+            :data   {:actions (cons input inputs)}}))
+
+(defmethod perform-actions
+  :phantom
+  [driver input & inputs]
+  (util/error "Phantom doesn't support w3c actions."))
+
+(defmulti release-actions dispatch-driver)
+
+(defmethod release-actions
+  :default
+  [driver]
+  (execute {:driver driver
+            :method :delete
+            :path   [:session (:session driver) :actions]}))
+
+
+(defmethod release-actions
+  :phantom
+  [driver input & inputs]
+  (util/error "Phantom doesn't support w3c actions."))
+
 ;;
 ;; mouse
 ;;
@@ -3246,4 +3408,5 @@
   [opt bind & body]
   `(with-driver :edge (assoc ~opt :headless true) ~bind
      ~@body))
+
 

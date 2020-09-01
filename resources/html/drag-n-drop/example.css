@@ -1,0 +1,49 @@
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.428571429;
+  color: #333;
+  background-color: #fff;
+  margin: 0;
+}
+
+.container {
+  max-width: 400px;
+  padding: 15px 15px 0 15px;
+}
+
+.trash {
+  background: url(images/trash.png) top left no-repeat;
+  height: 128px;
+  width: 128px;
+  margin-top: 90px;
+  float: right;
+  opacity: 0.7;
+}
+
+.trash.full {
+  background: url(images/trash.png) top right no-repeat;
+}
+
+.document {
+  margin-top: 10px;
+  display: block;
+  cursor: pointer;
+  cursor: grab;
+  cursor: -webkit-grab;
+}
+
+.dnd-over {
+  opacity: 1;
+}
+
+.dnd-dragging {
+  opacity: 0.5;
+}
+
+.dnd-dragging,
+.dnd-drag-occurring {
+  cursor: default;
+  cursor: grabbing;
+  cursor: -webkit-grabbing;
+}

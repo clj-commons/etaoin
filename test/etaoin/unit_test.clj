@@ -1,4 +1,4 @@
-(ns etaoin.api-test2
+(ns etaoin.unit-test
   (:require [etaoin.api :refer :all]
             [etaoin.proc]
             [clojure.test :refer :all])
@@ -56,3 +56,39 @@
         clojure.lang.ExceptionInfo
         #"wrong-driver-path"
         (chrome {:path-driver "wrong-driver-path"}))))
+
+
+(deftest test-actions
+  (let [keyboard        (-> (make-key-input)
+                            (with-key-down "H")
+                            add-pause
+                            (with-key-down "I")
+                            (dissoc :id))
+        mouse           (-> (make-mouse-input)
+                            add-pointer-click
+                            add-pause
+                            (with-pointer-left-btn-down
+                              (add-pointer-move-to-el "123"))
+                            (dissoc :id))
+        keyboard-result {:type "key",
+                         :actions
+                         [{:type "keyDown", :value "H"}
+                          {:type "keyUp", :value "H"}
+                          {:type "pause", :duration 0}
+                          {:type "keyDown", :value "I"}
+                          {:type "keyUp", :value "I"}]}
+        mouse-result    {:type       "pointer",
+                         :actions
+                         [{:type "pointerDown", :duration 0, :button 0}
+                          {:type "pointerUp", :duration 0, :button 0}
+                          {:type "pause", :duration 0}
+                          {:type "pointerDown", :duration 0, :button 0}
+                          {:type    "pointerMove",
+                           :x       0,
+                           :y       0,
+                           :origin  {:ELEMENT "123", :element-6066-11e4-a52e-4f735466cecf "123"},
+                           :duraion 250}
+                          {:type "pointerUp", :duration 0, :button 0}],
+                         :parameters {:pointerType :mouse}}]
+    (is (= keyboard-result keyboard))
+    (is (= mouse-result mouse))))
