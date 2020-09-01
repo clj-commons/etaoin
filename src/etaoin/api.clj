@@ -740,6 +740,16 @@
 (def default-origin "viewport")
 
 (defn add-pointer-move
+  "Move the pointer from `origin` to `x` and `y` offsets with `duration` in milliseconds.
+  `origin` cat take values:
+    - 'viewport' then the final x will be equal `x` offset and the final y equal `y` offset.
+    This is the default value.
+    - 'pointer' then the final x will be equal start x of pointer + `x` offset
+    and the final y equal start y of pointer + `y` offset.
+    - a map that represents a web element, to get it,
+    you can use the following sequence of functions
+  (-> (query driver q) ;; where `q` is query term to find a web element
+      el->ref)"
   [input & [{:keys [x y origin duration]}]]
   (add-action input {:type    "pointerMove"
                      :x       (or x 0)
