@@ -80,8 +80,9 @@ jobs:
           command: lein test2junit etaoin.api-test
 
       - run:
+          name: unit tests
           when: always
-          command: lein test2junit etaoin.api-test2
+          command: lein test2junit etaoin.unit-test
 
       - store_test_results:
           path: target/test2junit
