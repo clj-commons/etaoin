@@ -610,9 +610,9 @@ right click sometimes is used to imitate a context menu in web applications.
 
 ## Actions
 
-Since `etaoin 0.3.11` added support for [Webdriver Actions](https://www.w3.org/TR/webdriver/#actions).
+Since `0.3.11, the library supports [Webdriver Actions](https://www.w3.org/TR/webdriver/#actions).
 
-In general, actions can be represented by a vector of maps describing virtual input devices.
+In general, actions are represented by a vector of maps describing virtual input devices.
 
 ``` clojure
 {:actions [{:type    "key"
@@ -647,9 +647,7 @@ You can create a map manually and send it to the `perform-actions` method:
 (perform-actions driver keyboard-input)
 ```
 
-or use wrappers. First you need to create a virtual input devices
-
-for example
+or use wrappers. First you need to create a virtual input devices, for example:
 
 ``` clojure
 (def keyboard (make-key-input))
@@ -676,23 +674,18 @@ extended example:
       keyboard     (-> (make-key-input)
                        add-pause
                        (with-key-down keys/shift-left
-                         (with-key-down "e"))
-                       (with-key-down keys/shift-left
-                         (with-key-down "t"))
-                       (with-key-down keys/shift-left
-                         (with-key-down "a"))
-                       (with-key-down keys/shift-left
-                         (with-key-down "o"))
-                       (with-key-down keys/shift-left
-                         (with-key-down "i"))
-                       (with-key-down keys/shift-left
-                         (with-key-down "n"))
-                       (with-key-down keys/enter))]
+                         (add-key-press "e"))
+                       (add-key-press "t")
+                       (add-key-press "a")
+                       (add-key-press "o")
+                       (add-key-press "i")
+                       (add-key-press "n")
+                       (add-key-press keys/enter))]
   (perform-actions driver keyboard mouse)
   (quit driver))
 ```
 
-to clear the state of virtual input devices, release all pressed keys etc, use the `release-actions` method:
+To clear the state of virtual input devices, release all pressed keys etc, use the `release-actions` method:
 
 ``` clojure
 (release-actions driver)
@@ -1966,7 +1959,7 @@ A similar problem is described [here](https://stackoverflow.com/questions/506423
 ## Release Notes
 - Since `[etaoin 0.3.11]` driver is a map. The previous implementation was an atom.
  If you changed it manually, then refactoring is required.
-- Since `[etaoin 0.3.11]` added support for [Webdriver Actions](https://www.w3.org/TR/webdriver/#actions).
+- Since `[etaoin 0.3.11]` the library supports [Webdriver Actions](https://www.w3.org/TR/webdriver/#actions).
 
 ## Contributors
 
