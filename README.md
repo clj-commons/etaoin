@@ -37,6 +37,7 @@ after a mysteries note was produced on it.
   * [Interacting with queried elements](#interacting-with-queried-elements)
 - [Emulation of human input](#emulation-of-human-input)
 - [Mouse clicks](#mouse-clicks)
+- [Actions](#actions)
 - [File uploading](#file-uploading)
 - [Screenshots](#screenshots)
   * [Screening elements](#screening-elements)
@@ -607,6 +608,88 @@ element before clicking on them:
 A middle mouse click is useful when opening a link in a new background tab. The
 right click sometimes is used to imitate a context menu in web applications.
 
+## Actions
+
+Since `0.3.11, the library supports [Webdriver Actions](https://www.w3.org/TR/webdriver/#actions).
+
+In general, actions are represented by a vector of maps describing virtual input devices.
+
+``` clojure
+{:actions [{:type    "key"
+            :id      "some name"
+            :actions [{:type "keyDown" :value cmd}
+                      {:type "keyDown" :value "a"}
+                      {:type "keyUp" :value "a"}
+                      {:type "keyUp" :value cmd}
+                      {:type "pause" :duration 100}]}
+           {:type       "pointer"
+            :id         "UUID or some name"
+            :parameters {:pointerType "mouse"}
+            :actions    [{:type "pointerMove" :origin "pointer" :x 396 :y 323}
+                         ;; double click
+                         {:type "pointerDown" :duration 0 :button 0}
+                         {:type "pointerUp" :duration 0 :button 0}
+                         {:type "pointerDown" :duration 0 :button 0}
+                         {:type "pointerUp" :duration 0 :button 0}]}]}
+```
+
+You can create a map manually and send it to the `perform-actions` method:
+
+``` clojure
+(def keyboard-input {:type    "key"
+                     :id      "some name"
+                     :actions [{:type "keyDown" :value cmd}
+                               {:type "keyDown" :value "a"}
+                               {:type "keyUp" :value "a"}
+                               {:type "keyUp" :value cmd}
+                               {:type "pause" :duration 100}]})
+
+(perform-actions driver keyboard-input)
+```
+
+or use wrappers. First you need to create a virtual input devices, for example:
+
+``` clojure
+(def keyboard (make-key-input))
+```
+
+and then fill it with the necessary actions:
+
+``` clojure
+(-> keyboard
+    (add-key-down keys/shift-left)
+    (add-key-down "a")
+    (add-key-up "a")
+    (add-key-up keys/shift-left))
+```
+
+extended example:
+
+``` clojure
+(let [driver       (chrome)
+      _            (go driver "https://google.com")
+      search-box   (query driver {:name :q})
+      mouse        (-> (make-mouse-input)
+                       (add-pointer-click-el search-box))
+      keyboard     (-> (make-key-input)
+                       add-pause
+                       (with-key-down keys/shift-left
+                         (add-key-press "e"))
+                       (add-key-press "t")
+                       (add-key-press "a")
+                       (add-key-press "o")
+                       (add-key-press "i")
+                       (add-key-press "n")
+                       (add-key-press keys/enter))]
+  (perform-actions driver keyboard mouse)
+  (quit driver))
+```
+
+To clear the state of virtual input devices, release all pressed keys etc, use the `release-actions` method:
+
+``` clojure
+(release-actions driver)
+```
 
 ## File uploading
 
@@ -1876,6 +1959,7 @@ A similar problem is described [here](https://stackoverflow.com/questions/506423
 ## Release Notes
 - Since `[etaoin 0.3.11]` driver is a map. The previous implementation was an atom.
  If you changed it manually, then refactoring is required.
+- Since `[etaoin 0.3.11]` the library supports [Webdriver Actions](https://www.w3.org/TR/webdriver/#actions).
 
 ## Contributors
 

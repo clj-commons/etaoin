@@ -720,6 +720,12 @@
   [input key]
   (add-action input {:type "keyUp" :value key}))
 
+(defn add-key-press
+  [input key]
+  (-> input
+      (add-key-down key)
+      (add-key-up key)))
+
 (defn add-pointer-down
   [input & [button]]
   (add-action input {:type     "pointerDown"
@@ -740,6 +746,26 @@
 (def default-origin "viewport")
 
 (defn add-pointer-move
+  "
+  Move the pointer from `origin` to `x` and `y` offsets
+  with `duration` in milliseconds.
+
+  Possible `origin` values are:
+
+    - 'viewport'; the final x axis will be equal to `x` offset
+    and the final y equal to `y` offset. This is the default
+    value.
+
+    - 'pointer'; the final x will be equal to start x of pointer + `x` offset
+    and the final y equal to start y of pointer + `y` offset.
+
+    - a map that represents a web element. To get it, pass the result
+    of the `query` function into the `el->ref`, for example:
+
+    (el->ref (query driver q))
+
+    where `q` is a query term to find an element.
+  "
   [input & [{:keys [x y origin duration]}]]
   (add-action input {:type    "pointerMove"
                      :x       (or x 0)
