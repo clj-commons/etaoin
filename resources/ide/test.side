@@ -1,0 +1,61 @@
+{
+  "id": "9c2b9945-53a5-4f3b-a814-b336df7e5dce",
+  "version": "2.0",
+  "name": "test",
+  "url": "https://www.google.com",
+  "tests": [{
+    "id": "6ca020e8-fe26-4116-803a-754c47fe48e1",
+    "name": "test",
+    "commands": [{
+      "id": "7ebca6a1-8918-4644-a51e-08df0642964b",
+      "comment": "",
+      "command": "open",
+      "target": "/",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "061d6d3e-59cd-4a2a-84dc-9215f25a643d",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "1680x960",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "e514b7b9-f181-4177-b75d-70af345e7b8b",
+      "comment": "",
+      "command": "type",
+      "target": "name=q",
+      "targets": [
+        ["name=q", "name"],
+        ["css=.gLFyf", "css:finder"],
+        ["xpath=//input[@name='q']", "xpath:attributes"],
+        ["xpath=//form[@id='tsf']/div[2]/div/div/div/div[2]/input", "xpath:idRelative"],
+        ["xpath=//div[2]/input", "xpath:position"]
+      ],
+      "value": "clojure.org"
+    }, {
+      "id": "29273c04-4df1-43be-b44b-e86cbe63261b",
+      "comment": "",
+      "command": "sendKeys",
+      "target": "name=q",
+      "targets": [
+        ["name=q", "name"],
+        ["css=.gLFyf", "css:finder"],
+        ["xpath=//input[@name='q']", "xpath:attributes"],
+        ["xpath=//form[@id='tsf']/div[2]/div/div/div/div[2]/input", "xpath:idRelative"],
+        ["xpath=//div[2]/input", "xpath:position"]
+      ],
+      "value": "${KEY_ENTER}"
+    }]
+  }],
+  "suites": [{
+    "id": "98823cd7-d6a3-426e-b477-ac6900aaf87a",
+    "name": "Default Suite",
+    "persistSession": false,
+    "parallel": false,
+    "timeout": 300,
+    "tests": ["6ca020e8-fe26-4116-803a-754c47fe48e1"]
+  }],
+  "urls": ["https://www.google.com/"],
+  "plugins": []
+}
