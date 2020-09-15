@@ -2,15 +2,14 @@
   (:require [cheshire.core :refer [parse-stream]]
             [clojure.java.io :as io]
             [etaoin.api :refer :all]
-            [etaoin.keys :as k]))
+            [etaoin.keys :as k]
+            [clojure.string :as str])
+  (:import (java.net URL)))
 
 
 (defn dispatch-command
-  [driver {command-name :command :as command} & [opt]]
-  (if-not command-name
-    (throw (ex-info "Command not found in test"
-                    {:command command}))
-    (keyword command-name)))
+  [driver command & [opt]]
+  (some-> command :command keyword))
 
 (defmulti run-command dispatch-command)
 
@@ -22,7 +21,9 @@
 
 (defn absolute-path?
   [path]
-  (clojure.string/starts-with? path "http"))
+  (-> path
+      str/lower-case
+      (str/starts-with? "http")))
 
 (def special-keys
   {"${KEY_ENTER}" k/enter})
@@ -36,7 +37,9 @@
   [driver {:keys [target]} & [{base-url :base-url}]]
   (if (absolute-path? target)
     (go driver target)
-    (go driver (str base-url target))))
+    (go driver (-> (URL. base-url)
+                   (URL. target)
+                   str))))
 
 (defmethod run-command
   :setWindowSize
@@ -48,26 +51,47 @@
   [driver {:keys [target value]} & [opt]]
   (fill driver (make-query target) value))
 
+;; TODO apply map to special-keys or auto-replace
 (defmethod run-command
   :sendKeys
   [driver {:keys [target value]} & [opt]]
   (fill driver (make-query target) (get special-keys value)))
 
-(defn run-test
+(defn run-ide-test
   [driver {:keys [id commands]} & [opt]]
   (doseq [command commands]
     (run-command driver command opt)))
 
-(defn run
-  [driver path & [opt]]
+(defn run-ide-suite
+  [driver {test-ids :tests} tests & [opt]]
+  (let [tests (filter #((set test-ids) (:id %)) tests)]
+    (doseq [test tests]
+      (run-test driver test opt))))
+
+(defn run-ide-script
+  [driver path & [{:keys [suite-ids test-ids] :as opt}]]
   (with-open [rdr (io/reader path)]
-    (let [data            (parse-stream rdr true)
+    (let [data             (parse-stream rdr true)
           {:keys [id
                   name
                   url
-                  tests]} data
-          base-url        (or (:base-url opt)
-                              url)
-          opt             (assoc opt :base-url base-url)]
-      (doseq [test tests]
-        (run-test driver test opt)))))
+                  tests
+                  suites]} data
+          suite-ids        (when suite-ids
+                             (set suite-ids))
+          test-ids         (when test-ids
+                             (set test-ids))
+          opt              (merge {:base-url base-url
+                                   :vars     (atom {})}
+                                  opt)]
+      (cond
+        suite-ids (doseq [{:keys [name id] :as suite} suites]
+                    (when (some suite-ids [name id])
+                      (run-ide-suite driver suite tests opt)))
+
+        test-ids (doseq [{:keys [name id] :as test} tests]
+                   (when (some test-ids [name id])
+                     (run-ide-test driver test opt)))
+
+        :else (doseq [test tests]
+                (run-test driver test opt))))))
