@@ -29,71 +29,72 @@
 (defmethod run-command
   :default
   [driver command & _]
-  (log/warnf "The %s command is not implemented" (:command command)))
+  (log/warnf "The \"%s\" command is not implemented" (:command command)))
 
 (defmethod run-command
-:open
+  :open
   [driver {:keys [target]} & [{base-url :base-url}]]
-(if (absolute-path? target)
-  (go driver target)
-  (go driver (-> (URL. base-url)
-                 (URL. target)
-                 str))))
+  (if (absolute-path? target)
+    (go driver target)
+    (go driver (-> (URL. base-url)
+                   (URL. target)
+                   str))))
 
 (defmethod run-command
-:setWindowSize
+  :setWindowSize
   [driver {:keys [target]} & [opt]]
   (let [[width height] (map #(Integer/parseInt %) (str/split target #"x"))]
-  (set-window-size driver width height)))
-
+    (set-window-size driver width height)))
 
 (defmethod run-command
-:type
+  :type
   [driver {:keys [target value]} & [opt]]
-(fill driver (make-query target) value))
+  (fill driver (make-query target) value))
 
 (defmethod run-command
-:click
+  :click
   [driver {:keys [target]} & [opt]]
-(click driver (make-query target)))
+  (click driver (make-query target)))
 
 ;; TODO refactor select fn, add select by-value
 (defmethod run-command
-:select
+  :select
   [driver {:keys [target value]} & [opt]]
   (let [[type & vals] (str/split value #"=")
         val           (str/join "=" vals)
         q             (make-query target)]
-  (cond
-    (= type "label") (select driver q value)
+    (cond
+      (= type "label") (select driver q value)
 
-    (#{"id" "value"} type) (do
-                             (click driver q)
-                             (click-el driver (query driver q {:css (format "[%s=\"%s\"]" type val)})))
+      (#{"id" "value"} type) (do
+                               (click driver q)
+                               (click-el driver (query driver q {:css (format "[%s=\"%s\"]" type val)})))
 
-    (= type "index") (let [index (inc (Integer/parseInt val))] ;; the initial index in selenium is 0, in xpath and css selectors it is 1
-                       (click driver q)
-                       (click-el driver (query driver q {:tag :option :index index}))))))
-
-
-
+      (= type "index") (let [index (inc (Integer/parseInt val))] ;; the initial index in selenium is 0, in xpath and css selectors it is 1
+                         (click driver q)
+                         (click-el driver (query driver q {:tag :option :index index}))))))
 
 ;; TODO apply map to special-keys or auto-replace
 (defmethod run-command
-:sendKeys
+  :sendKeys
   [driver {:keys [target value]} & [opt]]
-(fill driver (make-query target) (get special-keys value)))
+  (fill driver (make-query target) (get special-keys value)))
+
+(defmethod run-command
+  :click
+  [driver {:keys [target]} & [opt]]
+  (click driver (make-query target)))
 
 (defn run-ide-test
   [driver {:keys [id commands]} & [opt]]
   (doseq [command commands]
-  (run-command driver command opt)))
+    (run-command driver command opt)))
 
 (defn run-ide-suite
   [driver {test-ids :tests} tests & [opt]]
   (let [tests (filter #((set test-ids) (:id %)) tests)]
     (doseq [test tests]
-    (run-ide-test driver test opt))))
+      (run-ide-test driver test opt))))
 
 ;; TODO make find-test fn
 (defn run-ide-script
@@ -111,15 +112,15 @@
                              (set test-ids))
           opt              (merge {:base-url url
                                    :vars     (atom {})}
-                                opt)]
-    (cond
-      suite-ids (doseq [{:keys [name id] :as suite} suites]
-                  (when (some suite-ids [name id])
-                    (run-ide-suite driver suite tests opt)))
+                                  opt)]
+      (cond
+        suite-ids (doseq [{:keys [name id] :as suite} suites]
+                    (when (some suite-ids [name id])
+                      (run-ide-suite driver suite tests opt)))
 
-      test-ids (doseq [{:keys [name id] :as test} tests]
-                 (when (some test-ids [name id])
-                   (run-ide-test driver test opt)))
+        test-ids (doseq [{:keys [name id] :as test} tests]
+                   (when (some test-ids [name id])
+                     (run-ide-test driver test opt)))
 
-      :else (doseq [test tests]
-              (run-ide-test driver test opt))))))
+        :else (doseq [test tests]
+                (run-ide-test driver test opt))))))
