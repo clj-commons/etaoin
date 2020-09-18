@@ -1,61 +1,84 @@
 {
-  "id": "9c2b9945-53a5-4f3b-a814-b336df7e5dce",
+  "id": "badbca9e-9281-4e49-8f58-701931032ea5",
   "version": "2.0",
   "name": "test",
-  "url": "https://www.google.com",
+  "url": "https://www.amazon.com",
   "tests": [{
-    "id": "6ca020e8-fe26-4116-803a-754c47fe48e1",
-    "name": "test",
+    "id": "3b35a361-716c-4beb-8e92-f175c2da7574",
+    "name": "amazon",
     "commands": [{
-      "id": "7ebca6a1-8918-4644-a51e-08df0642964b",
+      "id": "b6e8d66b-7634-489c-a8fe-6ce74538e306",
       "comment": "",
       "command": "open",
       "target": "/",
       "targets": [],
       "value": ""
     }, {
-      "id": "061d6d3e-59cd-4a2a-84dc-9215f25a643d",
+      "id": "fdce3c2e-4afe-4f6f-95be-2b67844b1175",
       "comment": "",
       "command": "setWindowSize",
       "target": "1680x960",
       "targets": [],
       "value": ""
     }, {
-      "id": "e514b7b9-f181-4177-b75d-70af345e7b8b",
+      "id": "10638b9d-b8a4-4c9c-89f4-a66fb21659e2",
+      "comment": "",
+      "command": "click",
+      "target": "id=searchDropdownBox",
+      "targets": [
+        ["id=searchDropdownBox", "id"],
+        ["name=url", "name"],
+        ["css=#searchDropdownBox", "css:finder"],
+        ["xpath=//select[@id='searchDropdownBox']", "xpath:attributes"],
+        ["xpath=//div[@id='nav-search-dropdown-card']/div/select", "xpath:idRelative"],
+        ["xpath=//select", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "a26876f9-3304-41ec-9cda-9938f8e495f2",
+      "comment": "",
+      "command": "select",
+      "target": "id=searchDropdownBox",
+      "targets": [],
+      "value": "index=3"
+    }, {
+      "id": "9c7954cb-c84b-4544-8601-b32d6c4da1d3",
       "comment": "",
       "command": "type",
-      "target": "name=q",
+      "target": "id=twotabsearchtextbox",
       "targets": [
-        ["name=q", "name"],
-        ["css=.gLFyf", "css:finder"],
-        ["xpath=//input[@name='q']", "xpath:attributes"],
-        ["xpath=//form[@id='tsf']/div[2]/div/div/div/div[2]/input", "xpath:idRelative"],
-        ["xpath=//div[2]/input", "xpath:position"]
+        ["id=twotabsearchtextbox", "id"],
+        ["name=field-keywords", "name"],
+        ["css=#twotabsearchtextbox", "css:finder"],
+        ["xpath=//input[@id='twotabsearchtextbox']", "xpath:attributes"],
+        ["xpath=//div[@id='nav-search']/form/div[2]/div/input", "xpath:idRelative"],
+        ["xpath=//input", "xpath:position"]
       ],
-      "value": "clojure.org"
+      "value": "shoes"
     }, {
-      "id": "29273c04-4df1-43be-b44b-e86cbe63261b",
+      "id": "0544bdb2-df97-4f0f-9e55-939dfedc6cc0",
       "comment": "",
       "command": "sendKeys",
-      "target": "name=q",
+      "target": "id=twotabsearchtextbox",
       "targets": [
-        ["name=q", "name"],
-        ["css=.gLFyf", "css:finder"],
-        ["xpath=//input[@name='q']", "xpath:attributes"],
-        ["xpath=//form[@id='tsf']/div[2]/div/div/div/div[2]/input", "xpath:idRelative"],
-        ["xpath=//div[2]/input", "xpath:position"]
+        ["id=twotabsearchtextbox", "id"],
+        ["name=field-keywords", "name"],
+        ["css=#twotabsearchtextbox", "css:finder"],
+        ["xpath=//input[@id='twotabsearchtextbox']", "xpath:attributes"],
+        ["xpath=//div[@id='nav-search']/form/div[2]/div/input", "xpath:idRelative"],
+        ["xpath=//input", "xpath:position"]
       ],
       "value": "${KEY_ENTER}"
     }]
   }],
   "suites": [{
-    "id": "98823cd7-d6a3-426e-b477-ac6900aaf87a",
+    "id": "76420bbb-97ef-4b4a-ac02-7ef70483698d",
     "name": "Default Suite",
     "persistSession": false,
     "parallel": false,
     "timeout": 300,
-    "tests": ["6ca020e8-fe26-4116-803a-754c47fe48e1"]
+    "tests": []
   }],
-  "urls": ["https://www.google.com/"],
+  "urls": ["https://www.google.com/", "https://www.amazon.com/"],
   "plugins": []
 }
