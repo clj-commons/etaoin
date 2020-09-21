@@ -13,6 +13,7 @@
       str/lower-case
       (str/starts-with? "http")))
 
+;; TODO extend
 (def special-keys
   {"${KEY_ENTER}" k/enter})
 
@@ -60,19 +61,18 @@
 (defmethod run-command
   :select
   [driver {:keys [target value]} & [opt]]
-  (let [[type & vals] (str/split value #"=")
-        val           (str/join "=" vals)
-        q             (make-query target)]
-    (cond
-      (= type "label") (select driver q value)
+  (let [[type val] (str/split value #"=" 2)
+        q          (make-query target)]
+    (case type
+      "label" (select driver q val)
 
-      (#{"id" "value"} type) (do
-                               (click driver q)
-                               (click-el driver (query driver q {:css (format "[%s=\"%s\"]" type val)})))
+      "index" (let [index (inc (Integer/parseInt val))] ;; the initial index in selenium is 0, in xpath and css selectors it is 1
+                (click driver q)
+                (click-el driver (query driver q {:tag :option :index index})))
 
-      (= type "index") (let [index (inc (Integer/parseInt val))] ;; the initial index in selenium is 0, in xpath and css selectors it is 1
-                         (click driver q)
-                         (click-el driver (query driver q {:tag :option :index index}))))))
+      (do
+        (click driver q)
+        (click-el driver (query driver q {:css (format "[%s=\"%s\"]" type val)}))))))
 
 ;; TODO apply map to special-keys or auto-replace
 (defmethod run-command
@@ -90,37 +90,39 @@
   (doseq [command commands]
     (run-command driver command opt)))
 
-(defn run-ide-suite
-  [driver {test-ids :tests} tests & [opt]]
-  (let [tests (filter #((set test-ids) (:id %)) tests)]
-    (doseq [test tests]
-      (run-ide-test driver test opt))))
+(defn get-tests-by-suite-id
+  [suite-id id {:keys [suites tests]}]
+  (let [test-ids    (-> (filter #(= suite-id (id %)) suites)
+                        first
+                        :tests
+                        set)
+        suite-tests (filter #(test-ids (:id %)) tests)]
+    suite-tests))
 
-;; TODO make find-test fn
+(defn find-tests
+  [{:keys [test-id test-ids suite-id suite-ids test-name suite-name]}
+   {:keys [suites tests] :as parsed-file}]
+  (let [test-ids    (cond-> #{}
+                      test-id    (conj (first (filter #(= test-id (:id %)) tests)))
+                      test-name  (conj (first (filter #(= test-id (:name %)) tests)))
+                      suite-id   (into (get-tests-by-suite-id suite-id :id parsed-file))
+                      suite-name (into (get-tests-by-suite-id suite-name :name parsed-file))
+                      test-ids   (into (filter #((set test-ids) (:id %)) tests))
+                      suite-ids  (into (mapcat #(get-tests-by-suite-id % :id parsed-file) suite-ids)))
+        tests-found (filter test-ids tests)]
+    (if (empty? tests-found)
+      tests
+      tests-found)))
+
 (defn run-ide-script
-  [driver path & [{:keys [suite-ids test-ids] :as opt}]]
-  (with-open [rdr (io/reader path)]
-    (let [data             (parse-stream rdr true)
-          {:keys [id
-                  name
-                  url
-                  tests
-                  suites]} data
-          suite-ids        (when suite-ids
-                             (set suite-ids))
-          test-ids         (when test-ids
-                             (set test-ids))
-          opt              (merge {:base-url url
-                                   :vars     (atom {})}
-                                  opt)]
-      (cond
-        suite-ids (doseq [{:keys [name id] :as suite} suites]
-                    (when (some suite-ids [name id])
-                      (run-ide-suite driver suite tests opt)))
-
-        test-ids (doseq [{:keys [name id] :as test} tests]
-                   (when (some test-ids [name id])
-                     (run-ide-test driver test opt)))
-
-        :else (doseq [test tests]
-                (run-ide-test driver test opt))))))
+  [driver path & [opt]]
+  (let [parsed-file (with-open [rdr (io/reader path)]
+                      (parse-stream rdr true))
+        opt-search  (select-keys opt [:test-name :test-id :test-ids
+                                      :suite-name :suite-id :suite-ids])
+        tests-found (find-tests opt-search parsed-file)
+        opt         (merge {:base-url (:url parsed-file)
+                            :vars     (atom {})}
+                           opt)]
+    (doseq [test tests-found]
+      (run-ide-test driver test opt))))

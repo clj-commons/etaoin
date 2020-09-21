@@ -1,5 +1,6 @@
 (ns etaoin.unit-test
   (:require [etaoin.api :refer :all]
+            [etaoin.ide :as ide]
             [etaoin.proc]
             [clojure.test :refer :all])
   (:import (java.nio.file Files)
@@ -92,3 +93,14 @@
                          :parameters {:pointerType :mouse}}]
     (is (= keyboard-result keyboard))
     (is (= mouse-result mouse))))
+
+(deftest test-find-tests
+  (let [parsed-file {:tests  [{:id 1} {:id 2} {:id 3} {:id 4}]
+                     :suites [{:id 1 :name "Suite 1" :tests [1 2]}
+                              {:id 2 :name "Suite 2" :tests [3 4]}]}]
+    (is (= [{:id 1} {:id 2} {:id 4}]
+           (ide/find-tests {:suite-id 1 :test-id 4} parsed-file)))
+    (is (= [{:id 1} {:id 2} {:id 3} {:id 4}]
+           (ide/find-tests {:suite-ids [1] :suite-name "Suite 2" :test-id 4} parsed-file)))
+    (is (= [{:id 1} {:id 2} {:id 3} {:id 4}]
+           (ide/find-tests {} parsed-file)))))
