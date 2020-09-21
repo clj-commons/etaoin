@@ -4,8 +4,7 @@
             [etaoin.api :refer :all]
             [etaoin.keys :as k]
             [clojure.string :as str]
-            [clojure.tools.logging :as log])
-  (:import (java.net URL)))
+            [clojure.tools.logging :as log]))
 
 (defn absolute-path?
   [path]
@@ -20,6 +19,15 @@
 (defn make-query
   [target]
   {:css (format "[%s]" target)})
+
+(defn make-absolute-url
+  [base-url target]
+  (let [base-url (if (str/ends-with? base-url "/")
+                   (-> base-url
+                       drop-last
+                       str/join)
+                   base-url)]
+    (str base-url target)))
 
 (defn dispatch-command
   [driver command & [opt]]
@@ -37,9 +45,7 @@
   [driver {:keys [target]} & [{base-url :base-url}]]
   (if (absolute-path? target)
     (go driver target)
-    (go driver (-> (URL. base-url)
-                   (URL. target)
-                   str))))
+    (go driver (make-absolute-url base-url target))))
 
 (defmethod run-command
   :setWindowSize
