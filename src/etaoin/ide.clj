@@ -23,9 +23,7 @@
 (defn make-absolute-url
   [base-url target]
   (let [base-url (if (str/ends-with? base-url "/")
-                   (-> base-url
-                       drop-last
-                       str/join)
+                   (subs base-url 0 (-> base-url count dec))
                    base-url)]
     (str base-url target)))
 
