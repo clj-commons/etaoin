@@ -84,6 +84,11 @@ jobs:
           when: always
           command: lein test2junit etaoin.unit-test
 
+      - run:
+          name: ide tests
+          when: always
+          command: lein test2junit etaoin.ide-test
+
       - store_test_results:
           path: target/test2junit
 
