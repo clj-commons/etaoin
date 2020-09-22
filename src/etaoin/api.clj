@@ -1772,7 +1772,7 @@
 ;; iframes
 ;;
 
-(defn- switch-frame*
+(defn switch-frame*
   "Switches to an (i)frame by its index or an element reference."
   [driver id]
   (execute {:driver driver

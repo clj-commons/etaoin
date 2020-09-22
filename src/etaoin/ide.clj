@@ -3,6 +3,7 @@
             [clojure.java.io :as io]
             [etaoin.api :refer :all]
             [etaoin.keys :as k]
+            [etaoin.util :refer [defmethods]]
             [clojure.string :as str]
             [clojure.tools.logging :as log]))
 
@@ -18,7 +19,12 @@
 
 (defn make-query
   [target]
-  {:css (format "[%s]" target)})
+  (let [[type val] (str/split target #"=" 2)]
+    (case type
+      "css"      {:css val}
+      "xpath"    {:xpath val}
+      "linkText" {:tag :a :fn/has-text val}
+      {:css (format "[%s]" target)})))
 
 (defn make-absolute-url
   [base-url target]
@@ -61,9 +67,34 @@
   [driver {:keys [target]} & [opt]]
   (click driver (make-query target)))
 
-;; TODO refactor select fn, add select by-value
 (defmethod run-command
-  :select
+  :close
+  [driver _ & _]
+  (close-window driver))
+
+(defmethod run-command
+  :doubleClick
+  [driver {:keys [target]} & [opt]]
+  (double-click driver (make-query target)))
+
+(defmethod run-command
+  :dragAndDropToObject
+  [driver {:keys [target value]} & [opt]]
+  (drag-and-drop driver
+                 (make-query target)
+                 (make-query value)))
+
+(defmethod run-command
+  :executeScript
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (let [result (js-execute driver target)]
+    (when value
+      (swap! vars assoc value result))
+    result))
+
+;; TODO refactor select fn, add select by-value
+(defmethods run-command
+  [:select :addSelection]
   [driver {:keys [target value]} & [opt]]
   (let [[type val] (str/split value #"=" 2)
         q          (make-query target)]
@@ -71,23 +102,27 @@
       "label" (select driver q val)
 
       "index" (let [index (inc (Integer/parseInt val))] ;; the initial index in selenium is 0, in xpath and css selectors it is 1
-                (click driver q)
                 (click-el driver (query driver q {:tag :option :index index})))
 
-      (do
-        (click driver q)
-        (click-el driver (query driver q {:css (format "[%s=\"%s\"]" type val)}))))))
+      (click-el driver (query driver q (make-query value))))))
+
+(defmethod run-command
+  :selectFrame
+  [driver {:keys [target]} & [opt]]
+  (cond
+    (= target "relative=top")          (switch-frame-top driver)
+    (= target "relative=parent")       (switch-frame-parent driver)
+    (str/starts-with? target "index=") (switch-frame* driver (-> target
+                                                                 (str/split #"index=")
+                                                                 second
+                                                                 (Integer/parseInt)))
+    :else                              (switch-frame driver (make-query target))))
 
 ;; TODO apply map to special-keys or auto-replace
 (defmethod run-command
   :sendKeys
   [driver {:keys [target value]} & [opt]]
   (fill driver (make-query target) (get special-keys value)))
-
-(defmethod run-command
-  :click
-  [driver {:keys [target]} & [opt]]
-  (click driver (make-query target)))
 
 (defn run-ide-test
   [driver {:keys [id commands]} & [opt]]
@@ -108,7 +143,7 @@
    {:keys [suites tests] :as parsed-file}]
   (let [test-ids    (cond-> #{}
                       test-id    (conj (first (filter #(= test-id (:id %)) tests)))
-                      test-name  (conj (first (filter #(= test-id (:name %)) tests)))
+                      test-name  (conj (first (filter #(= test-name (:name %)) tests)))
                       suite-id   (into (get-tests-by-suite-id suite-id :id parsed-file))
                       suite-name (into (get-tests-by-suite-id suite-name :name parsed-file))
                       test-ids   (into (filter #((set test-ids) (:id %)) tests))
