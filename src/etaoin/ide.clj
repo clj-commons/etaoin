@@ -13,6 +13,12 @@
       str/lower-case
       (str/starts-with? "http")))
 
+(defn str->var
+  [var]
+  (if (str/starts-with? var "$")
+    (keyword (subs var 2 (-> var count dec)))
+    (keyword var)))
+
 ;; TODO extend
 (def special-keys
   {"${KEY_ENTER}" k/enter})
@@ -88,8 +94,8 @@
   :executeScript
   [driver {:keys [target value]} & [{vars :vars}]]
   (let [result (js-execute driver target)]
-    (when value
-      (swap! vars assoc value result))
+    (when-not (str/blank? value)
+      (swap! vars assoc (str->var value) result))
     result))
 
 ;; TODO refactor select fn, add select by-value
@@ -110,13 +116,48 @@
   :selectFrame
   [driver {:keys [target]} & [opt]]
   (cond
-    (= target "relative=top")          (switch-frame-top driver)
-    (= target "relative=parent")       (switch-frame-parent driver)
-    (str/starts-with? target "index=") (switch-frame* driver (-> target
-                                                                 (str/split #"index=")
-                                                                 second
-                                                                 (Integer/parseInt)))
-    :else                              (switch-frame driver (make-query target))))
+    (= target "relative=top")
+    (switch-frame-top driver)
+
+    (= target "relative=parent")
+    (switch-frame-parent driver)
+
+    (str/starts-with? target "index=")
+    (switch-frame* driver (-> target
+                              (str/split #"index=")
+                              second
+                              (Integer/parseInt)))
+
+    :else (switch-frame driver (make-query target))))
+
+(defmethod run-command
+  :selectWindow
+  [driver {:keys [target] :as command} & [{vars :vars}]]
+  (cond
+    (or (str/starts-with? target "handle=")
+        (str/starts-with? target "name="))
+    (let [handle-name (-> target
+                          (str/split #"=")
+                          second
+                          str->var)]
+      (switch-window driver (get @vars handle-name)))
+
+    (str/starts-with? target "win_ser_")
+    (let [index  (second (str/split target #"win_ser_"))
+          index  (if (= index "local")
+                   0
+                   (Integer/parseInt index))
+          handle (get (get-window-handles driver) index)]
+      (switch-window driver handle))
+
+    :else (throw (ex-info "The `select window` can only be called using handles"
+                          {:command command}))))
+
+(defmethod run-command
+  :storeWindowHandle
+  [driver {:keys [target]} & [{vars :vars}]]
+  (let [handle (get-window-handle driver)]
+    (swap! vars assoc (str->var target) handle)))
 
 ;; TODO apply map to special-keys or auto-replace
 (defmethod run-command
@@ -125,9 +166,19 @@
   (fill driver (make-query target) (get special-keys value)))
 
 (defn run-ide-test
-  [driver {:keys [id commands]} & [opt]]
-  (doseq [command commands]
-    (run-command driver command opt)))
+  [driver {:keys [id commands]} & [{vars :vars :as opt}]]
+  (doseq [{:keys [opensWindow
+                  windowHandleName
+                  windowTimeout]
+           :as   command} commands]
+    (if opensWindow
+      (let [init-handles  (set (get-window-handles driver))
+            _             (run-command driver command opt)
+            _             (wait (/ windowTimeout 1000))
+            final-handles (set (get-window-handles driver))
+            handle        (first (clojure.set/difference final-handles init-handles))]
+        (swap! vars assoc (str->var windowHandleName) handle))
+      (run-command driver command opt))))
 
 (defn get-tests-by-suite-id
   [suite-id id {:keys [suites tests]}]
