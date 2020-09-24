@@ -34,3 +34,12 @@
                                              {:base-url base-url :test-name "test-select-window"})
             final-handle (api/get-window-handle driver)]
         (is (not= init-handle final-handle))))))
+
+(deftest test-send-keys
+  (let [base-url       (-> "html" io/resource str)
+        test-file-path (-> "ide/test.side" io/resource str)]
+    (api/with-chrome {:args ["--no-sandbox"]} driver
+      (ide/run-ide-script driver test-file-path
+                          {:base-url base-url :test-name "test-send-keys"})
+      (let [url (api/get-url driver)]
+        (is  (str/ends-with? url "login=LOGin&password=3*3%3D9&message="))))))

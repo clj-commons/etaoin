@@ -261,6 +261,80 @@
       "targets": [],
       "value": ""
     }]
+  }, {
+    "id": "1f9c469b-831f-450f-b024-99b4fbd28734",
+    "name": "test-send-keys",
+    "commands": [{
+      "id": "840284c3-46dd-44de-b11d-1fbc143073c3",
+      "comment": "",
+      "command": "open",
+      "target": "/",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "f755d7a8-ad49-484c-8b1b-747f8c31f14f",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "1680x960",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "19dfd1c7-bfb5-4cb7-b64d-f6908ac59e99",
+      "comment": "",
+      "command": "click",
+      "target": "linkText=test.html",
+      "targets": [
+        ["linkText=test.html", "linkText"],
+        ["css=li:nth-child(6) > a", "css:finder"],
+        ["xpath=//a[contains(text(),'test.html')]", "xpath:link"],
+        ["xpath=//a[contains(@href, 'test.html')]", "xpath:href"],
+        ["xpath=//li[6]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'test.html')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "c7c545db-cfeb-4a9c-acaa-ca64cb44cb52",
+      "comment": "",
+      "command": "click",
+      "target": "id=simple-input",
+      "targets": [
+        ["id=simple-input", "id"],
+        ["name=login", "name"],
+        ["css=#simple-input", "css:finder"],
+        ["xpath=//input[@id='simple-input']", "xpath:attributes"],
+        ["xpath=//form[@id='submit-test']/input", "xpath:idRelative"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "d301e198-bd56-405f-8245-911821cae20d",
+      "comment": "",
+      "command": "sendKeys",
+      "target": "id=simple-input",
+      "targets": [],
+      "value": "${KEY_SHIFT}log${KEY_SHIFT}in"
+    }, {
+      "id": "7923564d-6910-48d1-b03b-8b704750ab82",
+      "comment": "",
+      "command": "click",
+      "target": "id=simple-password",
+      "targets": [
+        ["id=simple-password", "id"],
+        ["name=password", "name"],
+        ["css=#simple-password", "css:finder"],
+        ["xpath=//input[@id='simple-password']", "xpath:attributes"],
+        ["xpath=//form[@id='submit-test']/input[2]", "xpath:idRelative"],
+        ["xpath=//input[2]", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "e3a37686-2afd-4dd3-b187-75c772866c92",
+      "comment": "",
+      "command": "sendKeys",
+      "target": "id=simple-password",
+      "targets": [],
+      "value": "3${KEY_NUM_MULTIPLY}3${KEY_EQUALS}9${KEY_ENTER}"
+    }]
   }],
   "suites": [{
     "id": "19d1b2da-ffe2-49cd-b1e6-0fd03d439dd1",

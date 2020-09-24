@@ -19,9 +19,81 @@
     (keyword (subs var 2 (-> var count dec)))
     (keyword var)))
 
-;; TODO extend
 (def special-keys
-  {"${KEY_ENTER}" k/enter})
+  {"ADD"          k/num-+
+   "ALT"          k/alt-left
+   "ARROW_LEFT"   k/arrow-left
+   "ARROW_RIGHT"  k/arrow-right
+   "ARROW_UP"     k/arrow-up
+   "BACKSPACE"    k/backspace
+   "BACK_SPACE"   k/backspace
+   "CANCEL"       k/cancel
+   "CLEAR"        k/clear
+   "COMMAND"      k/command
+   "CONTROL"      k/control-left
+   "DECIMAL"      k/num--
+   "DELETE"       k/delete
+   "DIVIDE"       k/num-slash
+   "DOWN"         k/arrow-down
+   "END"          k/end
+   "ENTER"        k/enter
+   "EQUALS"       k/equal
+   "ESCAPE"       k/escape
+   "F1"           k/f1
+   "F10"          k/f10
+   "F11"          k/f11
+   "F12"          k/f12
+   "F2"           k/f2
+   "F3"           k/f3
+   "F4"           k/f4
+   "F5"           k/f5
+   "F6"           k/f6
+   "F7"           k/f7
+   "F8"           k/f8
+   "F9"           k/f9
+   "HELP"         k/help
+   "HOME"         k/home
+   "INSERT"       k/insert
+   "LEFT"         k/arrow-left
+   "LEFT_ALT"     k/alt-left
+   "LEFT_CONTROL" k/control-left
+   "LEFT_SHIFT"   k/shift-left
+   "META"         k/meta-left
+   "MULTIPLY"     k/num-*
+   "NULL"         k/unidentified
+   "NUMPAD0"      k/num-0
+   "NUMPAD1"      k/num-1
+   "NUMPAD2"      k/num-2
+   "NUMPAD3"      k/num-3
+   "NUMPAD4"      k/num-4
+   "NUMPAD5"      k/num-5
+   "NUMPAD6"      k/num-6
+   "NUMPAD7"      k/num-7
+   "NUMPAD8"      k/num-9
+   "NUMPAD9"      k/num-9
+   "PAGE_DOWN"    k/pagedown
+   "PAGE_UP"      k/pageup
+   "PAUSE"        k/pause
+   "RETURN"       k/return
+   "RIGHT"        k/arrow-right
+   "SEMICOLON"    k/semicolon
+   "SEPARATOR"    k/num-comma
+   "SHIFT"        k/shift-left
+   "SPACE"        k/space
+   "SUBTRACT"     k/num--
+   "TAB"          k/tab
+   "UP"           k/arrow-up})
+
+(defn gen-send-key-input
+  [input]
+  (let [pattern #"\$\{KEY_([^}]+)\}"
+        keys    (->> (re-seq pattern input)
+                     (map second)
+                     set)]
+    (reduce (fn [acc key]
+              (let [pattern (re-pattern (format "\\$\\{KEY_%s\\}" key))
+                    sp-key  (str (get special-keys key))]
+                (str/replace acc pattern sp-key))) input keys)))
 
 (defn make-query
   [target]
@@ -66,7 +138,7 @@
 (defmethod run-command
   :type
   [driver {:keys [target value]} & [opt]]
-  (fill driver (make-query target) value))
+  (fill driver (make-query target) (gen-send-key-input value)))
 
 (defmethod run-command
   :click
@@ -159,14 +231,13 @@
   (let [handle (get-window-handle driver)]
     (swap! vars assoc (str->var target) handle)))
 
-;; TODO apply map to special-keys or auto-replace
 (defmethod run-command
   :sendKeys
   [driver {:keys [target value]} & [opt]]
-  (fill driver (make-query target) (get special-keys value)))
+  (fill driver (make-query target) (gen-send-key-input value)))
 
 (defn run-ide-test
-  [driver {:keys [id commands]} & [{vars :vars :as opt}]]
+  [driver {:keys [commands]} & [{vars :vars :as opt}]]
   (doseq [{:keys [opensWindow
                   windowHandleName
                   windowTimeout]
