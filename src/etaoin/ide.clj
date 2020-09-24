@@ -31,7 +31,8 @@
    "CLEAR"        k/clear
    "COMMAND"      k/command
    "CONTROL"      k/control-left
-   "DECIMAL"      k/num--
+   "CTRL"         k/control-left
+   "DECIMAL"      k/num-.
    "DELETE"       k/delete
    "DIVIDE"       k/num-slash
    "DOWN"         k/arrow-down
@@ -60,6 +61,16 @@
    "LEFT_SHIFT"   k/shift-left
    "META"         k/meta-left
    "MULTIPLY"     k/num-*
+   "N0"           k/num-0
+   "N1"           k/num-1
+   "N2"           k/num-2
+   "N3"           k/num-3
+   "N4"           k/num-4
+   "N5"           k/num-5
+   "N6"           k/num-6
+   "N7"           k/num-7
+   "N8"           k/num-9
+   "N9"           k/num-9
    "NULL"         k/unidentified
    "NUMPAD0"      k/num-0
    "NUMPAD1"      k/num-1
@@ -71,12 +82,18 @@
    "NUMPAD7"      k/num-7
    "NUMPAD8"      k/num-9
    "NUMPAD9"      k/num-9
+   "NUM_PERIOD"   k/num-.
+   "NUM_PLUS"     k/num-+
+   "NUM_DIVISION" k/num-slash
+   "NUM_MULTIPLY" k/num-*
+   "NUM_MINUS"    k/num--
    "PAGE_DOWN"    k/pagedown
    "PAGE_UP"      k/pageup
    "PAUSE"        k/pause
    "RETURN"       k/return
    "RIGHT"        k/arrow-right
    "SEMICOLON"    k/semicolon
+   "SEP"          k/num-comma
    "SEPARATOR"    k/num-comma
    "SHIFT"        k/shift-left
    "SPACE"        k/space
