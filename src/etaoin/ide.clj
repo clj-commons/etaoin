@@ -147,6 +147,11 @@
     (go driver (make-absolute-url base-url target))))
 
 (defmethod run-command
+  :pause
+  [driver {:keys [target]} & [{base-url :base-url}]]
+  (wait (/ target 1000)))
+
+(defmethod run-command
   :setWindowSize
   [driver {:keys [target]} & [opt]]
   (let [[width height] (map #(Integer/parseInt %) (str/split target #"x"))]
@@ -243,6 +248,11 @@
                           {:command command}))))
 
 (defmethod run-command
+  :store
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (swap! vars assoc (str->var value) target))
+
+(defmethod run-command
   :storeWindowHandle
   [driver {:keys [target]} & [{vars :vars}]]
   (let [handle (get-window-handle driver)]
@@ -252,6 +262,41 @@
   :sendKeys
   [driver {:keys [target value]} & [opt]]
   (fill driver (make-query target) (gen-send-key-input value)))
+
+(defmethod run-command
+  :submit
+  [driver {:keys [target]} & [{vars :vars}]]
+  (fill-el driver (query (make-query target) {:tag :input}) k/enter))
+
+(defmethod run-command
+  :waitForElementEditable
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (wait-enabled driver (make-query target) {:timeout (/ value 1000)}))
+
+(defmethod run-command
+  :waitForElementNotEditable
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (wait-disabled driver (make-query target) {:timeout (/ value 1000)}))
+
+(defmethod run-command
+  :waitForElementPresent
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (wait-exists driver (make-query target) {:timeout (/ value 1000)}))
+
+(defmethod run-command
+  :waitForElementNotPresent
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (wait-absent driver (make-query target) {:timeout (/ value 1000)}))
+
+(defmethod run-command
+  :waitForElementVisible
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (wait-visible driver (make-query target) {:timeout (/ value 1000)}))
+
+(defmethod run-command
+  :waitForElementNotVisible
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (wait-invisible driver (make-query target) {:timeout (/ value 1000)}))
 
 (defn run-ide-test
   [driver {:keys [commands]} & [{vars :vars :as opt}]]
