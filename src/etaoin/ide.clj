@@ -128,6 +128,11 @@
                    base-url)]
     (str base-url target)))
 
+(defn make-assert-msg
+  [command actual expected]
+  (format "\nAssert command:\"%s\"\nExpected: %s\nActual%s"
+          command expected actual))
+
 (defn dispatch-command
   [driver command & [opt]]
   (some-> command :command keyword))
@@ -138,6 +143,102 @@
   :default
   [driver command & _]
   (log/warnf "The \"%s\" command is not implemented" (:command command)))
+
+(defmethod run-command
+  :assert
+  [driver {:keys [target value command]} & [{vars :vars}]]
+  (let [stored-value (str (get @vars (str->var target)))]
+    (assert (= stored-value value) (make-assert-msg command stored-value value))))
+
+(defmethods run-command
+  [:assertAlert :assertConfirmation :assertPrompt]
+  [driver {:keys [target command]} & [{vars :vars}]]
+  (let [alert-msg (get-alert-text driver)]
+    (assert (= alert-msg target) (make-assert-msg command alert-msg target))))
+
+(defmethod run-command
+  :assertChecked
+  [driver {:keys [target command]} & [{vars :vars}]]
+  (let [actual (selected? driver (make-query target))]
+    (assert actual (make-assert-msg command actual true))))
+
+(defmethod run-command
+  :assertNotChecked
+  [driver {:keys [target command]} & [{vars :vars}]]
+  (let [actual (selected? driver (make-query target))]
+    (assert (not actual) (make-assert-msg command actual false))))
+
+(defmethod run-command
+  :assertEditable
+  [driver {:keys [target command]} & [{vars :vars}]]
+  (let [q (make-query target)
+        actual (and (enabled? driver (make-query target))
+                    (nil? (get-element-attr driver q :readonly)))]
+    (assert actual (make-assert-msg command actual true))))
+
+(defmethod run-command
+  :assertNotEditable
+  [driver {:keys [target command]} & [{vars :vars}]]
+  (let [q (make-query target)
+        actual (and (enabled? driver (make-query target))
+                    (nil? (get-element-attr driver q :readonly)))]
+    (assert (not actual) (make-assert-msg command actual false))))
+
+(defmethod run-command
+  :assertElementPresent
+  [driver {:keys [target command]} & [{vars :vars}]]
+  (let [actual (exists? driver (make-query target))]
+    (assert actual (make-assert-msg command actual true))))
+
+(defmethod run-command
+  :assertElementPresent
+  [driver {:keys [target command]} & [{vars :vars}]]
+  (let [actual (exists? driver (make-query target))]
+    (assert (not actual) (make-assert-msg command actual false))))
+
+(defmethod run-command
+  [:assertValue :assertSelectedValue]
+  [driver {:keys [target value command]} & [{vars :vars}]]
+  (let [actual-val (get-element-attr driver (make-query target) :value)]
+    (assert (= actual-val value)
+            (make-assert-msg command actual-val value))))
+
+(defmethod run-command
+  :assertNotSelectedValue
+  [driver {:keys [target value command]} & [{vars :vars}]]
+    (let [actual-val (get-element-attr driver (make-query target) :value)]
+    (assert (not= actual-val value)
+            (make-assert-msg command actual-val value))))
+
+(defmethod run-command
+  :assertText
+  [driver {:keys [target value command]} & [{vars :vars}]]
+  (let [actual-text (get-element-text driver (make-query target))]
+    (assert (= actual-text value)
+            (make-assert-msg command actual-text value))))
+
+(defmethod run-command
+  :assertNotText
+  [driver {:keys [target value command]} & [{vars :vars}]]
+  (let [actual-text (get-element-text driver (make-query target))]
+    (assert (not= actual-text value)
+            (make-assert-msg command actual-text value))))
+
+(defmethod run-command
+  :assertSelectedLabel
+  [driver {:keys [target value command]} & [{vars :vars}]]
+  (let [q (make-query target)
+        selected-val (get-element-attr driver q :value)
+        option-el  (query driver q {:value selected-val})
+        option-text (get-element-text-el driver option-el)]
+    (assert (= option-text value)
+            (make-assert-msg command option-text value))))
+
+(defmethod run-command
+  :assertTitle
+  [driver {:keys [target command]} & [{vars :vars}]]
+  (let [title (get-title driver)]
+    (assert (= title target) (make-assert-msg command title target))))
 
 (defmethod run-command
   :open
@@ -297,6 +398,19 @@
   :waitForElementNotVisible
   [driver {:keys [target value]} & [{vars :vars}]]
   (wait-invisible driver (make-query target) {:timeout (/ value 1000)}))
+
+(defmethods run-command
+  [:webdriverChooseCancelOnVisibleConfirmation
+   :webdriverChooseCancelOnVisiblePrompt]
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (dismiss-alert driver))
+
+(defmethods run-command
+  [:webdriverChooseOkOnVisibleConfirmation]
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (accept-alert driver))
+
+
 
 (defn run-ide-test
   [driver {:keys [commands]} & [{vars :vars :as opt}]]
