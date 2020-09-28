@@ -171,7 +171,7 @@
 (defmethod run-command
   :assertEditable
   [driver {:keys [target command]} & [{vars :vars}]]
-  (let [q (make-query target)
+  (let [q      (make-query target)
         actual (and (enabled? driver (make-query target))
                     (nil? (get-element-attr driver q :readonly)))]
     (assert actual (make-assert-msg command actual true))))
@@ -179,7 +179,7 @@
 (defmethod run-command
   :assertNotEditable
   [driver {:keys [target command]} & [{vars :vars}]]
-  (let [q (make-query target)
+  (let [q      (make-query target)
         actual (and (enabled? driver (make-query target))
                     (nil? (get-element-attr driver q :readonly)))]
     (assert (not actual) (make-assert-msg command actual false))))
@@ -191,10 +191,10 @@
     (assert actual (make-assert-msg command actual true))))
 
 (defmethod run-command
-  :assertElementPresent
+  :assertElementNotPresent
   [driver {:keys [target command]} & [{vars :vars}]]
-  (let [actual (exists? driver (make-query target))]
-    (assert (not actual) (make-assert-msg command actual false))))
+  (let [actual (absent? driver (make-query target))]
+    (assert actual (make-assert-msg command actual true))))
 
 (defmethod run-command
   [:assertValue :assertSelectedValue]
@@ -206,7 +206,7 @@
 (defmethod run-command
   :assertNotSelectedValue
   [driver {:keys [target value command]} & [{vars :vars}]]
-    (let [actual-val (get-element-attr driver (make-query target) :value)]
+  (let [actual-val (get-element-attr driver (make-query target) :value)]
     (assert (not= actual-val value)
             (make-assert-msg command actual-val value))))
 
@@ -227,10 +227,10 @@
 (defmethod run-command
   :assertSelectedLabel
   [driver {:keys [target value command]} & [{vars :vars}]]
-  (let [q (make-query target)
+  (let [q            (make-query target)
         selected-val (get-element-attr driver q :value)
-        option-el  (query driver q {:value selected-val})
-        option-text (get-element-text-el driver option-el)]
+        option-el    (query driver q {:value selected-val})
+        option-text  (get-element-text-el driver option-el)]
     (assert (= option-text value)
             (make-assert-msg command option-text value))))
 
