@@ -511,7 +511,7 @@
                 :data   {:using locator :value term}})
       :value :ELEMENT))
 
-(defmulti ^:private find-elements* dispatch-driver)
+(defmulti find-elements* dispatch-driver)
 
 (defmethod find-elements* :default
   [driver locator term]
