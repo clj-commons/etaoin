@@ -20,17 +20,13 @@
                   ["vcs" "push"]]
 
   :profiles {:dev {:plugins      [[lein-codox "0.10.7"]]
-                   :dependencies [[org.clojure/clojure "1.8.0"]
+                   :dependencies [[org.clojure/clojure "1.10.1"]
                                   [log4j/log4j "1.2.17"]]
 
                    :resource-paths ["env/dev/resources"]
 
                    :global-vars {*warn-on-reflection* true
-                                 *assert*             true}}
-
-             :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
-             :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}
-             :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]]}}
+                                 *assert*             true}}}
 
   :dependencies [[clj-http "3.10.1"]
                  [cheshire "5.9.0"]
