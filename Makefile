@@ -2,12 +2,6 @@
 repl:
 	lein repl
 
-repl-1.7:
-	lein with-profile +1.7 repl
-
-repl-1.8:
-	lein with-profile +1.8 repl
-
 repl-1.9:
 	lein with-profile +1.9 repl
 

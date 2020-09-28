@@ -17,8 +17,7 @@
   Phantom.js (Ghostdriver)
   https://github.com/detro/ghostdriver/blob/
   "
-  (:require [etaoin.legacy] ;; patch legacy clojure.string first
-            [etaoin.proc   :as proc]
+  (:require [etaoin.proc   :as proc]
             [etaoin.client :as client]
             [etaoin.keys   :as keys]
             [etaoin.query  :as query]

@@ -125,7 +125,7 @@ Add the following into `:dependencies` vector in your `project.clj` file:
 [etaoin "0.3.10"]
 ```
 
-Works with Clojure 1.7 and above.
+Works with Clojure 1.9 and above.
 
 ### Installing the Browser Drivers
 
