@@ -1,6 +1,7 @@
 (ns etaoin.ide
   (:require [cheshire.core :refer [parse-stream]]
             [clojure.java.io :as io]
+            [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [clojure.test :refer [is]]
             [clojure.tools.logging :as log]
@@ -599,3 +600,128 @@
                            opt)]
     (doseq [test tests-found]
       (run-ide-test driver test opt))))
+
+
+(def stop-tags
+  #{:elseIf :else :end :repeatIf})
+
+
+(defn tag? [tag]
+  (fn [command]
+    (some-> command :command (= tag))))
+
+
+(s/def ::command-if
+  (s/cat :if (s/cat :this (tag? :if)
+                    :branch ::commands)
+         :elseIf (s/* (s/cat :this (tag? :elseIf)
+                             :branch ::commands))
+         :else (s/? (s/cat :this (tag? :else)
+                           :branch ::commands))
+         :end (tag? :end)))
+
+(s/def ::command-times
+  (s/cat :times (tag? :times)
+         :branch ::commands
+         :end (tag? :end)))
+
+(s/def ::command-while
+  (s/cat :while (tag? :while)
+         :branch ::commands
+         :end (tag? :end)))
+
+(s/def ::command-do
+  (s/cat :do (tag? :do)
+         :branch ::commands
+         :end (tag? :repeatIf)))
+
+(s/def ::command-forEach
+  (s/cat :forEach (tag? :forEach)
+         :branch ::commands
+         :end (tag? :end)))
+
+(s/def ::command
+  (fn [{:keys [command]}]
+    (and (some? command)
+         (nil? (get stop-tags command)))))
+
+(s/def ::commands
+  (s/+ (s/alt
+         :if ::command-if
+         :times ::command-times
+         :while ::command-while
+         :do ::command-do
+         :forEach ::command-forEach
+         :cmd ::command)))
+
+(def data
+  [
+   {:command :times}
+   {:command :do-times}
+   {:command :end}
+   {:command :while}
+   {:command :do-while}
+   {:command :end}
+   {:command :do}
+   {:command :do-do}
+   {:command :repeatIf}
+   {:command :do-1}
+   {:command :if}
+   {:command :do-2}
+   {:command :if}
+   {:command :do-AAA}
+   {:command :end}
+   {:command :end}
+   {:command :do-3}
+   {:command :forEach}
+   {:command :if}
+   {:command :do-if}
+   {:command :elseIf}
+   {:command :do-else-if1}
+   {:command :elseIf}
+   {:command :do-else-if2}
+   {:command :else}
+   {:command :do-else}
+   {:command :end}
+   {:command :end}
+   {:command :do-3}
+   ])
+
+(comment
+  (s/conform ::commands data)
+  )
+;; => [[:times
+;;      {:times {:command :times},
+;;       :branch [[:cmd {:command :do-times}]],
+;;       :end {:command :end}}]
+;;     [:while
+;;      {:while {:command :while},
+;;       :branch [[:cmd {:command :do-while}]],
+;;       :end {:command :end}}]
+;;     [:do
+;;      {:do {:command :do},
+;;       :branch [[:cmd {:command :do-do}]],
+;;       :end {:command :repeatIf}}]
+;;     [:cmd {:command :do-1}]
+;;     [:if
+;;      {:if
+;;       {:this {:command :if},
+;;        :branch
+;;        [[:cmd {:command :do-2}]
+;;         [:if
+;;          {:if {:this {:command :if}, :branch [[:cmd {:command :do-AAA}]]},
+;;           :end {:command :end}}]]},
+;;       :end {:command :end}}]
+;;     [:cmd {:command :do-3}]
+;;     [:forEach
+;;      {:forEach {:command :forEach},
+;;       :branch
+;;       [[:if
+;;         {:if {:this {:command :if}, :branch [[:cmd {:command :do-if}]]},
+;;          :else-if
+;;          [{:this {:command :elseIf}, :branch [[:cmd {:command :do-else-if1}]]}
+;;           {:this {:command :elseIf}, :branch [[:cmd {:command :do-else-if2}]]}],
+;;          :else {:this {:command :else}, :branch [[:cmd {:command :do-else}]]},
+;;          :end {:command :end}}]],
+;;       :end {:command :end}}]
+;;     [:cmd {:command :do-3}]]
