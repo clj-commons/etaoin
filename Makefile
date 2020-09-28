@@ -2,6 +2,9 @@
 repl:
 	lein repl
 
+repl-1.9:
+	lein with-profile +1.9 repl
+
 .PHONY: test
 test:
 	lein test

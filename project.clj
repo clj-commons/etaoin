@@ -26,7 +26,8 @@
                    :resource-paths ["env/dev/resources"]
 
                    :global-vars {*warn-on-reflection* true
-                                 *assert*             true}}}
+                                 *assert*             true}}
+             :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]]}}
 
   :dependencies [[clj-http "3.10.1"]
                  [cheshire "5.9.0"]
