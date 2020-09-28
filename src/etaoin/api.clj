@@ -1772,7 +1772,7 @@
 ;; iframes
 ;;
 
-(defn- switch-frame*
+(defn switch-frame*
   "Switches to an (i)frame by its index or an element reference."
   [driver id]
   (execute {:driver driver
@@ -2083,9 +2083,9 @@
 
   Keep in mind it does not validates whether the element is visible,
   clickable and so on."
-  [driver q]
+  [driver q & more]
   (with-http-error
-    (get-element-text driver q)
+    (apply query driver q more)
     true))
 
 (def ^{:doc "Opposite of `exists?`."}
@@ -2133,6 +2133,18 @@
 
 (def ^{:doc "Oppsite to `visible?`."}
   invisible? (complement visible?))
+
+(defn selected-el?
+  [driver el]
+  {:pre [(some? el)]}
+  (:value (execute {:driver driver
+                    :method :get
+                    :path   [:session (:session driver) :element el :selected]})))
+
+(defn selected?
+  "Checks whether an element is selected."
+  [driver q]
+  (selected-el? driver (query driver q)))
 
 (defn enabled-el? 
   [driver el]

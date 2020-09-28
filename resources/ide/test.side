@@ -138,6 +138,203 @@
       "targets": [],
       "value": "label=United States"
     }]
+  }, {
+    "id": "bcf05b1b-3e20-4df9-8f31-1e204ef0938c",
+    "name": "test-drag-n-drop",
+    "commands": [{
+      "id": "a3e401dc-5fe5-4be0-b2a9-edd3b3722c10",
+      "comment": "",
+      "command": "open",
+      "target": "/drag-n-drop/index.html",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "f007886d-87d1-48cf-9ead-0378999fecde",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "1680x960",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "a0751353-11a0-4e04-9d5f-5cbb82e4a2b9",
+      "comment": "",
+      "command": "dragAndDropToObject",
+      "target": "css=.document:nth-child(3)",
+      "targets": [
+        ["css=.document:nth-child(3)", "css:finder"],
+        ["xpath=//div[4]/img", "xpath:position"]
+      ],
+      "value": "css=.trash"
+    }, {
+      "id": "4230821a-4ff4-4ce6-9370-5dbe532c3077",
+      "comment": "",
+      "command": "dragAndDropToObject",
+      "target": "css=.document:nth-child(3)",
+      "targets": [
+        ["css=.document:nth-child(3)", "css:finder"],
+        ["xpath=//div[4]/img", "xpath:position"]
+      ],
+      "value": "css=.trash"
+    }, {
+      "id": "48770e81-6058-4fb1-9cd7-cc75780909cc",
+      "comment": "",
+      "command": "dragAndDropToObject",
+      "target": "css=.document:nth-child(3)",
+      "targets": [
+        ["css=.document:nth-child(3)", "css:finder"],
+        ["xpath=//div[4]/img", "xpath:position"]
+      ],
+      "value": "css=.trash"
+    }, {
+      "id": "effa6252-6cbf-4dff-ac9e-359371b7a7c7",
+      "comment": "",
+      "command": "dragAndDropToObject",
+      "target": "css=.document:nth-child(3)",
+      "targets": [
+        ["css=.document:nth-child(3)", "css:finder"],
+        ["xpath=//div[4]/img", "xpath:position"]
+      ],
+      "value": "css=.trash"
+    }]
+  }, {
+    "id": "e8a6b08a-81b5-49ef-a135-34f3c0a9326c",
+    "name": "test-select-window",
+    "commands": [{
+      "id": "0f801cca-fee4-45de-a6f9-98cd8957dd46",
+      "comment": "",
+      "command": "open",
+      "target": "/",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "4c919569-a4df-44da-a2d4-2ab92d2e50c5",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "1680x960",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "7adeb209-19d4-4729-87ac-7dd62cc4452a",
+      "comment": "",
+      "command": "click",
+      "target": "linkText=test.html",
+      "targets": [
+        ["linkText=test.html", "linkText"],
+        ["css=li:nth-child(6) > a", "css:finder"],
+        ["xpath=//a[contains(text(),'test.html')]", "xpath:link"],
+        ["xpath=//a[contains(@href, 'test.html')]", "xpath:href"],
+        ["xpath=//li[6]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'test.html')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "25853ec5-a129-4b8f-8137-573efd0ddd13",
+      "comment": "",
+      "command": "click",
+      "target": "id=switch-window",
+      "targets": [
+        ["id=switch-window", "id"],
+        ["linkText=Go", "linkText"],
+        ["css=#switch-window", "css:finder"],
+        ["xpath=//a[contains(text(),'Go')]", "xpath:link"],
+        ["xpath=//a[@id='switch-window']", "xpath:attributes"],
+        ["xpath=//a[contains(@href, 'test2.html')]", "xpath:href"],
+        ["xpath=//a", "xpath:position"],
+        ["xpath=//a[contains(.,'Go')]", "xpath:innerText"]
+      ],
+      "value": "",
+      "opensWindow": true,
+      "windowHandleName": "win6790",
+      "windowTimeout": 2000
+    }, {
+      "id": "dbcb9584-c596-414f-9a00-65b6247fada4",
+      "comment": "",
+      "command": "storeWindowHandle",
+      "target": "root",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "56d4b587-f7b3-4433-9d6f-e337f10f78ef",
+      "comment": "",
+      "command": "selectWindow",
+      "target": "handle=${win6790}",
+      "targets": [],
+      "value": ""
+    }]
+  }, {
+    "id": "1f9c469b-831f-450f-b024-99b4fbd28734",
+    "name": "test-send-keys",
+    "commands": [{
+      "id": "840284c3-46dd-44de-b11d-1fbc143073c3",
+      "comment": "",
+      "command": "open",
+      "target": "/",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "f755d7a8-ad49-484c-8b1b-747f8c31f14f",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "1680x960",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "19dfd1c7-bfb5-4cb7-b64d-f6908ac59e99",
+      "comment": "",
+      "command": "click",
+      "target": "linkText=test.html",
+      "targets": [
+        ["linkText=test.html", "linkText"],
+        ["css=li:nth-child(6) > a", "css:finder"],
+        ["xpath=//a[contains(text(),'test.html')]", "xpath:link"],
+        ["xpath=//a[contains(@href, 'test.html')]", "xpath:href"],
+        ["xpath=//li[6]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'test.html')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "c7c545db-cfeb-4a9c-acaa-ca64cb44cb52",
+      "comment": "",
+      "command": "click",
+      "target": "id=simple-input",
+      "targets": [
+        ["id=simple-input", "id"],
+        ["name=login", "name"],
+        ["css=#simple-input", "css:finder"],
+        ["xpath=//input[@id='simple-input']", "xpath:attributes"],
+        ["xpath=//form[@id='submit-test']/input", "xpath:idRelative"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "d301e198-bd56-405f-8245-911821cae20d",
+      "comment": "",
+      "command": "sendKeys",
+      "target": "id=simple-input",
+      "targets": [],
+      "value": "${KEY_SHIFT}log${KEY_SHIFT}in"
+    }, {
+      "id": "7923564d-6910-48d1-b03b-8b704750ab82",
+      "comment": "",
+      "command": "click",
+      "target": "id=simple-password",
+      "targets": [
+        ["id=simple-password", "id"],
+        ["name=password", "name"],
+        ["css=#simple-password", "css:finder"],
+        ["xpath=//input[@id='simple-password']", "xpath:attributes"],
+        ["xpath=//form[@id='submit-test']/input[2]", "xpath:idRelative"],
+        ["xpath=//input[2]", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "e3a37686-2afd-4dd3-b187-75c772866c92",
+      "comment": "",
+      "command": "sendKeys",
+      "target": "id=simple-password",
+      "targets": [],
+      "value": "3${KEY_NUM_MULTIPLY}3${KEY_EQUALS}9${KEY_ENTER}"
+    }]
   }],
   "suites": [{
     "id": "19d1b2da-ffe2-49cd-b1e6-0fd03d439dd1",
