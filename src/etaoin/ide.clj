@@ -1,11 +1,12 @@
 (ns etaoin.ide
   (:require [cheshire.core :refer [parse-stream]]
             [clojure.java.io :as io]
+            [clojure.string :as str]
+            [clojure.test :refer [is]]
+            [clojure.tools.logging :as log]
             [etaoin.api :refer :all]
             [etaoin.keys :as k]
-            [etaoin.util :refer [defmethods]]
-            [clojure.string :as str]
-            [clojure.tools.logging :as log]))
+            [etaoin.util :refer [defmethods]]))
 
 (defn absolute-path?
   [path]
@@ -241,27 +242,11 @@
     (assert (= title target) (make-assert-msg command title target))))
 
 (defmethod run-command
-  :open
+  :check
   [driver {:keys [target]} & [{base-url :base-url}]]
-  (if (absolute-path? target)
-    (go driver target)
-    (go driver (make-absolute-url base-url target))))
-
-(defmethod run-command
-  :pause
-  [driver {:keys [target]} & [{base-url :base-url}]]
-  (wait (/ target 1000)))
-
-(defmethod run-command
-  :setWindowSize
-  [driver {:keys [target]} & [opt]]
-  (let [[width height] (map #(Integer/parseInt %) (str/split target #"x"))]
-    (set-window-size driver width height)))
-
-(defmethod run-command
-  :type
-  [driver {:keys [target value]} & [opt]]
-  (fill driver (make-query target) (gen-send-key-input value)))
+  (let [q (make-query target)]
+    (when-not (selected? driver q)
+      (click driver q))))
 
 (defmethod run-command
   :click
@@ -293,9 +278,21 @@
       (swap! vars assoc (str->var value) result))
     result))
 
+(defmethod run-command
+  :open
+  [driver {:keys [target]} & [{base-url :base-url}]]
+  (if (absolute-path? target)
+    (go driver target)
+    (go driver (make-absolute-url base-url target))))
+
+(defmethod run-command
+  :pause
+  [driver {:keys [target]} & [opt]]
+  (wait (/ target 1000)))
+
 ;; TODO refactor select fn, add select by-value
 (defmethods run-command
-  [:select :addSelection]
+  [:select :addSelection :removeSelection]
   [driver {:keys [target value]} & [opt]]
   (let [[type val] (str/split value #"=" 2)
         q          (make-query target)]
@@ -349,9 +346,45 @@
                           {:command command}))))
 
 (defmethod run-command
+  :sendKeys
+  [driver {:keys [target value]} & [opt]]
+  (fill driver (make-query target) (gen-send-key-input value)))
+
+(defmethod run-command
+  :setWindowSize
+  [driver {:keys [target]} & [opt]]
+  (let [[width height] (map #(Integer/parseInt %) (str/split target #"x"))]
+    (set-window-size driver width height)))
+
+(defmethod run-command
   :store
   [driver {:keys [target value]} & [{vars :vars}]]
   (swap! vars assoc (str->var value) target))
+
+(defmethod run-command
+  :storeAttribute
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (let [[locator attr-name] (str/split target "@" 2)
+        attr-val            (get-element-attr driver (make-query locator) attr-name)]
+    (swap! vars assoc (str->var value) attr-val)))
+
+(defmethod run-command
+  :storeText
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (let [text (get-element-text driver (make-query target))]
+    (swap! vars assoc (str->var value) text)))
+
+(defmethod run-command
+  :storeTitle
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (let [title (get-title driver (make-query target))]
+    (swap! vars assoc (str->var value) title)))
+
+(defmethod run-command
+  :storeValue
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (let [val (get-element-attr driver (make-query target) :value)]
+    (swap! vars assoc (str->var value) val)))
 
 (defmethod run-command
   :storeWindowHandle
@@ -360,14 +393,117 @@
     (swap! vars assoc (str->var target) handle)))
 
 (defmethod run-command
-  :sendKeys
-  [driver {:keys [target value]} & [opt]]
-  (fill driver (make-query target) (gen-send-key-input value)))
+  :storeXpathCount
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (let [cnt (count (find-elements* driver locator-xpath target))]
+    (swap! vars assoc (str->var value) cnt)))
 
 (defmethod run-command
   :submit
   [driver {:keys [target]} & [{vars :vars}]]
   (fill-el driver (query (make-query target) {:tag :input}) k/enter))
+
+(defmethod run-command
+  :type
+  [driver {:keys [target value]} & [opt]]
+  (fill driver (make-query target) (gen-send-key-input value)))
+
+(defmethod run-command
+  :unCheck
+  [driver {:keys [target]} & [{base-url :base-url}]]
+  (let [q (make-query target)]
+    (when (selected? driver q)
+      (click driver q))))
+
+(defmethod run-command
+  :verify
+  [{:keys [target value command]} & [{vars :vars}]]
+  (let [stored-value (str (get @vars (str->var target)))]
+    (is (= stored-value value) (make-assert-msg command stored-value value))))
+
+(defmethod run-command
+  :verifyChecked
+  [driver {:keys [target command]} & [{vars :vars}]]
+  (let [actual (selected? driver (make-query target))]
+    (is (true? actual) (make-assert-msg command actual true))))
+
+(defmethod run-command
+  :verifyNotChecked
+  [driver {:keys [target command]} & [{vars :vars}]]
+  (let [actual (selected? driver (make-query target))]
+    (is (false? actual) (make-assert-msg command actual false))))
+
+(defmethod run-command
+  :verifyEditable
+  [driver {:keys [target command]} & [{vars :vars}]]
+  (let [q      (make-query target)
+        actual (and (enabled? driver (make-query target))
+                    (nil? (get-element-attr driver q :readonly)))]
+    (is (true? actual) (make-assert-msg command actual true))))
+
+(defmethod run-command
+  :verifyNotEditable
+  [driver {:keys [target command]} & [{vars :vars}]]
+  (let [q      (make-query target)
+        actual (and (enabled? driver (make-query target))
+                    (nil? (get-element-attr driver q :readonly)))]
+    (is (false actual) (make-assert-msg command actual false))))
+
+(defmethod run-command
+  :verifyElementPresent
+  [driver {:keys [target command]} & [{vars :vars}]]
+  (let [actual (exists? driver (make-query target))]
+    (is (true? actual) (make-assert-msg command actual true))))
+
+(defmethod run-command
+  :verifyElementNotPresent
+  [driver {:keys [target command]} & [{vars :vars}]]
+  (let [actual (absent? driver (make-query target))]
+    (is (true? actual) (make-assert-msg command actual true))))
+
+(defmethod run-command
+  [:verifyValue :verifySelectedValue]
+  [driver {:keys [target value command]} & [{vars :vars}]]
+  (let [actual-val (get-element-attr driver (make-query target) :value)]
+    (is (= actual-val value)
+        (make-assert-msg command actual-val value))))
+
+(defmethod run-command
+  :verifyNotSelectedValue
+  [driver {:keys [target value command]} & [{vars :vars}]]
+  (let [actual-val (get-element-attr driver (make-query target) :value)]
+    (is (not= actual-val value)
+        (make-assert-msg command actual-val value))))
+
+(defmethod run-command
+  :verifyText
+  [driver {:keys [target value command]} & [{vars :vars}]]
+  (let [actual-text (get-element-text driver (make-query target))]
+    (is (= actual-text value)
+        (make-assert-msg command actual-text value))))
+
+(defmethod run-command
+  :verifyNotText
+  [driver {:keys [target value command]} & [{vars :vars}]]
+  (let [actual-text (get-element-text driver (make-query target))]
+    (is (not= actual-text value)
+        (make-assert-msg command actual-text value))))
+
+(defmethod run-command
+  :verifySelectedLabel
+  [driver {:keys [target value command]} & [{vars :vars}]]
+  (let [q            (make-query target)
+        selected-val (get-element-attr driver q :value)
+        option-el    (query driver q {:value selected-val})
+        option-text  (get-element-text-el driver option-el)]
+    (is (= option-text value)
+        (make-assert-msg command option-text value))))
+
+(defmethod run-command
+  :verifyTitle
+  [driver {:keys [target command]} & [{vars :vars}]]
+  (let [title (get-title driver)]
+    (is (= title target) (make-assert-msg command title target))))
 
 (defmethod run-command
   :waitForElementEditable
