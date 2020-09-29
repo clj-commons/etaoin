@@ -1,5 +1,5 @@
 (ns etaoin.ide
-  (:require [cheshire.core :refer [parse-stream]]
+  (:require [cheshire.core :refer [parse-stream generate-string]]
             [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
@@ -103,6 +103,13 @@
    "TAB"          k/tab
    "UP"           k/arrow-up})
 
+(defn fill-str-with-vars
+  [string vars]
+  (reduce (fn [acc [k v]]
+            (let [pattern (re-pattern (format "\\$\\{%s\\}" (name k)))
+                  value   (str v)]
+              (str/replace acc pattern value))) string vars))
+
 (defn gen-send-key-input
   [input]
   (let [pattern #"\$\{KEY_([^}]+)\}"
@@ -113,6 +120,17 @@
               (let [pattern (re-pattern (format "\\$\\{KEY_%s\\}" key))
                     sp-key  (str (get special-keys key))]
                 (str/replace acc pattern sp-key))) input keys)))
+
+(defn gen-script-arguments
+  [script vars]
+  (reduce (fn [acc [k v]]
+            (let [pattern (re-pattern (format "\\$\\{%s\\}" (name k)))
+                  js-val  (str/replace (generate-string v) #"\"" "'")]
+              (str/replace acc pattern js-val))) script vars))
+
+(defn gen-expession-script
+  [script vars]
+  (str "return " (gen-script-arguments script vars)))
 
 (defn make-query
   [target]
@@ -272,9 +290,14 @@
                  (make-query value)))
 
 (defmethod run-command
+  :echo
+  [driver {:keys [target]} {vars :vars}]
+  (println (fill-str-with-vars target @vars)))
+
+(defmethod run-command
   :executeScript
   [driver {:keys [target value]} & [{vars :vars}]]
-  (let [result (js-execute driver target)]
+  (let [result (js-execute driver (gen-script-arguments target @vars))]
     (when-not (str/blank? value)
       (swap! vars assoc (str->var value) result))
     result))
@@ -348,8 +371,9 @@
 
 (defmethod run-command
   :sendKeys
-  [driver {:keys [target value]} & [opt]]
-  (fill driver (make-query target) (gen-send-key-input value)))
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (fill driver (make-query target) (-> (gen-send-key-input value)
+                                       (fill-str-with-vars @vars))))
 
 (defmethod run-command
   :setWindowSize
@@ -406,8 +430,9 @@
 
 (defmethod run-command
   :type
-  [driver {:keys [target value]} & [opt]]
-  (fill driver (make-query target) (gen-send-key-input value)))
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (fill driver (make-query target) (-> (gen-send-key-input value)
+                                       (fill-str-with-vars @vars))))
 
 (defmethod run-command
   :unCheck
@@ -547,7 +572,16 @@
   [driver {:keys [target value]} & [{vars :vars}]]
   (accept-alert driver))
 
+;;control flow
+(defmethods run-command
+  [:if :elseIf :repeatIf :while]
+  [driver {:keys [target]} & [{vars :vars}]]
+  (js-execute driver (gen-expession-script target @vars)))
 
+(defmethod run-command
+  :forEach
+  [driver {:keys [target value]} & [{vars :vars}]]
+  [(str->var value) (js-execute driver (gen-expession-script target @vars))])
 
 (defn run-ide-test
   [driver {:keys [commands]} & [{vars :vars :as opt}]]
@@ -602,48 +636,48 @@
       (run-ide-test driver test opt))))
 
 
-(def stop-tags
+(def stop-commands
   #{:elseIf :else :end :repeatIf})
 
 
-(defn tag? [tag]
+(defn cmd? [cmd]
   (fn [command]
-    (some-> command :command (= tag))))
+    (some-> command :command (= cmd))))
 
 
 (s/def ::command-if
-  (s/cat :if (s/cat :this (tag? :if)
+  (s/cat :if (s/cat :this (cmd? :if)
                     :branch ::commands)
-         :elseIf (s/* (s/cat :this (tag? :elseIf)
-                             :branch ::commands))
-         :else (s/? (s/cat :this (tag? :else)
+         :else-if (s/* (s/cat :this (cmd? :elseIf)
+                              :branch ::commands))
+         :else (s/? (s/cat :this (cmd? :else)
                            :branch ::commands))
-         :end (tag? :end)))
+         :end (cmd? :end)))
 
 (s/def ::command-times
-  (s/cat :times (tag? :times)
+  (s/cat :times (cmd? :times)
          :branch ::commands
-         :end (tag? :end)))
+         :end (cmd? :end)))
 
 (s/def ::command-while
-  (s/cat :while (tag? :while)
+  (s/cat :while (cmd? :while)
          :branch ::commands
-         :end (tag? :end)))
+         :end (cmd? :end)))
 
 (s/def ::command-do
-  (s/cat :do (tag? :do)
+  (s/cat :do (cmd? :do)
          :branch ::commands
-         :end (tag? :repeatIf)))
+         :end (cmd? :repeatIf)))
 
-(s/def ::command-forEach
-  (s/cat :forEach (tag? :forEach)
+(s/def ::command-for-each
+  (s/cat :for-each (cmd? :forEach)
          :branch ::commands
-         :end (tag? :end)))
+         :end (cmd? :end)))
 
 (s/def ::command
   (fn [{:keys [command]}]
     (and (some? command)
-         (nil? (get stop-tags command)))))
+         (nil? (get stop-commands command)))))
 
 (s/def ::commands
   (s/+ (s/alt
@@ -651,45 +685,43 @@
          :times ::command-times
          :while ::command-while
          :do ::command-do
-         :forEach ::command-forEach
+         :for-each ::command-for-each
          :cmd ::command)))
 
-(def data
-  [
-   {:command :times}
-   {:command :do-times}
-   {:command :end}
-   {:command :while}
-   {:command :do-while}
-   {:command :end}
-   {:command :do}
-   {:command :do-do}
-   {:command :repeatIf}
-   {:command :do-1}
-   {:command :if}
-   {:command :do-2}
-   {:command :if}
-   {:command :do-AAA}
-   {:command :end}
-   {:command :end}
-   {:command :do-3}
-   {:command :forEach}
-   {:command :if}
-   {:command :do-if}
-   {:command :elseIf}
-   {:command :do-else-if1}
-   {:command :elseIf}
-   {:command :do-else-if2}
-   {:command :else}
-   {:command :do-else}
-   {:command :end}
-   {:command :end}
-   {:command :do-3}
-   ])
+#_(def data
+    [
+     {:command :times}
+     {:command :do-times}
+     {:command :end}
+     {:command :while}
+     {:command :do-while}
+     {:command :end}
+     {:command :do}
+     {:command :do-do}
+     {:command :repeatIf}
+     {:command :do-1}
+     {:command :if}
+     {:command :do-2}
+     {:command :if}
+     {:command :do-AAA}
+     {:command :end}
+     {:command :end}
+     {:command :do-3}
+     {:command :forEach}
+     {:command :if}
+     {:command :do-if}
+     {:command :elseIf}
+     {:command :do-else-if1}
+     {:command :elseIf}
+     {:command :do-else-if2}
+     {:command :else}
+     {:command :do-else}
+     {:command :end}
+     {:command :end}
+     {:command :do-3}
+     ])
 
-(comment
-  (s/conform ::commands data)
-  )
+#_(s/conform ::commands data)
 ;; => [[:times
 ;;      {:times {:command :times},
 ;;       :branch [[:cmd {:command :do-times}]],
@@ -713,8 +745,8 @@
 ;;           :end {:command :end}}]]},
 ;;       :end {:command :end}}]
 ;;     [:cmd {:command :do-3}]
-;;     [:forEach
-;;      {:forEach {:command :forEach},
+;;     [:for-each
+;;      {:for-each {:command :forEach},
 ;;       :branch
 ;;       [[:if
 ;;         {:if {:this {:command :if}, :branch [[:cmd {:command :do-if}]]},
@@ -725,3 +757,63 @@
 ;;          :end {:command :end}}]],
 ;;       :end {:command :end}}]
 ;;     [:cmd {:command :do-3}]]
+;;
+
+
+
+(declare execute-commands)
+
+(defn execute-branch
+  [driver {:keys [this branch]} opt]
+  (when (run-command driver this opt)
+    (execute-commands driver branch opt)
+    true))
+
+(defn execute-if
+  [driver {:keys [if else-if else]} opt]
+  (cond
+    (execute-branch driver if opt)
+    true
+
+    (some #(execute-branch driver % opt) else-if)
+    true
+
+    else
+    (execute-commands driver (:branch else) opt)))
+
+(defn execute-times
+  [driver {:keys [times branch]} opt]
+  (let [n (Integer/parseInt (:target times))]
+    (doseq [commands (repeat n branch)]
+      (execute-commands driver commands opt))))
+
+(defn execute-do
+  [driver {:keys [branch end]} opt]
+  (loop [commands branch]
+    (execute-commands driver commands opt)
+    (when (run-command driver end opt)
+      (recur commands))))
+
+(defn execute-while
+  [driver {:keys [while branch]} opt]
+  (while (run-command driver while opt)
+    (execute-commands driver branch opt)))
+
+(defn execute-for-each
+  [driver {:keys [for-each branch]} {vars :vars :as opt}]
+  (let [[var-name arr] (run-command driver for-each opt)]
+    (doseq [val arr]
+      (swap! vars assoc var-name val)
+      (execute-commands driver branch opt))))
+
+(defn execute-commands
+  [driver commands opt]
+  (doseq [[cmd-name cmd] commands]
+    (case cmd-name
+      :if       (execute-if driver cmd opt)
+      :times    (execute-times driver cmd opt)
+      :do       (execute-do driver cmd opt)
+      :while    (execute-while driver cmd opt)
+      :for-each (execute-for-each driver cmd opt)
+      :cmd      (run-command driver cmd opt)
+      :else     (throw (ex-info "Command is not valid" {:command cmd})))))
