@@ -150,12 +150,12 @@
 
 (defn make-assert-msg
   [command actual expected]
-  (format "\nAssert command:\"%s\"\nExpected: %s\nActual%s"
-          command expected actual))
+  (format "\nAssert command:\"%s\"\nExpected: %s\nActual: %s"
+          (name command) expected actual))
 
 (defn dispatch-command
   [driver command & [opt]]
-  (some-> command :command keyword))
+  (some-> command :command))
 
 (defmulti run-command dispatch-command)
 
@@ -578,25 +578,180 @@
   [driver {:keys [target]} & [{vars :vars}]]
   (js-execute driver (gen-expession-script target @vars)))
 
+(defmethods run-command
+  [:do :end]
+  [_ _ & _])
+
 (defmethod run-command
   :forEach
   [driver {:keys [target value]} & [{vars :vars}]]
-  [(str->var value) (js-execute driver (gen-expession-script target @vars))])
+  [(str->var value) (get @vars (str->var target))])
+
+(defmethod run-command
+  :times
+  [driver {:keys [target]} & [{vars :vars}]]
+  (Integer/parseInt target))
+
+(defn log-command-message
+  [{:keys [command target value]}]
+  (cond->> ""
+    (not (str/blank? value))
+    (str (format " with value: '%s'" value))
+
+    (not (str/blank? target))
+    (str (format " on '%s'" target))
+
+    "always"
+    (str (format "Command: %s" (name command)))))
+
+(defn run-command-with-log
+  [driver command & [opt]]
+  (let [[msg result] (try
+                       ["OK" (run-command driver command opt)]
+                       (catch Exception e
+                         [(format "Failed: %s" (ex-message e)) e])
+                       (catch java.lang.AssertionError e
+                         [(format "Failed: %s" (ex-message e)) e]))
+        message      (str (log-command-message command) " / " msg)]
+    (log/info message)
+    (when-not (= msg "OK")
+      (throw result))
+    result))
+
+
+
+(def control-flow-commands
+  #{:do :times :while :forEach :if :elseIf :else :end :repeatIf})
+
+(defn cmd? [cmd]
+  (fn [command]
+    (some-> command :command (= cmd))))
+
+
+(s/def ::command-if
+  (s/cat :if (s/cat :this (cmd? :if)
+                    :branch ::commands)
+         :else-if (s/* (s/cat :this (cmd? :elseIf)
+                              :branch ::commands))
+         :else (s/? (s/cat :this (cmd? :else)
+                           :branch ::commands))
+         :end (cmd? :end)))
+
+(s/def ::command-times
+  (s/cat :times (cmd? :times)
+         :branch ::commands
+         :end (cmd? :end)))
+
+(s/def ::command-while
+  (s/cat :while (cmd? :while)
+         :branch ::commands
+         :end (cmd? :end)))
+
+(s/def ::command-do
+  (s/cat :do (cmd? :do)
+         :branch ::commands
+         :end (cmd? :repeatIf)))
+
+(s/def ::command-for-each
+  (s/cat :for-each (cmd? :forEach)
+         :branch ::commands
+         :end (cmd? :end)))
+
+(s/def ::cmd-with-open-window
+  (fn [{:keys [opensWindow]}]
+    (true? opensWindow)))
+
+(s/def ::command
+  (fn [{:keys [command]}]
+    (and (some? command)
+         (nil? (get control-flow-commands command)))))
+
+(s/def ::commands
+  (s/+ (s/alt
+         :if ::command-if
+         :times ::command-times
+         :while ::command-while
+         :do ::command-do
+         :for-each ::command-for-each
+         :cmd-with-open-window ::cmd-with-open-window
+         :cmd ::command)))
+
+(declare execute-commands)
+
+(defn execute-branch
+  [driver {:keys [this branch]} opt]
+  (when (run-command-with-log driver this opt)
+    (execute-commands driver branch opt)
+    true))
+
+(defn execute-if
+  [driver {:keys [if else-if else]} opt]
+  (cond
+    (execute-branch driver if opt)
+    true
+
+    (some #(execute-branch driver % opt) else-if)
+    true
+
+    else
+    (execute-commands driver (:branch else) opt)))
+
+(defn execute-times
+  [driver {:keys [times branch]} opt]
+  (let [n (run-command-with-log driver times opt)]
+    (doseq [commands (repeat n branch)]
+      (execute-commands driver commands opt))))
+
+(defn execute-do
+  [driver {:keys [do branch end]} opt]
+  (run-command-with-log driver do opt)
+  (loop [commands branch]
+    (execute-commands driver commands opt)
+    (when (run-command-with-log driver end opt)
+      (recur commands))))
+
+(defn execute-while
+  [driver {:keys [branch] while-cmd :while} opt]
+  (while (run-command-with-log driver while-cmd opt)
+    (execute-commands driver branch opt)))
+
+(defn execute-for-each
+  [driver {:keys [for-each branch]} {vars :vars :as opt}]
+  (let [[var-name arr] (run-command-with-log driver for-each opt)]
+    (doseq [val arr]
+      (swap! vars assoc var-name val)
+      (execute-commands driver branch opt))))
+
+(defn execute-cmd-with-open-window
+  [driver {:keys [windowHandleName windowTimeout] :as cmd} {vars :vars :as opt}]
+  (let [init-handles  (set (get-window-handles driver))
+        _             (run-command-with-log driver cmd opt)
+        _             (wait (/ windowTimeout 1000))
+        final-handles (set (get-window-handles driver))
+        handle        (first (clojure.set/difference final-handles init-handles))]
+    (swap! vars assoc (str->var windowHandleName) handle)))
+
+(defn execute-commands
+  [driver commands opt]
+  (doseq [[cmd-name cmd] commands]
+    (case cmd-name
+      :if                   (execute-if driver cmd opt)
+      :times                (execute-times driver cmd opt)
+      :do                   (execute-do driver cmd opt)
+      :while                (execute-while driver cmd opt)
+      :for-each             (execute-for-each driver cmd opt)
+      :cmd-with-open-window (execute-cmd-with-open-window driver cmd opt)
+      :cmd                  (run-command-with-log driver cmd opt)
+      (throw (ex-info "Command is not valid" {:command cmd})))))
+
 
 (defn run-ide-test
-  [driver {:keys [commands]} & [{vars :vars :as opt}]]
-  (doseq [{:keys [opensWindow
-                  windowHandleName
-                  windowTimeout]
-           :as   command} commands]
-    (if opensWindow
-      (let [init-handles  (set (get-window-handles driver))
-            _             (run-command driver command opt)
-            _             (wait (/ windowTimeout 1000))
-            final-handles (set (get-window-handles driver))
-            handle        (first (clojure.set/difference final-handles init-handles))]
-        (swap! vars assoc (str->var windowHandleName) handle))
-      (run-command driver command opt))))
+  [driver {:keys [commands]} & [opt]]
+  (let [command->kw   (fn [{:keys [command] :as cmd}]
+                        (assoc cmd :command (keyword command)))
+        commands      (map command->kw commands)
+        commands-tree (s/conform ::commands commands)]
+    (execute-commands driver commands-tree opt)))
 
 (defn get-tests-by-suite-id
   [suite-id id {:keys [suites tests]}]
@@ -634,186 +789,3 @@
                            opt)]
     (doseq [test tests-found]
       (run-ide-test driver test opt))))
-
-
-(def stop-commands
-  #{:elseIf :else :end :repeatIf})
-
-
-(defn cmd? [cmd]
-  (fn [command]
-    (some-> command :command (= cmd))))
-
-
-(s/def ::command-if
-  (s/cat :if (s/cat :this (cmd? :if)
-                    :branch ::commands)
-         :else-if (s/* (s/cat :this (cmd? :elseIf)
-                              :branch ::commands))
-         :else (s/? (s/cat :this (cmd? :else)
-                           :branch ::commands))
-         :end (cmd? :end)))
-
-(s/def ::command-times
-  (s/cat :times (cmd? :times)
-         :branch ::commands
-         :end (cmd? :end)))
-
-(s/def ::command-while
-  (s/cat :while (cmd? :while)
-         :branch ::commands
-         :end (cmd? :end)))
-
-(s/def ::command-do
-  (s/cat :do (cmd? :do)
-         :branch ::commands
-         :end (cmd? :repeatIf)))
-
-(s/def ::command-for-each
-  (s/cat :for-each (cmd? :forEach)
-         :branch ::commands
-         :end (cmd? :end)))
-
-(s/def ::command
-  (fn [{:keys [command]}]
-    (and (some? command)
-         (nil? (get stop-commands command)))))
-
-(s/def ::commands
-  (s/+ (s/alt
-         :if ::command-if
-         :times ::command-times
-         :while ::command-while
-         :do ::command-do
-         :for-each ::command-for-each
-         :cmd ::command)))
-
-#_(def data
-    [
-     {:command :times}
-     {:command :do-times}
-     {:command :end}
-     {:command :while}
-     {:command :do-while}
-     {:command :end}
-     {:command :do}
-     {:command :do-do}
-     {:command :repeatIf}
-     {:command :do-1}
-     {:command :if}
-     {:command :do-2}
-     {:command :if}
-     {:command :do-AAA}
-     {:command :end}
-     {:command :end}
-     {:command :do-3}
-     {:command :forEach}
-     {:command :if}
-     {:command :do-if}
-     {:command :elseIf}
-     {:command :do-else-if1}
-     {:command :elseIf}
-     {:command :do-else-if2}
-     {:command :else}
-     {:command :do-else}
-     {:command :end}
-     {:command :end}
-     {:command :do-3}
-     ])
-
-#_(s/conform ::commands data)
-;; => [[:times
-;;      {:times {:command :times},
-;;       :branch [[:cmd {:command :do-times}]],
-;;       :end {:command :end}}]
-;;     [:while
-;;      {:while {:command :while},
-;;       :branch [[:cmd {:command :do-while}]],
-;;       :end {:command :end}}]
-;;     [:do
-;;      {:do {:command :do},
-;;       :branch [[:cmd {:command :do-do}]],
-;;       :end {:command :repeatIf}}]
-;;     [:cmd {:command :do-1}]
-;;     [:if
-;;      {:if
-;;       {:this {:command :if},
-;;        :branch
-;;        [[:cmd {:command :do-2}]
-;;         [:if
-;;          {:if {:this {:command :if}, :branch [[:cmd {:command :do-AAA}]]},
-;;           :end {:command :end}}]]},
-;;       :end {:command :end}}]
-;;     [:cmd {:command :do-3}]
-;;     [:for-each
-;;      {:for-each {:command :forEach},
-;;       :branch
-;;       [[:if
-;;         {:if {:this {:command :if}, :branch [[:cmd {:command :do-if}]]},
-;;          :else-if
-;;          [{:this {:command :elseIf}, :branch [[:cmd {:command :do-else-if1}]]}
-;;           {:this {:command :elseIf}, :branch [[:cmd {:command :do-else-if2}]]}],
-;;          :else {:this {:command :else}, :branch [[:cmd {:command :do-else}]]},
-;;          :end {:command :end}}]],
-;;       :end {:command :end}}]
-;;     [:cmd {:command :do-3}]]
-;;
-
-
-
-(declare execute-commands)
-
-(defn execute-branch
-  [driver {:keys [this branch]} opt]
-  (when (run-command driver this opt)
-    (execute-commands driver branch opt)
-    true))
-
-(defn execute-if
-  [driver {:keys [if else-if else]} opt]
-  (cond
-    (execute-branch driver if opt)
-    true
-
-    (some #(execute-branch driver % opt) else-if)
-    true
-
-    else
-    (execute-commands driver (:branch else) opt)))
-
-(defn execute-times
-  [driver {:keys [times branch]} opt]
-  (let [n (Integer/parseInt (:target times))]
-    (doseq [commands (repeat n branch)]
-      (execute-commands driver commands opt))))
-
-(defn execute-do
-  [driver {:keys [branch end]} opt]
-  (loop [commands branch]
-    (execute-commands driver commands opt)
-    (when (run-command driver end opt)
-      (recur commands))))
-
-(defn execute-while
-  [driver {:keys [while branch]} opt]
-  (while (run-command driver while opt)
-    (execute-commands driver branch opt)))
-
-(defn execute-for-each
-  [driver {:keys [for-each branch]} {vars :vars :as opt}]
-  (let [[var-name arr] (run-command driver for-each opt)]
-    (doseq [val arr]
-      (swap! vars assoc var-name val)
-      (execute-commands driver branch opt))))
-
-(defn execute-commands
-  [driver commands opt]
-  (doseq [[cmd-name cmd] commands]
-    (case cmd-name
-      :if       (execute-if driver cmd opt)
-      :times    (execute-times driver cmd opt)
-      :do       (execute-do driver cmd opt)
-      :while    (execute-while driver cmd opt)
-      :for-each (execute-for-each driver cmd opt)
-      :cmd      (run-command driver cmd opt)
-      :else     (throw (ex-info "Command is not valid" {:command cmd})))))

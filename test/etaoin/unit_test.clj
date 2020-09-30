@@ -1,12 +1,13 @@
 (ns etaoin.unit-test
-  (:require [etaoin.api :refer :all]
+  (:require [clojure.spec.alpha :as s]
+            [clojure.test :refer :all]
+            [etaoin.api :refer :all]
             [etaoin.ide :as ide]
-            [etaoin.proc]
-            [clojure.test :refer :all])
-  (:import (java.nio.file Files)
-           (java.io File)
-           (org.apache.commons.io FileUtils)
-           (java.nio.file.attribute FileAttribute)))
+            etaoin.proc)
+  (:import java.io.File
+           java.nio.file.attribute.FileAttribute
+           java.nio.file.Files
+           org.apache.commons.io.FileUtils))
 
 (defmacro with-tmp-dir [prefix bind & body]
   `(let [tmp#  (str (Files/createTempDirectory
@@ -104,3 +105,82 @@
            (ide/find-tests {:suite-ids [1] :suite-name "Suite 2" :test-id 4} parsed-file)))
     (is (= [{:id 1} {:id 2} {:id 3} {:id 4}]
            (ide/find-tests {} parsed-file)))))
+
+(def commands
+  [
+   {:command :times}
+   {:command :do-times}
+   {:command :end}
+   {:command :while}
+   {:command :do-while}
+   {:command :end}
+   {:command :do}
+   {:command :do-do}
+   {:command :repeatIf}
+   {:command :do-1}
+   {:command :if}
+   {:command :do-2}
+   {:command :if}
+   {:command :do-AAA}
+   {:command :end}
+   {:command :end}
+   {:command :do-3}
+   {:command :forEach}
+   {:command :if}
+   {:command :do-if}
+   {:command :elseIf}
+   {:command :do-else-if1}
+   {:command :elseIf}
+   {:command :do-else-if2}
+   {:command :else}
+   {:command :do-else}
+   {:command :end}
+   {:command :end}
+   {:command :do-3 :opensWindow true}
+   ])
+
+(def valid-commands-tree
+  [[:times
+    {:times  {:command :times},
+     :branch [[:cmd {:command :do-times}]],
+     :end    {:command :end}}]
+   [:while
+    {:while  {:command :while},
+     :branch [[:cmd {:command :do-while}]],
+     :end    {:command :end}}]
+   [:do
+    {:do     {:command :do},
+     :branch [[:cmd {:command :do-do}]],
+     :end    {:command :repeatIf}}]
+   [:cmd {:command :do-1}]
+   [:if
+    {:if
+     {:this {:command :if},
+      :branch
+      [[:cmd {:command :do-2}]
+       [:if
+        {:if  {:this {:command :if}, :branch [[:cmd {:command :do-AAA}]]},
+         :end {:command :end}}]]},
+     :end {:command :end}}]
+   [:cmd {:command :do-3}]
+   [:for-each
+    {:for-each {:command :forEach},
+     :branch
+     [[:if
+       {:if   {:this {:command :if}, :branch [[:cmd {:command :do-if}]]},
+        :else-if
+        [{:this {:command :elseIf}, :branch [[:cmd {:command :do-else-if1}]]}
+         {:this {:command :elseIf}, :branch [[:cmd {:command :do-else-if2}]]}],
+        :else {:this {:command :else}, :branch [[:cmd {:command :do-else}]]},
+        :end  {:command :end}}]],
+     :end      {:command :end}}]
+   [:cmd-with-open-window {:command :do-3, :opensWindow true}]])
+
+(deftest parse-commands-tree
+  (let [invalid-commands [{:command :if}
+                          {:command :if}
+                          {:command :do-something}
+                          {:command :end}]]
+    (is (= (s/conform :etaoin.ide/commands commands)
+           valid-commands-tree))
+    (is (s/invalid? (s/conform :etaoin.ide/commands invalid-commands)))))
