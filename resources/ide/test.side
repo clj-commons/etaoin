@@ -514,6 +514,220 @@
       "targets": [],
       "value": "14"
     }]
+  }, {
+    "id": "aaefd818-0945-4ff0-8572-09f31a7c312d",
+    "name": "test-wait-for",
+    "commands": [{
+      "id": "68ae59cd-0f84-4428-858e-489c37e970dd",
+      "comment": "",
+      "command": "click",
+      "target": "linkText=test.html",
+      "targets": [
+        ["linkText=test.html", "linkText"],
+        ["css=li:nth-child(6) > a", "css:finder"],
+        ["xpath=//a[contains(text(),'test.html')]", "xpath:link"],
+        ["xpath=//a[contains(@href, 'test.html')]", "xpath:href"],
+        ["xpath=//li[6]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'test.html')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "d603cc03-4cc7-4a1d-a61f-ad04d984943f",
+      "comment": "",
+      "command": "click",
+      "target": "id=wait-button",
+      "targets": [
+        ["id=wait-button", "id"],
+        ["css=#wait-button", "css:finder"],
+        ["xpath=//button[@id='wait-button']", "xpath:attributes"],
+        ["xpath=//button[5]", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "1646119a-e34c-4091-8811-f93cab12aa4a",
+      "comment": "",
+      "command": "waitForText",
+      "target": "id=wait-span",
+      "targets": [
+        ["id=wait-span", "id"],
+        ["css=#wait-span", "css:finder"],
+        ["xpath=//span[@id='wait-span']", "xpath:attributes"],
+        ["xpath=//span[2]", "xpath:position"],
+        ["xpath=//span[contains(.,'super-secret-text')]", "xpath:innerText"]
+      ],
+      "value": "super-secret-text"
+    }, {
+      "id": "85d83408-a050-4ad2-a019-89884fe72a14",
+      "comment": "",
+      "command": "assertText",
+      "target": "id=wait-span",
+      "targets": [],
+      "value": "super-secret-text"
+    }]
+  }, {
+    "id": "27ca8498-e73d-4b5a-9035-d7ba5c482b0a",
+    "name": "test-asserts",
+    "commands": [{
+      "id": "af046c62-d3e2-445b-a8b4-53a16251705f",
+      "comment": "",
+      "command": "open",
+      "target": "/",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "ecc21655-be42-4c4e-bacb-91da3f4abba7",
+      "comment": "",
+      "command": "setWindowSize",
+      "target": "1680x960",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "f61f5864-2bff-4602-a699-1121563fbbd0",
+      "comment": "",
+      "command": "click",
+      "target": "linkText=test.html",
+      "targets": [
+        ["linkText=test.html", "linkText"],
+        ["css=li:nth-child(6) > a", "css:finder"],
+        ["xpath=//a[contains(text(),'test.html')]", "xpath:link"],
+        ["xpath=//a[contains(@href, 'test.html')]", "xpath:href"],
+        ["xpath=//li[6]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'test.html')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "0aca6d60-ed01-4c1a-8c70-646524d94e26",
+      "comment": "",
+      "command": "executeScript",
+      "target": "return 1;",
+      "targets": [],
+      "value": "myVar"
+    }, {
+      "id": "248bc5c5-6f51-4ec7-bd37-5b9c840124d5",
+      "comment": "",
+      "command": "assert",
+      "target": "myVar",
+      "targets": [],
+      "value": "1"
+    }, {
+      "id": "e5a5fd5e-1b38-4179-8293-b9738b0eb20d",
+      "comment": "",
+      "command": "click",
+      "target": "id=button-alert",
+      "targets": [
+        ["id=button-alert", "id"],
+        ["css=#button-alert", "css:finder"],
+        ["xpath=//button[@id='button-alert']", "xpath:attributes"],
+        ["xpath=//button[4]", "xpath:position"],
+        ["xpath=//button[contains(.,'Show alert')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "958a0500-f909-40ff-86fa-c428d7a972ab",
+      "comment": "",
+      "command": "assertAlert",
+      "target": "Hello!",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "d5b43738-d69e-4be2-afd9-fc644774a6b6",
+      "comment": "",
+      "command": "select",
+      "target": "id=simple-country",
+      "targets": [],
+      "value": "label=France"
+    }, {
+      "id": "17660a37-1c43-4799-982a-f0b0fbada251",
+      "comment": "",
+      "command": "assertSelectedValue",
+      "target": "id=simple-country",
+      "targets": [],
+      "value": "fr"
+    }, {
+      "id": "f63b147c-3c7d-4775-881a-b3ef53ed468e",
+      "comment": "",
+      "command": "assertSelectedLabel",
+      "target": "id=simple-country",
+      "targets": [],
+      "value": "France"
+    }, {
+      "id": "5a9fcdd4-aa4d-42c8-bf3f-c981e0d89a0d",
+      "comment": "",
+      "command": "click",
+      "target": "id=vehicle1",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "f24deaaa-ba09-4eee-a221-30d2a41656f1",
+      "comment": "",
+      "command": "assertChecked",
+      "target": "id=vehicle1",
+      "targets": [
+        ["css=label:nth-child(22)", "css:finder"],
+        ["xpath=//body/label[3]", "xpath:position"],
+        ["xpath=//label[contains(.,'I have a bike')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "4f160823-dac4-4cbb-8efe-0b741c2b58b0",
+      "comment": "",
+      "command": "assertNotChecked",
+      "target": "id=vehicle2",
+      "targets": [
+        ["css=label:nth-child(22)", "css:finder"],
+        ["xpath=//body/label[3]", "xpath:position"],
+        ["xpath=//label[contains(.,'I have a bike')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "dfb49734-5114-4142-96b7-b96f2026fcc6",
+      "comment": "",
+      "command": "assertNotEditable",
+      "target": "id=input-disabled",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "c7d8fa0b-29c6-42f9-865f-012f77d2f0a8",
+      "comment": "",
+      "command": "assertEditable",
+      "target": "id=input-not-disabled",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "5f8d47ba-d705-44f1-ac73-178e24c01203",
+      "comment": "",
+      "command": "assertElementNotPresent",
+      "target": "id=some-wrong-id",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "3680a1da-4838-48aa-bb27-e99ad535703d",
+      "comment": "",
+      "command": "assertElementPresent",
+      "target": "id=wait-button",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "8eaccc84-008e-4a32-991d-168fdbccb3e4",
+      "comment": "",
+      "command": "assertText",
+      "target": "id=find-quote",
+      "targets": [
+        ["id=input-attr", "id"],
+        ["name=test", "name"],
+        ["css=#input-attr", "css:finder"],
+        ["xpath=//input[@id='input-attr']", "xpath:attributes"],
+        ["xpath=//input[7]", "xpath:position"]
+      ],
+      "value": "Text with a 'quote"
+    }, {
+      "id": "a6b95817-395c-46da-9e8b-66a04ec92496",
+      "comment": "",
+      "command": "assertTitle",
+      "target": "Webdriver Test Document",
+      "targets": [],
+      "value": ""
+    }]
   }],
   "suites": [{
     "id": "19d1b2da-ffe2-49cd-b1e6-0fd03d439dd1",

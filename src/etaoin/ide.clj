@@ -143,10 +143,13 @@
 
 (defn make-absolute-url
   [base-url target]
-  (let [base-url (if (str/ends-with? base-url "/")
+  (let [target   (if (str/starts-with? target "/")
+                   (subs target 1)
+                   target)
+        base-url (if (str/ends-with? base-url "/")
                    (subs base-url 0 (-> base-url count dec))
                    base-url)]
-    (str base-url target)))
+    (str base-url "/" target)))
 
 (defn make-assert-msg
   [command actual expected]
@@ -174,6 +177,7 @@
   [:assertAlert :assertConfirmation :assertPrompt]
   [driver {:keys [target command]} & [{vars :vars}]]
   (let [alert-msg (get-alert-text driver)]
+    (dismiss-alert driver)
     (assert (= alert-msg target) (make-assert-msg command alert-msg target))))
 
 (defmethod run-command
@@ -312,7 +316,7 @@
 (defmethod run-command
   :pause
   [driver {:keys [target]} & [opt]]
-  (wait (/ target 1000)))
+  (wait (/ (Integer/parseInt target) 1000)))
 
 ;; TODO refactor select fn, add select by-value
 (defmethods run-command
@@ -473,7 +477,7 @@
   (let [q      (make-query target)
         actual (and (enabled? driver (make-query target))
                     (nil? (get-element-attr driver q :readonly)))]
-    (is (false actual) (make-assert-msg command actual false))))
+    (is (false? actual) (make-assert-msg command actual false))))
 
 (defmethod run-command
   :verifyElementPresent
@@ -534,32 +538,45 @@
 (defmethod run-command
   :waitForElementEditable
   [driver {:keys [target value]} & [{vars :vars}]]
-  (wait-enabled driver (make-query target) {:timeout (/ value 1000)}))
+  (wait-enabled driver (make-query target)
+                {:timeout (/ (Integer/parseInt value) 1000)}))
 
 (defmethod run-command
   :waitForElementNotEditable
   [driver {:keys [target value]} & [{vars :vars}]]
-  (wait-disabled driver (make-query target) {:timeout (/ value 1000)}))
+  (wait-disabled driver (make-query target)
+                 {:timeout (/ (Integer/parseInt value) 1000)}))
 
 (defmethod run-command
   :waitForElementPresent
   [driver {:keys [target value]} & [{vars :vars}]]
-  (wait-exists driver (make-query target) {:timeout (/ value 1000)}))
+  (wait-exists driver (make-query target)
+               {:timeout (/ (Integer/parseInt value) 1000)}))
 
 (defmethod run-command
   :waitForElementNotPresent
   [driver {:keys [target value]} & [{vars :vars}]]
-  (wait-absent driver (make-query target) {:timeout (/ value 1000)}))
+  (wait-absent driver (make-query target)
+               {:timeout (/ (Integer/parseInt value) 1000)}))
 
 (defmethod run-command
   :waitForElementVisible
   [driver {:keys [target value]} & [{vars :vars}]]
-  (wait-visible driver (make-query target) {:timeout (/ value 1000)}))
+  (wait-visible driver (make-query target)
+                {:timeout (/ (Integer/parseInt value) 1000)}))
 
 (defmethod run-command
   :waitForElementNotVisible
   [driver {:keys [target value]} & [{vars :vars}]]
-  (wait-invisible driver (make-query target) {:timeout (/ value 1000)}))
+  (wait-invisible driver (make-query target)
+                  {:timeout (/ (Integer/parseInt value) 1000)}))
+
+(defmethod run-command
+  :waitForText
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (let [q (make-query target)]
+    (wait-visible driver q)
+    (wait-has-text driver q value)))
 
 (defmethods run-command
   [:webdriverChooseCancelOnVisibleConfirmation
