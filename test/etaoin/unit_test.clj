@@ -141,17 +141,17 @@
 
 (def valid-commands-tree
   [[:times
-    {:times  {:command :times},
+    {:this   {:command :times},
      :branch [[:cmd {:command :do-times}]],
      :end    {:command :end}}]
    [:while
-    {:while  {:command :while},
+    {:this   {:command :while},
      :branch [[:cmd {:command :do-while}]],
      :end    {:command :end}}]
    [:do
-    {:do     {:command :do},
-     :branch [[:cmd {:command :do-do}]],
-     :end    {:command :repeatIf}}]
+    {:this      {:command :do},
+     :branch    [[:cmd {:command :do-do}]],
+     :repeat-if {:command :repeatIf}}]
    [:cmd {:command :do-1}]
    [:if
     {:if
@@ -164,7 +164,7 @@
      :end {:command :end}}]
    [:cmd {:command :do-3}]
    [:for-each
-    {:for-each {:command :forEach},
+    {:this {:command :forEach},
      :branch
      [[:if
        {:if   {:this {:command :if}, :branch [[:cmd {:command :do-if}]]},
@@ -173,7 +173,7 @@
          {:this {:command :elseIf}, :branch [[:cmd {:command :do-else-if2}]]}],
         :else {:this {:command :else}, :branch [[:cmd {:command :do-else}]]},
         :end  {:command :end}}]],
-     :end      {:command :end}}]
+     :end  {:command :end}}]
    [:cmd-with-open-window {:command :do-3, :opensWindow true}]])
 
 (deftest parse-commands-tree
