@@ -1,6 +1,7 @@
 (ns etaoin.ide
-  (:require [cheshire.core :refer [parse-stream]]
+  (:require [cheshire.core :refer [parse-stream generate-string]]
             [clojure.java.io :as io]
+            [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [clojure.test :refer [is]]
             [clojure.tools.logging :as log]
@@ -102,6 +103,13 @@
    "TAB"          k/tab
    "UP"           k/arrow-up})
 
+(defn fill-str-with-vars
+  [string vars]
+  (reduce (fn [acc [k v]]
+            (let [pattern (re-pattern (format "\\$\\{%s\\}" (name k)))
+                  value   (str v)]
+              (str/replace acc pattern value))) string vars))
+
 (defn gen-send-key-input
   [input]
   (let [pattern #"\$\{KEY_([^}]+)\}"
@@ -112,6 +120,17 @@
               (let [pattern (re-pattern (format "\\$\\{KEY_%s\\}" key))
                     sp-key  (str (get special-keys key))]
                 (str/replace acc pattern sp-key))) input keys)))
+
+(defn gen-script-arguments
+  [script vars]
+  (reduce (fn [acc [k v]]
+            (let [pattern (re-pattern (format "\\$\\{%s\\}" (name k)))
+                  js-val  (str/replace (generate-string v) #"\"" "'")]
+              (str/replace acc pattern js-val))) script vars))
+
+(defn gen-expession-script
+  [script vars]
+  (str "return " (gen-script-arguments script vars)))
 
 (defn make-query
   [target]
@@ -131,12 +150,12 @@
 
 (defn make-assert-msg
   [command actual expected]
-  (format "\nAssert command:\"%s\"\nExpected: %s\nActual%s"
-          command expected actual))
+  (format "\nAssert command:\"%s\"\nExpected: %s\nActual: %s"
+          (name command) expected actual))
 
 (defn dispatch-command
   [driver command & [opt]]
-  (some-> command :command keyword))
+  (some-> command :command))
 
 (defmulti run-command dispatch-command)
 
@@ -271,9 +290,14 @@
                  (make-query value)))
 
 (defmethod run-command
+  :echo
+  [driver {:keys [target]} {vars :vars}]
+  (println (fill-str-with-vars target @vars)))
+
+(defmethod run-command
   :executeScript
   [driver {:keys [target value]} & [{vars :vars}]]
-  (let [result (js-execute driver target)]
+  (let [result (js-execute driver (gen-script-arguments target @vars))]
     (when-not (str/blank? value)
       (swap! vars assoc (str->var value) result))
     result))
@@ -347,8 +371,9 @@
 
 (defmethod run-command
   :sendKeys
-  [driver {:keys [target value]} & [opt]]
-  (fill driver (make-query target) (gen-send-key-input value)))
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (fill driver (make-query target) (-> (gen-send-key-input value)
+                                       (fill-str-with-vars @vars))))
 
 (defmethod run-command
   :setWindowSize
@@ -405,8 +430,9 @@
 
 (defmethod run-command
   :type
-  [driver {:keys [target value]} & [opt]]
-  (fill driver (make-query target) (gen-send-key-input value)))
+  [driver {:keys [target value]} & [{vars :vars}]]
+  (fill driver (make-query target) (-> (gen-send-key-input value)
+                                       (fill-str-with-vars @vars))))
 
 (defmethod run-command
   :unCheck
@@ -546,22 +572,187 @@
   [driver {:keys [target value]} & [{vars :vars}]]
   (accept-alert driver))
 
+;;control flow
+(defmethods run-command
+  [:if :elseIf :repeatIf :while]
+  [driver {:keys [target]} & [{vars :vars}]]
+  (js-execute driver (gen-expession-script target @vars)))
+
+(defmethods run-command
+  [:do :end]
+  [_ _ & _])
+
+(defmethod run-command
+  :forEach
+  [driver {:keys [target value]} & [{vars :vars}]]
+  [(str->var value) (get @vars (str->var target))])
+
+(defmethod run-command
+  :times
+  [driver {:keys [target]} & [{vars :vars}]]
+  (Integer/parseInt target))
+
+(defn log-command-message
+  [{:keys [command target value]}]
+  (cond->> ""
+    (not (str/blank? value))
+    (str (format " with value: '%s'" value))
+
+    (not (str/blank? target))
+    (str (format " on '%s'" target))
+
+    "always"
+    (str (format "Command: %s" (name command)))))
+
+(defn run-command-with-log
+  [driver command & [opt]]
+  (let [[msg result] (try
+                       ["OK" (run-command driver command opt)]
+                       (catch Exception e
+                         [(format "Failed: %s" (ex-message e)) e])
+                       (catch java.lang.AssertionError e
+                         [(format "Failed: %s" (ex-message e)) e]))
+        message      (str (log-command-message command) " / " msg)]
+    (log/info message)
+    (when-not (= msg "OK")
+      (throw result))
+    result))
+
+
+
+(def control-flow-commands
+  #{:do :times :while :forEach :if :elseIf :else :end :repeatIf})
+
+(defn cmd? [cmd]
+  (fn [command]
+    (some-> command :command (= cmd))))
+
+
+(s/def ::command-if
+  (s/cat :if (s/cat :this (cmd? :if)
+                    :branch ::commands)
+         :else-if (s/* (s/cat :this (cmd? :elseIf)
+                              :branch ::commands))
+         :else (s/? (s/cat :this (cmd? :else)
+                           :branch ::commands))
+         :end (cmd? :end)))
+
+(s/def ::command-times
+  (s/cat :this (cmd? :times)
+         :branch ::commands
+         :end (cmd? :end)))
+
+(s/def ::command-while
+  (s/cat :this (cmd? :while)
+         :branch ::commands
+         :end (cmd? :end)))
+
+(s/def ::command-do
+  (s/cat :this (cmd? :do)
+         :branch ::commands
+         :repeat-if (cmd? :repeatIf)))
+
+(s/def ::command-for-each
+  (s/cat :this (cmd? :forEach)
+         :branch ::commands
+         :end (cmd? :end)))
+
+(s/def ::cmd-with-open-window
+  (fn [{:keys [opensWindow]}]
+    (true? opensWindow)))
+
+(s/def ::command
+  (fn [{:keys [command]}]
+    (and (some? command)
+         (nil? (get control-flow-commands command)))))
+
+(s/def ::commands
+  (s/+ (s/alt
+         :if ::command-if
+         :times ::command-times
+         :while ::command-while
+         :do ::command-do
+         :for-each ::command-for-each
+         :cmd-with-open-window ::cmd-with-open-window
+         :cmd ::command)))
+
+(declare execute-commands)
+
+(defn execute-branch
+  [driver {:keys [this branch]} opt]
+  (when (run-command-with-log driver this opt)
+    (execute-commands driver branch opt)
+    true))
+
+(defn execute-if
+  [driver {:keys [if else-if else end]} opt]
+  (or (execute-branch driver if opt)
+      (some #(execute-branch driver % opt) else-if)
+      (execute-commands driver (:branch else) opt))
+  (run-command-with-log driver end opt))
+
+(defn execute-times
+  [driver {:keys [this branch end]} opt]
+  (let [n (run-command-with-log driver this opt)]
+    (doseq [commands (repeat n branch)]
+      (execute-commands driver commands opt))
+    (run-command-with-log driver end opt)))
+
+(defn execute-do
+  [driver {:keys [this branch repeat-if]} opt]
+  (run-command-with-log driver this opt)
+  (loop [commands branch]
+    (execute-commands driver commands opt)
+    (when (run-command-with-log driver repeat-if opt)
+      (recur commands))))
+
+(defn execute-while
+  [driver {:keys [this branch end]} opt]
+  (while (run-command-with-log driver this opt)
+    (execute-commands driver branch opt))
+  (run-command-with-log driver end opt))
+
+(defn execute-for-each
+  [driver {:keys [this branch end]} {vars :vars :as opt}]
+  (let [[var-name arr] (run-command-with-log driver this opt)]
+    (doseq [val arr]
+      (swap! vars assoc var-name val)
+      (execute-commands driver branch opt))
+    (run-command-with-log driver end opt)))
+
+(defn execute-cmd-with-open-window
+  [driver {:keys [windowHandleName windowTimeout] :as cmd} {vars :vars :as opt}]
+  (let [init-handles  (set (get-window-handles driver))
+        _             (run-command-with-log driver cmd opt)
+        _             (wait (/ windowTimeout 1000))
+        final-handles (set (get-window-handles driver))
+        handle        (first (clojure.set/difference final-handles init-handles))]
+    (swap! vars assoc (str->var windowHandleName) handle)))
+
+(defn execute-commands
+  [driver commands opt]
+  (doseq [[cmd-name cmd] commands]
+    (case cmd-name
+      :if                   (execute-if driver cmd opt)
+      :times                (execute-times driver cmd opt)
+      :do                   (execute-do driver cmd opt)
+      :while                (execute-while driver cmd opt)
+      :for-each             (execute-for-each driver cmd opt)
+      :cmd-with-open-window (execute-cmd-with-open-window driver cmd opt)
+      :cmd                  (run-command-with-log driver cmd opt)
+      (throw (ex-info "Command is not valid" {:command cmd})))))
 
 
 (defn run-ide-test
-  [driver {:keys [commands]} & [{vars :vars :as opt}]]
-  (doseq [{:keys [opensWindow
-                  windowHandleName
-                  windowTimeout]
-           :as   command} commands]
-    (if opensWindow
-      (let [init-handles  (set (get-window-handles driver))
-            _             (run-command driver command opt)
-            _             (wait (/ windowTimeout 1000))
-            final-handles (set (get-window-handles driver))
-            handle        (first (clojure.set/difference final-handles init-handles))]
-        (swap! vars assoc (str->var windowHandleName) handle))
-      (run-command driver command opt))))
+  [driver {:keys [commands]} & [opt]]
+  (let [command->kw   (fn [{:keys [command] :as cmd}]
+                        (assoc cmd :command (keyword command)))
+        commands      (map command->kw commands)
+        commands-tree (s/conform ::commands commands)]
+    (when (s/invalid?  commands-tree)
+      (throw (ex-info "Incomplete or invalid command in the config"
+                      {:explain-data (s/explain-data ::commands commands)})))
+    (execute-commands driver commands-tree opt)))
 
 (defn get-tests-by-suite-id
   [suite-id id {:keys [suites tests]}]
