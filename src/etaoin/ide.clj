@@ -685,7 +685,7 @@
     true))
 
 (defn execute-if
-  [driver {:keys [if else-if else]} opt]
+  [driver {:keys [if else-if else end]} opt]
   (cond
     (execute-branch driver if opt)
     true
@@ -694,13 +694,15 @@
     true
 
     else
-    (execute-commands driver (:branch else) opt)))
+    (execute-commands driver (:branch else) opt))
+  (run-command-with-log driver end opt))
 
 (defn execute-times
-  [driver {:keys [times branch]} opt]
+  [driver {:keys [times branch end]} opt]
   (let [n (run-command-with-log driver times opt)]
     (doseq [commands (repeat n branch)]
-      (execute-commands driver commands opt))))
+      (execute-commands driver commands opt))
+    (run-command-with-log driver end opt)))
 
 (defn execute-do
   [driver {:keys [do branch end]} opt]
@@ -708,19 +710,22 @@
   (loop [commands branch]
     (execute-commands driver commands opt)
     (when (run-command-with-log driver end opt)
-      (recur commands))))
+      (recur commands)))
+  (run-command-with-log driver end opt))
 
 (defn execute-while
-  [driver {:keys [branch] while-cmd :while} opt]
+  [driver {:keys [branch end] while-cmd :while} opt]
   (while (run-command-with-log driver while-cmd opt)
-    (execute-commands driver branch opt)))
+    (execute-commands driver branch opt))
+  (run-command-with-log driver end opt))
 
 (defn execute-for-each
-  [driver {:keys [for-each branch]} {vars :vars :as opt}]
+  [driver {:keys [for-each branch end]} {vars :vars :as opt}]
   (let [[var-name arr] (run-command-with-log driver for-each opt)]
     (doseq [val arr]
       (swap! vars assoc var-name val)
-      (execute-commands driver branch opt))))
+      (execute-commands driver branch opt))
+    (run-command-with-log driver end opt)))
 
 (defn execute-cmd-with-open-window
   [driver {:keys [windowHandleName windowTimeout] :as cmd} {vars :vars :as opt}]
@@ -751,6 +756,9 @@
                         (assoc cmd :command (keyword command)))
         commands      (map command->kw commands)
         commands-tree (s/conform ::commands commands)]
+    (when (s/invalid?  commands-tree)
+      (throw (ex-info "Incomplete or invalid command in the config"
+                      {:explain-data (s/explain-data ::commands commands)})))
     (execute-commands driver commands-tree opt)))
 
 (defn get-tests-by-suite-id
