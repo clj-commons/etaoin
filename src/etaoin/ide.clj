@@ -638,22 +638,22 @@
          :end (cmd? :end)))
 
 (s/def ::command-times
-  (s/cat :times (cmd? :times)
+  (s/cat :this (cmd? :times)
          :branch ::commands
          :end (cmd? :end)))
 
 (s/def ::command-while
-  (s/cat :while (cmd? :while)
+  (s/cat :this (cmd? :while)
          :branch ::commands
          :end (cmd? :end)))
 
 (s/def ::command-do
-  (s/cat :do (cmd? :do)
+  (s/cat :this (cmd? :do)
          :branch ::commands
-         :end (cmd? :repeatIf)))
+         :repeat-if (cmd? :repeatIf)))
 
 (s/def ::command-for-each
-  (s/cat :for-each (cmd? :forEach)
+  (s/cat :this (cmd? :forEach)
          :branch ::commands
          :end (cmd? :end)))
 
@@ -686,42 +686,35 @@
 
 (defn execute-if
   [driver {:keys [if else-if else end]} opt]
-  (cond
-    (execute-branch driver if opt)
-    true
-
-    (some #(execute-branch driver % opt) else-if)
-    true
-
-    else
-    (execute-commands driver (:branch else) opt))
+  (or (execute-branch driver if opt)
+      (some #(execute-branch driver % opt) else-if)
+      (execute-commands driver (:branch else) opt))
   (run-command-with-log driver end opt))
 
 (defn execute-times
-  [driver {:keys [times branch end]} opt]
-  (let [n (run-command-with-log driver times opt)]
+  [driver {:keys [this branch end]} opt]
+  (let [n (run-command-with-log driver this opt)]
     (doseq [commands (repeat n branch)]
       (execute-commands driver commands opt))
     (run-command-with-log driver end opt)))
 
 (defn execute-do
-  [driver {:keys [do branch end]} opt]
-  (run-command-with-log driver do opt)
+  [driver {:keys [this branch repeat-if]} opt]
+  (run-command-with-log driver this opt)
   (loop [commands branch]
     (execute-commands driver commands opt)
-    (when (run-command-with-log driver end opt)
-      (recur commands)))
-  (run-command-with-log driver end opt))
+    (when (run-command-with-log driver repeat-if opt)
+      (recur commands))))
 
 (defn execute-while
-  [driver {:keys [branch end] while-cmd :while} opt]
-  (while (run-command-with-log driver while-cmd opt)
+  [driver {:keys [this branch end]} opt]
+  (while (run-command-with-log driver this opt)
     (execute-commands driver branch opt))
   (run-command-with-log driver end opt))
 
 (defn execute-for-each
-  [driver {:keys [for-each branch end]} {vars :vars :as opt}]
-  (let [[var-name arr] (run-command-with-log driver for-each opt)]
+  [driver {:keys [this branch end]} {vars :vars :as opt}]
+  (let [[var-name arr] (run-command-with-log driver this opt)]
     (doseq [val arr]
       (swap! vars assoc var-name val)
       (execute-commands driver branch opt))
