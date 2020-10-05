@@ -1,6 +1,6 @@
 (ns etaoin.ide-test
   (:require [etaoin.api :as api]
-            [etaoin.ide :as ide]
+            [etaoin.ide.flow :as ide]
             [clojure.test :refer :all]
             [clojure.java.io :as io]))
 
