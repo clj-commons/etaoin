@@ -3,7 +3,8 @@
             [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
             [etaoin.api :refer :all]
-            [etaoin.ide.api :refer [run-command-with-log str->var]]))
+            [etaoin.ide.api :refer [run-command-with-log str->var]]
+            [etaoin.ide.spec :as spec]))
 
 (declare execute-commands)
 
@@ -76,10 +77,10 @@
   (let [command->kw   (fn [{:keys [command] :as cmd}]
                         (assoc cmd :command (keyword command)))
         commands      (map command->kw commands)
-        commands-tree (s/conform :etaoin.ide.spec/commands commands)]
+        commands-tree (s/conform ::spec/commands commands)]
     (when (s/invalid?  commands-tree)
       (throw (ex-info "Incomplete or invalid command in the config"
-                      {:explain-data (s/explain-data :etaoin.ide.spec/commands commands)})))
+                      {:explain-data (s/explain-data ::spec/commands commands)})))
     (execute-commands driver commands-tree opt)))
 
 (defn get-tests-by-suite-id
