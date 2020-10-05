@@ -220,7 +220,7 @@
   (let [actual (absent? driver (make-query target))]
     (assert actual (make-assert-msg command actual true))))
 
-(defmethod run-command
+(defmethods run-command
   [:assertValue :assertSelectedValue]
   [driver {:keys [target value command]} & [{vars :vars}]]
   (let [actual-val (get-element-attr driver (make-query target) :value)]

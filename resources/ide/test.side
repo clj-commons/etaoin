@@ -49,6 +49,13 @@
       ],
       "value": "1"
     }, {
+      "id": "6ef151df-2f45-4323-921a-fd88d4d54913",
+      "comment": "",
+      "command": "assertValue",
+      "target": "id=simple-input",
+      "targets": [],
+      "value": "1"
+    }, {
       "id": "8c349752-d66f-4068-8ee2-2adba6e33bad",
       "comment": "",
       "command": "click",
@@ -75,6 +82,13 @@
         ["xpath=//form[@id='submit-test']/input[2]", "xpath:idRelative"],
         ["xpath=//input[2]", "xpath:position"]
       ],
+      "value": "2"
+    }, {
+      "id": "50d2d56d-c381-4d5d-9959-06d5a9e63ecf",
+      "comment": "",
+      "command": "assertValue",
+      "target": "id=simple-password",
+      "targets": [],
       "value": "2"
     }, {
       "id": "ef5a210f-571d-4e24-ba14-52b46a513f18",
@@ -105,18 +119,12 @@
       ],
       "value": "3"
     }, {
-      "id": "ceb96b99-d5ee-41c4-b8b7-c8af4c4cff32",
+      "id": "f8c54a3a-4133-4aa1-a85a-911bf95fda4a",
       "comment": "",
-      "command": "click",
-      "target": "id=simple-submit",
-      "targets": [
-        ["id=simple-submit", "id"],
-        ["css=#simple-submit", "css:finder"],
-        ["xpath=//input[@id='simple-submit']", "xpath:attributes"],
-        ["xpath=//form[@id='submit-test']/input[3]", "xpath:idRelative"],
-        ["xpath=//input[3]", "xpath:position"]
-      ],
-      "value": ""
+      "command": "assertValue",
+      "target": "id=simple-textarea",
+      "targets": [],
+      "value": "3"
     }, {
       "id": "d514f9b1-f621-4179-a064-6b872a610f0e",
       "comment": "",
@@ -137,6 +145,13 @@
       "target": "id=simple-country",
       "targets": [],
       "value": "label=United States"
+    }, {
+      "id": "a5699668-a4b0-4ee5-9bbc-ae58dd0a90a7",
+      "comment": "",
+      "command": "assertSelectedValue",
+      "target": "id=simple-country",
+      "targets": [],
+      "value": "usa"
     }]
   }, {
     "id": "bcf05b1b-3e20-4df9-8f31-1e204ef0938c",
@@ -195,6 +210,13 @@
         ["xpath=//div[4]/img", "xpath:position"]
       ],
       "value": "css=.trash"
+    }, {
+      "id": "66c5f8c2-9bb6-4476-91a8-44fc6adebb2e",
+      "comment": "",
+      "command": "assertElementNotPresent",
+      "target": "css=.document",
+      "targets": [],
+      "value": ""
     }]
   }, {
     "id": "e8a6b08a-81b5-49ef-a135-34f3c0a9326c",
@@ -254,10 +276,38 @@
       "targets": [],
       "value": ""
     }, {
-      "id": "56d4b587-f7b3-4433-9d6f-e337f10f78ef",
+      "id": "5dd9c589-04fc-46cb-95c9-2464ba91cbd3",
       "comment": "",
       "command": "selectWindow",
       "target": "handle=${win6790}",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "f4a3ef23-ef57-4479-ba65-bfb4b436ef04",
+      "comment": "",
+      "command": "assertTitle",
+      "target": "Webdriver Test Document2",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "5026c3c8-3605-4554-b9e0-73a501c3309c",
+      "comment": "",
+      "command": "close",
+      "target": "",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "0b41c04d-e869-4e74-abd9-0fa7eadba340",
+      "comment": "",
+      "command": "selectWindow",
+      "target": "handle=${root}",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "d509c1a6-942a-4526-96ed-515712b900fa",
+      "comment": "",
+      "command": "assertTitle",
+      "target": "Webdriver Test Document",
       "targets": [],
       "value": ""
     }]
@@ -314,6 +364,13 @@
       "targets": [],
       "value": "${KEY_SHIFT}log${KEY_SHIFT}in"
     }, {
+      "id": "f3703b21-e986-4906-b938-c512add7659e",
+      "comment": "",
+      "command": "assertValue",
+      "target": "id=simple-input",
+      "targets": [],
+      "value": "LOGin"
+    }, {
       "id": "7923564d-6910-48d1-b03b-8b704750ab82",
       "comment": "",
       "command": "click",
@@ -333,7 +390,14 @@
       "command": "sendKeys",
       "target": "id=simple-password",
       "targets": [],
-      "value": "3${KEY_NUM_MULTIPLY}3${KEY_EQUALS}9${KEY_ENTER}"
+      "value": "3${KEY_NUM_MULTIPLY}3${KEY_EQUALS}9"
+    }, {
+      "id": "f7b93ce7-dea4-4881-b934-a18cd42d6012",
+      "comment": "",
+      "command": "assertValue",
+      "target": "id=simple-password",
+      "targets": [],
+      "value": "3*3=9"
     }]
   }, {
     "id": "51d11c97-dc40-4def-873e-cfc74f562beb",
