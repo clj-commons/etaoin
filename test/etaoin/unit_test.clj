@@ -2,7 +2,8 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.test :refer :all]
             [etaoin.api :refer :all]
-            [etaoin.ide :as ide]
+            [etaoin.ide.flow :as ide]
+            [etaoin.ide.spec :as spec]
             etaoin.proc)
   (:import java.io.File
            java.nio.file.attribute.FileAttribute
@@ -181,6 +182,6 @@
                           {:command :if}
                           {:command :do-something}
                           {:command :end}]]
-    (is (= (s/conform :etaoin.ide/commands commands)
+    (is (= (s/conform ::spec/commands commands)
            valid-commands-tree))
-    (is (s/invalid? (s/conform :etaoin.ide/commands invalid-commands)))))
+    (is (s/invalid? (s/conform ::spec/commands invalid-commands)))))
