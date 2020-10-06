@@ -21,7 +21,8 @@
 
   :profiles {:dev {:plugins      [[lein-codox "0.10.7"]]
                    :dependencies [[org.clojure/clojure "1.10.1"]
-                                  [log4j/log4j "1.2.17"]]
+                                  [log4j/log4j "1.2.17"]
+                                  [org.clojure/tools.cli "1.0.194"]]
 
                    :resource-paths ["env/dev/resources"]
 
