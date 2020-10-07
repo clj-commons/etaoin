@@ -909,7 +909,7 @@
        (finally
          (mouse-btn-up ~driver)))))
 
-(defn drag-and-drop
+(defmulti drag-and-drop
   "Performs drag and drop operation as a sequence of the following steps:
 
   1. moves mouse pointer to an element found with `q-from` query;
@@ -932,10 +932,26 @@
 
   - does not work in Safari.
   "
+  {:arglists '([driver q-from q-to])}
+  dispatch-driver)
+
+(defmethod drag-and-drop
+  :phantom
   [driver q-from q-to]
   (mouse-move-to driver q-from)
   (with-mouse-btn driver
     (mouse-move-to driver q-to)))
+
+(defmethod drag-and-drop
+  :default
+  [driver q-from q-to]
+  (let [el-from (query driver q-from)
+        el-to   (query driver q-to)
+        mouse   (-> (make-mouse-input)
+                    (add-pointer-move-to-el el-from)
+                    (with-pointer-left-btn-down
+                      (add-pointer-move-to-el el-to)))]
+    (perform-actions driver mouse)))
 
 ;;
 ;; Clicking

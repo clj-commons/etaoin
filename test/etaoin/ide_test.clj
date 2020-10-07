@@ -11,12 +11,13 @@
 (defn fixture-browser [f]
   (let [base-url       (-> "html" io/resource str)
         test-file-path (-> "ide/test.side" io/resource str)]
-    (api/with-chrome {:args ["--no-sandbox"]} driver
-      (api/go driver base-url)
-      (binding [*driver*         driver
-                *base-url*       base-url
-                *test-file-path* test-file-path]
-        (f)))))
+    (doseq [type [:chrome :firefox]]
+      (api/with-driver type {:args ["--no-sandbox"]} driver
+        (api/go driver base-url)
+        (binding [*driver*         driver
+                  *base-url*       base-url
+                  *test-file-path* test-file-path]
+          (f))))))
 
 (use-fixtures
   :each
