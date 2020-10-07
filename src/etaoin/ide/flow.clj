@@ -1,5 +1,5 @@
 (ns etaoin.ide.flow
-  (:require [cheshire.core :refer [parse-stream]]
+  (:require [cheshire.core :refer [parse-string]]
             [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
             [etaoin.api :refer :all]
@@ -110,9 +110,10 @@
       tests-found)))
 
 (defn run-ide-script
-  [driver path & [opt]]
-  (let [parsed-file (with-open [rdr (io/reader path)]
-                      (parse-stream rdr true))
+  [driver source & [opt]]
+  (let [parsed-file (-> source
+                        slurp
+                        (parse-string true))
         opt-search  (select-keys opt [:test-name :test-id :test-ids
                                       :suite-name :suite-id :suite-ids
                                       :test-names :suite-names])

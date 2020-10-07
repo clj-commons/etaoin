@@ -64,12 +64,12 @@ Options:")
        (str/join \newline errors)))
 
 (defn run-script
-  [file-path {:keys [driver-name params] :as options}]
+  [source {:keys [driver-name params] :as options}]
   (let [opt (select-keys options [:base-url :test-ids
                                   :test-names :suite-ids
                                   :suite-names])]
     (api/with-driver driver-name params driver
-      (flow/run-ide-script driver file-path opt))))
+      (flow/run-ide-script driver source opt))))
 
 (defn -main [& args]
   (let [{:keys [errors summary options]} (parse-opts args cli-options)
@@ -86,11 +86,11 @@ Options:")
         (when-not (and (.exists ide-file)
                        (not (.isDirectory ide-file)))
           (exit 1 "The IDE file not found"))
-        (run-script file options))
+        (run-script ide-file options))
 
       resource
       (if-let [r (io/resource resource)]
-        (run-script (str r) options)
+        (run-script r options)
         (exit 1 "Resource not found"))
 
       :else
