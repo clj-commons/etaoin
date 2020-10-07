@@ -68,13 +68,12 @@ Options:")
   (let [opt (select-keys options [:base-url :test-ids
                                   :test-names :suite-ids
                                   :suite-names])]
-    (prn opt)
     (api/with-driver driver-name params driver
-          (flow/run-ide-script driver file-path opt))))
+      (flow/run-ide-script driver file-path opt))))
 
 (defn -main [& args]
   (let [{:keys [errors summary options]} (parse-opts args cli-options)
-        {:keys [help file resource]} options]
+        {:keys [help file resource]}     options]
     (cond
       errors
       (exit 1 (error-msg errors))
@@ -84,10 +83,10 @@ Options:")
 
       file
       (let [ide-file (io/file file)]
-        (when (and (.exists ide-file)
-                   (not (.isDirectory ide-file)))
-          (exit 1 "The IDE file not found")
-          (run-script file options)))
+        (when-not (and (.exists ide-file)
+                       (not (.isDirectory ide-file)))
+          (exit 1 "The IDE file not found"))
+        (run-script file options))
 
       resource
       (if-let [r (io/resource resource)]
