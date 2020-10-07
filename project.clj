@@ -31,6 +31,7 @@
 
   :dependencies [[clj-http "3.10.1"]
                  [cheshire "5.9.0"]
+                 [org.clojure/tools.cli "1.0.194"]
                  [org.clojure/tools.logging "0.3.1"]
                  [org.clojure/data.codec "0.1.0"]]
 

@@ -1,5 +1,5 @@
 (ns etaoin.ide.flow
-  (:require [cheshire.core :refer [parse-stream]]
+  (:require [cheshire.core :refer [parse-string]]
             [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
             [etaoin.api :refer :all]
@@ -93,26 +93,30 @@
     suite-tests))
 
 (defn find-tests
-  [{:keys [test-id test-ids suite-id suite-ids test-name suite-name]}
+  [{:keys [test-id test-ids suite-id suite-ids test-name suite-name test-names suite-names]}
    {:keys [tests] :as parsed-file}]
   (let [test-ids    (cond-> #{}
-                      test-id    (conj (first (filter #(= test-id (:id %)) tests)))
-                      test-name  (conj (first (filter #(= test-name (:name %)) tests)))
-                      suite-id   (into (get-tests-by-suite-id suite-id :id parsed-file))
-                      suite-name (into (get-tests-by-suite-id suite-name :name parsed-file))
-                      test-ids   (into (filter #((set test-ids) (:id %)) tests))
-                      suite-ids  (into (mapcat #(get-tests-by-suite-id % :id parsed-file) suite-ids)))
+                      test-id     (conj (first (filter #(= test-id (:id %)) tests)))
+                      test-name   (conj (first (filter #(= test-name (:name %)) tests)))
+                      suite-id    (into (get-tests-by-suite-id suite-id :id parsed-file))
+                      suite-name  (into (get-tests-by-suite-id suite-name :name parsed-file))
+                      test-ids    (into (filter #((set test-ids) (:id %)) tests))
+                      suite-ids   (into (mapcat #(get-tests-by-suite-id % :id parsed-file) suite-ids))
+                      test-names  (into (filter #((set test-names) (:name %)) tests))
+                      suite-names (into (mapcat #(get-tests-by-suite-id % :name parsed-file) suite-names)))
         tests-found (filter test-ids tests)]
     (if (empty? tests-found)
       tests
       tests-found)))
 
 (defn run-ide-script
-  [driver path & [opt]]
-  (let [parsed-file (with-open [rdr (io/reader path)]
-                      (parse-stream rdr true))
+  [driver source & [opt]]
+  (let [parsed-file (-> source
+                        slurp
+                        (parse-string true))
         opt-search  (select-keys opt [:test-name :test-id :test-ids
-                                      :suite-name :suite-id :suite-ids])
+                                      :suite-name :suite-id :suite-ids
+                                      :test-names :suite-names])
         tests-found (find-tests opt-search parsed-file)
         opt         (merge {:base-url (:url parsed-file)
                             :vars     (atom {})}
