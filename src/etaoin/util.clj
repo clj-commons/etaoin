@@ -50,3 +50,13 @@
     (when (.isConnected socket)
       (.close socket)
       true)))
+
+(defn exit
+  [code template & args]
+  (let [out (if (zero? code)
+              *out*
+              *err*)]
+    (binding [*out* out]
+      (println (apply format
+                      template args))))
+  (System/exit code))

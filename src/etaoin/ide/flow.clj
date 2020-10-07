@@ -114,7 +114,8 @@
   (let [parsed-file (with-open [rdr (io/reader path)]
                       (parse-stream rdr true))
         opt-search  (select-keys opt [:test-name :test-id :test-ids
-                                      :suite-name :suite-id :suite-ids])
+                                      :suite-name :suite-id :suite-ids
+                                      :test-names :suite-names])
         tests-found (find-tests opt-search parsed-file)
         opt         (merge {:base-url (:url parsed-file)
                             :vars     (atom {})}
