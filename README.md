@@ -753,7 +753,7 @@ now. Example:
 
 ### Screening after each form
 
-With macro `with-screenshots`, you can make screenshot after each form
+With macro `with-screenshots`, you can make a screenshot after each form
 
 ``` clojure
 (with-screenshots driver "../screenshots"
