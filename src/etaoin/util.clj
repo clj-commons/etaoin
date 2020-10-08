@@ -1,4 +1,9 @@
-(ns etaoin.util)
+(ns etaoin.util
+  (:import java.io.File
+           java.nio.file.attribute.FileAttribute
+           java.nio.file.Files
+           org.apache.commons.io.FileUtils))
+
 
 (defn map-or-nil?
   [x]
@@ -60,3 +65,21 @@
       (println (apply format
                       template args))))
   (System/exit code))
+
+(defmacro with-tmp-file [prefix suffix bind & body]
+  `(let [tmp#  (File/createTempFile ~prefix ~suffix)
+         ~bind (.getAbsolutePath tmp#)]
+     (try
+       ~@body
+       (finally
+         (.delete tmp#)))))
+
+(defmacro with-tmp-dir [prefix bind & body]
+  `(let [tmp#  (str (Files/createTempDirectory
+                      ~prefix
+                      (into-array FileAttribute [])))
+         ~bind tmp#]
+     (try
+       ~@body
+       (finally
+         (FileUtils/deleteDirectory (File. tmp#))))))

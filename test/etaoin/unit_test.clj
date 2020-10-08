@@ -4,21 +4,10 @@
             [etaoin.api :refer :all]
             [etaoin.ide.flow :as ide]
             [etaoin.ide.spec :as spec]
+            [etaoin.util :refer [with-tmp-dir]]
             etaoin.proc)
-  (:import java.io.File
-           java.nio.file.attribute.FileAttribute
-           java.nio.file.Files
-           org.apache.commons.io.FileUtils))
+  (:import java.io.File))
 
-(defmacro with-tmp-dir [prefix bind & body]
-  `(let [tmp#  (str (Files/createTempDirectory
-                      ~prefix
-                      (into-array FileAttribute [])))
-         ~bind tmp#]
-     (try
-       ~@body
-       (finally
-         (FileUtils/deleteDirectory (File. tmp#))))))
 
 (deftest test-firefox-driver-args
   (with-redefs

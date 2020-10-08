@@ -2972,6 +2972,21 @@
       (b64-to-file b64str file)
       (util/error "Empty screenshot, query: %s" q))))
 
+(defn make-screenshot-file-path
+  [driver-type dir]
+  (->> (.getTime (java.util.Date.))
+       (format "-%d.png")
+       (str (name driver-type))
+       (io/file dir)
+       str))
+
+(defmacro with-screenshots
+  "Makes a screenshot after each form"
+  [driver dir & body]
+  (let [screenshot-form# `(screenshot ~driver (make-screenshot-file-path (:type ~driver) ~dir))
+        new-body         (interleave body (repeat screenshot-form#))]
+    `(do ~@new-body)))
+
 ;;
 ;; postmortem
 ;;
