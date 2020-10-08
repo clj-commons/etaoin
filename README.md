@@ -41,6 +41,7 @@ after a mysteries note was produced on it.
 - [File uploading](#file-uploading)
 - [Screenshots](#screenshots)
   * [Screening elements](#screening-elements)
+  * [Screening after each form](#screening-after-each-form)
 - [Using headless drivers](#using-headless-drivers)
 - [Connection to remote webdriver](#connection-to-remote-webdriver)
 - [Webdriver in Docker](#webdriver-in-docker)
@@ -748,6 +749,28 @@ now. Example:
 
 ```clojure
 (screenshot-element driver {:tag :div :class :smart-widget} "smart_widget.png")
+```
+
+### Screening after each form
+
+With macro `with-screenshots`, you can make screenshot after each form
+
+``` clojure
+(with-screenshots driver "../screenshots"
+  (fill driver :simple-input "1")
+  (fill driver :simple-input "2")
+  (fill driver :simple-input "3"))
+```
+
+what is equivalent to a record:
+
+``` clojure
+(fill driver :simple-input "1")
+(screenshot driver "../screenshots/chrome-...123.png")
+(fill driver :simple-input "2")
+(screenshot driver "../screenshots/chrome-...124.png")
+(fill driver :simple-input "3")
+(screenshot driver "../screenshots/chrome-...125.png")
 ```
 
 ## Using headless drivers
