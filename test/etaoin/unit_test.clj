@@ -5,7 +5,8 @@
             [etaoin.ide.flow :as ide]
             [etaoin.ide.spec :as spec]
             [etaoin.util :refer [with-tmp-dir]]
-            etaoin.proc))
+            etaoin.proc)
+  (:import java.io.File))
 
 
 (deftest test-firefox-driver-args
