@@ -368,15 +368,13 @@
   (let [url   (-> "html/drag-n-drop/index.html" io/resource str)
         doc   {:class :document}
         trash {:xpath "//div[contains(@class, 'trash')]"}]
-    (when-not (or (firefox? *driver*)
-                  (safari? *driver*))
-      (doto *driver*
-        (go url)
-        (drag-and-drop doc trash)
-        (drag-and-drop doc trash)
-        (drag-and-drop doc trash)
-        (drag-and-drop doc trash)
-        (-> (absent? doc) is)))))
+    (doto *driver*
+      (go url)
+      (drag-and-drop doc trash)
+      (drag-and-drop doc trash)
+      (drag-and-drop doc trash)
+      (drag-and-drop doc trash)
+      (-> (absent? doc) is))))
 
 (deftest test-element-location
   (let [q             {:id :el-location-input}
@@ -729,24 +727,4 @@
                          (add-pointer-click-el submit))]
         (perform-actions *driver* keyboard mouse)
         (wait 1)
-        (is (str/ends-with? (get-url *driver*) "?login=1&password=2&message=3")))))
-  (testing "drag-n-drop"
-    (when-not-phantom *driver*
-      (let [drag-and-drop (fn [driver q-from q-to]
-                            (let [el-from (query driver q-from)
-                                  el-to   (query driver q-to)
-                                  mouse   (-> (make-mouse-input)
-                                              (add-pointer-move-to-el el-from)
-                                              (with-pointer-left-btn-down
-                                                (add-pointer-move-to-el el-to)))]
-                              (perform-actions driver mouse)))
-            url           (-> "html/drag-n-drop/index.html" io/resource str)
-            doc           {:class :document}
-            trash         {:xpath "//div[contains(@class, 'trash')]"}]
-        (doto *driver*
-          (go url)
-          (drag-and-drop doc trash)
-          (drag-and-drop doc trash)
-          (drag-and-drop doc trash)
-          (drag-and-drop doc trash)
-          (-> (absent? doc) is))))))
+        (is (str/ends-with? (get-url *driver*) "?login=1&password=2&message=3"))))))

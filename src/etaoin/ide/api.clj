@@ -221,14 +221,14 @@
 (defmethods run-command
   [:assertValue :assertSelectedValue]
   [driver {:keys [target value command]} & [{vars :vars}]]
-  (let [actual-val (get-element-attr driver (make-query target) :value)]
+  (let [actual-val (get-element-value driver (make-query target))]
     (assert (= actual-val value)
             (make-assert-msg command actual-val value))))
 
 (defmethod run-command
   :assertNotSelectedValue
   [driver {:keys [target value command]} & [{vars :vars}]]
-  (let [actual-val (get-element-attr driver (make-query target) :value)]
+  (let [actual-val (get-element-value driver (make-query target))]
     (assert (not= actual-val value)
             (make-assert-msg command actual-val value))))
 
@@ -250,7 +250,7 @@
   :assertSelectedLabel
   [driver {:keys [target value command]} & [{vars :vars}]]
   (let [q            (make-query target)
-        selected-val (get-element-attr driver q :value)
+        selected-val (get-element-value driver q)
         option-el    (query driver q {:value selected-val})
         option-text  (get-element-text-el driver option-el)]
     (assert (= option-text value)
@@ -410,7 +410,7 @@
 (defmethod run-command
   :storeValue
   [driver {:keys [target value]} & [{vars :vars}]]
-  (let [val (get-element-attr driver (make-query target) :value)]
+  (let [val (get-element-value driver (make-query target))]
     (swap! vars assoc (str->var value) val)))
 
 (defmethod run-command
@@ -492,14 +492,14 @@
 (defmethod run-command
   [:verifyValue :verifySelectedValue]
   [driver {:keys [target value command]} & [{vars :vars}]]
-  (let [actual-val (get-element-attr driver (make-query target) :value)]
+  (let [actual-val (get-element-value driver (make-query target))]
     (is (= actual-val value)
         (make-assert-msg command actual-val value))))
 
 (defmethod run-command
   :verifyNotSelectedValue
   [driver {:keys [target value command]} & [{vars :vars}]]
-  (let [actual-val (get-element-attr driver (make-query target) :value)]
+  (let [actual-val (get-element-value driver (make-query target))]
     (is (not= actual-val value)
         (make-assert-msg command actual-val value))))
 
@@ -521,7 +521,7 @@
   :verifySelectedLabel
   [driver {:keys [target value command]} & [{vars :vars}]]
   (let [q            (make-query target)
-        selected-val (get-element-attr driver q :value)
+        selected-val (get-element-value driver q)
         option-el    (query driver q {:value selected-val})
         option-text  (get-element-text-el driver option-el)]
     (is (= option-text value)

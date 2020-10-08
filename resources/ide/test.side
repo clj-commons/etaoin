@@ -390,14 +390,14 @@
       "command": "sendKeys",
       "target": "id=simple-password",
       "targets": [],
-      "value": "3${KEY_NUM_MULTIPLY}3${KEY_EQUALS}9"
+      "value": "${KEY_SHIFT}password"
     }, {
       "id": "f7b93ce7-dea4-4881-b934-a18cd42d6012",
       "comment": "",
       "command": "assertValue",
       "target": "id=simple-password",
       "targets": [],
-      "value": "3*3=9"
+      "value": "PASSWORD"
     }]
   }, {
     "id": "51d11c97-dc40-4def-873e-cfc74f562beb",
