@@ -1857,10 +1857,20 @@ Example:
 
 ``` clojure
 (def driver (chrome))
-(def ide-file (io/resources "ide/test.side"'))
-(def base-url (-> "html/test.html" io/resources str))
+(def ide-file (io/resource "ide/test.side"))
+(def opt
+    {;; The base url is used to redefine the base url from the file.
+     ;; For example, the file was written on the local machine
+     ;; (http://localhost:8080), and we want to perform on staging 
+     ;; (https://preprod-001.company.com)
+     :base-url "https://preprod-001.company.com"
+    
+     ;; keywords :test-.. and :suite-.. (id, ids, name, names)
+     ;; are used for selection of specific tests.
+     ;; When not passed, runs all tests from the file
+     :test-name "test-name"})
 
-(ide/run-ide-script driver ide-file {:base-url base-url :test-name "test-asserts"})
+(etaoin.ide.flow/run-ide-script driver ide-file opt)
 ```
 
 Example for running from shell:
