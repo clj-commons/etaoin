@@ -67,6 +67,7 @@ after a mysteries note was produced on it.
   * [Postmortem Handler To Collect Artifacts](#postmortem-handler-to-collect-artifacts)
   * [Running Tests By Tag](#running-tests-by-tag)
   * [Check whether a file has been downloaded](#check-whether-a-file-has-been-downloaded)
+- [Running IDE files](#running-ide-files)
 - [Troubleshooting](#troubleshooting)
   * [Calling maximize function throws an error](#calling-maximize-function-throws-an-error)
   * [Querying wrong elements with XPath expressions](#querying-wrong-elements-with-xpath-expressions)
@@ -1847,6 +1848,41 @@ Example:
       found (some xlsx? files)]
   (is found (format "No *.xlsx file found in %s directory." DL-DIR)))
 ```
+
+## Running IDE files
+
+Since `etaoin [0.3.11]` added the ability to run IDE scripts written using [Selenium IDE](https://www.selenium.dev/selenium-ide/)
+
+Example:
+
+``` clojure
+(def driver (chrome))
+(def ide-file (io/resource "ide/test.side"))
+(def opt
+    {;; The base url is used to redefine the base url from the file.
+     ;; For example, the file was written on the local machine
+     ;; (http://localhost:8080), and we want to perform on staging 
+     ;; (https://preprod-001.company.com)
+     :base-url "https://preprod-001.company.com"
+    
+     ;; keywords :test-.. and :suite-.. (id, ids, name, names)
+     ;; are used for selection of specific tests.
+     ;; When not passed, runs all tests from the file
+     :test-name "test-name"})
+
+(etaoin.ide.flow/run-ide-script driver ide-file opt)
+```
+
+Example for running from shell:
+
+``` shell
+lein run -m etaoin.ide.main -d firefox -p '{:port 8888 :args [\"--no-sandbox\"]} -r ide/test.side
+
+java -cp .../poject.jar -m etaoin.ide.main -d firefox -p '{:port 8888} -f ide/test.side
+```
+
+Note that feature is experimental and if you encounter unexpected behavior feel free to open the issue.
+At the moment, the feature only supports chrome and firefox
 
 ## Troubleshooting
 
