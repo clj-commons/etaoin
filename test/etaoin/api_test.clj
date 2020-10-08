@@ -4,16 +4,10 @@
             [clojure.string :as str]
             [clojure.test :refer :all]
             [etaoin.api :refer :all]
+            [etaoin.util :refer [with-tmp-dir with-tmp-file]]
             [slingshot.slingshot :refer [try+]])
   (:import javax.imageio.ImageIO))
 
-(defmacro with-tmp-file [prefix suffix bind & body]
-  `(let [tmp#  (java.io.File/createTempFile ~prefix ~suffix)
-         ~bind (.getAbsolutePath tmp#)]
-     (try
-       ~@body
-       (finally
-         (.delete tmp#)))))
 
 (defn numeric? [val]
   (or (instance? Double val)
@@ -558,6 +552,14 @@
         io/file
         ImageIO/read
         is)))
+
+(deftest test-with-screenshots
+  (with-tmp-dir "screenshots" dir
+    (with-screenshots *driver* dir
+      (fill *driver* :simple-input "1")
+      (fill *driver* :simple-input "1")
+      (fill *driver* :simple-input "1"))
+    (is (= 3 (count (.listFiles (io/file dir)))))))
 
 (deftest test-screenshot-element
   (when (or (chrome? *driver*)

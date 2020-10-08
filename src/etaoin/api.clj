@@ -2973,14 +2973,15 @@
       (util/error "Empty screenshot, query: %s" q))))
 
 (defmacro with-screenshots
-  "Make screenshot after each form"
-  [driver folder & body]
-  (let [make-screenshot-file# #(->> (.getTime (java.util.Date.))
-                                    (format "%d.png")
-                                    (io/file %)
-                                    str)
+  "Makes a screenshot after each form"
+  [driver dir & body]
+  (let [make-screenshot-file# (fn [dir]
+                                (->> (.getTime (java.util.Date.))
+                                     (format "%d.png")
+                                     (io/file dir)
+                                     str))
 
-        screenshot-form# `(screenshot ~driver (~make-screenshot-file# ~folder))
+        screenshot-form# `(screenshot ~driver (~make-screenshot-file# ~dir))
         new-body         (interleave body (repeat screenshot-form#))]
     `(do ~@new-body)))
 
