@@ -110,6 +110,20 @@
       tests-found)))
 
 (defn run-ide-script
+  "Runs the received ide file
+
+  Arguments:
+
+  - `driver`: a driver instance
+
+  - `source`: file path to the ide config, or file, or io/resource
+
+  - `opt`: a map of optional parameters
+  -- `:test-...` and `:suite-...` are used for selection of specific tests,
+  When not passed, runs all tests from the file
+  -- `:base-url` url of the main page from which tests start.
+  When not passed, the base url from the file is used."
+
   [driver source & [opt]]
   (let [parsed-file (-> source
                         slurp

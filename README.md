@@ -67,6 +67,7 @@ after a mysteries note was produced on it.
   * [Postmortem Handler To Collect Artifacts](#postmortem-handler-to-collect-artifacts)
   * [Running Tests By Tag](#running-tests-by-tag)
   * [Check whether a file has been downloaded](#check-whether-a-file-has-been-downloaded)
+- [Running IDE files](#running-ide-files)
 - [Troubleshooting](#troubleshooting)
   * [Calling maximize function throws an error](#calling-maximize-function-throws-an-error)
   * [Querying wrong elements with XPath expressions](#querying-wrong-elements-with-xpath-expressions)
@@ -1847,6 +1848,31 @@ Example:
       found (some xlsx? files)]
   (is found (format "No *.xlsx file found in %s directory." DL-DIR)))
 ```
+
+## Running IDE files
+
+Since `etaoin [0.3.11]` added the ability to run IDE scripts written using [Selenium IDE](https://www.selenium.dev/selenium-ide/)
+
+Example:
+
+``` clojure
+(def driver (chrome))
+(def ide-file (io/resources "ide/test.side"'))
+(def base-url (-> "html/test.html" io/resources str))
+
+(ide/run-ide-script driver ide-file {:base-url base-url :test-name "test-asserts"})
+```
+
+Example for running from shell:
+
+``` shell
+lein run -m etaoin.ide.main -d firefox -p '{:port 8888 :args [\"--no-sandbox\"]} -r ide/test.side
+
+java -cp .../poject.jar -m etaoin.ide.main -d firefox -p '{:port 8888} -f ide/test.side
+```
+
+Note that feature is experimental and if you encounter unexpected behavior feel free to open the issue.
+At the moment, the feature only supports chrome and firefox
 
 ## Troubleshooting
 
