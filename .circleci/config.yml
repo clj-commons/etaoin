@@ -1,3 +1,4 @@
+
 version: 2
 jobs:
   build:
@@ -56,27 +57,9 @@ jobs:
       # and everything but firefox to allow to compare them (and see that
       # the firefox tests report "ran 0 tests" due to the fixture bug)
 
-      - run: lein test2junit etaoin.xpath-test
-
       - run:
-          name: lein test2junit etaoin.api-test (firefox)
+          name: api tests
           when: always
-          environment:
-            ETAOIN_TEST_DRIVERS: "[:firefox]"
-          command: lein test2junit etaoin.api-test
-
-      - run:
-          name: lein test2junit etaoin.api-test (chrome)
-          when: always
-          environment:
-            ETAOIN_TEST_DRIVERS: "[:chrome]"
-          command: lein test2junit etaoin.api-test
-
-      - run:
-          name: lein test2junit etaoin.api-test (phantom)
-          when: always
-          environment:
-            ETAOIN_TEST_DRIVERS: "[:phantom]"
           command: lein test2junit etaoin.api-test
 
       - run:
@@ -88,6 +71,16 @@ jobs:
           name: ide tests
           when: always
           command: lein test2junit etaoin.ide-test
+
+      - run:
+          name: xpath tests
+          when: always
+          command: lein test2junit etaoin.xpath-test
+
+      - run:
+          name: proc tests
+          when: always
+          command: lein test2junit etaoin.proc-test
 
       - store_test_results:
           path: target/test2junit
