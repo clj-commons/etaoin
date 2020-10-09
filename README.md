@@ -1,7 +1,7 @@
 [url-webdriver]: https://www.w3.org/TR/webdriver/
 [url-wiki]: https://en.wikipedia.org/wiki/Etaoin_shrdlu#Literature
 [url-tests]: https://github.com/igrishaev/etaoin/blob/master/test/etaoin/api_test.clj
-[url-doc]: http://grishaev.me/etaoin/
+[url-doc]: http://etaoin.grishaev.me/
 [url-slack]: https://clojurians.slack.com/messages/C7KDM0EKW/
 
 # Etaoin
@@ -1884,10 +1884,10 @@ Example:
 (def opt
     {;; The base url is used to redefine the base url from the file.
      ;; For example, the file was written on the local machine
-     ;; (http://localhost:8080), and we want to perform on staging 
+     ;; (http://localhost:8080), and we want to perform on staging
      ;; (https://preprod-001.company.com)
      :base-url "https://preprod-001.company.com"
-    
+
      ;; keywords :test-.. and :suite-.. (id, ids, name, names)
      ;; are used for selection of specific tests.
      ;; When not passed, runs all tests from the file
