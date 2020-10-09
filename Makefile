@@ -37,14 +37,6 @@ kill:
 	pkill phantomjs || true
 
 
-.PHONY: autodoc
-autodoc:
-	lein codox
-	cd autodoc && git checkout gh-pages
-	cd autodoc && git add -A
-	cd autodoc && git commit -m "Documentation updated"
-	cd autodoc && git push
-
 IMAGE := etaoin
 
 .PHONY: docker-build
@@ -74,3 +66,12 @@ docker-test:
 	-v ${CURDIR}:/etaoin \
 	-w /etaoin ${IMAGE}:latest \
 	lein test
+
+
+gh-init:
+	git clone -b gh-pages --single-branch git@github.com:igrishaev/etaoin.git gh-pages
+
+
+gh-build:
+	lein codox
+	cd gh-pages && git add -A && git commit -m "docs updated" && git push

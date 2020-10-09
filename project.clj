@@ -12,6 +12,7 @@
   :release-tasks [["vcs" "assert-committed"]
                   ["shell" "make" "docker-test"]
                   ["change" "version" "leiningen.release/bump-version" "release"]
+                  ["make" "gh-build"]
                   ["vcs" "commit"]
                   ["vcs" "tag" "--no-sign"]
                   ["deploy"]
@@ -44,4 +45,4 @@
             [lein-shell "0.5.0"]]
   :test2junit-output-dir "target/test2junit"
 
-  :codox {:output-path "autodoc"})
+  :codox {:output-path "gh-pages"})

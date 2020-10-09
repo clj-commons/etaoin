@@ -10,7 +10,8 @@ pom.xml.asc
 .hgignore
 .hg/
 .DS_Store
-autodoc/**
+
+gh-pages
 node_modules
 package-lock.json
 TAGS
