@@ -56,31 +56,7 @@ jobs:
       # and just chokes. As such, we split the tests between firefox-only
       # and everything but firefox to allow to compare them (and see that
       # the firefox tests report "ran 0 tests" due to the fixture bug)
-
-      - run:
-          name: api tests
-          when: always
-          command: lein test2junit etaoin.api-test
-
-      - run:
-          name: unit tests
-          when: always
-          command: lein test2junit etaoin.unit-test
-
-      - run:
-          name: ide tests
-          when: always
-          command: lein test2junit etaoin.ide-test
-
-      - run:
-          name: xpath tests
-          when: always
-          command: lein test2junit etaoin.xpath-test
-
-      - run:
-          name: proc tests
-          when: always
-          command: lein test2junit etaoin.proc-test
+      - run: lein with-profile +test test2junit
 
       - store_test_results:
           path: target/test2junit

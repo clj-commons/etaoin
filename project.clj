@@ -28,6 +28,12 @@
 
                    :global-vars {*warn-on-reflection* true
                                  *assert*             true}}
+
+             :test {:dependencies [[org.clojure/clojure "1.10.1"]
+                                   [log4j/log4j "1.2.17"]]
+
+                    :resource-paths ["env/test/resources"]}
+
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]]}}
 
   :dependencies [[clj-http "3.10.1"]
