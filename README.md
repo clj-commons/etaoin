@@ -1949,7 +1949,7 @@ Everything related to the IDE is stored under the `etaoin.ide` package.
 You may also run a script from the command line. Here is the `lein run` example:
 
 ```shell
-lein run -m etaoin.ide.main -d firefox -p '{:port 8888 :args [\"--no-sandbox\"]} -r ide/test.side
+lein run -m etaoin.ide.main -d firefox -p '{:port 8888 :args ["--no-sandbox"]}' -r ide/test.side
 ```
 
 As well as from an uberjar. In this case, Etaoin must be in the primary
