@@ -1956,7 +1956,7 @@ As well as from an uberjar. In this case, Etaoin must be in the primary
 dependencies, not the `:dev` or `:test` related.
 
 ```shell
-java -cp .../poject.jar -m etaoin.ide.main -d firefox -p '{:port 8888} -f ide/test.side
+java -cp .../poject.jar -m etaoin.ide.main -d firefox -p '{:port 8888}' -f ide/test.side
 ```
 
 We support the following arguments (check them out using the `lein run -m
