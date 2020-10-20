@@ -1,18 +1,25 @@
 (ns etaoin.ide.flow
-  (:require [cheshire.core :refer [parse-string]]
-            [clojure.java.io :as io]
-            [clojure.spec.alpha :as s]
-            [etaoin.api :refer :all]
-            [etaoin.ide.api :refer [run-command-with-log str->var]]
-            [etaoin.ide.spec :as spec]))
+  "
+  Flow stuff (if/else, for/while/repeat, etc).
+  "
+  (:require
+   [cheshire.core :as json]
+   [clojure.java.io :as io]
+   [clojure.spec.alpha :as s]
+   [etaoin.api :refer :all]
+   [etaoin.ide.api :refer [run-command-with-log str->var]]
+   [etaoin.ide.spec :as spec]))
+
 
 (declare execute-commands)
+
 
 (defn execute-branch
   [driver {:keys [this branch]} opt]
   (when (run-command-with-log driver this opt)
     (execute-commands driver branch opt)
     true))
+
 
 (defn execute-if
   [driver {:keys [if else-if else end]} opt]
@@ -21,12 +28,14 @@
       (execute-commands driver (:branch else) opt))
   (run-command-with-log driver end opt))
 
+
 (defn execute-times
   [driver {:keys [this branch end]} opt]
   (let [n (run-command-with-log driver this opt)]
     (doseq [commands (repeat n branch)]
       (execute-commands driver commands opt))
     (run-command-with-log driver end opt)))
+
 
 (defn execute-do
   [driver {:keys [this branch repeat-if]} opt]
@@ -36,11 +45,13 @@
     (when (run-command-with-log driver repeat-if opt)
       (recur commands))))
 
+
 (defn execute-while
   [driver {:keys [this branch end]} opt]
   (while (run-command-with-log driver this opt)
     (execute-commands driver branch opt))
   (run-command-with-log driver end opt))
+
 
 (defn execute-for-each
   [driver {:keys [this branch end]} {vars :vars :as opt}]
@@ -50,6 +61,7 @@
       (execute-commands driver branch opt))
     (run-command-with-log driver end opt)))
 
+
 (defn execute-cmd-with-open-window
   [driver {:keys [windowHandleName windowTimeout] :as cmd} {vars :vars :as opt}]
   (let [init-handles  (set (get-window-handles driver))
@@ -58,6 +70,7 @@
         final-handles (set (get-window-handles driver))
         handle        (first (clojure.set/difference final-handles init-handles))]
     (swap! vars assoc (str->var windowHandleName) handle)))
+
 
 (defn execute-commands
   [driver commands opt]
@@ -72,6 +85,7 @@
       :cmd                  (run-command-with-log driver cmd opt)
       (throw (ex-info "Command is not valid" {:command cmd})))))
 
+
 (defn run-ide-test
   [driver {:keys [commands]} & [opt]]
   (let [command->kw   (fn [{:keys [command] :as cmd}]
@@ -83,6 +97,7 @@
                       {:explain-data (s/explain-data ::spec/commands commands)})))
     (execute-commands driver commands-tree opt)))
 
+
 (defn get-tests-by-suite-id
   [suite-id id {:keys [suites tests]}]
   (let [test-ids    (-> (filter #(= suite-id (id %)) suites)
@@ -91,6 +106,7 @@
                         set)
         suite-tests (filter #(test-ids (:id %)) tests)]
     suite-tests))
+
 
 (defn find-tests
   [{:keys [test-id test-ids suite-id suite-ids test-name suite-name test-names suite-names]}
@@ -109,26 +125,31 @@
       tests
       tests-found)))
 
+
 (defn run-ide-script
-  "Runs the received ide file
+  "
+  Run a Selenium IDE file.
 
   Arguments:
 
-  - `driver`: a driver instance
+  - `driver`: a driver instance;
 
-  - `source`: file path to the ide config, or file, or io/resource
+  - `source`: either a file path, or an `io/file`, or an `io/resource`;
 
-  - `opt`: a map of optional parameters
-  -- `:test-...` and `:suite-...` (id, ids, name, names)
-  are used for selection of specific tests. When not passed,
-  runs all tests from the file
-  -- `:base-url` url of the main page from which tests start.
-  When not passed, the base url from the file is used."
+  - `opt`: a map of optional parameters:
+
+  -- `:test-...` and `:suite-...` (`id`, `ids`, `name`, `names`)
+      are used for selection of specific tests. When not passed,
+      all the tests get run;
+
+  -- `:base-url` the URL of the main page from which the tests start.
+      Use it override the default URL from an IDE file.
+  "
 
   [driver source & [opt]]
   (let [parsed-file (-> source
                         slurp
-                        (parse-string true))
+                        (json/parse-string true))
         opt-search  (select-keys opt [:test-name :test-id :test-ids
                                       :suite-name :suite-id :suite-ids
                                       :test-names :suite-names])
@@ -136,5 +157,6 @@
         opt         (merge {:base-url (:url parsed-file)
                             :vars     (atom {})}
                            opt)]
+
     (doseq [test tests-found]
       (run-ide-test driver test opt))))
