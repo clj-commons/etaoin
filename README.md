@@ -19,7 +19,7 @@ after a mysteries note was produced on it.
 
 ### Atom turns into a map
 
-Since `[etaoin 0.3.11]`, the driver instance is **a map but not an atom** like
+Since `0.4.0`, the driver instance is **a map but not an atom** like
 it used to be. It was a difficult solution to decide on, yet we've got rid of
 atom to follow Clojure way in our code. Generally speaking, you never deref a
 driver or store something inside it. All the internal functions that used to
@@ -31,7 +31,7 @@ before you update.
 
 ### Actions
 
-Since `[etaoin 0.3.11]`, the library supports [Webdriver
+Since `0.4.0`, the library supports [Webdriver
 Actions][actions]. Actions are commands sent to the driver in batch. See the
 detailed related section in ToC.
 
@@ -39,7 +39,7 @@ detailed related section in ToC.
 
 [ide]: https://www.selenium.dev/selenium-ide/
 
-Since `0.3.11`, Etaoin can play script files created in the interactive
+Since `0.4.0`, Etaoin can play script files created in the interactive
 [Selenium IDE][ide]. See the related section below.
 
 # Table of Contents
@@ -151,7 +151,7 @@ There are two steps to installation:
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.3.10"]
+[etaoin "0.4.0"]
 ```
 
 Works with Clojure 1.9 and above.
@@ -639,9 +639,8 @@ right click sometimes is used to imitate a context menu in web applications.
 
 ## Actions
 
-Since `0.3.11, the library supports [Webdriver Actions](https://www.w3.org/TR/webdriver/#actions).
-
-In general, actions are represented by a vector of maps describing virtual input devices.
+The library supports [Webdriver Actions][actions]. In general, actions are
+commands describing virtual input devices.
 
 ``` clojure
 {:actions [{:type    "key"
@@ -2118,7 +2117,7 @@ console output.
 
 ## License
 
-Copyright © 2017 Ivan Grishaev.
+Copyright © 2017&mdash;2020 Ivan Grishaev.
 
 Distributed under the Eclipse Public License either version 1.0 or (at your
 option) any later version.
