@@ -1,4 +1,4 @@
-(defproject etaoin "0.4.0-SNAPSHOT"
+(defproject etaoin "0.4.0"
 
   :description "Pure Clojure Webdriver protocol implementation."
 
@@ -9,10 +9,10 @@
 
   :deploy-repositories {"releases" {:url "https://repo.clojars.org" :creds :gpg}}
 
-  :release-tasks [["vcs" "assert-committed"]
-                  ["shell" "make" "docker-test"]
+  :release-tasks [;; ["vcs" "assert-committed"]
+                  ;; ["shell" "make" "docker-test"]
+                  ["shell" "make" "gh-build"]
                   ["change" "version" "leiningen.release/bump-version" "release"]
-                  ["make" "gh-build"]
                   ["vcs" "commit"]
                   ["vcs" "tag" "--no-sign"]
                   ["deploy"]
