@@ -15,6 +15,33 @@ actions or whatever you want.
 It's named after [Etaoin Shrdlu][url-wiki] -- a typing machine that became alive
 after a mysteries note was produced on it.
 
+## Release Notes
+
+### Atom turns into a map
+
+Since `[etaoin 0.3.11]`, the driver instance is **a map but not an atom** like
+it used to be. It was a difficult solution to decide on, yet we've got rid of
+atom to follow Clojure way in our code. Generally speaking, you never deref a
+driver or store something inside it. All the internal functions that used to
+modify the instance now just return a new version of a map. If you have `swap!`
+or something similar in your code for the driver, please refactor your code
+before you update.
+
+[actions]: https://www.w3.org/TR/webdriver/#actions
+
+### Actions
+
+Since `[etaoin 0.3.11]`, the library supports [Webdriver
+Actions][actions]. Actions are commands sent to the driver in batch. See the
+detailed related section in ToC.
+
+### Selenium IDE support
+
+[ide]: https://www.selenium.dev/selenium-ide/
+
+Since `0.3.11`, Etaoin can play script files created in the interactive
+[Selenium IDE][ide]. See the related section below.
+
 # Table of Contents
 
 <!-- toc -->
@@ -24,7 +51,7 @@ after a mysteries note was produced on it.
 - [Who uses it?](#who-uses-it)
 - [Documentation](#documentation)
 - [Installation](#installation)
-  * [Installing the `etaoin` library](#installing-the-etaoin-library)
+  * [Installing the etaoin library](#installing-the-etaoin-library)
   * [Installing the Browser Drivers](#installing-the-browser-drivers)
 - [Getting started](#getting-started)
 - [Querying elements](#querying-elements)
@@ -68,7 +95,8 @@ after a mysteries note was produced on it.
   * [Postmortem Handler To Collect Artifacts](#postmortem-handler-to-collect-artifacts)
   * [Running Tests By Tag](#running-tests-by-tag)
   * [Check whether a file has been downloaded](#check-whether-a-file-has-been-downloaded)
-- [Running IDE files](#running-ide-files)
+- [Running IDE files (new!)](#running-ide-files-new)
+  * [CLI arguments](#cli-arguments)
 - [Troubleshooting](#troubleshooting)
   * [Calling maximize function throws an error](#calling-maximize-function-throws-an-error)
   * [Querying wrong elements with XPath expressions](#querying-wrong-elements-with-xpath-expressions)
@@ -76,7 +104,6 @@ after a mysteries note was produced on it.
   * [Unpredictable errors in Chrome when window is not active](#unpredictable-errors-in-chrome-when-window-is-not-active)
   * [Invalid argument: can't kill an exited process](#invalid-argument-cant-kill-an-exited-process)
   * [DevToolsActivePort file doesn't exist](#devtoolsactiveport-file-doesnt-exist)
-- [Release Notes](#release-notes)
 - [Contributors](#contributors)
 - [Other materials](#other-materials)
 - [License](#license)
@@ -1872,40 +1899,90 @@ Example:
   (is found (format "No *.xlsx file found in %s directory." DL-DIR)))
 ```
 
-## Running IDE files
+## Running IDE files (new!)
 
-Since `etaoin [0.3.11]` added the ability to run IDE scripts written using [Selenium IDE](https://www.selenium.dev/selenium-ide/)
+Etaoin can play the files produced by [Selenium IDE][ide]. It's an official
+utility to create scenarios interactively. The IDE comes as an extension to your
+browser. Once installed, it records you actions into a JSON file with the
+`.side` extension. You can save that file and run it with Etaoin.
 
-Example:
+Let's imagine you've installed the IDE and recorded some actions as the official
+documentation prescribes. Now that you have a `test.side` file, do this:
 
-``` clojure
+```clojure
+
+(require '[etaoin.ide.flow :as flow])
+
 (def driver (chrome))
+
 (def ide-file (io/resource "ide/test.side"))
+
 (def opt
-    {;; The base url is used to redefine the base url from the file.
+    {;; The base URL redefines the one from the file.
      ;; For example, the file was written on the local machine
-     ;; (http://localhost:8080), and we want to perform on staging
-     ;; (https://preprod-001.company.com)
+     ;; (http://localhost:8080), and we want to perform the scenario
+     ;; on staging (https://preprod-001.company.com)
      :base-url "https://preprod-001.company.com"
 
      ;; keywords :test-.. and :suite-.. (id, ids, name, names)
-     ;; are used for selection of specific tests.
-     ;; When not passed, runs all tests from the file
-     :test-name "test-name"})
+     ;; are used to select specific tests. When not passed,
+     ;; all tests get run. For example:
 
-(etaoin.ide.flow/run-ide-script driver ide-file opt)
+     :test-id "xxxx-xxxx..."         ;; a single test by its UUID
+     :test-name "some-test"          ;; a single test by its name
+     :test-ids ["xxxx-xxxx...", ...] ;; multiple tests by their ids
+     :test-names ["some-test1", ...] ;; multiple tests by their names
+
+     ;; the same for suites:
+
+     :suite-id    ...
+     :suite-name  ...
+     :suite-ids   [...]
+     :suite-names [...]})
+
+(flow/run-ide-script driver ide-file opt)
 ```
 
-Example for running from shell:
+Everything related to the IDE is stored under the `etaoin.ide` package.
 
-``` shell
+### CLI arguments
+
+You may also run a script from the command line. Here is the `lein run` example:
+
+```shell
 lein run -m etaoin.ide.main -d firefox -p '{:port 8888 :args [\"--no-sandbox\"]} -r ide/test.side
+```
 
+As well as from an uberjar. In this case, Etaoin must be in the primary
+dependencies, not the `:dev` or `:test` related.
+
+```shell
 java -cp .../poject.jar -m etaoin.ide.main -d firefox -p '{:port 8888} -f ide/test.side
 ```
 
-Note that feature is experimental and if you encounter unexpected behavior feel free to open the issue.
-At the moment, the feature only supports chrome and firefox
+We support the following arguments (check them out using the `lein run -m
+etaoin.ide.main -h` command):
+
+```
+  -d, --driver-name name   :chrome  The name of driver. The default is `:chrome`
+  -p, --params params      {}       Parameters for the driver represented as an
+                                    EDN string, e.g '{:port 8080}'
+  -f, --file path                   Path to an IDE file on disk
+  -r, --resource path               Path to an IDE resource
+      --test-ids ids                Comma-separeted test ID(s)
+      --suite-ids ids               Comma-separeted suite ID(s)
+      --test-names names            Comma-separeted test name(s)
+      --suite-names names           Comma-separeted suite name(s)
+      --base-url url                Base URL for tests
+  -h, --help
+```
+
+Pay attention to the `--params` one. This must be an EDN string representing a
+Clojure map. That's the same map that you pass into a driver when initiate it.
+
+Please note the IDE support is still experimental. If you encounter unexpected
+behavior feel free to open an issue. At the moment, we only support Chrome and
+Firefox for IDE files.
 
 ## Troubleshooting
 
@@ -2014,11 +2091,6 @@ Possible cause:
 ```
 
 A similar problem is described [here](https://stackoverflow.com/questions/50642308/webdriverexception-unknown-error-devtoolsactiveport-file-doesnt-exist-while-t)
-
-## Release Notes
-- Since `[etaoin 0.3.11]` driver is a map. The previous implementation was an atom.
- If you changed it manually, then refactoring is required.
-- Since `[etaoin 0.3.11]` the library supports [Webdriver Actions](https://www.w3.org/TR/webdriver/#actions).
 
 ## Contributors
 
