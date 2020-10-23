@@ -666,7 +666,7 @@
 
 ;; actions
 
-(declare el->ref)
+(declare el->ref wait)
 
 (defn rand-uuid
   []
@@ -985,6 +985,16 @@
                        (count elements) q)))
       (click-el driver (first elements)))))
 
+(defn click-multi
+  "Clicks on a multiple elements in batch.
+
+  `qs`  a vector of [query1 query2 query3 ...]
+  `pause` a pause between click in seconds, default is 0"
+
+  [driver qs & [pause]]
+  (doseq [q qs]
+    (wait (or pause 0))
+    (click driver q)))
 
 ;; Double click
 
