@@ -76,6 +76,12 @@
       (is (= "rf" default-val))
       (is (= "fr" selected-val)))))
 
+(deftest test-multiple-click
+  (click-multi *driver* [:vehicle1 :vehicle2 :vehicle3] 0.3)
+  (is (selected? *driver* :vehicle1))
+  (is (selected? *driver* :vehicle2))
+  (is (selected? *driver* :vehicle3)))
+
 (deftest test-input
   (testing "fill multiple imputs"
     (doto *driver*
