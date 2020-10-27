@@ -766,11 +766,11 @@
     where `q` is a query term to find an element.
   "
   [input & [{:keys [x y origin duration]}]]
-  (add-action input {:type    "pointerMove"
-                     :x       (or x 0)
-                     :y       (or y 0)
-                     :origin  (or origin default-origin)
-                     :duraion (or duration default-duration)}))
+  (add-action input {:type     "pointerMove"
+                     :x        (or x 0)
+                     :y        (or y 0)
+                     :origin   (or origin default-origin)
+                     :duration (or duration default-duration)}))
 
 (defn add-pointer-move-to-el
   [input el & [{:keys [duration]}]]
