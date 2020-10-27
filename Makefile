@@ -41,7 +41,7 @@ IMAGE := etaoin
 
 .PHONY: docker-build
 docker-build:
-	docker build -t ${IMAGE}:latest .
+	docker build --no-cache -t ${IMAGE}:latest .
 
 .PHONY: check-host
 check-host:
