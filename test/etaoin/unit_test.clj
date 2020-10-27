@@ -75,11 +75,11 @@
                           {:type "pointerUp", :duration 0, :button 0}
                           {:type "pause", :duration 0}
                           {:type "pointerDown", :duration 0, :button 0}
-                          {:type    "pointerMove",
-                           :x       0,
-                           :y       0,
-                           :origin  {:ELEMENT "123", :element-6066-11e4-a52e-4f735466cecf "123"},
-                           :duraion 250}
+                          {:type     "pointerMove",
+                           :x        0,
+                           :y        0,
+                           :origin   {:ELEMENT "123", :element-6066-11e4-a52e-4f735466cecf "123"},
+                           :duration 250}
                           {:type "pointerUp", :duration 0, :button 0}],
                          :parameters {:pointerType :mouse}}]
     (is (= keyboard-result keyboard))
