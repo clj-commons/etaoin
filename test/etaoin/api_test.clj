@@ -423,6 +423,13 @@
     (is (= new-handle target-handle))
     (is (not= init-url target-url))))
 
+(deftest test-switch-window-next
+  (let [_             (repeat 3 #(click *driver* :switch-window))
+        init-handle   (get-window-handle *driver*)
+        _             (repeat 4 #(switch-window-next *driver*))
+        target-handle (get-window-handle *driver*)]
+    (is (= init-handle target-handle))))
+
 ;; need refactoring not working for headless & firefox
 #_
 (deftest test-maximize
