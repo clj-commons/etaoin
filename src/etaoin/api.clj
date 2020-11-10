@@ -258,6 +258,19 @@
             :path   [:session (:session driver) :window]
             :data   {:name handle}}))
 
+(defn switch-window-next
+  [driver]
+  (let [current-handle (try
+                         (get-window-handle driver)
+                         (catch Exception _
+                           (first (get-window-handles driver))))
+        handles        (get-window-handles driver)
+        next-handle    (loop [[h & hs] (cycle handles)]
+                         (if (= h current-handle)
+                           (first hs)
+                           (recur hs)))]
+    (switch-window driver next-handle)))
+
 (defmulti close-window
   "Closes the current browser window."
   dispatch-driver)
