@@ -2445,10 +2445,12 @@
   (wait-predicate #(has-class? driver q class) opt))
 
 (defn wait-running [driver & [opt]]
-  (log/debugf "Waiting for %s:%s is running"
-              (:host driver) (:port driver))
-  (wait-predicate #(running? driver) opt))
-
+  (if (str/blank? (:webdriver-url driver))
+    (do
+      (log/debugf "Waiting for %s:%s is running"
+                  (:host driver) (:port driver))
+      (wait-predicate #(running? driver) opt))
+    (log/debugf "Skipped wait for driver to become available since a webdriver-url is specified")))
 ;;
 ;; visible actions
 ;;
@@ -3138,10 +3140,14 @@
   from the `defaults` global map if is not passed. If there is no
   port in that map, a random-generated port is used.
 
+  -- `:webdriver-url` is a URL to a web-driver service. This URL is
+  generally provided by web-driver service providers. When specified the
+  `:host` and `:port` parameters are ignored.
+
   -- `:locator` is a string determs what algorithm to use by default
   when finding elements on a page. `default-locator` variable is used
   if not passed."
-  [type & [{:keys [port host locator]}]]
+  [type & [{:keys [port host webdriver-url locator]}]]
   (let [port    (or port
                     (if host
                       (get-in defaults [type :port])
@@ -3149,12 +3155,15 @@
         host    (or host "127.0.0.1")
         url     (make-url host port)
         locator (or locator default-locator)
-        driver  {:type    type
-                 :host    host
-                 :port    port
-                 :url     url
-                 :locator locator}]
-    (log/debugf "Created driver: %s %s:%s" (name type) host port)
+        driver  {:type          type
+                 :host          host
+                 :port          port
+                 :url           url
+                 :webdriver-url webdriver-url
+                 :locator       locator}]
+    (if (str/blank? webdriver-url)
+      (log/debugf "Created driver: %s %s:%s" (name type) host port)
+      (log/debugf "Created driver: %s %s" (name type) (util/strip-url-creds webdriver-url)))
     driver))
 
 
@@ -3357,11 +3366,12 @@
   `-run-driver` and `-connect-driver` may accept."
   ([type]
    (boot-driver type {}))
-  ([type {:keys [host] :as opt}]
+  ([type {:keys [host webdriver-url] :as opt}]
    (cond-> type
-     true       (-create-driver opt)
-     (not host) (-run-driver opt)
-     true       (-connect-driver opt))))
+     true                      (-create-driver opt)
+     (and (not host)
+          (not webdriver-url)) (-run-driver opt)
+     true                      (-connect-driver opt))))
 
 (defn quit
   "Closes the current session and stops the driver."

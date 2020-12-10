@@ -83,3 +83,15 @@
        ~@body
        (finally
          (FileUtils/deleteDirectory (File. tmp#))))))
+
+(defn ^String strip-url-creds
+  "Strip any http credentials from the url, https://user:pass@hello.com -> https://hello.com"
+  [^String url]
+  (let [u (java.net.URL. url)]
+    (.toExternalForm
+      (java.net.URL.
+        (.getProtocol u)
+        (.getHost u)
+        (.getPort u)
+        (.getFile u)
+        (.getRef u)))))

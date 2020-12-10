@@ -1,5 +1,7 @@
 (ns etaoin.client
-  (:require [clojure.string :as str]
+  (:require [etaoin.util :as util]
+
+            [clojure.string :as str]
             [clojure.tools.logging :as log]
             [clj-http.client :as client]
             [cheshire.core :refer [parse-string]]
@@ -69,35 +71,39 @@
 ;;
 
 (defn call
-  [{driver-type :type :keys [host port] :as driver}
+  [{driver-type :type :keys [host port webdriver-url] :as driver}
    method path-args payload]
   (let [path   (get-url-path path-args)
-        url    (format "http://%s:%s/%s" host port path)
+        url    (if (str/blank? webdriver-url)
+                 (format "http://%s:%s/%s" host port path)
+                 (format "%s/%s" webdriver-url path))
         params (merge default-api-params
                       {:url              url
                        :method           method
                        :form-params      (-> payload (or {}))
                        :throw-exceptions false})
 
-        _ (log/debugf "%s %s:%s %6s %s %s"
+        _ (log/debugf "%s %s %6s %s %s"
                       (name driver-type)
-                      host
-                      port
+                      (if (str/blank? webdriver-url)
+                        (str host ":" port)
+                        (util/strip-url-creds webdriver-url))
                       (-> method name str/upper-case)
                       path
                       (-> payload (or "")))
 
         resp  (client/request params)
         body  (:body resp)
-        error (delay {:type     :etaoin/http-error
-                      :status   (:status resp)
-                      :driver   driver
-                      :response (error-response body)
-                      :host     host
-                      :port     port
-                      :method   method
-                      :path     path
-                      :payload  payload})]
+        error (delay {:type          :etaoin/http-error
+                      :status        (:status resp)
+                      :driver        driver
+                      :response      (error-response body)
+                      :webdriver-url webdriver-url
+                      :host          host
+                      :port          port
+                      :method        method
+                      :path          path
+                      :payload       payload})]
     (cond
       (-> resp :status (not= 200))
       (throw+ @error)
