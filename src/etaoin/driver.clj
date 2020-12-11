@@ -309,6 +309,21 @@
              [:capabilities (options-name driver) :prefs]
              merge prefs))
 
+(defmulti get-prefs
+  {:arglists '([driver])}
+  dispatch-driver)
+
+(defmethod get-prefs
+  :default
+  [driver]
+  (log/debugf "This driver doesn't support getting preferences.")
+  driver)
+
+(defmethods get-prefs
+  [:firefox :chrome]
+  [driver]
+  (get-in driver [:capabilities (options-name driver) :prefs]))
+
 ;;
 ;; Download folder
 ;;
@@ -319,6 +334,27 @@
     (if (string/ends-with? path sep)
       path
       (str path sep))))
+
+(defmulti get-download-dir
+  {:arglists '([driver])}
+  dispatch-driver)
+
+(defmethod get-download-dir
+  :default
+  [driver]
+  (log/debugf "This driver doesn't support getting the download directory.")
+  driver)
+
+(defmethod get-download-dir
+  :chrome
+  [driver]
+  (-> driver get-prefs :download.default_directory))
+
+(defmethod get-download-dir
+  :firefox
+  [driver]
+  (-> driver get-prefs :browser.download.dir))
+
 
 (defmulti set-download-dir
   {:arglists '([driver path])}

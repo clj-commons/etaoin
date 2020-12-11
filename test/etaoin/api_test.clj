@@ -4,7 +4,7 @@
             [clojure.string :as str]
             [clojure.test :refer :all]
             [etaoin.api :refer :all]
-            [etaoin.util :refer [with-tmp-dir with-tmp-file]]
+            [etaoin.util :refer [make-tmp-dir with-tmp-dir with-tmp-file]]
             [slingshot.slingshot :refer [try+]])
   (:import javax.imageio.ImageIO))
 
@@ -34,8 +34,9 @@
   [:firefox :chrome :phantom :safari])
 
 (def default-opts
-  {:chrome  {:args ["--no-sandbox"]}
-   :firefox {}
+  {:chrome  {:args         ["--no-sandbox"]
+             :download-dir (make-tmp-dir "chrome-downloads")}
+   :firefox {:download-dir (make-tmp-dir "firefox-downloads")}
    :safari  {:path-driver "/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"}
    :edge    {:args ["--headless"]}})
 
@@ -736,3 +737,17 @@
         (perform-actions *driver* keyboard mouse)
         (wait 1)
         (is (str/ends-with? (get-url *driver*) "?login=1&password=2&message=3"))))))
+
+(deftest test-wait-download
+  (when-not-drivers
+      [:phantom :edge :safari] *driver*
+      (let [url        "http://ovh.net/files/"
+            large-file "100Mio.dat"
+            small-file "1Mio.dat"]
+        (doto *driver*
+          (go url)
+          (click {:tag :a :fn/link large-file})
+          (-> (wait-downloaded large-file {:timeout 2}) (= {:status :timeout}) is)
+          (click {:tag :a :fn/link small-file})
+          (-> (wait-downloaded small-file {:timeout 20}) :status (= :download-done) is)))))
+

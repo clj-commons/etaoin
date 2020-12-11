@@ -74,10 +74,13 @@
        (finally
          (.delete tmp#)))))
 
+(defn make-tmp-dir [prefix]
+  (str (Files/createTempDirectory
+         prefix
+         (into-array FileAttribute []))))
+
 (defmacro with-tmp-dir [prefix bind & body]
-  `(let [tmp#  (str (Files/createTempDirectory
-                      ~prefix
-                      (into-array FileAttribute [])))
+  `(let [tmp#  (make-tmp-dir ~prefix)
          ~bind tmp#]
      (try
        ~@body

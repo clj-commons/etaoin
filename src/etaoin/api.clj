@@ -25,17 +25,20 @@
             [etaoin.driver :as drv]
             [etaoin.xpath  :as xpath]
 
+            [clojure.core.async        :as a]
             [clojure.data.codec.base64 :as b64]
             [clojure.tools.logging     :as log]
             [clojure.java.io           :as io]
             [clojure.string            :as str]
 
             [cheshire.core       :refer [generate-stream]]
-            [slingshot.slingshot :refer [try+ throw+]])
+            [slingshot.slingshot :refer [try+ throw+]]
+
+            [juxt.dirwatch :as dw])
 
   (:import java.util.Date
            java.text.SimpleDateFormat
-           (java.io IOException)))
+           (java.io IOException File)))
 
 ;;
 ;; defaults
@@ -2435,6 +2438,54 @@
   (log/debugf "Waiting for %s:%s is running"
               (:host driver) (:port driver))
   (wait-predicate #(running? driver) opt))
+
+(defn wait-downloaded
+  "Waits until a download is finished.
+
+  A download directory for the driver needs to have been set using the `:download-dir` option.
+
+  Arguments:
+
+  - `driver`: a driver instance;
+  - `file` name of the downloaded file, without the leading path component;
+  - `opt`: a map of options;
+  -- `:timeout` wait limit in seconds, 20 by default;
+
+  Return:
+  a map with keys:
+  - `:status` which can be either `:download-done` if download was successful or `:timeout`
+  if the wait limit was reached.
+  - `:file` the absolute path of the downloaded file."
+  [driver file & [opt]]
+  {:pre [(-> driver drv/get-download-dir)]}
+  (let [timeout       (* 1000 (get opt :timeout 20))
+        download-dir  (-> driver drv/get-download-dir io/file)
+        expected-file (io/file download-dir file)]
+
+    ;; On firefox a 0 length file with the eventual file name is created while the download is ongoing
+    ;; the downloaded content is being appended in a ".part" file (firefox) or ".crdownload" (chrome)
+    ;; when the download is finished the part/crdownload file is moved to the expected file name.
+    (if (and (.exists expected-file)
+             (pos? (.length expected-file)))
+      ;; Download already done, do nothing
+      {:status :download-done
+       :file   expected-file}
+
+      (let [ch      (a/chan)
+            watcher (dw/watch-dir (fn [{:keys [action file]}]
+                                    (log/debugf "Watch dir action %s, file: %s" action file)
+                                    (when (and (= action :modify)
+                                               (= (.getPath ^File expected-file)
+                                                  (.getPath ^File file)))
+                                      (a/>!! ch (.getAbsolutePath ^File file))))
+                                  download-dir)
+            [_ c]   (a/alts!! [ch (a/timeout timeout)])]
+        (log/debugf "Watch dir: close watcher: %s" watcher)
+        (dw/close-watcher watcher)
+        (if (= c ch)
+          {:status :download-done
+           :file   expected-file}
+          {:status :timeout})))))
 
 ;;
 ;; visible actions
