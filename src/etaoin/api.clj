@@ -2794,6 +2794,23 @@
 ;; file upload
 ;;
 
+(defrecord RemoteFile [file])
+(defn remote-file
+  "Attaches a remote file to a file input field, a remote file exists
+  on the host where the webdriver runs.
+
+  Arguments:
+
+  - `remote-file-path` is the path of a file on the remote webdriver host.
+  This argument is sent to the server as is without any local validation.
+
+  Example:
+
+  (upload-file (remote-file \"C:/Users/hello/url.txt\"))
+  "
+  [remote-file-path]
+  (RemoteFile. remote-file-path))
+
 (defmulti upload-file
   "Attaches a local file to a file input field.
 
@@ -2811,6 +2828,11 @@
 (defmethod upload-file String
   [driver q path]
   (upload-file driver q (io/file path)))
+
+(defmethod upload-file RemoteFile
+  [driver q path]
+  ;; directly send the path without any local validation
+  (fill driver q (:file path)))
 
 (defmethod upload-file java.io.File
   [driver q ^java.io.File file]
