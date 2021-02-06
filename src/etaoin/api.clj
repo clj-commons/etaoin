@@ -1469,6 +1469,19 @@
   [driver q]
   (get-element-property driver q :value))
 
+(defn set-custom-header
+  "Sets a new header.
+  Arguments:
+  - `driver`: a driver instance,
+  - `header`: a map with with a `header-key-path` and `header-value`. These fields should be populated. 
+  Example `header`: {:header-key-path [:Authorization] :header-value "Basic YWxhZGRpbjpvcGVuc2VzYW1l"}
+  "
+  [driver header]
+  (execute {:driver driver
+            :method :post
+            :path   (:header-key-path header)
+            :data   {:header-value header}}))
+
 ;;
 ;; cookes
 ;;
