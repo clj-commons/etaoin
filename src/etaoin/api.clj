@@ -1474,7 +1474,7 @@
   Arguments:
   - `driver`: a driver instance,
   - `header`: a map with with a `header-key-path` and `header-value`. These fields should be populated. 
-  Example `header`: {:header-key-path [:Authorization] :header-value "Basic YWxhZGRpbjpvcGVuc2VzYW1l"}
+  Example `header`: {:header-key-path [:Authorization] :header-value \"Basic YWxhZGRpbjpvcGVuc2VzYW1l\"}
   "
   [driver header]
   (execute {:driver driver
