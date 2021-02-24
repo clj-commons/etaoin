@@ -132,6 +132,7 @@ Since `0.4.0`, Etaoin can play script files created in the interactive
 - [Barrick Gold](http://www.barrick.com/)
 - [Doctor Evidence](http://drevidence.com/)
 - [Adzerk](https://adzerk.com/)
+- [Guaranteed Rate](https://www.rate.com/)
 
 You are welcome to submit your company into that list.
 
