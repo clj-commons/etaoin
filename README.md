@@ -258,6 +258,19 @@ The good news you may automate your browser directly from the REPL:
 
 (get-title driver) ;; "Clojure - Wikipedia"
 
+;; getting text of the result of a query
+(get-element-text driver {:css "table.infobox caption"}) ;; "Clojure"
+
+;; find element based on siblings
+(let [wikitable    (query driver {:css "table.infobox.vevent tbody"})
+      children-els (children driver wikitable {:css "tr"})]
+                     (for [row children-els
+                           :let [text (try (get-element-text-el driver
+                                                                (child driver row {:css "th"}))
+                                           (catch Throwable e ""))]
+                           :when (= "Family" text)]
+                       (get-element-text-el driver (child driver row {:css "td"})))) ;; ("Lisp")
+
 (has-text? driver "Clojure") ;; true
 
 ;; navigate on history
