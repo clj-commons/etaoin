@@ -1,4 +1,4 @@
-(defproject etaoin "0.4.3"
+(defproject etaoin "0.4.4-SNAPSHOT"
 
   :description "Pure Clojure Webdriver protocol implementation."
 
