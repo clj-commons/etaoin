@@ -65,35 +65,6 @@
 
 
 ;;
-;; User-Agent
-;; https://stackoverflow.com/questions/29916054/
-;;
-
-(defmulti set-user-agent
-  "Set User-Agent header for the driver."
-  {:arglists '([driver user-agent])}
-  dispatch-driver)
-
-
-(defmethods set-user-agent
-  [:chrome :edge]
-  [driver user-agent]
-  (set-options-args driver [(str "--user-agent=" user-agent)]))
-
-
-(defmethods set-user-agent
-  [:firefox]
-  [driver user-agent]
-  (set-prefs driver {:general.useragent.override user-agent}))
-
-(defmethods set-user-agent
-  [:default]
-  [driver user-agent]
-  (log/infof "This driver doesn't support setting a user-agent.")
-  driver)
-
-
-;;
 ;; Port
 ;;
 
@@ -170,7 +141,7 @@
              append-args (map str args)))
 
 ;;
-;; profiles
+;; Profiles
 ;;
 
 (defmulti set-profile dispatch-driver)
@@ -514,3 +485,32 @@
   :phantom
   [driver log-level]
   (set-args driver [(format "--webdriver-loglevel=%s" log-level)]))
+
+
+;;
+;; User-Agent
+;; https://stackoverflow.com/questions/29916054/
+;;
+
+(defmulti set-user-agent
+  "Set User-Agent header for the driver."
+  {:arglists '([driver user-agent])}
+  dispatch-driver)
+
+
+(defmethods set-user-agent
+  [:chrome :edge]
+  [driver user-agent]
+  (set-options-args driver [(str "--user-agent=" user-agent)]))
+
+
+(defmethods set-user-agent
+  [:firefox]
+  [driver user-agent]
+  (set-prefs driver {:general.useragent.override user-agent}))
+
+(defmethods set-user-agent
+  [:default]
+  [driver user-agent]
+  (log/infof "This driver doesn't support setting a user-agent.")
+  driver)
