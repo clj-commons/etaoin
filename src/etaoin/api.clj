@@ -430,6 +430,7 @@
   ([driver x y]
    (set-window-position* driver x y)))
 
+
 ;;
 ;; navigation
 ;;
@@ -1702,6 +1703,15 @@
                     :path   [:session (:session driver) :execute :async]
                     :data   {:script script :args (vec args)}})))
 
+
+;;
+;; User-Agent
+;;
+
+(defn get-user-agent [driver]
+  (js-execute driver "return navigator.userAgent"))
+
+
 ;;
 ;; Javascript helpers
 ;;
@@ -2184,7 +2194,7 @@
   [driver q]
   (selected-el? driver (query driver q)))
 
-(defn enabled-el? 
+(defn enabled-el?
   [driver el]
   {:pre [(some? el)]}
   (:value (execute {:driver driver
@@ -3299,6 +3309,7 @@
                      proxy
                      profile
                      headless
+                     user-agent
                      capabilities
                      load-strategy
                      desired-capabilities]}]]
@@ -3316,9 +3327,12 @@
                         load-strategy (drv/set-load-strategy load-strategy)
                         prefs         (drv/set-prefs prefs)
                         profile       (drv/set-profile profile)
-                        true          (drv/set-capabilities caps)
-                        true          (drv/set-capabilities capabilities)
-                        true          (drv/set-capabilities desired-capabilities))
+                        user-agent    (drv/set-user-agent user-agent)
+                        :else
+                        (->
+                         (drv/set-capabilities caps)
+                         (drv/set-capabilities capabilities)
+                         (drv/set-capabilities desired-capabilities)))
         caps          (:capabilities driver)
         session       (create-session driver caps)]
     (assoc driver :session session)))
@@ -3499,5 +3513,3 @@
   [opt bind & body]
   `(with-driver :edge (assoc ~opt :headless true) ~bind
      ~@body))
-
-
