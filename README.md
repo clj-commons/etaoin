@@ -154,7 +154,7 @@ There are two steps to installation:
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.4.3"]
+[etaoin "0.4.4"]
 ```
 
 Works with Clojure 1.9 and above.
