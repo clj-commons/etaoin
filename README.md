@@ -105,6 +105,7 @@ Since `0.4.0`, Etaoin can play script files created in the interactive
   * [Unpredictable errors in Chrome when window is not active](#unpredictable-errors-in-chrome-when-window-is-not-active)
   * [Invalid argument: can't kill an exited process](#invalid-argument-cant-kill-an-exited-process)
   * [DevToolsActivePort file doesn't exist](#devtoolsactiveport-file-doesnt-exist)
+- [API v2](#api-v2)
 - [Contributors](#contributors)
 - [Other materials](#other-materials)
 - [License](#license)
@@ -2115,6 +2116,32 @@ Possible cause:
 ```
 
 A similar problem is described [here](https://stackoverflow.com/questions/50642308/webdriverexception-unknown-error-devtoolsactiveport-file-doesnt-exist-while-t)
+
+## API v2
+
+The `etaoin.api2` namespace brings some bits of alternative macros and
+functions. They provide better syntax and live in a separate namespace to
+prevent the old API from breaking.
+
+At the moment, the `api2` module provides a set of `with-...` macros with a
+`let`-like binding form:
+
+~~~clojure
+(ns ...
+  (:require
+   [etaoin.api :as api]
+   [etaoin.api2 :as api2]))
+
+(api2/with-chrome [driver {}]
+  (api/go driver "http://ya.ru"))
+~~~
+
+The options map can be skipped so you have only a binding symbol:
+
+~~~clojure
+(api2/with-firefox [ff]
+  (api/go ff "http://ya.ru"))
+~~~
 
 ## Contributors
 
