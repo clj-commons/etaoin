@@ -80,6 +80,7 @@ Since `0.4.0`, Etaoin can play script files created in the interactive
 - [Eager page load](#eager-page-load)
 - [Keyboard chords](#keyboard-chords)
 - [File download directory](#file-download-directory)
+- [Managing User-Agent](#managing-user-agent)
 - [Setting browser profile](#setting-browser-profile)
   * [Create and find a profile in Chrome](#create-and-find-a-profile-in-chrome)
   * [Create and find a profile in Firefox](#create-and-find-a-profile-in-firefox)
@@ -104,6 +105,7 @@ Since `0.4.0`, Etaoin can play script files created in the interactive
   * [Unpredictable errors in Chrome when window is not active](#unpredictable-errors-in-chrome-when-window-is-not-active)
   * [Invalid argument: can't kill an exited process](#invalid-argument-cant-kill-an-exited-process)
   * [DevToolsActivePort file doesn't exist](#devtoolsactiveport-file-doesnt-exist)
+- [API v2](#api-v2)
 - [Contributors](#contributors)
 - [Other materials](#other-materials)
 - [License](#license)
@@ -152,7 +154,7 @@ There are two steps to installation:
 Add the following into `:dependencies` vector in your `project.clj` file:
 
 ```
-[etaoin "0.4.1"]
+[etaoin "0.4.4"]
 ```
 
 Works with Clojure 1.9 and above.
@@ -1236,6 +1238,9 @@ skipped or have nil values. Some of them, if not passed, are taken from the
  ;; Default URL to open. Works only in FF for now.
  :url "http://example.com"
 
+ ;; Override the default User-Agent. Useful for headless mode.
+ :user-agent "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"
+
  ;; Where to download files.
  :download-dir "/Users/ivan/Desktop"
 
@@ -1354,6 +1359,26 @@ manually:
 
 To check whether a file was downloaded during UI tests, see the testing section
 below.
+
+## Managing User-Agent
+
+Set a custom User-Agent header with the `:user-agent` option when creating a
+driver, for example:
+
+~~~clojure
+(def f (firefox {:user-agent "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"}))
+~~~
+
+To get the current value of the header in runtime, use the function:
+
+~~~clojure
+(get-user-agent f)
+;; Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)
+~~~
+
+Setting that header is quite important for headless browsers as most of the
+sites check if the User-Agent includes the "headless" string. This could lead to
+403 response or some weird behavior of the site.
 
 ## Setting browser profile
 
@@ -2091,6 +2116,32 @@ Possible cause:
 ```
 
 A similar problem is described [here](https://stackoverflow.com/questions/50642308/webdriverexception-unknown-error-devtoolsactiveport-file-doesnt-exist-while-t)
+
+## API v2
+
+The `etaoin.api2` namespace brings some bits of alternative macros and
+functions. They provide better syntax and live in a separate namespace to
+prevent the old API from breaking.
+
+At the moment, the `api2` module provides a set of `with-...` macros with a
+`let`-like binding form:
+
+~~~clojure
+(ns ...
+  (:require
+   [etaoin.api :as api]
+   [etaoin.api2 :as api2]))
+
+(api2/with-chrome [driver {}]
+  (api/go driver "http://ya.ru"))
+~~~
+
+The options map can be skipped so you have only a binding symbol:
+
+~~~clojure
+(api2/with-firefox [ff]
+  (api/go ff "http://ya.ru"))
+~~~
 
 ## Contributors
 

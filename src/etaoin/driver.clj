@@ -63,8 +63,9 @@
   [driver]
   (or (:args driver) []))
 
+
 ;;
-;; port
+;; Port
 ;;
 
 (defmulti set-port
@@ -140,7 +141,7 @@
              append-args (map str args)))
 
 ;;
-;; profiles
+;; Profiles
 ;;
 
 (defmulti set-profile dispatch-driver)
@@ -148,7 +149,7 @@
 (defmethod set-profile
   :default
   [driver profile]
-  (log/debugf "This driver doesn't support setting a profile.")
+  (log/infof "This driver doesn't support setting a profile.")
   driver)
 
 (defmethod set-profile
@@ -191,7 +192,7 @@
 (defmethod set-window-size
   :default
   [driver w h]
-  (log/debugf "This driver doesn't support setting window size.")
+  (log/infof "This driver doesn't support setting window size.")
   driver)
 
 (defmethod set-window-size
@@ -216,7 +217,7 @@
 (defmethod set-url
   :default
   [driver url]
-  (log/debugf "This driver doesn't support setting initial URL.")
+  (log/infof "This driver doesn't support setting initial URL.")
   driver)
 
 (defmethod set-url
@@ -238,7 +239,7 @@
 (defmethod set-headless
   :default
   [driver]
-  (log/debugf "This driver doesn't support setting headless mode.")
+  (log/infof "This driver doesn't support setting headless mode.")
   driver)
 
 (defmethods set-headless
@@ -299,7 +300,7 @@
 (defmethod set-prefs
   :default
   [driver prefs]
-  (log/debugf "This driver doesn't support setting preferences.")
+  (log/infof "This driver doesn't support setting preferences.")
   driver)
 
 (defmethods set-prefs
@@ -327,7 +328,7 @@
 (defmethod set-download-dir
   :default
   [driver path]
-  (log/debugf "This driver doesn't support setting a download directory.")
+  (log/infof "This driver doesn't support setting a download directory.")
   driver)
 
 ;; https://github.com/rshf/chromedriver/issues/338
@@ -467,7 +468,7 @@
 (defmethod set-driver-log-level
   :default
   [driver _]
-  (log/debugf "For this driver, the log level setting is not implemented.")
+  (log/infof "The log level setting is not implemented for this driver.")
   driver)
 
 (defmethod set-driver-log-level
@@ -484,3 +485,32 @@
   :phantom
   [driver log-level]
   (set-args driver [(format "--webdriver-loglevel=%s" log-level)]))
+
+
+;;
+;; User-Agent
+;; https://stackoverflow.com/questions/29916054/
+;;
+
+(defmulti set-user-agent
+  "Set User-Agent header for the driver."
+  {:arglists '([driver user-agent])}
+  dispatch-driver)
+
+
+(defmethods set-user-agent
+  [:chrome :edge]
+  [driver user-agent]
+  (set-options-args driver [(str "--user-agent=" user-agent)]))
+
+
+(defmethods set-user-agent
+  [:firefox]
+  [driver user-agent]
+  (set-prefs driver {:general.useragent.override user-agent}))
+
+(defmethods set-user-agent
+  [:default]
+  [driver user-agent]
+  (log/infof "This driver doesn't support setting a user-agent.")
+  driver)
