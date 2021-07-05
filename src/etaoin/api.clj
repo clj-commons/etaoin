@@ -2336,7 +2336,9 @@
   - `opt`: a map of options (see `wait-predicate`)."
 
   [driver q & [opt]]
-  (wait-predicate #(exists? driver q) opt))
+  (let [message (format "Wait until %s element exists" q)]
+    (wait-predicate #(exists? driver q)
+                    (merge {:message message} opt))))
 
 (defn wait-absent
   "Waits until an element is absent.
@@ -2348,9 +2350,9 @@
   - `opt`: a map of options (see `wait-predicate`)."
 
   [driver q & [opt]]
-  (let [message (format "Wait for %s element is absent" q)]
+  (let [message (format "Wait until %s element is absent" q)]
     (wait-predicate #(absent? driver q)
-                    (assoc opt :message message))))
+                    (merge {:message message} opt))))
 
 (defn wait-visible
   "Waits until an element presents and is visible.
@@ -2362,9 +2364,9 @@
   - `opt`: a map of options (see `wait-predicate`)."
 
   [driver q & [opt]]
-  (let [message (format "Wait for %s element is visible" q)]
+  (let [message (format "Wait until %s element is visible" q)]
     (wait-predicate #(visible? driver q)
-                    (assoc opt :message message))))
+                    (merge {:message message} opt))))
 
 (defn wait-invisible
   "Waits until an element presents but not visible.
@@ -2376,7 +2378,9 @@
   - `opt`: a map of options (see `wait-predicate`)."
 
   [driver q & [opt]]
-  (wait-predicate #(invisible? driver q) opt))
+  (let [message (format "Wait until %s element is invisible" q)]
+    (wait-predicate #(invisible? driver q)
+                    (merge {:message message} opt))))
 
 (defn wait-enabled
   "Waits until an element is enabled (usually an input element).
@@ -2388,7 +2392,9 @@
   - `opt`: a map of options (see `wait-predicate`)."
 
   [driver q & [opt]]
-  (wait-predicate #(enabled? driver q) opt))
+  (let [message (format "Wait until %s element is enabled" q)]
+    (wait-predicate #(enabled? driver q) 
+                    (merge {:message message} opt))))
 
 (defn wait-disabled
   "Waits until an element is disabled (usually an input element).
@@ -2400,7 +2406,9 @@
   - `opt`: a map of options (see `wait-predicate`)."
 
   [driver q & [opt]]
-  (wait-predicate #(disabled? driver q) opt))
+  (let [message (format "Wait until %s element is disabled" q)]
+    (wait-predicate #(disabled? driver q) 
+                    (merge {:message message} opt))))
 
 (defn wait-has-alert
   "Waits until an alert dialog appears on the screen.
@@ -2408,11 +2416,12 @@
   Arguments:
 
   - `driver`: a driver instance;
-  - `q`: a query term (see `query`);
   - `opt`: a map of options (see `wait-predicate`)."
 
   [driver & [opt]]
-  (wait-predicate #(has-alert? driver) opt))
+  (let [message "Wait until element has alert"]
+    (wait-predicate #(has-alert? driver) 
+                    (merge {:message message} opt))))
 
 (defn wait-has-text
   "Waits until an element has text anywhere inside it (including inner HTML).
@@ -2424,10 +2433,10 @@
   - `text`: a string to search;
   - `opt`: a map of options (see `wait-predicate`)."
   [driver q text & [opt]]
-  (let [message (format "Wait for %s element has text %s"
+  (let [message (format "Wait until %s element has text %s"
                         q text)]
     (wait-predicate #(has-text? driver q text)
-                    (assoc opt :message message))))
+                    (merge {:message message} opt))))
 
 (defn wait-has-text-everywhere
   "Like `wait-has-text` but searches for text across the entire page.
@@ -2452,7 +2461,10 @@
   - `opt`: a map of options (see `wait-predicate`)."
 
   [driver q class & [opt]]
-  (wait-predicate #(has-class? driver q class) opt))
+  (let [message (format "Wait until %s element has class %s"
+                        q class)]
+    (wait-predicate #(has-class? driver q class) 
+                    (merge {:message message} opt))))
 
 (defn wait-running [driver & [opt]]
   (log/debugf "Waiting for %s:%s is running"

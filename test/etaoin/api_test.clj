@@ -282,7 +282,7 @@
       (catch [:type :etaoin/timeout] data
         (is (= (-> data (dissoc :predicate :time-rest))
                {:type     :etaoin/timeout
-                :message  "Wait for :wait-span element has text -secret-"
+                :message  "Wait until :wait-span element has text -secret-"
                 :timeout  1
                 :interval 0.33
                 :times    4})))))
@@ -299,7 +299,7 @@
       (catch [:type :etaoin/timeout] data
         (is (= (-> data (dissoc :predicate :time-rest))
                {:type     :etaoin/timeout
-                :message  "Wait for :wait-span element has text -dunno-whatever-foo-bar-"
+                :message  "Wait until :wait-span element has text -dunno-whatever-foo-bar-"
                 :timeout  2
                 :interval 0.33
                 :times    7}))))))
@@ -325,7 +325,7 @@
       (catch [:type :etaoin/timeout] data
         (is (= (-> data (dissoc :predicate :time-rest))
                {:type     :etaoin/timeout
-                :message  "Wait for {:xpath \"*\"} element has text -secret-"
+                :message  "Wait until {:xpath \"*\"} element has text -secret-"
                 :timeout  1
                 :interval 0.33
                 :times    4})))))
@@ -341,7 +341,7 @@
       (catch [:type :etaoin/timeout] data
         (is (= (-> data (dissoc :predicate :time-rest))
                {:type     :etaoin/timeout
-                :message  "Wait for {:xpath \"*\"} element has text -dunno-whatever-foo-bar-"
+                :message  "Wait until {:xpath \"*\"} element has text -dunno-whatever-foo-bar-"
                 :timeout  2
                 :interval 0.33
                 :times    7}))))))
