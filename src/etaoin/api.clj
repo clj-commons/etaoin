@@ -1014,13 +1014,16 @@
 
 (defmulti double-click-el dispatch-driver)
 
-(defmethods double-click-el
-  [:chrome :phantom]
+(defmethod double-click-el
+  :default
   [driver el]
   {:pre [(some? el)]}
-  (execute {:driver driver
-            :method :post
-            :path   [:session (:session driver) :element el :doubleclick]}))
+  (let [mouse   (-> (make-mouse-input)
+                    (add-pointer-move-to-el el)
+                    add-pointer-click
+                    (add-pause 10)
+                    add-pointer-click)]
+    (perform-actions driver mouse)))
 
 (defn double-click
   "Performs double click on an element.
