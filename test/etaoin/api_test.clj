@@ -27,7 +27,7 @@
   (case (first (str/split (System/getProperty "os.name") #"\s+"))
     "Linux"   [:firefox :chrome :phantom]
     "Mac"     [:chrome :edge :firefox :phantom :safari]
-    "Windows" [:firefox :chrome :edge :phantom :safari]
+    "Windows" [:firefox :chrome :edge :phantom]
     nil))
 
 (defn get-default-drivers []
