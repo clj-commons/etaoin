@@ -60,6 +60,6 @@ RUN printf '#!/bin/sh\nXvfb :99 -screen 0 1280x1024x24 &\nexec "$@"\n' > /tmp/en
     && chmod +x /tmp/entrypoint \
     && mv /tmp/entrypoint /entrypoint.sh
 
-ENV ETAOIN_TEST_DRIVERS="[:firefox :chrome :phantom]"
+ENV ETAOIN_TEST_DRIVERS="[:firefox :chrome]"
 
 ENTRYPOINT ["/entrypoint.sh"]
