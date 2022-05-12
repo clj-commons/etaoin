@@ -66,12 +66,3 @@ docker-test:
 	-v ${CURDIR}:/etaoin \
 	-w /etaoin ${IMAGE}:latest \
 	lein test
-
-
-gh-init:
-	git clone -b gh-pages --single-branch git@github.com:igrishaev/etaoin.git gh-pages
-
-
-gh-build:
-	lein codox
-	cd gh-pages && git add -A && git commit -m "docs updated" && git push

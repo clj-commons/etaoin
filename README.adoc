@@ -2,15 +2,18 @@
 :toc: macro
 :toclevels: 4
 :project-src-coords: clj-commons/etaoin
-:project-mvn-coords: etaion/etaoin
+:project-mvn-coords: etaoin/etaoin
 :url-webdriver: https://www.w3.org/TR/webdriver/
 :url-wiki: https://en.wikipedia.org/wiki/Etaoin_shrdlu#Literature
-:url-tests: https://github.com/igrishaev/etaoin/blob/master/test/etaoin/api_test.clj
-:url-doc: http://etaoin.grishaev.me/
+:url-tests: https://github.com/{project-src-coords}/blob/master/test/etaoin/api_test.clj
+:url-doc: https://cljdoc.org/d/{project-mvn-coords}
 :url-slack: https://clojurians.slack.com/messages/C7KDM0EKW/
 
 // Badges
+link:{url-doc}[image:https://cljdoc.org/badge/{project-mvn-coords}[cljdoc]]
 https://circleci.com/gh/{project-src-coords}[image:https://circleci.com/gh/{project-src-coords}.svg?style=svg[CircleCI]]
+https://clojars.org/{project-mvn-coords}[image:https://img.shields.io/clojars/v/{project-mvn-coords}.svg[Clojars project]]
+https://clojurians.slack.com/archives/C7KDM0EKW[image:https://img.shields.io/badge/slack-join_chat-brightgreen.svg[Join chat]]
 
 Pure Clojure implementation of link:{url-webdriver}[Webdriver] protocol.
 Use that library to automate a browser, test your frontend behaviour, simulate human actions or whatever you want.
@@ -91,7 +94,7 @@ Add the following into `:dependencies` vector in your `project.clj` file:
 ----
 
 :url-webdriver: https://www.w3.org/TR/webdriver/
-:url-tests: https://github.com/igrishaev/etaoin/blob/master/test/etaoin/api_test.clj
+:url-tests: https://github.com/{project-src-coords}/blob/master/test/etaoin/api_test.clj
 :url-chromedriver: https://sites.google.com/a/chromium.org/chromedriver/
 :url-chromedriver-dl: https://sites.google.com/a/chromium.org/chromedriver/downloads
 :url-geckodriver-dl: https://github.com/mozilla/geckodriver/releases
@@ -1636,7 +1639,7 @@ The final form would be something like this:
     ...etc))
 ----
 
-In addition to `with-wait` and `do-wait` there are a number of waiting functions: `wait-visible`, `wait-has-alert`, `wait-predicate`, etc (see the full list in the http://etaoin.grishaev.me/etaoin.api.html#var-wait[corresponsing section]).
+In addition to `with-wait` and `do-wait` there are a number of waiting functions: `wait-visible`, `wait-has-alert`, `wait-predicate`, etc (see the full list in the link:{url-doc}/CURRENT/api/etaoin.api#wait[API docs].
 They accept default timeout/interval values that can be redefined using the `with-wait-timeout` and `with-wait-interval` macros, respectively.
 
 Example from etaoin test:
