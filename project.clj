@@ -20,8 +20,7 @@
                   ["vcs" "commit"]
                   ["vcs" "push"]]
 
-  :profiles {:dev {:plugins      [[lein-codox "0.10.7"]]
-                   :dependencies [[org.clojure/clojure "1.10.1"]
+  :profiles {:dev {:dependencies [[org.clojure/clojure "1.10.1"]
                                   [log4j/log4j "1.2.17"]]
 
                    :resource-paths ["env/dev/resources"]
@@ -49,6 +48,4 @@
   ;;
   :plugins [[test2junit "1.1.2"]
             [lein-shell "0.5.0"]]
-  :test2junit-output-dir "target/test2junit"
-
-  :codox {:output-path "gh-pages"})
+  :test2junit-output-dir "target/test2junit")
