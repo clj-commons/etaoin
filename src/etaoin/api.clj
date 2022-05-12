@@ -14,7 +14,7 @@
   https://github.com/mozilla/geckodriver
   https://github.com/mozilla/webdriver-rust/
 
-  Phantom.js (Ghostdriver)
+  Phantom.js (Ghostdriver) - obsolete and no longer tested
   https://github.com/detro/ghostdriver/blob/
   "
   (:require [etaoin.proc   :as proc]
@@ -1906,7 +1906,7 @@
   - JS console logs have `:console-api` for `:source` field.
   - Entries about errors will have SEVERE level.
 
-  * PhantomJS:
+  * PhantomJS (obsolete and no longer tested):
   - Return all recorded logs since the last URL change.
   - Does not clear recorded logs on subsequent invocations.
   - JS console logs have nil for `:source` field.
