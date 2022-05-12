@@ -121,7 +121,7 @@ Since `0.4.0`, Etaoin can play script files created in the interactive
 
 ## Capabilities
 
-- Currently supports Chrome, Firefox, Phantom.js and Safari (partially).
+- Currently supports Chrome, Firefox, and Safari (partially).
 - May either connect to a remote driver or run it on your local machine.
 - Run your unit tests directly from Emacs pressing `C-t t` as usual.
 - Can imitate human-like behaviour (delays, typos, etc).
@@ -189,7 +189,7 @@ Install specific drivers you need:
   - `brew install geckodriver` for Mac users
   - or download it from the official [Mozilla site][url-geckodriver-dl].
 
-- Phantom.js browser:
+- Phantom.js browser (obsolete, no longer tested):
 
   - `brew install phantomjs` For Mac users
   - or download it from the [official site][url-phantom-dl].

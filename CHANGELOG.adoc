@@ -3,6 +3,7 @@
 == Unreleased
 
 * https://github.com/clj-commons/etaoin/issues/383[#383]: Drop testing for Safari on Windows
+* https://github.com/clj-commons/etaoin/issues/388[#388]: Drop testing for PhantomJS
 * Docs
 ** https://github.com/clj-commons/etaoin/issues/393[#393]: Add changelog
 * Internal quality

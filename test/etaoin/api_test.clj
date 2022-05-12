@@ -25,13 +25,13 @@
 
 (defn get-drivers-from-prop []
   (case (first (str/split (System/getProperty "os.name") #"\s+"))
-    "Linux"   [:firefox :chrome :phantom]
-    "Mac"     [:chrome :edge :firefox :phantom :safari]
-    "Windows" [:firefox :chrome :edge :phantom]
+    "Linux"   [:firefox :chrome]
+    "Mac"     [:chrome :edge :firefox :safari]
+    "Windows" [:firefox :chrome :edge]
     nil))
 
 (defn get-default-drivers []
-  [:firefox :chrome :phantom :safari])
+  [:firefox :chrome :safari])
 
 (def default-opts
   {:chrome  {:args ["--no-sandbox"]}
