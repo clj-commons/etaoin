@@ -36,7 +36,7 @@
 (def default-opts
   {:chrome  {:args ["--no-sandbox"]}
    :firefox {}
-   :safari  {:path-driver "/Applications/Safari Technology Preview.app/Contents/MacOS/safaridriver"}
+   :safari  {}
    :edge    {:args ["--headless"]}})
 
 (def drivers
