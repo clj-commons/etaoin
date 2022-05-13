@@ -8,7 +8,8 @@
 ** https://github.com/clj-commons/etaoin/issues/393[#393]: Add changelog
 ** https://github.com/clj-commons/etaoin/issues/396[#396]: Move from Markdown to AsciiDoc
 * Internal quality
-**  https://github.com/clj-commons/etaoin/issues/382[#382]: Fix process fork testing on Windows
+** https://github.com/clj-commons/etaoin/issues/382[#382]: Fix process fork testing on Windows
+** https://github.com/clj-commons/etaoin/issues/391[#391]: Identify browser name on failed ide tests
 
 == v0.4.6
 

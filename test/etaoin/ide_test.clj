@@ -17,7 +17,8 @@
         (binding [*driver*         driver
                   *base-url*       base-url
                   *test-file-path* test-file-path]
-          (f))))))
+          (testing (name type)
+            (f)))))))
 
 (use-fixtures
   :each
