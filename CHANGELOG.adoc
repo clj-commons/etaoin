@@ -7,6 +7,7 @@
 * https://github.com/clj-commons/etaoin/issues/384[#384]: Look for `safaridriver` on PATH by default
 * https://github.com/clj-commons/etaoin/issues/402[#402]: Only send body for webdriver `POST` requests to appease `safaridriver`
 * https://github.com/clj-commons/etaoin/issues/403[#403]: The `select` fn now clicks on the `select` element before clicking the `option` element to appease `safaridriver`
+* https://github.com/clj-commons/etaoin/issues/408[#408]: Fix `switch-window` for `msedgedriver`
 * Docs
 ** https://github.com/clj-commons/etaoin/issues/393[#393]: Add changelog
 ** https://github.com/clj-commons/etaoin/issues/396[#396]: Move from Markdown to AsciiDoc
