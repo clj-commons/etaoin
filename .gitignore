@@ -18,3 +18,8 @@ TAGS
 *.iml
 build.xml
 /.idea
+
+# ignore cache under .clj-kondo and .lsp
+.cache
+# VSCode Calva extension
+/.calva
