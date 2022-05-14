@@ -241,16 +241,8 @@
             :path   [:session (:session driver) :window]
             :data   {:handle handle}}))
 
-(defmethod switch-window
-  :phantom
-  [driver handle]
-  (execute {:driver driver
-            :method :post
-            :path   [:session (:session driver) :window]
-            :data   {:name handle}}))
-
-(defmethod switch-window
-  :chrome
+(defmethods switch-window
+  [:chrome :edge :phantom]
   [driver handle]
   (execute {:driver driver
             :method :post
