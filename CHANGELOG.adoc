@@ -13,6 +13,7 @@
 * Internal quality
 ** https://github.com/clj-commons/etaoin/issues/382[#382]: Fix process fork testing on Windows
 ** https://github.com/clj-commons/etaoin/issues/391[#391]: Identify browser name on failed ide tests
+** https://github.com/clj-commons/etaoin/issues/387[#387]: No longer testing multiple key modifiers for a single webdriver send keys request
 
 == v0.4.6
 

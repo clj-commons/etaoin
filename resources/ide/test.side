@@ -362,14 +362,14 @@
       "command": "sendKeys",
       "target": "id=simple-input",
       "targets": [],
-      "value": "${KEY_SHIFT}log${KEY_SHIFT}in"
+      "value": "log${KEY_SHIFT}in"
     }, {
       "id": "f3703b21-e986-4906-b938-c512add7659e",
       "comment": "",
       "command": "assertValue",
       "target": "id=simple-input",
       "targets": [],
-      "value": "LOGin"
+      "value": "logIN"
     }, {
       "id": "7923564d-6910-48d1-b03b-8b704750ab82",
       "comment": "",
