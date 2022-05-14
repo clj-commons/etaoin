@@ -122,22 +122,21 @@
                     :method :get
                     :path   [:status]})))
 
-;; TODO safari: "Request body does not contain required parameter 'capabilities'."
 (defn create-session
   "Initiates a new session for a driver. Opens a browser window as a
   side-effect. All the further requests are made within specific
   session. Some drivers may work with only one active session. Returns
   a long string identifier."
   [driver & [capabilities]]
-  (let [data   (if (= (dispatch-driver driver) :safari) ;; tmp
-                 {:capabilities (or capabilities {})}
+  (let [data   (if (= (dispatch-driver driver) :safari)
+                 {:capabilities (or capabilities {})} ;; required for safari even if empty
                  {:desiredCapabilities (or capabilities {})})
         result (execute {:driver driver
                          :method :post
                          :path   [:session]
                          :data   data})]
     (or (:sessionId result)               ;; default
-        (:sessionId (:value result)))))   ;; firefox
+        (:sessionId (:value result)))))   ;; firefox, safari
 
 (defn delete-session
   "Deletes a session. Closes a browser window."

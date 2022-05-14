@@ -29,7 +29,6 @@
    :content-type   :json
    :socket-timeout (* 1000 timeout)
    :conn-timeout   (* 1000 timeout)
-   :form-params    {}
    :debug          false})
 
 ;;
@@ -73,11 +72,12 @@
    method path-args payload]
   (let [path   (get-url-path path-args)
         url    (format "http://%s:%s/%s" host port path)
-        params (merge default-api-params
-                      {:url              url
-                       :method           method
-                       :form-params      (-> payload (or {}))
-                       :throw-exceptions false})
+        params (cond-> (merge
+                         default-api-params
+                         {:url              url
+                          :method           method
+                          :throw-exceptions false})
+                 (= :post method) (assoc :form-params (-> payload (or {}))))
 
         _ (log/debugf "%s %s:%s %6s %s %s"
                       (name driver-type)
