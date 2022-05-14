@@ -2783,18 +2783,21 @@
                     :arg     q-text}))))
 
 (defn select
-  "Select element in select-box by visible text on click.
+  "Select option in select-box by visible text on click.
+  The select element is clicked, then the option.
 
   Arguments:
 
   - `driver`: a driver instance,
 
-  - `q`: a query term, see `query` function for more info,
+  - `q`: a query term to find the select box, see [[query]],
 
   - `text`: a string, text in the option you want to select"
   [driver q text]
-  (let [el (query driver q {:tag :option :fn/has-text text})]
-    (click-el driver el)))
+  (let [select-el (query driver q)]
+    (click-el driver select-el)
+    (let [option-el (query driver q {:tag :option :fn/has-text text})]
+      (click-el driver option-el))))
 
 (defn clear-el
   "Clears an element by its identifier."
