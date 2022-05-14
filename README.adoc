@@ -1,6 +1,7 @@
 = Etaoin
 :toc: macro
 :toclevels: 4
+:lib-version: 0.4.6
 :project-src-coords: clj-commons/etaoin
 :project-mvn-coords: etaoin/etaoin
 :url-webdriver: https://www.w3.org/TR/webdriver/
@@ -16,32 +17,9 @@ https://clojars.org/{project-mvn-coords}[image:https://img.shields.io/clojars/v/
 https://clojurians.slack.com/archives/C7KDM0EKW[image:https://img.shields.io/badge/slack-join_chat-brightgreen.svg[Join chat]]
 
 Pure Clojure implementation of link:{url-webdriver}[Webdriver] protocol.
-Use that library to automate a browser, test your frontend behaviour, simulate human actions or whatever you want.
+Use the Etaoin library to automate a browser, test your frontend behaviour, simulate human actions or whatever you want.
 
-It's named after link:{url-wiki}[Etaoin Shrdlu] -- a typing machine that became alive after a mysteries note was produced on it.
-
-== Release Notes
-
-=== Atom turns into a map
-
-Since `0.4.0`, the driver instance is *a map but not an atom* like it used to be.
-It was a difficult solution to decide on, yet we've got rid of atom to follow Clojure way in our code.
-Generally speaking, you never deref a driver or store something inside it.
-All the internal functions that used to modify the instance now just return a new version of a map.
-If you have `swap!` or something similar in your code for the driver, please refactor your code before you update.
-
-=== Actions
-:actions: https://www.w3.org/TR/webdriver/#actions
-
-Since `0.4.0`, the library supports link:{actions}[Webdriver Actions].
-Actions are commands sent to the driver in batch.
-See the detailed related section in ToC.
-
-=== Selenium IDE support
-:ide: https://www.selenium.dev/selenium-ide/
-
-Since `0.4.0`, Etaoin can play script files created in the interactive link:{ide}[Selenium IDE].
-See the related section below.
+It's named after link:{url-wiki}[Etaoin Shrdlu] -- a typing machine that became alive after a mysterious note was produced on it.
 
 toc::[]
 
@@ -55,10 +33,39 @@ Simple, easy to understand.
 
 == Capabilities
 
-* Currently supports Chrome, Firefox, and Safari (partially).
+* Currently supports Chrome, Firefox, Safari and Edge.
 * May either connect to a remote driver or run it on your local machine.
 * Run your unit tests directly from Emacs pressing `C-t t` as usual.
 * Can imitate human-like behaviour (delays, typos, etc).
+
+== Supported OSes & Browsers
+
+The Etaoin unit tests cover:
+
+|===
+| OS | Chrome | Firefox | Safari | Edge
+
+| Linux (ubuntu)
+| yes
+| yes
+| -
+| -
+
+| macOS
+| yes
+| yes
+| yes
+| yes
+
+| Windows
+| yes
+| yes
+| -
+| yes
+
+|===
+
+NOTE: At one point we did also test against PhantomJS, but since work has long ago stopped for this project we have dropped testing.
 
 == Who uses it?
 
@@ -89,8 +96,15 @@ There are two steps to installation:
 
 Add the following into `:dependencies` vector in your `project.clj` file:
 
+[source,clojure,subs="attributes+"]
 ----
-[etaoin "0.4.6"]
+   [etaoin "{lib-version}"]
+----
+
+Or the following to your `:deps` in your `deps.edn` file:
+[source,clojure,subs="attributes+"]
+----
+   etaoin/etaoin {:mvn/version "{lib-version}"}
 ----
 
 :url-webdriver: https://www.w3.org/TR/webdriver/
@@ -100,6 +114,7 @@ Add the following into `:dependencies` vector in your `project.clj` file:
 :url-geckodriver-dl: https://github.com/mozilla/geckodriver/releases
 :url-phantom-dl: http://phantomjs.org/download.html
 :url-webkit: https://webkit.org/blog/6900/webdriver-support-in-safari-10/
+:url-edge-dl: https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/
 
 Works with Clojure 1.9 and above.
 
@@ -107,38 +122,51 @@ Works with Clojure 1.9 and above.
 
 This page provides instructions on how to install drivers you need to automate your browser.
 
-Install Chrome and Firefox browsers downloading them from the official sites.
+Install Chrome, Firefox and Edge browsers by downloading them from their official sites.
 There won't be a problem on all the platforms.
 
-Install specific drivers you need:
+Some ways to install the webdrivers you might need:
 
-* Google link:{url-chromedriver}[Chrome driver]:
- ** `brew cask install chromedriver` for Mac users
- ** or download compiled binaries from the link:{url-chromedriver-dl}[official site].
- ** ensure you have at least `2.28` version installed.
-`2.27` and below has a bug related to maximizing a window (see <<troubleshooting>>).
-* Geckodriver, a driver for Firefox:
- ** `brew install geckodriver` for Mac users
- ** or download it from the official link:{url-geckodriver-dl}[Mozilla site].
-* Phantom.js browser (obsolete, no longer tested):
- ** `brew install phantomjs` For Mac users
- ** or download it from the link:{url-phantom-dl}[official site].
-* Safari Driver (for Mac only):
- ** update your Mac OS to El Captain using App Store;
- ** set up Safari options as the link:{url-webkit}[Webkit page] says (scroll down to "Running the Example in Safari" section).
+* Google link:{url-chromedriver}[Chrome Driver] +
+Ensure you install at least v2.28.
+v2.27 and below has a bug related to maximizing a window (see <<troubleshooting>>)
+** macOS: `brew install chromedriver`
+** Windows: `scoop install chromedriver`
+** Download: link:{url-chromedriver-dl}[Official Chromedriver download]
 
-Now, check your installation launching any of these commands.
-For each command, an endless process with a local HTTP server should start.
+* Geckodriver for Firefox
+** macOS: `brew install geckodriver`
+** Windows: `scoop install geckodriver`
+** Download: link:{url-geckodriver-dl}[Official geckodriver release page]
+
+* Safari Driver
+** macOS only: Set up Safari options as the link:{url-webkit}[Webkit page] instructs (scroll down to "Running the Example in Safari" section).
+
+* Microsoft Edge Driver
+** macos: (download manually)
+** Windows: `scoop install edgedriver` +
+Edge and `msedgedriver` must match so you might need to specify the version:
+`scoop install edgedriver@101.0.1210.0`
+** Download: link:{url-edge-dl}[Official Microsoft download site]
+
+* Phantom.js browser +
+(obsolete, no longer tested)
+** macOS: `brew install phantomjs`
+** Windows: `scoop install phantomjs`
+** Download: link:{url-phantom-dl}[Official PhantomJS download site]
+
+Now, check your installation launching any of these commands. For each command, an endless process with a local HTTP server should start.
 
 [source,bash]
 ----
 chromedriver
 geckodriver
-phantomjs --wd
 safaridriver -p 0
+msedgedriver
+phantomjs --wd
 ----
 
-You may run tests for this library launching:
+You may run tests for this library by launching:
 
 [source,bash]
 ----
@@ -146,7 +174,7 @@ lein test
 ----
 
 You'll see browser windows open and close in series.
-The tests use a local HTML file with a special layout to validate the most of the cases.
+The tests use a local HTML file with a special layout to validate most of the cases.
 
 See below for <<troubleshooting>> if you have problems
 
