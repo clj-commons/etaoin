@@ -2,10 +2,11 @@
 
 == Unreleased
 
-* https://github.com/clj-commons/etaoin/issues/383[#383]: Drop testing for Safari on Windows
-* https://github.com/clj-commons/etaoin/issues/388[#388]: Drop testing for PhantomJS
-* https://github.com/clj-commons/etaoin/issues/384[#384]: Look for safaridriver on PATH by default
-* https://github.com/clj-commons/etaoin/issues/402[#402]: Only send body for webdriver POST requests to appease safaridriver
+* https://github.com/clj-commons/etaoin/issues/383[#383]: Drop testing for Safari on Windows, Apple no longer releases Safari for Windows
+* https://github.com/clj-commons/etaoin/issues/388[#388]: Drop testing for PhantomJS, development has long ago stopped for PhantomJS
+* https://github.com/clj-commons/etaoin/issues/384[#384]: Look for `safaridriver` on PATH by default
+* https://github.com/clj-commons/etaoin/issues/402[#402]: Only send body for webdriver `POST` requests to appease `safaridriver`
+* https://github.com/clj-commons/etaoin/issues/403[#403]: The `select` fn now clicks on the `select` element before clicking the `option` element to appease `safaridriver`
 * Docs
 ** https://github.com/clj-commons/etaoin/issues/393[#393]: Add changelog
 ** https://github.com/clj-commons/etaoin/issues/396[#396]: Move from Markdown to AsciiDoc
