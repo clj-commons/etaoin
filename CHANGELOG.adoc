@@ -1,5 +1,7 @@
 = Changelog
 
+A release with an intentional breaking changes is marked with [breaking]
+
 == Unreleased
 
 * https://github.com/clj-commons/etaoin/issues/383[#383]: Drop testing for Safari on Windows, Apple no longer releases Safari for Windows
@@ -41,14 +43,24 @@
 * https://github.com/clj-commons/etaoin/issues/347[#347]: Add support for mltiple clicks
 * https://github.com/clj-commons/etaoin/pull/349[#349]: Fix typo for duration within `add-action`
 
-== v0.4.0
+== v0.4.0 [breaking]
+
+Breaking Changes
+
+* https://github.com/clj-commons/etaoin/issues/111[#111]: the driver instance is *now a map instead of an atom*.
++
+Breaking changes are never embarked on lightly but we felt it important to transition to more a more idiomatic use of Clojure.
++
+All the internal functions that used to modify the driver atom now just return a new version of a map.
+If you have `swap!` or something similar in your code for the driver, please refactor your code before you update.
+
+Other Changes
 
 * https://github.com/clj-commons/etaoin/issues/44[#44]: Add `with-screenshots` macro
 * https://github.com/clj-commons/etaoin/issues/196[#196]: Add support for running Selenium IDE files
 ** https://github.com/clj-commons/etaoin/issues/336[#336]: Docs
 ** https://github.com/clj-commons/etaoin/issues/329[#329]: Cli entry point
 * https://github.com/clj-commons/etaoin/issues/103[#103]: Add w3c webdriver action support
-* https://github.com/clj-commons/etaoin/issues/111[#111]: Stop using atom for storing browser instance
 
 == v0.3.10
 
