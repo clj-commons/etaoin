@@ -43,7 +43,7 @@
    "COMMAND"      k/command
    "CONTROL"      k/control-left
    "CTRL"         k/control-left
-   "DECIMAL"      #_{:clj-kondo/ignore [:unresolved-var]} k/num-.
+   "DECIMAL"      k/num-dot
    "DELETE"       k/delete
    "DIVIDE"       k/num-slash
    "DOWN"         k/arrow-down
@@ -93,7 +93,7 @@
    "NUMPAD7"      k/num-7
    "NUMPAD8"      k/num-9
    "NUMPAD9"      k/num-9
-   "NUM_PERIOD"   #_{:clj-kondo/ignore [:unresolved-var]} k/num-.
+   "NUM_PERIOD"   k/num-dot
    "NUM_PLUS"     k/num-+
    "NUM_DIVISION" k/num-slash
    "NUM_MULTIPLY" k/num-*

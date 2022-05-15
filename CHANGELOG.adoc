@@ -1,8 +1,20 @@
 = Changelog
 
-A release with an intentional breaking changes is marked with [breaking]
+A release with an intentional breaking changes is marked with:
 
-== Unreleased
+* [breaking] you probably need to change your code
+* [minor breaking] you likely don't need to change your code
+
+== Unreleased [minor breaking]
+
+Minor Breaking Changes
+
+* https://github.com/clj-commons/etaoin/issues/412[#412]: Rename `etaoin.keys/num-.` to `etaoin.keys/num-dot` +
+The symbol `num-.` is technically an invalid Clojure symbol and can confuse tooling. +
+A grep.app for `num-.` found Etaoin itself as the only user of this var.
+If your code uses `etaoin.keys/num-.`, you'll need to rename it to `etaoin.keys/num-dot`.
+
+Other Changes
 
 * https://github.com/clj-commons/etaoin/issues/383[#383]: Drop testing for Safari on Windows, Apple no longer releases Safari for Windows
 * https://github.com/clj-commons/etaoin/issues/388[#388]: Drop testing for PhantomJS, development has long ago stopped for PhantomJS
