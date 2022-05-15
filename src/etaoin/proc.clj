@@ -27,7 +27,7 @@
   ([args] (run args {}))
   ([args {:keys [log-stdout log-stderr env]}]
    (let [binary      (first args)
-         readme-link "https://github.com/igrishaev/etaoin#installing-the-browser-drivers"
+         readme-link "https://github.com/clj-commons/etaoin#installing-the-browser-drivers"
          pb          (java.lang.ProcessBuilder. (java-params args))
          pb-env      (.environment pb)]
      (when env
