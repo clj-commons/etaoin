@@ -2,7 +2,7 @@
 
   :description "Pure Clojure Webdriver protocol implementation."
 
-  :url "https://github.com/igrishaev/etaoin"
+  :url "https://github.com/clj-commons/etaoin"
 
   :license {:name "Eclipse Public License"
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
