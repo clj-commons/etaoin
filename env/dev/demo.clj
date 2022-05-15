@@ -1,4 +1,4 @@
-
+#_{:clj-kondo/ignore [:use]}
 (use 'etaoin.api)
 (require '[etaoin.keys :as k])
 

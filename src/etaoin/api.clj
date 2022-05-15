@@ -34,8 +34,7 @@
             [slingshot.slingshot :refer [try+ throw+]])
 
   (:import java.util.Date
-           java.text.SimpleDateFormat
-           (java.io IOException)))
+           java.text.SimpleDateFormat))
 
 ;;
 ;; defaults
@@ -107,7 +106,7 @@
                      :method :get
                      :path [:session (:session driver) :element :active])))
   "
-  [{:keys [driver method path data result]}]
+  [{:keys [driver method path data]}]
   (client/call driver method path data))
 
 ;;
@@ -839,7 +838,7 @@
 
 (defmethod perform-actions
   :phantom
-  [driver input & inputs]
+  [_driver _input & _inputs]
   (util/error "Phantom doesn't support w3c actions."))
 
 (defmulti release-actions dispatch-driver)
@@ -854,7 +853,7 @@
 
 (defmethod release-actions
   :phantom
-  [driver input & inputs]
+  [_driver _input & _inputs]
   (util/error "Phantom doesn't support w3c actions."))
 
 ;;
@@ -1765,14 +1764,14 @@
 (defn scroll-top
   "Scrolls to top of the page keeping current horizontal position."
   [driver]
-  (let [{:keys [x y]} (get-scroll driver)]
+  (let [{:keys [x _y]} (get-scroll driver)]
     (scroll driver x 0)))
 
 (defn scroll-bottom
   "Scrolls to bottom of the page keeping current horizontal position."
   [driver]
   (let [y-max         (js-execute driver "return document.body.scrollHeight;")
-        {:keys [x y]} (get-scroll driver)]
+        {:keys [x _y]} (get-scroll driver)]
     (scroll driver x y-max)))
 
 (def ^{:doc "Default scroll offset in pixels."}
@@ -2266,7 +2265,7 @@
 
 (defn wait
   "Sleeps for N seconds."
-  ([driver sec]
+  (#_{:clj-kondo/ignore [:unused-binding]} [driver sec]
    (wait sec))
   ([sec]
    (Thread/sleep (* sec 1000))))
@@ -2822,7 +2821,7 @@
 
   Under the hood, it sends the file's name as a sequence of keys
   to the input."
-  (fn [driver q file]
+  (fn [_driver _q file]
     (type file)))
 
 (defmethod upload-file String
@@ -2999,7 +2998,7 @@
 
 (defmethod screenshot-element
   :default
-  [driver q file]
+  [_driver _q _file]
   (util/error "This driver doesn't support screening elements."))
 
 (defmethods screenshot-element
@@ -3355,7 +3354,7 @@
 
   (try (delete-session driver)
        (catch Exception e
-         (if (not (= 404 (:status (ex-data e))))
+         (when (not (= 404 (:status (ex-data e))))
            ;; the exception was caused by something other than "session not found"
            (throw e))))
 

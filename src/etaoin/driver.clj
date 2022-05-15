@@ -110,27 +110,27 @@
 
 (defmethod options-name
   :firefox
-  [driver]
+  [_driver]
   :moz:firefoxOptions)
 
 (defmethod options-name
   :chrome
-  [driver]
+  [_driver]
   :chromeOptions)
 
 (defmethod options-name
   :safari
-  [driver]
+  [_driver]
   :safariOptions)
 
 (defmethod options-name
   :edge
-  [driver]
+  [_driver]
   :edgeOptions)
 
 (defmethod options-name
   :opera
-  [driver]
+  [_driver]
   :operaOptions)
 
 (defn set-options-args
@@ -148,7 +148,7 @@
 
 (defmethod set-profile
   :default
-  [driver profile]
+  [driver _profile]
   (log/infof "This driver doesn't support setting a profile.")
   driver)
 
@@ -191,7 +191,7 @@
 
 (defmethod set-window-size
   :default
-  [driver w h]
+  [driver _w _h]
   (log/infof "This driver doesn't support setting window size.")
   driver)
 
@@ -216,7 +216,7 @@
 
 (defmethod set-url
   :default
-  [driver url]
+  [driver _url]
   (log/infof "This driver doesn't support setting initial URL.")
   driver)
 
@@ -262,7 +262,7 @@
 
 (defmethod is-headless?
   :phantom
-  [driver]
+  [_driver]
   true)
 
 ;;
@@ -299,7 +299,7 @@
 
 (defmethod set-prefs
   :default
-  [driver prefs]
+  [driver _prefs]
   (log/infof "This driver doesn't support setting preferences.")
   driver)
 
@@ -314,8 +314,8 @@
 ;; Download folder
 ;;
 
-(defn- ^String add-trailing-slash
-  [^String path]
+(defn- add-trailing-slash
+  ^String [^String path]
   (let [sep java.io.File/separator]
     (if (string/ends-with? path sep)
       path
@@ -327,7 +327,7 @@
 
 (defmethod set-download-dir
   :default
-  [driver path]
+  [driver _path]
   (log/infof "This driver doesn't support setting a download directory.")
   driver)
 
@@ -497,12 +497,10 @@
   {:arglists '([driver user-agent])}
   dispatch-driver)
 
-
 (defmethods set-user-agent
   [:chrome :edge]
   [driver user-agent]
   (set-options-args driver [(str "--user-agent=" user-agent)]))
-
 
 (defmethods set-user-agent
   [:firefox]
@@ -511,6 +509,6 @@
 
 (defmethods set-user-agent
   [:default]
-  [driver user-agent]
+  [driver _user-agent]
   (log/infof "This driver doesn't support setting a user-agent.")
   driver)

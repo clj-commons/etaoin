@@ -1,0 +1,19 @@
+{:config-paths ^:replace [] ;; don't adopt any user preferences
+
+ :hooks
+ ;; for now we'll use the simple macroexpand, can move to hooks for finer grained errors later
+ {:macroexpand
+  {etaoin.util/defmethods etaoin.util/defmethods
+   etaoin.util/with-tmp-dir etaoin.util/with-tmp-dir
+   etaoin.util/with-tmp-file etaoin.util/with-tmp-file
+
+   etaoin.api/with-key-down etaoin.api/with-key-down
+   etaoin.api/with-pointer-btn-down etaoin.api/with-pointer-btn-down
+   etaoin.api/with-pointer-left-btn-down etaoin.api/with-pointer-left-btn-down
+   etaoin.api/with-driver etaoin.api/with-driver
+   etaoin.api/with-chrome etaoin.api/with-chrome
+   etaoin.api/with-firefox etaoin.api/with-firefox}}
+
+ :linters
+ ;; etaoin is dsl-ish and does make use of :refer :all, can decide if we like that at some later date
+ {:refer-all {:level :off}}}

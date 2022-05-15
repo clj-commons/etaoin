@@ -45,9 +45,6 @@
 (defn- get-url-path [items]
   (str/join "/" (map url-item-str items)))
 
-(defn- status-selector [resp]
-  (-> resp :status integer?))
-
 (defmacro with-pool [opt & body]
   `(client/with-connection-pool ~opt
      ~@body))

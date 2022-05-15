@@ -691,7 +691,7 @@
         (with-postmortem *driver* {:dir dir-tmp}
           (click *driver* :non-existing-element))
         (is false "should be caught")
-        (catch Exception e
+        (catch Exception _e
           (is true "caught")
           (let [files               (file-seq (io/file dir-tmp))
                 expected-file-count (if (supports-logs? *driver*) 3 2)]
