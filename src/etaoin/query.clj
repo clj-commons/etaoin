@@ -19,7 +19,7 @@
   (query locator-css term))
 
 (defmulti to-query
-  (fn [driver q]
+  (fn [_driver q]
     (type q)))
 
 (defmethod to-query clojure.lang.Keyword
@@ -31,14 +31,14 @@
   (query (:locator driver) q))
 
 (defmethod to-query clojure.lang.IPersistentMap
-  [driver {:keys [xpath css] :as q}]
+  [_driver {:keys [xpath css] :as q}]
   (cond
     xpath (query-xpath xpath)
     css   (query-css css)
     :else (query-xpath (xpath/expand q))))
 
 (defmethod to-query :default
-  [driver q]
+  [_driver q]
   (util/error "Wrong query: %s" q))
 
 (defn expand [driver q]

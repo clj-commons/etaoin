@@ -11,7 +11,7 @@
 (defn try-parse-int
   [line]
   (try (Integer/parseInt line)
-       (catch Exception e
+       (catch Exception _e
          line)))
 
 
@@ -101,9 +101,9 @@
                          :headers headers}))
 
       :network/responsereceived
-      (let [{:keys [response]}                                params
-            {:keys [method headers mimeType remoteIPAddress]} response
-            {:keys [status]}                                  headers]
+      (let [{:keys [response]}                         params
+            {:keys [headers mimeType remoteIPAddress]} response
+            {:keys [status]}                           headers]
         (assoc acc
                :state 2
                :response {:status    (try-parse-int status)

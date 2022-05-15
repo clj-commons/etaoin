@@ -43,7 +43,7 @@
    "COMMAND"      k/command
    "CONTROL"      k/control-left
    "CTRL"         k/control-left
-   "DECIMAL"      k/num-.
+   "DECIMAL"      #_{:clj-kondo/ignore [:unresolved-var]} k/num-.
    "DELETE"       k/delete
    "DIVIDE"       k/num-slash
    "DOWN"         k/arrow-down
@@ -93,7 +93,7 @@
    "NUMPAD7"      k/num-7
    "NUMPAD8"      k/num-9
    "NUMPAD9"      k/num-9
-   "NUM_PERIOD"   k/num-.
+   "NUM_PERIOD"   #_{:clj-kondo/ignore [:unresolved-var]} k/num-.
    "NUM_PLUS"     k/num-+
    "NUM_DIVISION" k/num-slash
    "NUM_MULTIPLY" k/num-*
@@ -174,6 +174,7 @@
 
 
 (defn dispatch-command
+  #_{:clj-kondo/ignore [:unused-binding]}
   [driver command & [opt]]
   (some-> command :command))
 
@@ -183,20 +184,20 @@
 
 (defmethod run-command
   :default
-  [driver command & _]
+  [_driver command & _]
   (log/warnf "The \"%s\" command is not implemented" (:command command)))
 
 
 (defmethod run-command
   :assert
-  [driver {:keys [target value command]} & [{vars :vars}]]
+  [_driver {:keys [target value command]} & [{vars :vars}]]
   (let [stored-value (str (get @vars (str->var target)))]
     (assert (= stored-value value) (make-assert-msg command stored-value value))))
 
 
 (defmethods run-command
   [:assertAlert :assertConfirmation :assertPrompt]
-  [driver {:keys [target command]} & [{vars :vars}]]
+  [driver {:keys [target command]} & [{_vars :vars}]]
   (let [alert-msg (get-alert-text driver)]
     (dismiss-alert driver)
     (assert (= alert-msg target) (make-assert-msg command alert-msg target))))
@@ -204,21 +205,21 @@
 
 (defmethod run-command
   :assertChecked
-  [driver {:keys [target command]} & [{vars :vars}]]
+  [driver {:keys [target command]} & [{_vars :vars}]]
   (let [actual (selected? driver (make-query target))]
     (assert actual (make-assert-msg command actual true))))
 
 
 (defmethod run-command
   :assertNotChecked
-  [driver {:keys [target command]} & [{vars :vars}]]
+  [driver {:keys [target command]} & [{_vars :vars}]]
   (let [actual (selected? driver (make-query target))]
     (assert (not actual) (make-assert-msg command actual false))))
 
 
 (defmethod run-command
   :assertEditable
-  [driver {:keys [target command]} & [{vars :vars}]]
+  [driver {:keys [target command]} & [{_vars :vars}]]
   (let [q      (make-query target)
         actual (and (enabled? driver (make-query target))
                     (nil? (get-element-attr driver q :readonly)))]
@@ -227,7 +228,7 @@
 
 (defmethod run-command
   :assertNotEditable
-  [driver {:keys [target command]} & [{vars :vars}]]
+  [driver {:keys [target command]} & [{_vars :vars}]]
   (let [q      (make-query target)
         actual (and (enabled? driver (make-query target))
                     (nil? (get-element-attr driver q :readonly)))]
@@ -236,21 +237,21 @@
 
 (defmethod run-command
   :assertElementPresent
-  [driver {:keys [target command]} & [{vars :vars}]]
+  [driver {:keys [target command]} & [{_vars :vars}]]
   (let [actual (exists? driver (make-query target))]
     (assert actual (make-assert-msg command actual true))))
 
 
 (defmethod run-command
   :assertElementNotPresent
-  [driver {:keys [target command]} & [{vars :vars}]]
+  [driver {:keys [target command]} & [{_vars :vars}]]
   (let [actual (absent? driver (make-query target))]
     (assert actual (make-assert-msg command actual true))))
 
 
 (defmethods run-command
   [:assertValue :assertSelectedValue]
-  [driver {:keys [target value command]} & [{vars :vars}]]
+  [driver {:keys [target value command]} & [{_vars :vars}]]
   (let [actual-val (get-element-value driver (make-query target))]
     (assert (= actual-val value)
             (make-assert-msg command actual-val value))))
@@ -258,7 +259,7 @@
 
 (defmethod run-command
   :assertNotSelectedValue
-  [driver {:keys [target value command]} & [{vars :vars}]]
+  [driver {:keys [target value command]} & [{_vars :vars}]]
   (let [actual-val (get-element-value driver (make-query target))]
     (assert (not= actual-val value)
             (make-assert-msg command actual-val value))))
@@ -266,7 +267,7 @@
 
 (defmethod run-command
   :assertText
-  [driver {:keys [target value command]} & [{vars :vars}]]
+  [driver {:keys [target value command]} & [{_vars :vars}]]
   (let [actual-text (get-element-text driver (make-query target))]
     (assert (= actual-text value)
             (make-assert-msg command actual-text value))))
@@ -274,7 +275,7 @@
 
 (defmethod run-command
   :assertNotText
-  [driver {:keys [target value command]} & [{vars :vars}]]
+  [driver {:keys [target value command]} & [{_vars :vars}]]
   (let [actual-text (get-element-text driver (make-query target))]
     (assert (not= actual-text value)
             (make-assert-msg command actual-text value))))
@@ -282,7 +283,7 @@
 
 (defmethod run-command
   :assertSelectedLabel
-  [driver {:keys [target value command]} & [{vars :vars}]]
+  [driver {:keys [target value command]} & [{_vars :vars}]]
   (let [q            (make-query target)
         selected-val (get-element-value driver q)
         option-el    (query driver q {:value selected-val})
@@ -293,14 +294,14 @@
 
 (defmethod run-command
   :assertTitle
-  [driver {:keys [target command]} & [{vars :vars}]]
+  [driver {:keys [target command]} & [{_vars :vars}]]
   (let [title (get-title driver)]
     (assert (= title target) (make-assert-msg command title target))))
 
 
 (defmethod run-command
   :check
-  [driver {:keys [target]} & [{base-url :base-url}]]
+  [driver {:keys [target]} & [{_base-url :base-url}]]
   (let [q (make-query target)]
     (when-not (selected? driver q)
       (click driver q))))
@@ -308,7 +309,7 @@
 
 (defmethod run-command
   :click
-  [driver {:keys [target]} & [opt]]
+  [driver {:keys [target]} & [_opt]]
   (click driver (make-query target)))
 
 
@@ -320,13 +321,13 @@
 
 (defmethod run-command
   :doubleClick
-  [driver {:keys [target]} & [opt]]
+  [driver {:keys [target]} & [_opt]]
   (double-click driver (make-query target)))
 
 
 (defmethod run-command
   :dragAndDropToObject
-  [driver {:keys [target value]} & [opt]]
+  [driver {:keys [target value]} & [_opt]]
   (drag-and-drop driver
                  (make-query target)
                  (make-query value)))
@@ -334,7 +335,7 @@
 
 (defmethod run-command
   :echo
-  [driver {:keys [target]} {vars :vars}]
+  [_driver {:keys [target]} {vars :vars}]
   (println (fill-str-with-vars target @vars)))
 
 
@@ -357,14 +358,14 @@
 
 (defmethod run-command
   :pause
-  [driver {:keys [target]} & [opt]]
+  [_driver {:keys [target]} & [_opt]]
   (wait (/ (Integer/parseInt target) 1000)))
 
 
 ;; TODO refactor select fn, add select by-value
 (defmethods run-command
   [:select :addSelection :removeSelection]
-  [driver {:keys [target value]} & [opt]]
+  [driver {:keys [target value]} & [_opt]]
   (let [[type val] (str/split value #"=" 2)
         q          (make-query target)]
     (case type
@@ -378,7 +379,7 @@
 
 (defmethod run-command
   :selectFrame
-  [driver {:keys [target]} & [opt]]
+  [driver {:keys [target]} & [_opt]]
   (cond
     (= target "relative=top")
     (switch-frame-top driver)
@@ -428,14 +429,14 @@
 
 (defmethod run-command
   :setWindowSize
-  [driver {:keys [target]} & [opt]]
+  [driver {:keys [target]} & [_opt]]
   (let [[width height] (map #(Integer/parseInt %) (str/split target #"x"))]
     (set-window-size driver width height)))
 
 
 (defmethod run-command
   :store
-  [driver {:keys [target value]} & [{vars :vars}]]
+  [_driver {:keys [target value]} & [{vars :vars}]]
   (swap! vars assoc (str->var value) target))
 
 
@@ -456,8 +457,8 @@
 
 (defmethod run-command
   :storeTitle
-  [driver {:keys [target value]} & [{vars :vars}]]
-  (let [title (get-title driver (make-query target))]
+  [driver {:keys [value]} & [{vars :vars}]]
+  (let [title (get-title driver)]
     (swap! vars assoc (str->var value) title)))
 
 
@@ -484,7 +485,7 @@
 
 (defmethod run-command
   :submit
-  [driver {:keys [target]} & [{vars :vars}]]
+  [driver {:keys [target]} & [{_vars :vars}]]
   (fill-el driver (query (make-query target) {:tag :input}) k/enter))
 
 
@@ -497,7 +498,7 @@
 
 (defmethod run-command
   :unCheck
-  [driver {:keys [target]} & [{base-url :base-url}]]
+  [driver {:keys [target]} & [{_base-url :base-url}]]
   (let [q (make-query target)]
     (when (selected? driver q)
       (click driver q))))
@@ -512,21 +513,21 @@
 
 (defmethod run-command
   :verifyChecked
-  [driver {:keys [target command]} & [{vars :vars}]]
+  [driver {:keys [target command]} & [{_vars :vars}]]
   (let [actual (selected? driver (make-query target))]
     (is (true? actual) (make-assert-msg command actual true))))
 
 
 (defmethod run-command
   :verifyNotChecked
-  [driver {:keys [target command]} & [{vars :vars}]]
+  [driver {:keys [target command]} & [{_vars :vars}]]
   (let [actual (selected? driver (make-query target))]
     (is (false? actual) (make-assert-msg command actual false))))
 
 
 (defmethod run-command
   :verifyEditable
-  [driver {:keys [target command]} & [{vars :vars}]]
+  [driver {:keys [target command]} & [{_vars :vars}]]
   (let [q      (make-query target)
         actual (and (enabled? driver (make-query target))
                     (nil? (get-element-attr driver q :readonly)))]
@@ -535,7 +536,7 @@
 
 (defmethod run-command
   :verifyNotEditable
-  [driver {:keys [target command]} & [{vars :vars}]]
+  [driver {:keys [target command]} & [{_vars :vars}]]
   (let [q      (make-query target)
         actual (and (enabled? driver (make-query target))
                     (nil? (get-element-attr driver q :readonly)))]
@@ -544,21 +545,21 @@
 
 (defmethod run-command
   :verifyElementPresent
-  [driver {:keys [target command]} & [{vars :vars}]]
+  [driver {:keys [target command]} & [{_vars :vars}]]
   (let [actual (exists? driver (make-query target))]
     (is (true? actual) (make-assert-msg command actual true))))
 
 
 (defmethod run-command
   :verifyElementNotPresent
-  [driver {:keys [target command]} & [{vars :vars}]]
+  [driver {:keys [target command]} & [{_vars :vars}]]
   (let [actual (absent? driver (make-query target))]
     (is (true? actual) (make-assert-msg command actual true))))
 
 
 (defmethod run-command
   [:verifyValue :verifySelectedValue]
-  [driver {:keys [target value command]} & [{vars :vars}]]
+  [driver {:keys [target value command]} & [{_vars :vars}]]
   (let [actual-val (get-element-value driver (make-query target))]
     (is (= actual-val value)
         (make-assert-msg command actual-val value))))
@@ -566,7 +567,7 @@
 
 (defmethod run-command
   :verifyNotSelectedValue
-  [driver {:keys [target value command]} & [{vars :vars}]]
+  [driver {:keys [target value command]} & [{_vars :vars}]]
   (let [actual-val (get-element-value driver (make-query target))]
     (is (not= actual-val value)
         (make-assert-msg command actual-val value))))
@@ -574,7 +575,7 @@
 
 (defmethod run-command
   :verifyText
-  [driver {:keys [target value command]} & [{vars :vars}]]
+  [driver {:keys [target value command]} & [{_vars :vars}]]
   (let [actual-text (get-element-text driver (make-query target))]
     (is (= actual-text value)
         (make-assert-msg command actual-text value))))
@@ -582,7 +583,7 @@
 
 (defmethod run-command
   :verifyNotText
-  [driver {:keys [target value command]} & [{vars :vars}]]
+  [driver {:keys [target value command]} & [{_vars :vars}]]
   (let [actual-text (get-element-text driver (make-query target))]
     (is (not= actual-text value)
         (make-assert-msg command actual-text value))))
@@ -590,7 +591,7 @@
 
 (defmethod run-command
   :verifySelectedLabel
-  [driver {:keys [target value command]} & [{vars :vars}]]
+  [driver {:keys [target value command]} & [{_vars :vars}]]
   (let [q            (make-query target)
         selected-val (get-element-value driver q)
         option-el    (query driver q {:value selected-val})
@@ -601,56 +602,56 @@
 
 (defmethod run-command
   :verifyTitle
-  [driver {:keys [target command]} & [{vars :vars}]]
+  [driver {:keys [target command]} & [{_vars :vars}]]
   (let [title (get-title driver)]
     (is (= title target) (make-assert-msg command title target))))
 
 
 (defmethod run-command
   :waitForElementEditable
-  [driver {:keys [target value]} & [{vars :vars}]]
+  [driver {:keys [target value]} & [{_vars :vars}]]
   (wait-enabled driver (make-query target)
                 {:timeout (/ (Integer/parseInt value) 1000)}))
 
 
 (defmethod run-command
   :waitForElementNotEditable
-  [driver {:keys [target value]} & [{vars :vars}]]
+  [driver {:keys [target value]} & [{_vars :vars}]]
   (wait-disabled driver (make-query target)
                  {:timeout (/ (Integer/parseInt value) 1000)}))
 
 
 (defmethod run-command
   :waitForElementPresent
-  [driver {:keys [target value]} & [{vars :vars}]]
+  [driver {:keys [target value]} & [{_vars :vars}]]
   (wait-exists driver (make-query target)
                {:timeout (/ (Integer/parseInt value) 1000)}))
 
 
 (defmethod run-command
   :waitForElementNotPresent
-  [driver {:keys [target value]} & [{vars :vars}]]
+  [driver {:keys [target value]} & [{_vars :vars}]]
   (wait-absent driver (make-query target)
                {:timeout (/ (Integer/parseInt value) 1000)}))
 
 
 (defmethod run-command
   :waitForElementVisible
-  [driver {:keys [target value]} & [{vars :vars}]]
+  [driver {:keys [target value]} & [{_vars :vars}]]
   (wait-visible driver (make-query target)
                 {:timeout (/ (Integer/parseInt value) 1000)}))
 
 
 (defmethod run-command
   :waitForElementNotVisible
-  [driver {:keys [target value]} & [{vars :vars}]]
+  [driver {:keys [target value]} & [{_vars :vars}]]
   (wait-invisible driver (make-query target)
                   {:timeout (/ (Integer/parseInt value) 1000)}))
 
 
 (defmethod run-command
   :waitForText
-  [driver {:keys [target value]} & [{vars :vars}]]
+  [driver {:keys [target value]} & [{_vars :vars}]]
   (let [q (make-query target)]
     (wait-visible driver q)
     (wait-has-text driver q value)))
@@ -659,13 +660,13 @@
 (defmethods run-command
   [:webdriverChooseCancelOnVisibleConfirmation
    :webdriverChooseCancelOnVisiblePrompt]
-  [driver {:keys [target value]} & [{vars :vars}]]
+  [driver {:keys [_target _value]} & [{_vars :vars}]]
   (dismiss-alert driver))
 
 
 (defmethods run-command
   [:webdriverChooseOkOnVisibleConfirmation]
-  [driver {:keys [target value]} & [{vars :vars}]]
+  [driver {:keys [_target _value]} & [{_vars :vars}]]
   (accept-alert driver))
 
 
@@ -686,13 +687,13 @@
 
 (defmethod run-command
   :forEach
-  [driver {:keys [target value]} & [{vars :vars}]]
+  [_driver {:keys [target value]} & [{vars :vars}]]
   [(str->var value) (get @vars (str->var target))])
 
 
 (defmethod run-command
   :times
-  [driver {:keys [target]} & [{vars :vars}]]
+  [_driver {:keys [target]} & [{_vars :vars}]]
   (Integer/parseInt target))
 
 

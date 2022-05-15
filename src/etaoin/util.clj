@@ -4,7 +4,6 @@
            java.nio.file.Files
            org.apache.commons.io.FileUtils))
 
-
 (defn map-or-nil?
   [x]
   (or (map? x) (nil? x)))

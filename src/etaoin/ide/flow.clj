@@ -4,7 +4,7 @@
   "
   (:require
    [cheshire.core :as json]
-   [clojure.java.io :as io]
+   [clojure.set :as cset]
    [clojure.spec.alpha :as s]
    [etaoin.api :refer :all]
    [etaoin.ide.api :refer [run-command-with-log str->var]]
@@ -68,7 +68,7 @@
         _             (run-command-with-log driver cmd opt)
         _             (wait (/ windowTimeout 1000))
         final-handles (set (get-window-handles driver))
-        handle        (first (clojure.set/difference final-handles init-handles))]
+        handle        (first (cset/difference final-handles init-handles))]
     (swap! vars assoc (str->var windowHandleName) handle)))
 
 

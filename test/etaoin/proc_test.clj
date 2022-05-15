@@ -40,6 +40,6 @@
     (let [port    9999
           process (proc/run ["chromedriver" (format "--port=%d" port)])
           _       (wait-running {:port port :host "localhost"})
-          driver  (chrome {:host "localhost" :port port :args ["--no-sandbox"]})]
+          _driver  (chrome {:host "localhost" :port port :args ["--no-sandbox"]})]
       (is (= 1 (get-count-chromedriver-instances)))
       (proc/kill process))))
