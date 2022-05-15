@@ -41,7 +41,7 @@
 (def num-+              \uE025)
 (def num-comma          \uE026)
 (def num--              \uE027)
-(def num-.              \uE028)
+(def num-dot            \uE028)
 (def num-slash          \uE029)
 (def f1                 \uE031)
 (def f2                 \uE032)
