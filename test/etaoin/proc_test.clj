@@ -7,16 +7,18 @@
 
 (defn get-count-chromedriver-instances
   []
-  (let [process-count (->> (if proc/windows?
-                             (sh "tasklist")
-                             (sh "sh" "-c" "ps aux"))
-                           :out
-                           str/split-lines
-                           (filter #(str/includes? % "chromedriver"))
-                           count)]
-    (if proc/windows?
-      (/ process-count 2) ;; on Windows we seem to have 2 chromedriver.exe instances per launch
-      process-count)))
+  (if proc/windows?
+    (->> (sh "powershell" "-command" "(Get-Process chromedriver -ErrorAction SilentlyContinue).Path")
+         :out
+         str/split-lines
+         (remove #(str/includes? % "\\scoop\\shims\\")) ;; for the scoop users, exclude the shim process
+         (filter #(str/includes? % "chromedriver"))
+         count)
+    (->> (sh "sh" "-c" "ps aux")
+         :out
+         str/split-lines
+         (filter #(str/includes? % "chromedriver"))
+         count)))
 
 (deftest test-prevent-process-fork
   (testing "certain driver port"
@@ -40,6 +42,7 @@
     (let [port    9999
           process (proc/run ["chromedriver" (format "--port=%d" port)])
           _       (wait-running {:port port :host "localhost"})
-          _driver  (chrome {:host "localhost" :port port :args ["--no-sandbox"]})]
+          driver  (chrome {:host "localhost" :port port :args ["--no-sandbox"]})]
       (is (= 1 (get-count-chromedriver-instances)))
+      (quit driver)
       (proc/kill process))))
