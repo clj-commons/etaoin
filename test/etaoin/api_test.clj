@@ -404,7 +404,7 @@
     (let [{:keys [width height]} (get-window-size *driver*)]
       (is (numeric? width))
       (is (numeric? height))
-      (set-window-size *driver* (+ width 10) (+ height 10))
+      (set-window-size *driver* (- width 10) (- height 10))
       (let [{width' :width height' :height} (get-window-size *driver*)]
         (is (not= width width'))
         (is (not= height height'))))))
