@@ -12,7 +12,7 @@
 
 // Badges
 link:{url-doc}[image:https://cljdoc.org/badge/{project-mvn-coords}[cljdoc]]
-https://circleci.com/gh/{project-src-coords}[image:https://circleci.com/gh/{project-src-coords}.svg?style=svg[CircleCI]]
+https://github.com/{project-src-coords}/actions/workflows/test.yml[image:https://github.com/{project-src-coords}/actions/workflows/test.yml/badge.svg[GitHub Actions Tests]]
 https://clojars.org/{project-mvn-coords}[image:https://img.shields.io/clojars/v/{project-mvn-coords}.svg[Clojars project]]
 https://clojurians.slack.com/archives/C7KDM0EKW[image:https://img.shields.io/badge/slack-join_chat-brightgreen.svg[Join chat]]
 
