@@ -1515,8 +1515,8 @@ Say you have an HTML layout like this:
 <iframe src="...">
   <iframe src="...">
     <button id="the-goal">
-  </frame>
-</frame>
+  </iframe>
+</iframe>
 ----
 
 So you can reach the button with the following code:
