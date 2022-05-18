@@ -1,0 +1,3 @@
+{:paths ["script"]
+ :deps {doric/doric {:mvn/version "0.9.0"}}
+ :tasks {tools-versions {:task tools-versions/report :doc "report on tools versions"}}}

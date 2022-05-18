@@ -1,0 +1,60 @@
+name: Test
+
+on:
+  push:
+    branches: ['master']
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu, macos, windows ]
+
+    name: ${{ matrix.os }}
+
+    steps:
+
+    - uses: actions/checkout@v3
+
+    - name: Clojure deps cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.m2/repository
+        key: ${{ runner.os }}-cljdeps-${{ hashFiles('project.clj') }}
+        restore-keys: ${{ runner.os }}-cljdeps-
+
+    - name: "Setup Java"
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '11'
+
+    - name: Install Clojure Tools
+      uses: DeLaGuardo/setup-clojure@5.1
+      with:
+        bb: 'latest'
+        lein: 'latest'
+
+    - name: Tools versions
+      run: bb tools-versions
+
+    - name: Bring down deps
+      run: lein deps
+
+    - name: Launch Virtual Display (ubuntu)
+      if: matrix.os == 'ubuntu'
+      run: Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+
+    - name: Run Tests (unbuntu)
+      if: matrix.os == 'ubuntu'
+      run: lein test
+      env:
+        DISPLAY: :99.0
+
+    - name: Run Tests (macos, windows)
+      if: matrix.os != 'ubuntu'
+      run: lein test
