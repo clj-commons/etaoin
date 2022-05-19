@@ -4,6 +4,7 @@
             [clojure.string :as str]
             [clojure.test :refer :all]
             [etaoin.api :refer :all]
+            [etaoin.test-report :as test-report]
             [etaoin.util :refer [with-tmp-dir with-tmp-file]]
             [slingshot.slingshot :refer [try+]])
   (:import javax.imageio.ImageIO))
@@ -53,13 +54,22 @@
       (with-driver type (get default-opts type {}) driver
         (go driver url)
         (wait-visible driver {:id :document-end})
-        (binding [*driver* driver]
+        (binding [*driver* driver
+                  test-report/*context* (name type)]
           (testing (name type)
             (f)))))))
 
 (use-fixtures
   :each
   fixture-browsers)
+
+(defn report-browsers [f]
+  (println "Testing with browsers:" drivers)
+  (f))
+
+(use-fixtures
+  :once
+  report-browsers)
 
 (deftest test-visible
   (doto *driver*

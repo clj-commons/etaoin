@@ -1,3 +1,15 @@
 {:paths ["script"]
- :deps {doric/doric {:mvn/version "0.9.0"}}
- :tasks {tools-versions {:task tools-versions/report :doc "report on tools versions"}}}
+ :deps {doric/doric {:mvn/version "0.9.0"}
+        lread/status-line {:git/url "https://github.com/lread/status-line.git"
+                           :sha "35ed39645038e81b42cb15ed6753b8462e60a06d"}
+        dev.nubank/docopt {:mvn/version "0.6.1-fix7"}}
+ :tasks
+ {;; setup
+  :requires ([clojure.string :as string]
+             [lread.status-line :as status])
+  :enter (let [{:keys [name]} (current-task)] (status/line :head "TASK %s %s" name (string/join " " *command-line-args*)))
+  :leave (let [{:keys [name]} (current-task)] (status/line :detail "\nTASK %s done." name))
+
+  ;; commands
+  tools-versions {:task tools-versions/-main :doc "report on tools versions"}
+  test           {:task test/-main           :doc "run all or a subset of tests, use --help for args"}}}

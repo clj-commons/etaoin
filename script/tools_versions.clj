@@ -1,9 +1,11 @@
 (ns tools-versions
   (:require [babashka.fs :as fs]
-            [babashka.tasks :as tasks]
             [clojure.string :as string]
             [doric.core :as doric]
-            [cheshire.core :as json]))
+            [cheshire.core :as json]
+            [helper.main :as main]
+            [helper.os :as os]
+            [helper.shell :as shell]))
 
 (def tools
   [;; earlier versions of java used -version and spit version info to stderr
@@ -32,24 +34,16 @@
                     :args "--version"
                     :version-post-fn identity})
 
-(defn- get-os []
-  (let [os-name (string/lower-case (System/getProperty "os.name"))]
-    (condp re-find os-name
-      #"win" :win
-      #"mac" :mac
-      #"(nix|nux|aix)" :unix
-      :unknown)))
-
 (defn- expected-on-this-os [{:keys [oses]}]
   (or (= :all oses)
-      (some #{(get-os)} oses)))
+      (some #{(os/get-os)} oses)))
 
 (defn- version-cmd-result [shell-opts {:keys [out err exit]}]
   (if (not (zero? exit))
-    (format "<exit code %d>" exit)
-    (cond-> ""
-      (= :string (:out shell-opts)) (str out)
-      (= :string (:err shell-opts)) (str err))))
+    {:error (format "exit code %d" exit)}
+    {:version (cond-> ""
+                (= :string (:out shell-opts)) (str out)
+                (= :string (:err shell-opts)) (str err))}))
 
 (defn- table-multilines->rows
   "Convert a seq of maps from [{:a \"one\n\two\" :b \"a\nb\nc\"}]
@@ -60,7 +54,7 @@
   [results]
   (reduce (fn [acc n]
             (let [n (reduce-kv (fn [m k v]
-                                 (assoc m k (string/split-lines v)))
+                                 (assoc m k (when v (string/split-lines v))))
                                {}
                                n)
                   max-lines (apply max (map #(count (val %)) n))]
@@ -81,11 +75,9 @@
   (let [reg-keys ["\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*"
                   "\\Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*"]]
     (->> (mapcat (fn [reg-key]
-                   (-> (tasks/shell {:out :string :continue true}
-                                    "powershell"
-                                    "-command"
-                                    (format "Get-ItemProperty HKLM:%s | Select-Object DisplayName, DisplayVersion, InstallLocation | ConvertTo-Json"
-                                            reg-key))
+                   (-> (shell/command {:out :string :continue true}
+                                      (format "Get-ItemProperty HKLM:%s | Select-Object DisplayName, DisplayVersion, InstallLocation | ConvertTo-Json"
+                                              reg-key))
                        :out
                        json/parse-string))
                  reg-keys))))
@@ -103,44 +95,49 @@
                                             (= app pname)
                                             (re-matches app pname)))))
                               first)]
-    {:app (get found-package "InstallLocation" "?")
+    {:path (get found-package "InstallLocation" "?")
      :version (get found-package "DisplayVersion" "?")}
-    {:error (format "<windows package not found: %s>" app)}))
+    {:error (format "windows package not found: %s" app)}))
 
 (defmethod resolve-tool :mac-app
   [{:keys [app shell-opts version-post-fn]}]
   (let [app-dir (format "/Applications/%s.app" app)]
-             (if (fs/exists? app-dir)
-               {:app app-dir
-                :version
-                (->> (tasks/shell shell-opts (format "defaults read '%s/Contents/Info' CFBundleShortVersionString" app-dir))
-                            (version-cmd-result shell-opts)
-                            version-post-fn)}
-               {:error (format "<mac app not found: %s>" app)})))
+    (if (fs/exists? app-dir)
+      (let [version-result (->> (shell/command shell-opts (format "defaults read '%s/Contents/Info' CFBundleShortVersionString" app-dir))
+                                (version-cmd-result shell-opts))
+            version-result (assoc version-result :path app-dir)]
+        (if (:error version-result)
+          version-result
+          (update version-result :version version-post-fn)))
+      {:error (format "mac app not found: %s" app)})))
 
 (defmethod resolve-tool :bin
   [{:keys [app shell-opts args version-post-fn]}]
   (if-let [found-bin (some-> (fs/which app {:win-exts ["com" "exe" "bat" "cmd" "ps1"]})
-                                      str)]
-             {:app found-bin
-              :version (->> (if (string/ends-with? found-bin ".ps1")
-                              (tasks/shell shell-opts "powershell" "-command" found-bin args)
-                              (tasks/shell shell-opts found-bin args))
-                            (version-cmd-result shell-opts)
-                            version-post-fn)}
-             {:error (format "<bin not found: %s>" app)}))
+                             str)]
+    (let [version-result (->> (shell/command shell-opts found-bin args)
+                              (version-cmd-result shell-opts))
+          version-result (assoc version-result :path found-bin)]
+      (if (:error version-result)
+        version-result
+        (update version-result :version version-post-fn)))
+    {:error (format "bin not found: %s" app)}))
 
-(defn report
+(defn -main
   "Report on tools versions based the the OS the script it is run from.
   Currently informational only, should always return 0 unless, of course,
   something exceptional happens."
-  []
-  (->> (for [{:keys [name] :as t} (map #(merge tool-defaults %) tools)
-             :when (expected-on-this-os t)
-             :let [{:keys [error app version]} (resolve-tool t)]]
-         (if error
-           {:name name :version error}
-           {:name name :app app :version version}))
-       table-multilines->rows
-       (doric/table [:name :version :app])
-       println))
+  [& args]
+  (when (main/doc-arg-opt args)
+    (->> (for [{:keys [name] :as t} (map #(merge tool-defaults %) tools)
+               :when (expected-on-this-os t)
+               :let [{:keys [error path version]} (resolve-tool t)]]
+           (if error
+             {:name name :path path :version (format "** ERROR: %s **",error)}
+             {:name name :path path :version version}))
+         table-multilines->rows
+         (doric/table [:name :version :path])
+         println)))
+
+(main/when-invoked-as-script
+ (apply -main *command-line-args*))

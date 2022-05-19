@@ -6,14 +6,57 @@ on:
   pull_request:
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+
+    outputs:
+      tests: ${{ steps.set-tests.outputs.tests }}
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Clojure deps cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.m2/repository
+          ~/.deps.clj
+          ~/.gitlibs
+        key: cljdeps-${{ hashFiles('project.clj, bb.edn') }}
+        restore-keys: ${{ runner.os }}-cljdeps-
+
+    - name: "Setup Java"
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '11'
+
+    - name: Install Clojure Tools
+      uses: DeLaGuardo/setup-clojure@5.1
+      with:
+        bb: 'latest'
+        lein: 'latest'
+
+    # This assumes downloaded deps are same for all OSes
+    - name: Bring down deps
+      run: |
+        lein deps
+        bb --version
+
+    - id: set-tests
+      name: Set test var for matrix
+      # run test.clj directly instead of via bb task to avoid generic task output
+      run: echo "::set-output name=tests::$(bb script/test.clj matrix-for-ci --format=json)"
+
   build:
+    needs: setup
     runs-on: ${{ matrix.os }}-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu, macos, windows ]
+        include: ${{fromJSON(needs.setup.outputs.tests)}}
 
-    name: ${{ matrix.os }}
+    name: ${{ matrix.desc }}
 
     steps:
 
@@ -24,7 +67,9 @@ jobs:
       with:
         path: |
           ~/.m2/repository
-        key: ${{ runner.os }}-cljdeps-${{ hashFiles('project.clj') }}
+          ~/.deps.clj
+          ~/.gitlibs
+        key: cljdeps-${{ hashFiles('project.clj, bb.edn') }}
         restore-keys: ${{ runner.os }}-cljdeps-
 
     - name: "Setup Java"
@@ -42,19 +87,6 @@ jobs:
     - name: Tools versions
       run: bb tools-versions
 
-    - name: Bring down deps
-      run: lein deps
-
-    - name: Launch Virtual Display (ubuntu)
-      if: matrix.os == 'ubuntu'
-      run: Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-
-    - name: Run Tests (unbuntu)
-      if: matrix.os == 'ubuntu'
-      run: lein test
-      env:
-        DISPLAY: :99.0
-
-    - name: Run Tests (macos, windows)
-      if: matrix.os != 'ubuntu'
-      run: lein test
+    - name: Run Tests
+      # To see all commands: bb test matrix-for-ci
+      run: ${{ matrix.cmd }}

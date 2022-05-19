@@ -1,8 +1,9 @@
-(ns etaoin.proc-test
+(ns ^:unit etaoin.proc-test
   (:require [etaoin.api :refer :all]
             [clojure.java.shell :refer [sh]]
             [clojure.test :refer :all]
             [etaoin.proc :as proc]
+            [etaoin.test-report]
             [clojure.string :as str]))
 
 (defn get-count-chromedriver-instances

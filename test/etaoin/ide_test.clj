@@ -1,6 +1,8 @@
 (ns etaoin.ide-test
-  (:require [etaoin.api :as api]
+  (:require [clojure.edn :as edn]
+            [etaoin.api :as api]
             [etaoin.ide.flow :as ide]
+            [etaoin.test-report :as test-report]
             [clojure.test :refer :all]
             [clojure.java.io :as io]))
 
@@ -8,21 +10,41 @@
 (def ^:dynamic *base-url*)
 (def ^:dynamic *test-file-path*)
 
+(defn get-drivers-from-env []
+  (when-let [override (System/getenv "ETAOIN_IDE_TEST_DRIVERS")]
+    (edn/read-string override)))
+
+(defn get-default-drivers []
+  [:firefox :chrome])
+
+(def drivers
+  (or (get-drivers-from-env)
+      (get-default-drivers)))
+
 (defn fixture-browser [f]
   (let [base-url       (-> "html" io/resource str)
         test-file-path (-> "ide/test.side" io/resource str)]
-    (doseq [type [:chrome :firefox]]
+    (doseq [type drivers]
       (api/with-driver type {:args ["--no-sandbox"]} driver
         (api/go driver base-url)
         (binding [*driver*         driver
                   *base-url*       base-url
-                  *test-file-path* test-file-path]
+                  *test-file-path* test-file-path
+                  test-report/*context* (name type)]
           (testing (name type)
             (f)))))))
 
 (use-fixtures
   :each
   fixture-browser)
+
+(defn report-browsers [f]
+  (println "Testing with browsers:" drivers)
+  (f))
+
+(use-fixtures
+  :once
+  report-browsers)
 
 (deftest test-asserts
   (ide/run-ide-script *driver* *test-file-path*
