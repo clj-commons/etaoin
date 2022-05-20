@@ -1,5 +1,6 @@
-(ns etaoin.xpath-test
+(ns ^:unit etaoin.xpath-test
   (:require [clojure.test :refer :all]
+            [etaoin.test-report]
             [etaoin.xpath :as xpath]))
 
 (def xpath-samples

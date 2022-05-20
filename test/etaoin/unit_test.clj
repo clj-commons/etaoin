@@ -1,10 +1,11 @@
-(ns etaoin.unit-test
+(ns ^:unit etaoin.unit-test
   (:require [clojure.spec.alpha :as s]
             [clojure.test :refer :all]
             [etaoin.api :refer :all]
             [etaoin.ide.flow :as ide]
             [etaoin.ide.spec :as spec]
             [etaoin.util :refer [with-tmp-dir]]
+            [etaoin.test-report]
             etaoin.proc)
   (:import java.io.File))
 
