@@ -9,12 +9,14 @@
 (defn get-count-chromedriver-instances
   []
   (if proc/windows?
-    (->> (sh "powershell" "-command" "(Get-Process chromedriver -ErrorAction SilentlyContinue).Path")
-         :out
-         str/split-lines
-         (remove #(str/includes? % "\\scoop\\shims\\")) ;; for the scoop users, exclude the shim process
-         (filter #(str/includes? % "chromedriver"))
-         count)
+    (let [instance-report (-> (sh "powershell" "-command" "(Get-Process chromedriver -ErrorAction SilentlyContinue).Path")
+                              :out
+                              str/split-lines)]
+      (println "windows chromedriver instance report:" instance-report)
+      (->> instance-report
+           (remove #(str/includes? % "\\scoop\\shims\\")) ;; for the scoop users, exclude the shim process
+           (filter #(str/includes? % "chromedriver"))
+           count))
     (->> (sh "sh" "-c" "ps aux")
          :out
          str/split-lines
