@@ -43,5 +43,5 @@ For driver installation, check out the official readme file from Etaoin: %s" bin
                   {:args args} e)))))))
 
 (defn kill [^Process proc]
-  (.destroy proc))
-
+  (.destroy proc)
+  (.waitFor proc))
