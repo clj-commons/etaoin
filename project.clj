@@ -35,7 +35,8 @@
 
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]]}}
 
-  :dependencies [[clj-http "3.10.1"]
+  :dependencies [[babashka/fs "0.1.6"]
+                 [clj-http "3.10.1"]
                  [cheshire "5.9.0"]
                  [org.clojure/tools.cli "1.0.194"]
                  [org.clojure/tools.logging "0.3.1"]
