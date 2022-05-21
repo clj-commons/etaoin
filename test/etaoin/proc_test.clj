@@ -37,8 +37,12 @@
           process (proc/run ["chromedriver" (format "--port=%d" port)])
           _       (wait-running {:port port :host "localhost"})]
       (with-chrome {:args ["--no-sandbox"]} driver
-        (is (= 2 (get-count-chromedriver-instances)))
-        (proc/kill process))))
+        ;; added to diagnose flakyness on windows on CI
+        (println "automatically chosen port->" (:port driver))
+        ;; added to diagnose flakyness on windows on CI
+        (wait-running {:port (:port driver) :host "localhost"})
+        (is (= 2 (get-count-chromedriver-instances))))
+      (proc/kill process)))
   (testing "connect to driver"
     (let [port    9999
           process (proc/run ["chromedriver" (format "--port=%d" port)])
