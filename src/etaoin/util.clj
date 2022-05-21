@@ -1,8 +1,8 @@
 (ns etaoin.util
+  (:require [babashka.fs :as fs])
   (:import java.io.File
            java.nio.file.attribute.FileAttribute
-           java.nio.file.Files
-           org.apache.commons.io.FileUtils))
+           java.nio.file.Files))
 
 (defn map-or-nil?
   [x]
@@ -81,4 +81,4 @@
      (try
        ~@body
        (finally
-         (FileUtils/deleteDirectory (File. tmp#))))))
+         (fs/delete-tree tmp#)))))
