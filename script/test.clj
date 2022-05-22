@@ -90,11 +90,11 @@ Notes:
                                   (doric/table [:os :cmd :desc]))))
 
       :else
-      (let [lein-args (cond
-                        (get opts "api") "test :only etaoin.api-test"
-                        (get opts "ide") "test :only etaoin.ide-test"
-                        (get opts "unit") "test :unit"
-                        :else "test")
+      (let [clojure-args (cond
+                           (get opts "api") "-M:test --namespace etaoin.api-test"
+                           (get opts "ide") "-M:test --namespace etaoin.ide-test"
+                           (get opts "unit") "-M:test --namespace-regex '.*unit.*-test$'"
+                           :else "-M:test")
             browsers (->> (get opts "--browser") (keep identity))
             env (cond-> {}
                   (seq browsers)
@@ -112,7 +112,7 @@ Notes:
           (status/line :head "Launching virtual display")
           (launch-xvfb))
         (status/line :head "Running tests")
-        (shell/command shell-opts (str "lein " lein-args))))))
+        (shell/clojure shell-opts clojure-args)))))
 
 (main/when-invoked-as-script
  (apply -main *command-line-args*))

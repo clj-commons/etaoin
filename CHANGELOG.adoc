@@ -23,6 +23,10 @@ Other Changes
 * https://github.com/clj-commons/etaoin/issues/402[#402]: Only send body for webdriver `POST` requests to appease `safaridriver`
 * https://github.com/clj-commons/etaoin/issues/403[#403]: The `select` fn now clicks on the `select` element before clicking the `option` element to appease `safaridriver`
 * https://github.com/clj-commons/etaoin/issues/408[#408]: Fix `switch-window` for `msedgedriver`
+* https://github.com/clj-commons/etaoin/issues/432[#432]: Switched from `project.clj` to `deps.edn`.
+This will allow for easier testing of unreleased versions of Etaoin via git deps.
+It also unconvered that our minimum Clojure version was 1.10, instead of the advertised v1.9.
+Fixed.
 * Docs
 ** https://github.com/clj-commons/etaoin/issues/393[#393]: Add changelog
 ** https://github.com/clj-commons/etaoin/issues/396[#396]: Move from Markdown to AsciiDoc

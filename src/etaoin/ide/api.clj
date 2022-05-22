@@ -720,9 +720,9 @@
   (let [[msg result] (try
                        ["OK" (run-command driver command opt)]
                        (catch Exception e
-                         [(format "Failed: %s" (ex-message e)) e])
+                         [(format "Failed: %s" (.getMessage e)) e])
                        (catch java.lang.AssertionError e
-                         [(format "Failed: %s" (ex-message e)) e]))
+                         [(format "Failed: %s" (.getMessage e)) e]))
         message      (str (log-command-message command) " / " msg)]
 
     (log/info message)

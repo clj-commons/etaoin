@@ -1,4 +1,4 @@
-(ns ^:unit etaoin.xpath-test
+(ns etaoin.unit.xpath-test
   (:require [clojure.test :refer :all]
             [etaoin.test-report]
             [etaoin.xpath :as xpath]))

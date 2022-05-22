@@ -10,7 +10,6 @@
 (def tools
   [;; earlier versions of java used -version and spit version info to stderr
    {:oses :all        :name "Java"              :type :bin         :app "java" :args "-version" :shell-opts {:out :string :err :string :continue true}}
-   {:oses :all        :name "Leiningen"         :type :bin         :app "lein"}
    {:oses :all        :name "Babashka"          :type :bin         :app "bb"}
 
    {:oses [:unix]     :name "Chrome"            :type :bin         :app "google-chrome"} ;; only handling nix for now

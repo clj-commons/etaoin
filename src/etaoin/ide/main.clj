@@ -3,7 +3,7 @@
   Provide an CLI entry point for running IDE files.
   Example:
 
-  lein run -m etaoin.ide.main -d firefox -p '{:port 8888 :args [\"--no-sandbox\"]}' -f /path/to/script.side
+  clojure -M -m etaoin.ide.main -d firefox -p '{:port 8888 :args [\"--no-sandbox\"]}' -f /path/to/script.side
 
   See the readme file for more info.
   "
@@ -64,8 +64,8 @@ This is a CLI interface for running Selenium IDE files.
 
 Usage examples:
 
-;; from lein
-lein run -m etaoin.ide.main -d firefox -p '{:port 8888 :args [\"--no-sandbox\"]}' -r ide/test.side
+;; from clojure
+clojure -M -m etaoin.ide.main -d firefox -p '{:port 8888 :args [\"--no-sandbox\"]}' -r ide/test.side
 
 ;; from a jar
 java -cp .../poject.jar -m etaoin.ide.main -d firefox -p '{:port 8888}' -f ide/test.side
