@@ -7,10 +7,16 @@
             [helper.os :as os]
             [helper.shell :as shell]))
 
+(defn- first-line [s]
+  (-> s string/split-lines first))
+
 (def tools
   [;; earlier versions of java used -version and spit version info to stderr
    {:oses :all        :name "Java"              :type :bin         :app "java" :args "-version" :shell-opts {:out :string :err :string :continue true}}
    {:oses :all        :name "Babashka"          :type :bin         :app "bb"}
+
+   {:oses [:mac :win] :name "Image Magick"      :type :bin         :app "magick" :version-post-fn first-line}
+   {:oses [:unix]     :name "Image Magick"      :type :bin         :app "identify" :version-post-fn first-line}
 
    {:oses [:unix]     :name "Chrome"            :type :bin         :app "google-chrome"} ;; only handling nix for now
    {:oses [:mac]      :name "Chrome"            :type :mac-app     :app "Google Chrome"}
@@ -20,7 +26,7 @@
    {:oses [:unix]     :name "Firefox"           :type :bin         :app "firefox"} ;; only handling nix for now
    {:oses [:mac]      :name "Firefox"           :type :mac-app     :app "Firefox"}
    {:oses [:win]      :name "Firefox"           :type :win-package :app #"Mozilla Firefox .*"}
-   {:oses :all        :name "Firefox Webdriver" :type :bin         :app "geckodriver" :version-post-fn #(->> % string/split-lines first)}
+   {:oses :all        :name "Firefox Webdriver" :type :bin         :app "geckodriver" :version-post-fn first-line}
 
    {:oses [:mac]      :name "Edge"              :type :mac-app     :app "Microsoft Edge"}
    {:oses [:win]      :name "Edge"              :type :win-package :app "Microsoft Edge"}
@@ -114,7 +120,8 @@
   [{:keys [app shell-opts args version-post-fn]}]
   (if-let [found-bin (some-> (fs/which app {:win-exts ["com" "exe" "bat" "cmd" "ps1"]})
                              str)]
-    (let [version-result (->> (shell/command shell-opts found-bin args)
+    ;; call with app rather than found-bin to avoid Windows headaches
+    (let [version-result (->> (shell/command shell-opts app args)
                               (version-cmd-result shell-opts))
           version-result (assoc version-result :path found-bin)]
       (if (:error version-result)

@@ -1,14 +1,14 @@
 (ns etaoin.api-test
-  (:require [clojure.edn :as edn]
+  (:require [babashka.fs :as fs]
+            [clojure.edn :as edn]
             [clojure.java.io :as io]
+            [clojure.java.shell :as shell]
             [clojure.string :as str]
             [clojure.test :refer :all]
             [etaoin.api :refer :all]
             [etaoin.test-report :as test-report]
             [etaoin.util :refer [with-tmp-dir with-tmp-file]]
-            [slingshot.slingshot :refer [try+]])
-  (:import javax.imageio.ImageIO))
-
+            [slingshot.slingshot :refer [try+]]))
 
 (defn numeric? [val]
   (or (instance? Double val)
@@ -22,8 +22,11 @@
   (when-let [override (System/getenv "ETAOIN_TEST_DRIVERS")]
     (edn/read-string override)))
 
+(defn os-name []
+  (first (str/split (System/getProperty "os.name") #"\s+")))
+
 (defn get-drivers-from-prop []
-  (case (first (str/split (System/getProperty "os.name") #"\s+"))
+  (case (os-name)
     "Linux"   [:firefox :chrome]
     "Mac"     [:chrome :edge :firefox :safari]
     "Windows" [:firefox :chrome :edge]
@@ -566,13 +569,23 @@
       (is (str/starts-with? src "<!DOCTYPE html>"))
       (is (str/starts-with? src "<html><head>")))))
 
+(defn- valid-image? [file]
+  (if-let [image-magick (some-> (fs/which (if (= "Linux" (os-name))
+                                            "identify" ;; sacre ubuntu!
+                                            "magick"))
+                                str)]
+    (let [{:keys [exit out]}
+          (if (= "Linux" (os-name))
+            (shell/sh image-magick (str file))
+            (shell/sh image-magick "identify" (str file)))]
+      (println out)
+      (zero? exit))
+    (throw (ex-info "please install image magick, we use it for screenshot image verification" {}))))
+
 (deftest test-screenshot
   (with-tmp-file "screenshot" ".png" path
     (screenshot *driver* path)
-    (-> path
-        io/file
-        ImageIO/read
-        is)))
+    (is (valid-image? path))))
 
 (deftest test-with-screenshots
   (with-tmp-dir "screenshots" dir
@@ -587,10 +600,7 @@
             (firefox? *driver*))
     (with-tmp-file "screenshot" ".png" path
       (screenshot-element *driver* {:id :css-test} path)
-      (-> path
-          io/file
-          ImageIO/read
-          is))))
+      (is (valid-image? path)))))
 
 (deftest test-js-execute
   (testing "simple result"
