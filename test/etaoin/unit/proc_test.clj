@@ -1,4 +1,4 @@
-(ns ^:unit etaoin.proc-test
+(ns etaoin.unit.proc-test
   (:require [etaoin.api :refer :all]
             [clojure.java.shell :refer [sh]]
             [clojure.test :refer :all]

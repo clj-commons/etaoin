@@ -16,9 +16,7 @@
 
 ;; By default we run the tests with all the drivers supported on the current OS.
 ;; To override this, you can set the environment variable ETAOIN_TEST_DRIVERS
-;; to a Clojure vector encoded as a string; for example:
-;;
-;;  ETAOIN_TEST_DRIVERS="[:firefox]" lein test
+;; to a Clojure vector encoded as a string; see script/test.clj for how we use this.
 
 (defn get-drivers-from-env []
   (when-let [override (System/getenv "ETAOIN_TEST_DRIVERS")]

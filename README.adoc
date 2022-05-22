@@ -170,7 +170,7 @@ You may run tests for this library by launching:
 
 [source,bash]
 ----
-lein test
+bb test all
 ----
 
 You'll see browser windows open and close in series.
@@ -1870,7 +1870,9 @@ Once an error occurs, you will find a PNG image that represents your browser pag
 
 Since UI tests may take lots of time to pass, it's definitely a good practice to pass both server and UI tests independently from each other.
 
-First, add `+^:integration+` tag to all the tests that are run inder the browser like follows:
+If you are using lneiningen, here are a few tips.
+
+First, add `+^:integration+` tag to all the tests that are run under the browser like follows:
 
 [source,clojure]
 ----
@@ -1896,7 +1898,7 @@ To run integration tests, launch `lein test :integration`.
 The main difference between a program and a human is that the first one operates very fast.
 It means so fast, that sometimes a browser cannot render new HTML in time.
 So after each action you need to put `wait-<something>` function that just polls a browser checking for a predicate.
-O just `(wait <seconds>)` if you don't care about optimization.
+Or just `(wait <seconds>)` if you don't care about optimization.
 
 === Check whether a file has been downloaded
 
@@ -1986,11 +1988,11 @@ Everything related to the IDE is stored under the `etaoin.ide` package.
 === CLI arguments
 
 You may also run a script from the command line.
-Here is the `lein run` example:
+Here is a `clojure` example:
 
 [source,shell]
 ----
-lein run -m etaoin.ide.main -d firefox -p '{:port 8888 :args ["--no-sandbox"]}' -r ide/test.side
+clojure -M -m etaoin.ide.main -d firefox -p '{:port 8888 :args ["--no-sandbox"]}' -r ide/test.side
 ----
 
 As well as from an uberjar.
@@ -2001,7 +2003,7 @@ In this case, Etaoin must be in the primary dependencies, not the `:dev` or `:te
 java -cp .../poject.jar -m etaoin.ide.main -d firefox -p '{:port 8888}' -f ide/test.side
 ----
 
-We support the following arguments (check them out using the `lein run -m etaoin.ide.main -h` command):
+We support the following arguments (check them out using the `clojure -M -m etaoin.ide.main -h` command):
 
 ----
   -d, --driver-name name   :chrome  The name of driver. The default is `:chrome`

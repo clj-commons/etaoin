@@ -22,8 +22,8 @@ jobs:
           ~/.m2/repository
           ~/.deps.clj
           ~/.gitlibs
-        key: cljdeps-${{ hashFiles('project.clj, bb.edn') }}
-        restore-keys: ${{ runner.os }}-cljdeps-
+        key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
+        restore-keys: cljdeps-
 
     - name: "Setup Java"
       uses: actions/setup-java@v3
@@ -35,13 +35,10 @@ jobs:
       uses: DeLaGuardo/setup-clojure@5.1
       with:
         bb: 'latest'
-        lein: 'latest'
 
     # This assumes downloaded deps are same for all OSes
     - name: Bring down deps
-      run: |
-        lein deps
-        bb --version
+      run: bb download-deps
 
     - id: set-tests
       name: Set test var for matrix
@@ -69,8 +66,8 @@ jobs:
           ~/.m2/repository
           ~/.deps.clj
           ~/.gitlibs
-        key: cljdeps-${{ hashFiles('project.clj, bb.edn') }}
-        restore-keys: ${{ runner.os }}-cljdeps-
+        key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
+        restore-keys: cljdeps-
 
     - name: "Setup Java"
       uses: actions/setup-java@v3
@@ -82,7 +79,6 @@ jobs:
       uses: DeLaGuardo/setup-clojure@5.1
       with:
         bb: 'latest'
-        lein: 'latest'
 
     - name: Tools versions
       run: bb tools-versions

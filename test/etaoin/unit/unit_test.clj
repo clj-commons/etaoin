@@ -1,4 +1,4 @@
-(ns ^:unit etaoin.unit-test
+(ns etaoin.unit.unit-test
   (:require [clojure.spec.alpha :as s]
             [clojure.test :refer :all]
             [etaoin.api :refer :all]
