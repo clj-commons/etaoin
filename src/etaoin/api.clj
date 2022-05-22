@@ -25,7 +25,6 @@
             [etaoin.driver :as drv]
             [etaoin.xpath  :as xpath]
 
-            [clojure.data.codec.base64 :as b64]
             [clojure.tools.logging     :as log]
             [clojure.java.io           :as io]
             [clojure.string            :as str]
@@ -33,7 +32,7 @@
             [cheshire.core       :refer [generate-stream]]
             [slingshot.slingshot :refer [try+ throw+]])
 
-  (:import java.util.Date
+  (:import (java.util Date Base64)
            java.text.SimpleDateFormat))
 
 ;;
@@ -2950,6 +2949,10 @@
 ;; screenshots
 ;;
 
+(defn- b64-decode [s]
+  (-> (Base64/getDecoder)
+      (.decode s)))
+
 (defmulti ^:private b64-to-file
   "Dumps a Base64-encoded string into a file.
   A file might be either a path or a `java.io.File` instance."
@@ -2965,7 +2968,7 @@
   [String String]
   [^String b64str filepath]
   (with-open [out (io/output-stream filepath)]
-    (.write out ^bytes (b64/decode (.getBytes b64str)))))
+    (.write out ^bytes (b64-decode b64str))))
 
 (defmulti screenshot
   "Takes a screenshot of the current page. Saves it in a *.png file on disk.
