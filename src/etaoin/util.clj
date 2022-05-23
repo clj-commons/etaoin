@@ -72,13 +72,3 @@
        ~@body
        (finally
          (.delete tmp#)))))
-
-(defmacro with-tmp-dir [prefix bind & body]
-  `(let [tmp#  (str (Files/createTempDirectory
-                      ~prefix
-                      (into-array FileAttribute [])))
-         ~bind tmp#]
-     (try
-       ~@body
-       (finally
-         (fs/delete-tree tmp#)))))

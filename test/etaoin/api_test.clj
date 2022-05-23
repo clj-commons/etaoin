@@ -7,7 +7,7 @@
             [clojure.test :refer :all]
             [etaoin.api :refer :all]
             [etaoin.test-report :as test-report]
-            [etaoin.util :refer [with-tmp-dir with-tmp-file]]
+            [etaoin.util :refer [with-tmp-file]]
             [slingshot.slingshot :refer [try+]]))
 
 (defn numeric? [val]
@@ -588,12 +588,12 @@
     (is (valid-image? path))))
 
 (deftest test-with-screenshots
-  (with-tmp-dir "screenshots" dir
+  (fs/with-temp-dir [dir {:prefix "screenshots"}]
     (with-screenshots *driver* dir
       (fill *driver* :simple-input "1")
       (fill *driver* :simple-input "1")
       (fill *driver* :simple-input "1"))
-    (is (= 3 (count (.listFiles (io/file dir)))))))
+    (is (= 3 (count (fs/list-dir dir))))))
 
 (deftest test-screenshot-element
   (when (or (chrome? *driver*)
@@ -711,7 +711,7 @@
         (is false "should be caught")
         (catch Exception _e
           (is true "caught")
-          (let [files               (file-seq (io/file dir-tmp))
+          (let [files               (file-seq (fs/file dir-tmp))
                 expected-file-count (if (supports-logs? *driver*) 3 2)]
             (is (= (-> files rest count)
                    expected-file-count))))))))

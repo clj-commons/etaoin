@@ -29,6 +29,7 @@
             [clojure.java.io           :as io]
             [clojure.string            :as str]
 
+            [babashka.fs :as fs]
             [cheshire.core       :refer [generate-stream]]
             [slingshot.slingshot :refer [try+ throw+]])
 
@@ -2825,7 +2826,7 @@
 
 (defmethod upload-file String
   [driver q path]
-  (upload-file driver q (io/file path)))
+  (upload-file driver q (fs/file path)))
 
 (defmethod upload-file java.io.File
   [driver q ^java.io.File file]
@@ -2995,7 +2996,6 @@
 
 ;; TODO add w3c screenshot
 (defmulti screenshot-element
-
   {:arglists '([driver q file])}
   dispatch-driver)
 
@@ -3021,7 +3021,7 @@
   (->> (.getTime (java.util.Date.))
        (format "-%d.png")
        (str (name driver-type))
-       (io/file dir)
+       (fs/file dir)
        str))
 
 (defmacro with-screenshots
@@ -3041,7 +3041,7 @@
 (defn join-path
   "Joins two and more path components into a single file path OS-wisely."
   [p1 p2 & more]
-  (.getPath ^java.io.File (apply io/file p1 p2 more)))
+  (.getPath ^java.io.File (apply fs/file p1 p2 more)))
 
 (defn format-date
   [date pattern]
@@ -3072,9 +3072,9 @@
         path-src (join-path dir-src file-src)
         path-log (join-path dir-log file-log)]
 
-    (clojure.java.io/make-parents path-img)
-    (clojure.java.io/make-parents path-src)
-    (clojure.java.io/make-parents path-log)
+    (io/make-parents path-img)
+    (io/make-parents path-src)
+    (io/make-parents path-log)
 
     (log/debugf "Writing screenshot: %s" path-img)
     (screenshot driver path-img)
