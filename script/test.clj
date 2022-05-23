@@ -8,32 +8,37 @@
             [helper.shell :as shell]
             [lread.status-line :as status]))
 
-(defn- test-def [os id browser]
+(defn- test-def [os id platform browser]
   {:os os
    :cmd (->> ["bb test" id
+              (str "--platform=" platform)
               (when browser (str "--browser=" browser))
               (when (= "ubuntu" os) "--launch-virtual-display")]
              (remove nil?)
              (string/join " "))
-   :desc (->> [id os browser]
+   :desc (->> [id os browser platform]
               (remove nil?)
               (string/join " "))})
 
 (defn- github-actions-matrix []
   (let [oses ["macos" "ubuntu" "windows"]
         ide-browsers ["chrome" "firefox"]
-        api-browsers ["chrome" "firefox" "edge" "safari"]]
+        api-browsers ["chrome" "firefox" "edge" "safari"]
+        platforms ["jvm" "bb"]]
     (->> (concat
-          (for [os oses]
-            (test-def os "unit" nil))
           (for [os oses
+                platform platforms]
+            (test-def os "unit" platform nil))
+          (for [os oses
+                platform platforms
                 browser ide-browsers]
-            (test-def os "ide" browser))
+            (test-def os "ide" platform browser))
           (for [os oses
+                platform platforms
                 browser api-browsers
                 :when (not (or (and (= "ubuntu" os) (some #{browser} ["edge" "safari"]))
                                (and (= "windows" os) (= "safari" browser))))]
-            (test-def os "api" browser)))
+            (test-def os "api" platform browser)))
          (sort-by :desc)
          (into []))))
 
@@ -57,62 +62,88 @@
               (Thread/sleep 500)
               (recur))))))))
 
-(def args-usage "Valid args:
-  (api|ide) [--browser=<edge|safari|firefox|chrome>]... [--launch-virtual-display]
-  (unit|all) [--launch-virtual-display]
+(def valid-browsers ["chrome" "firefox" "edge" "safari"])
+(def valid-platforms ["jvm" "bb"])
+
+(defn valid-opts [opts]
+  (format "<%s>" (string/join "|" opts)))
+
+(def args-usage (-> "Valid args:
+  (api|ide) [--browser=BROWSER]... [--launch-virtual-display] [--platform=PLATFORM]
+  (unit|all) [--launch-virtual-display] [--platform=PLATFORM]
   matrix-for-ci [--format=json]
   --help
 
 Commands:
-  unit           Run only unit tests
-  api            Run only api tests, optionally specifying browsers to override defaults
-  ide            Run only ide tests, optionally specifying browsers to override defaults
+  unit           Run unit tests
+  api            Run api tests
+  ide            Run ide tests
   all            Run all tests using browser defaults
   matrix-for-ci  Return text matrix for GitHub Actions
 
 Options:
-  --launch-virtual-display   Launch a virtual display for browsers (use on linux only)
+  --browser=BROWSER          {{valid-browsers}} overrides defaults
+  --platform=PLATFORM        {{valid-platforms}} [default: jvm]
+  --launch-virtual-display   Launch a virtual display for browsers
   --help                     Show this help
 
 Notes:
 - ide tests default to firefox and chrome only.
 - api tests default browsers based on OS on which they are run.
-- launching a virtual display is necessary for GitHub Actions but not so for CircleCI")
+- launching a virtual display is necessary for GitHub Actions but not for CircleCI"
+                    (string/replace "{{valid-browsers}}" (valid-opts valid-browsers))
+                    (string/replace "{{valid-platforms}}" (valid-opts valid-platforms))))
 
 (defn -main [& args]
   (when-let [opts (main/doc-arg-opt args-usage args)]
-    (cond
-      (get opts "matrix-for-ci")
-      (if (= "json" (get opts "--format"))
-        (status/line :detail (-> (github-actions-matrix)
-                                 (json/generate-string #_{:pretty true})))
-        (status/line :detail (->> (github-actions-matrix)
-                                  (doric/table [:os :cmd :desc]))))
+    (let [browsers (->> (get opts "--browser") (keep identity))
+          platform (get opts "--platform")]
+      (when (or (not-every? (set valid-browsers) browsers)
+                (and platform (not (some #{platform} valid-platforms))))
+        (status/die 1 args-usage))
+      (cond
+        (get opts "matrix-for-ci")
+        (if (= "json" (get opts "--format"))
+          (status/line :detail (-> (github-actions-matrix)
+                                   (json/generate-string #_{:pretty true})))
+          (status/line :detail (->> (github-actions-matrix)
+                                    (doric/table [:os :cmd :desc]))))
 
-      :else
-      (let [clojure-args (cond
-                           (get opts "api") "-M:test --namespace etaoin.api-test"
-                           (get opts "ide") "-M:test --namespace etaoin.ide-test"
-                           (get opts "unit") "-M:test --namespace-regex '.*unit.*-test$'"
-                           :else "-M:test")
-            browsers (->> (get opts "--browser") (keep identity))
-            env (cond-> {}
-                  (seq browsers)
-                  (assoc (if (get opts "api")
-                           "ETAOIN_TEST_DRIVERS"
-                           "ETAOIN_IDE_TEST_DRIVERS")
-                         (mapv keyword browsers))
+        :else
+        (let [env (cond-> {}
+                    (seq browsers)
+                    (assoc (if (get opts "api")
+                             "ETAOIN_TEST_DRIVERS"
+                             "ETAOIN_IDE_TEST_DRIVERS")
+                           (mapv keyword browsers))
 
-                  (get opts "--launch-virtual-display")
-                  (assoc "DISPLAY" ":99.0"))
-            shell-opts (if (seq env)
-                         {:extra-env env}
-                         {})]
-        (when (get opts "--launch-virtual-display")
-          (status/line :head "Launching virtual display")
-          (launch-xvfb))
-        (status/line :head "Running tests")
-        (shell/clojure shell-opts clojure-args)))))
+                    (get opts "--launch-virtual-display")
+                    (assoc "DISPLAY" ":99.0"))
+              shell-opts (if (seq env)
+                           {:extra-env env}
+                           {})
+              test-id (cond
+                        (get opts "api") "api"
+                        (get opts "ide") "ide"
+                        (get opts "unit") "unit"
+                        :else "all")]
+          (when (get opts "--launch-virtual-display")
+            (status/line :head "Launching virtual display")
+            (launch-xvfb))
+          (status/line :head "Running %s tests on %s%s"
+                       test-id
+                       platform
+                       (if (seq browsers)
+                         (str " against browsers: " (string/join ", " browsers))
+                         ""))
+          (if (= "jvm" platform)
+            (shell/clojure shell-opts
+                           (case test-id
+                             "api" "-M:test --namespace etaoin.api-test"
+                             "ide" "-M:test --namespace etaoin.ide-test"
+                             "unit" "-M:test --namespace-regex '.*unit.*-test$'"
+                             "all" "-M:test"))
+            (shell/command shell-opts "bb" "script/bb_test_runner.clj" test-id)))))))
 
 (main/when-invoked-as-script
  (apply -main *command-line-args*))

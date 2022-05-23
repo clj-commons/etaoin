@@ -94,7 +94,7 @@
   (is (selected? *driver* :vehicle3)))
 
 (deftest test-input
-  (testing "fill multiple imputs"
+  (testing "fill multiple inputs"
     (doto *driver*
       (fill-multi {:simple-input    1
                    :simple-password 2

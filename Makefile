@@ -1,5 +1,3 @@
-;; TODO: lread move to bb tasks
-
 .PHONY: kill
 kill:
 	pkill chromedriver || true
@@ -9,7 +7,6 @@ kill:
 
 IMAGE := etaoin
 
-;; TODO: lread: have never tried, test, fix if necessary
 .PHONY: docker-build
 docker-build:
 	docker build --no-cache -t ${IMAGE}:latest .
@@ -20,7 +17,6 @@ check-host:
 		$(error The HOST variable is not set, please do `export HOST=$$HOST` first)
 	endif
 
-;; TODO: lread: have never tried, test, fix if necessary
 # works only on mac + quartz
 .PHONY: docker-test-display
 docker-test-display: check-host
@@ -32,7 +28,6 @@ docker-test-display: check-host
 	bb test all || \
 	xhost -
 
-;; TODO: lread: have never tried, test, fix if necessary
 .PHONY: docker-test
 docker-test:
 	docker run --rm \

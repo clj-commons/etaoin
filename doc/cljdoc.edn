@@ -1,0 +1,4 @@
+{:cljdoc.doc/tree
+ [["Readme" {:file "README.adoc"}]
+  ["Changelog" {:file "CHANGELOG.adoc"}]]
+ :cljdoc/languages ["clj"]}

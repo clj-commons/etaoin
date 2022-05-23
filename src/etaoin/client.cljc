@@ -1,8 +1,9 @@
 (ns etaoin.client
   (:require [clojure.string :as str]
             [clojure.tools.logging :as log]
-            [clj-http.client :as client]
-            [cheshire.core :refer [parse-string]]
+            #?(:bb [clj-http.lite.client :as client]
+               :clj [clj-http.client :as client])
+            [cheshire.core :as json]
             [slingshot.slingshot :refer [throw+]]))
 
 ;;
@@ -24,12 +25,19 @@
 (def timeout (read-timeout))
 
 (def default-api-params
-  {:as             :json
-   :accept         :json
-   :content-type   :json
-   :socket-timeout (* 1000 timeout)
-   :conn-timeout   (* 1000 timeout)
-   :debug          false})
+  #?(:bb
+     {:accept         :json
+      :content-type   :json
+      :socket-timeout (* 1000 timeout)
+      :conn-timeout   (* 1000 timeout)
+      :debug false}
+     :clj
+     {:as             :json
+      :accept         :json
+      :content-type   :json
+      :socket-timeout (* 1000 timeout)
+      :conn-timeout   (* 1000 timeout)
+      :debug          false}))
 
 ;;
 ;; helpers
@@ -52,7 +60,7 @@
 (defn- parse-json [body]
   (let [body* (str/replace body #"Invalid Command Method -" "")]
     (try
-      (parse-string body* true)
+      (json/parse-string body* true)
       (catch Throwable _ body))))
 
 (defn- error-response [body]
@@ -74,7 +82,10 @@
                          {:url              url
                           :method           method
                           :throw-exceptions false})
-                 (= :post method) (assoc :form-params (-> payload (or {}))))
+                 (= :post method)
+                 #?(:bb (assoc :body (.getBytes (json/generate-string (or payload {}))
+                                                "UTF-8"))
+                    :clj (assoc :form-params (or payload {}))))
 
         _ (log/debugf "%s %s:%s %6s %s %s"
                       (name driver-type)
@@ -85,7 +96,8 @@
                       (-> payload (or "")))
 
         resp  (client/request params)
-        body  (:body resp)
+        body  #?(:bb (-> resp :body parse-json)
+                 :clj (:body resp))
         error (delay {:type     :etaoin/http-error
                       :status   (:status resp)
                       :driver   driver
