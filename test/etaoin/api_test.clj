@@ -614,7 +614,10 @@
               :bar [true nil "Hello"]})))))
 
 (deftest test-add-script
-  (let [js-url (-> "js/inject.js" io/resource str)]
+  (let [js-url (-> "js/inject.js" io/resource
+                   fs/file .toURI .toURL ;; little extra dance here for bb on Windows,
+                                         ;; otherwise slash after file: is ommitted and therefore invalid
+                   str)]
     (testing "adding a script"
       (add-script *driver* js-url)
       (wait 1)
