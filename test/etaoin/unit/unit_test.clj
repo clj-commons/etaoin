@@ -1,14 +1,12 @@
 (ns etaoin.unit.unit-test
-  (:require [clojure.spec.alpha :as s]
+  (:require [babashka.fs :as fs]
+            [clojure.spec.alpha :as s]
             [clojure.test :refer :all]
             [etaoin.api :refer :all]
             [etaoin.ide.flow :as ide]
             [etaoin.ide.spec :as spec]
-            [etaoin.util :refer [with-tmp-dir]]
             [etaoin.test-report]
-            etaoin.proc)
-  (:import java.io.File))
-
+            etaoin.proc))
 
 (deftest test-firefox-driver-args
   (with-redefs
@@ -37,8 +35,8 @@
                (:args driver)))))))
 
 (deftest test-chrome-profile
-  (with-tmp-dir "chrome-dir" chrome-dir
-    (let [profile-path (str (File. chrome-dir "chrome-profile"))]
+  (fs/with-temp-dir [chrome-dir {:prefix "chrome-dir"}]
+    (let [profile-path (str (fs/file chrome-dir "chrome-profile"))]
       (with-chrome {:profile profile-path :args ["--no-sandbox"]} driver
         (go driver "chrome://version")
         (is profile-path

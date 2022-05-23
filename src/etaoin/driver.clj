@@ -34,9 +34,9 @@
   https://github.com/SeleniumHQ/selenium/blob/master/py/selenium/webdriver/firefox/options.py
   "
   (:require [etaoin.util :refer [defmethods deep-merge]]
+            [babashka.fs :as fs]
             [clojure.string :as string]
-            [clojure.tools.logging :as log])
-  (:import (java.io File)))
+            [clojure.tools.logging :as log]))
 
 (defn dispatch-driver
   [driver & _]
@@ -157,12 +157,12 @@
   ;; Chrome adds the trailing `/Default` part to the profile path.
   ;; To prevent duplication, let's clear the given path manually.
   [driver ^String profile]
-  (let [profile       (File. profile)
-        ^File profile (if (= "Default" (.getName profile))
-                        (.getParent profile)
-                        profile)
-        user-data-dir (str (.getParent profile))
-        profile-dir   (str  (.getName profile))]
+  (let [profile       (fs/file profile)
+        profile (if (= "Default" (fs/file-name profile))
+                  (fs/parent profile)
+                  profile)
+        user-data-dir (str (fs/parent profile))
+        profile-dir   (str  (fs/file-name profile))]
     (set-options-args driver [(format "--user-data-dir=%s" user-data-dir)
                               (format "--profile-directory=%s" profile-dir)])))
 
