@@ -5,9 +5,26 @@
 :lib-version: 0.4.6
 :url-tests: https://github.com/{project-src-coords}/blob/master/test/etaoin/api_test.clj
 
-== Supported OSes & Browsers
+== Introduction
 
-The Etaoin unit tests cover:
+Etaoin offers the Clojure community a simple way to script web browser interactions from Clojure and Babashka.
+
+=== History
+
+Ivan Grishaev (https://github.com/igrishaev[@igrishaev]) created Etaoin and published its first release to Clojars in Feb of 2017.
+He and his band of faithful contributors grew Etaoin into a well respected goto library for browser automation.
+
+In May of 2022, finding his time had gravitated more to back-end development, Ivan offered Etaoin for adoption to clj-commons where it is now currently under the loving care of https://github.com/lread[@lread] and https://github.com/borkdude[@borkdude].
+
+=== Interesting Alternatives
+
+If Etaoin is not your cup of tea, you might also consider:
+
+* https://github.com/tatut/clj-chrome-devtools[clj-chrome-devtools]
+
+=== Supported OSes & Browsers
+
+Etaoin's test suite covers the following OSes and browsers run with both regular Clojure and Babashka:
 
 |===
 | OS | Chrome | Firefox | Safari | Edge
@@ -38,10 +55,14 @@ NOTE: At one point we did also test against PhantomJS, but since work has long a
 
 There are two steps to installation:
 
-. Install the library `etaoin` into your clojure code
-. Install the drivers for each browser
+. Add the `etaoin` library as a dependency to your project
+. Install the WebDriver for each web browser you'd like control with Etaoin
 
 === Installing the etaoin library
+
+==== For Clojure Users
+
+Etaoin supports Clojure v1.9 and above.
 
 Add the following into `:dependencies` vector in your `project.clj` file:
 
@@ -50,11 +71,32 @@ Add the following into `:dependencies` vector in your `project.clj` file:
    [etaoin "{lib-version}"]
 ----
 
-Or the following to your `:deps` in your `deps.edn` file:
+Or the following under `:deps` in your `deps.edn` file:
 [source,clojure,subs="attributes+"]
 ----
    etaoin/etaoin {:mvn/version "{lib-version}"}
 ----
+
+==== For Bababashka Users
+
+We recommend the current release of https://book.babashka.org/#_installation[babashka].
+
+Add the following under `:deps` to your `bb.edn` file:
+
+[source,clojure,subs="attributes+"]
+----
+   etaoin/etaoin {:mvn/version "{lib-version}"}
+----
+
+The Etaoin feature to <<selenium-ide, run Selenium IDE files>> employs clojure spec. If you are using this feature, you'll need to also enable clojure spec support in Babashka by adding `babashka/spec.alpha` to your `bb.edn` `:deps`:
+
+[source,clojure]
+----
+   org.babashka/spec.alpha {:git/url "https://github.com/babashka/spec.alpha"
+                            :sha "644a7fc216e43d5da87b07471b0f87d874107d1a"}}}
+----
+
+See https://github.com/babashka/spec.alpha[babashka/spec.alpha] for current docs.
 
 :url-webdriver: https://www.w3.org/TR/webdriver/
 :url-tests: https://github.com/{project-src-coords}/blob/master/test/etaoin/api_test.clj
@@ -65,20 +107,26 @@ Or the following to your `:deps` in your `deps.edn` file:
 :url-webkit: https://webkit.org/blog/6900/webdriver-support-in-safari-10/
 :url-edge-dl: https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/
 
-Works with Clojure 1.9 and above.
+=== Installing the Browser WebDrivers
 
-=== Installing the Browser Drivers
+Etaoin controls web browsers via their WebDrivers.
+Each browser has its own WebDriver implementation which must be installed.
 
-This page provides instructions on how to install drivers you need to automate your browser.
+[TIP]
+====
+If it is not already installed, download the web browser you'd like to control (Chrome, Firefox, Edge) as per normal, which is usually by downloading it from its official site.
+Safari comes bundled with macOS.
+====
 
-Install Chrome, Firefox and Edge browsers by downloading them from their official sites.
-There won't be a problem on all the platforms.
+[TIP]
+====
+WebDrivers and browsers are updated regularly to fix bugs.
+Use current versions.
+====
 
-Some ways to install the webdrivers you might need:
+Some ways to install WebDrivers:
 
 * Google link:{url-chromedriver}[Chrome Driver] +
-Ensure you install at least v2.28.
-v2.27 and below has a bug related to maximizing a window (see <<troubleshooting>>)
 ** macOS: `brew install chromedriver`
 ** Windows: `scoop install chromedriver`
 ** Download: link:{url-chromedriver-dl}[Official Chromedriver download]
@@ -115,90 +163,98 @@ msedgedriver
 phantomjs --wd
 ----
 
-You may run tests for this library by launching:
+If you like, you can run Etaoin's test suite to verify your installation.
+From a clone of the https://github.com/clj-commons/etaoin[Etaoin GitHub repo]:
 
 [source,bash]
 ----
 bb test all
 ----
 
+For a smaller sanity test, you might want to run api tests against browsers you are particularly intested in. Example:
+
+[source,bash]
+----
+bb test api --browser chrome
+----
+
 You'll see browser windows open and close in series.
-The tests use a local HTML file with a special layout to validate most of the cases.
+The tests use a local HTML file with a special layout to validate most interactions.
 
 See below for <<troubleshooting>> if you have problems
 
 == Getting started
 
-The good news you may automate your browser directly from the REPL:
+The good news is that you can automate your browser directly from your Babashka or Clojure REPL:
 
 [source,clojure]
 ----
-(use 'etaoin.api)
-(require '[etaoin.keys :as k])
+(require '[etaoin.api :as api]
+         '[etaoin.keys :as k])
 
-(def driver (firefox)) ;; here, a Firefox window should appear
+;; Start WebDriver for Firefox
+(def driver (api/firefox)) ;; a Firefox window should appear
 
 ;; let's perform a quick Wiki session
-(go driver "https://en.wikipedia.org/")
-(wait-visible driver [{:id :simpleSearch} {:tag :input :name :search}])
 
-;; search for something
-(fill driver {:tag :input :name :search} "Clojure programming language")
-(fill driver {:tag :input :name :search} k/enter)
-(wait-visible driver {:class :mw-search-results})
+;; navigate to wikipedia
+(api/go driver "https://en.wikipedia.org/")
+;; wait for the search input to load
+(api/wait-visible driver [{:id :simpleSearch} {:tag :input :name :search}])
 
-;; select an `option` in select-box by visible text
-;; <select id="country">
-;;    <option value="rf">Russia</option>
-;;    <option value="usa">United States</option>
-;;    <option value="uk">United Kingdom</option>
-;;    <option value="fr">France</option>
-;;</select>
-(select driver :country "France")
-(get-element-value driver :country)
-;;=> "fr"
+;; search for something interesting
+(api/fill driver {:tag :input :name :search} "Clojure programming language")
+(api/fill driver {:tag :input :name :search} k/enter)
+(api/wait-visible driver {:class :mw-search-results})
 
-;; I'm sure the first link is what I was looking for
-(click driver [{:class :mw-search-results} {:class :mw-search-result-heading} {:tag :a}])
-(wait-visible driver {:id :firstHeading})
+;; click on first match
+(api/click driver [{:class :mw-search-results} {:class :mw-search-result-heading} {:tag :a}])
+(api/wait-visible driver {:id :firstHeading})
 
-;; let's ensure
-(get-url driver) ;; "https://en.wikipedia.org/wiki/Clojure"
+;; check our new url location
+(api/get-url driver)
+;; => "https://en.wikipedia.org/wiki/Clojure"
 
-(get-title driver) ;; "Clojure - Wikipedia"
+;; and our new title
+(api/get-title driver)
+;; => "Clojure - Wikipedia"
 
-(has-text? driver "Clojure") ;; true
+;; does page have Clojure in it?
+(api/has-text? driver "Clojure")
+;; => true
 
-;; navigate on history
-(back driver)
-(forward driver)
-(refresh driver)
-(get-title driver) ;; "Clojure - Wikipedia"
+;; navigate through history
+(api/back driver)
+(api/forward driver)
+(api/refresh driver)
+(api/get-title driver)
+;; => "Clojure - Wikipedia"
 
-;; stops Firefox and HTTP server
-(quit driver)
+;; stops Firefox WebDriver
+(api/quit driver) ;; the Firefox Window should close
 ----
 
-You see, any function requires a driver instance as the first argument.
-So you may simplify it using `doto` macros:
+Most api functions require the driver as the first argument.
+The `doto` macro can give your code a DSL feel.
+A portion of the above rewritten with `doto`:
 
 [source,clojure]
 ----
+(use '[etaoin.api :refer :all])
+(require '[etaoin.keys :as k])
+
 (def driver (firefox))
+
 (doto driver
   (go "https://en.wikipedia.org/")
   (wait-visible [{:id :simpleSearch} {:tag :input :name :search}])
-  ;; ...
+  (fill {:tag :input :name :search} "Clojure programming language")
   (fill {:tag :input :name :search} k/enter)
   (wait-visible {:class :mw-search-results})
-  (click :some-button)
-  ;; ...
+  (click [{:class :mw-search-results} {:class :mw-search-result-heading} {:tag :a}])
   (wait-visible {:id :firstHeading})
-  ;; ...
   (quit))
 ----
-
-In that case, your code looks like a DSL designed just for such purposes.
 
 You can use `fill-multi` to shorten the code like:
 
@@ -218,8 +274,8 @@ into
                     :textarea "some text"})
 ----
 
-If any exception occurs during a browser session, the external process might hang forever until you kill it manually.
-To prevent it, use `with-<browser>` macros as follows:
+If any exception occurs during a browser session, the WebDriver process might hang forever until you kill it manually.
+To prevent that, use `with-<browser>` macros as follows:
 
 [source,clojure]
 ----
@@ -229,9 +285,9 @@ To prevent it, use `with-<browser>` macros as follows:
     ...))
 ----
 
-Whatever happens during a session, the process will be stopped anyway.
+This will ensure that the WebDriver process is closed regardless of what happens.
 
-== Unit Tests
+== Unit Tests as Docs
 
 The sections that follow describe, how to use Etaoin.
 
@@ -1892,7 +1948,8 @@ Example:
   (is found (format "No *.xlsx file found in %s directory." DL-DIR)))
 ----
 
-== Running IDE files (new!)
+[[selenium-ide]]
+== Running Selenium IDE files
 
 Etaoin can play the files produced by link:{ide}[Selenium IDE].
 It's an official utility to create scenarios interactively.
