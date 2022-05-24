@@ -1,4 +1,6 @@
 {:cljdoc.doc/tree
  [["Readme" {:file "README.adoc"}]
-  ["Changelog" {:file "CHANGELOG.adoc"}]]
+  ["Changelog" {:file "CHANGELOG.adoc"}]
+  ["User Guide" {:file "doc/01-user-guide.adoc"}]
+  ["Developer Guide" {:file "doc/02-developer-guide.adoc"}]]
  :cljdoc/languages ["clj"]}
