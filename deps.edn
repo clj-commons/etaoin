@@ -15,6 +15,10 @@
                       ;; for http-client which uses apache http client 4.x which uses commons logging
                       org.slf4j/jcl-over-slf4j {:mvn/version "2.0.0-alpha7"}}
          :main-opts ["-m" "cognitect.test-runner"]}
+  :script {:extra-paths ["script"]}
   ;; for babashka testing, needed for eatoin.ide
   :bb-spec {:extra-deps {org.babashka/spec.alpha {:git/url "https://github.com/babashka/spec.alpha"
-                                                  :sha "644a7fc216e43d5da87b07471b0f87d874107d1a"}}}}}
+                                                  :sha "644a7fc216e43d5da87b07471b0f87d874107d1a"}}}
+  ;; for babashka testing, allows us to use cognitect test-runner
+  :bb-test {:extra-deps {org.clojure/tools.namespace {:git/url "https://github.com/babashka/tools.namespace"
+                                                      :git/sha "a13b037215e21a2e71aa34b27e1dd52c801a2a7b"}}}}}

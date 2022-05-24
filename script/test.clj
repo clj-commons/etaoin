@@ -126,7 +126,20 @@ Notes:
                         (get opts "api") "api"
                         (get opts "ide") "ide"
                         (get opts "unit") "unit"
-                        :else "all")]
+                        :else "all")
+              cp-args (case platform
+                        "jvm" ["-M:test"]
+                        "bb" (let [aliases (cond-> ":script:bb-test:test"
+                                             (not= "api" test-id) (str ":bb-spec"))]
+                               ["--classpath"
+                                (with-out-str (shell/clojure "-Spath" (str "-A" aliases)))
+                                "--main" "bb-test-runner"]))
+              test-runner-args (case test-id
+                                 "api" ["--namespace" "etaoin.api-test"]
+                                 "ide" ["--namespace" "etaoin.ide-test"]
+                                 "unit" ["--namespace-regex" ".*unit.*-test$"]
+                                 "all" [])
+              test-cmd-args (concat cp-args test-runner-args)]
           (when (get opts "--launch-virtual-display")
             (status/line :head "Launching virtual display")
             (launch-xvfb))
@@ -136,14 +149,9 @@ Notes:
                        (if (seq browsers)
                          (str " against browsers: " (string/join ", " browsers))
                          ""))
-          (if (= "jvm" platform)
-            (shell/clojure shell-opts
-                           (case test-id
-                             "api" "-M:test --namespace etaoin.api-test"
-                             "ide" "-M:test --namespace etaoin.ide-test"
-                             "unit" "-M:test --namespace-regex '.*unit.*-test$'"
-                             "all" "-M:test"))
-            (shell/command shell-opts "bb" "script/bb_test_runner.clj" test-id)))))))
+          (case platform
+            "jvm" (apply shell/clojure shell-opts test-cmd-args)
+            "bb" (apply shell/command shell-opts "bb" test-cmd-args)))))))
 
 (main/when-invoked-as-script
  (apply -main *command-line-args*))
