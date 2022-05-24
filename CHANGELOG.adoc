@@ -16,6 +16,7 @@ If your code uses `etaoin.keys/num-.`, you'll need to rename it to `etaoin.keys/
 
 Other Changes
 
+* https://github.com/clj-commons/etaoin/issues/380[#380]: Etaoin is now Babashka compatible!
 * https://github.com/clj-commons/etaoin/issues/383[#383]: Drop testing for Safari on Windows, Apple no longer releases Safari for Windows
 * https://github.com/clj-commons/etaoin/issues/388[#388]: Drop testing for PhantomJS, development has long ago stopped for PhantomJS
 * https://github.com/clj-commons/etaoin/issues/387[#387]: No longer testing multiple key modifiers for a single webdriver send keys request
