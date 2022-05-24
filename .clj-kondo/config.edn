@@ -1,5 +1,5 @@
 {:config-paths ^:replace [] ;; don't adopt any user preferences
-
+ :cljc {:features [:clj]}
  :hooks
  ;; for now we'll use the simple macroexpand, can move to hooks for finer grained errors later
  {:macroexpand

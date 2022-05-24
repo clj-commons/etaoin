@@ -24,12 +24,12 @@
     (if (= :win (os/get-os))
       (let [full-cmd (if (seq args)
                        ;; naive, but fine for our uses for now, adjust as necessary
-                       (str cmd " " (string/join " " args))
+                       (str cmd " " (string/join " " (map #(str "'" % "'") args)))
                        cmd)]
         (tasks/shell opts "powershell" "-command"
                      ;; powershell -command does not automatically propagate exit code,
                      ;; hence the secret exit sauce here
-                     (str full-cmd ";exit $LASTEXITCODE") ))
+                     (str full-cmd ";exit $LASTEXITCODE")))
       (apply tasks/shell opts cmd args))))
 
 

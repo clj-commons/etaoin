@@ -8,6 +8,11 @@
       </encoder>
     </appender>
 
+    <!-- uncomment org.apache.http for more details when using clj-http -->
+    <!--logger name="org.apache.http" level="debug" additivity="false">
+      <appender-ref ref="STDOUT"/>
+    </logger -->
+
     <logger name="etaoin" level="debug" additivity="false">
       <appender-ref ref="STDOUT"/>
     </logger>
