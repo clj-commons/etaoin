@@ -5,12 +5,36 @@
         dev.nubank/docopt {:mvn/version "0.6.1-fix7"}}
  :tasks
  {;; setup
-  :requires ([clojure.string :as string]
+  :requires ([babashka.classpath :as cp]
+             [babashka.fs :as fs]
+             [clojure.string :as string]
+             [helper.shell :as shell]
              [lread.status-line :as status])
   :enter (let [{:keys [name]} (current-task)] (status/line :head "TASK %s %s" name (string/join " " *command-line-args*)))
   :leave (let [{:keys [name]} (current-task)] (status/line :detail "\nTASK %s done." name))
 
   ;; commands
-  download-deps  {:task download-deps/-main  :doc "download all deps (useful for CI prep)"}
-  tools-versions {:task tools-versions/-main :doc "report on tools versions"}
-  test           {:task test/-main           :doc "run all or a subset of tests, use --help for args"}}}
+
+  dev            {:doc "start a Clojure nrepl server/prompt"
+                  :task (shell/command "clj" "-M:test:repl/cider")}
+  bb-dev         {:doc "start a Babashka nrepl server"
+                  :task (let [cp (-> (shell/clojure "-Spath -M:test:bb-spec:bb-test")
+                                     with-out-str)
+                              bbcp (cp/get-classpath)]
+                          (shell/command "bb"
+                                         "--classpath" (str cp fs/path-separator bbcp)
+                                         "--nrepl-server"))}
+  test           {:doc "run all or a subset of tests, use --help for args"
+                  :task test/-main}
+  drivers        {:doc "[list|kill] any running WebDrivers"
+                  :task drivers/-main}
+  lint           {:doc "[--rebuild] lint source code"
+                  :task lint/-main}
+  cljdoc-preview {:doc "preview what docs will look like on cljdoc, use --help for args"
+                  :task cljdoc-preview/-main}
+  tools-versions {:doc "report on tools versions"
+                  :task tools-versions/-main}
+  download-deps  {:doc "download all deps (useful for CI prep)"
+                  :task download-deps/-main}
+  outdated       {:task (shell/clojure {:continue true} "-M:outdated")
+                  :doc "report on outdated dependencies"}}}

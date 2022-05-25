@@ -1,10 +1,3 @@
-.PHONY: kill
-kill:
-	pkill chromedriver || true
-	pkill geckodriver || true
-	pkill safaridriver || true
-	pkill phantomjs || true
-
 IMAGE := etaoin
 
 .PHONY: docker-build

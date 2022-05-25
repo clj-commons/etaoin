@@ -1,4 +1,4 @@
-(ns etaoin.util)
+(ns etaoin.impl.util)
 
 (defmacro defmethods
   "Declares multimethods in batch. For each dispatch value from
@@ -9,10 +9,5 @@
 
 ;; essence only for linting
 (defmacro with-tmp-file [prefix suffix bind & body]
-  `(let [~bind "somepath"]
-     ~@body))
-
-;; essence only for linting
-(defmacro with-tmp-dir [prefix bind & body]
   `(let [~bind "somepath"]
      ~@body))

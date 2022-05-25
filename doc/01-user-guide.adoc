@@ -22,6 +22,7 @@ If Etaoin is not your cup of tea, you might also consider:
 
 * https://github.com/tatut/clj-chrome-devtools[clj-chrome-devtools]
 
+[[supported-os-browser]]
 === Supported OSes & Browsers
 
 Etaoin's test suite covers the following OSes and browsers run with both regular Clojure and Babashka:
@@ -107,6 +108,7 @@ See https://github.com/babashka/spec.alpha[babashka/spec.alpha] for current docs
 :url-webkit: https://webkit.org/blog/6900/webdriver-support-in-safari-10/
 :url-edge-dl: https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/
 
+[[install-webdrivers]]
 === Installing the Browser WebDrivers
 
 Etaoin controls web browsers via their WebDrivers.
