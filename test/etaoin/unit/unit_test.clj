@@ -4,16 +4,16 @@
             [clojure.test :refer :all]
             [etaoin.api :refer :all]
             [etaoin.ide.flow :as ide]
-            [etaoin.ide.spec :as spec]
+            [etaoin.ide.impl.spec :as spec]
             [etaoin.test-report]
-            etaoin.proc))
+            etaoin.impl.proc))
 
 (deftest test-firefox-driver-args
   (with-redefs
-    [etaoin.proc/run  (fn [_ _])
+    [etaoin.impl.proc/run  (fn [_ _])
      wait-running     identity
      create-session   (fn [_ _] "session-key")
-     etaoin.proc/kill identity
+     etaoin.impl.proc/kill identity
      delete-session   identity]
     (testing "Session"
       (with-firefox {} driver

@@ -1,4 +1,4 @@
-(ns etaoin.xpath
+(ns ^:no-doc etaoin.impl.xpath
   "A special module to work with XPath language."
   (:require [clojure.string :as string]))
 

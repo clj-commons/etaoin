@@ -1,4 +1,4 @@
-(ns etaoin.ide.spec
+(ns ^:no-doc etaoin.ide.impl.spec
   "
   Parsing IDE flow with spec.
   "

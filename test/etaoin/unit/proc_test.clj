@@ -2,7 +2,7 @@
   (:require [etaoin.api :refer :all]
             [clojure.java.shell :refer [sh]]
             [clojure.test :refer :all]
-            [etaoin.proc :as proc]
+            [etaoin.impl.proc :as proc]
             [etaoin.test-report]
             [clojure.pprint :as pprint]
             [clojure.string :as str]))

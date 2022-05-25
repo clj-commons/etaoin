@@ -1,7 +1,7 @@
 (ns etaoin.unit.xpath-test
   (:require [clojure.test :refer :all]
             [etaoin.test-report]
-            [etaoin.xpath :as xpath]))
+            [etaoin.impl.xpath :as xpath]))
 
 (def xpath-samples
   [[{:tag :a} ".//a"]

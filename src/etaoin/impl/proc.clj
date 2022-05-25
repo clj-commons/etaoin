@@ -1,4 +1,4 @@
-(ns etaoin.proc
+(ns ^:no-doc etaoin.impl.proc
   (:require [clojure.java.io :as io]
             [clojure.string :as str]))
 
