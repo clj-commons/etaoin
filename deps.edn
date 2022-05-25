@@ -21,4 +21,25 @@
                                                   :sha "644a7fc216e43d5da87b07471b0f87d874107d1a"}}}
   ;; for babashka testing, allows us to use cognitect test-runner
   :bb-test {:extra-deps {org.clojure/tools.namespace {:git/url "https://github.com/babashka/tools.namespace"
-                                                      :git/sha "a13b037215e21a2e71aa34b27e1dd52c801a2a7b"}}}}}
+                                                      :git/sha "a13b037215e21a2e71aa34b27e1dd52c801a2a7b"}}}
+  ;; for consistent linting we use a specific version of clj-kondo through the jvm
+  :clj-kondo {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2022.04.25"}}
+              :main-opts ["-m" "clj-kondo.main"]}
+
+  :build {:deps {io.github.clojure/tools.build {:git/tag "v0.8.2" :git/sha "ba1a2bf"}
+                 slipset/deps-deploy {:mvn/version "0.2.0"}}
+          :ns-default build}
+
+  :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "1.6.774"}
+                          org.slf4j/slf4j-simple {:mvn/version "1.7.36"} ;; to rid ourselves of logger warnings
+                          }
+             :main-opts ["-m" "antq.core"]}
+
+  :repl/cider
+  {:extra-deps {nrepl/nrepl                {:mvn/version "0.9.0"}
+                cider/cider-nrepl          {:mvn/version "0.28.4"}
+                refactor-nrepl/refactor-nrepl {:mvn/version "3.5.2"}}
+   :jvm-opts ["-XX:-OmitStackTraceInFastThrow"]
+   :main-opts  ["-m" "nrepl.cmdline"
+                "--middleware" "[refactor-nrepl.middleware/wrap-refactor,cider.nrepl/cider-middleware]"
+                "-i"]}}}

@@ -3,9 +3,8 @@
  :hooks
  ;; for now we'll use the simple macroexpand, can move to hooks for finer grained errors later
  {:macroexpand
-  {etaoin.util/defmethods etaoin.util/defmethods
-   etaoin.util/with-tmp-dir etaoin.util/with-tmp-dir
-   etaoin.util/with-tmp-file etaoin.util/with-tmp-file
+  {etaoin.impl.util/defmethods etaoin.impl.util/defmethods
+   etaoin.impl.util/with-tmp-file etaoin.impl.util/with-tmp-file
 
    etaoin.api/with-key-down etaoin.api/with-key-down
    etaoin.api/with-pointer-btn-down etaoin.api/with-pointer-btn-down

@@ -14,7 +14,7 @@ https://clojars.org/{project-mvn-coords}[image:https://img.shields.io/clojars/v/
 https://babashka.org[image:https://raw.githubusercontent.com/babashka/babashka/master/logo/badge.svg[bb compatible]]
 https://clojurians.slack.com/archives/C7KDM0EKW[image:https://img.shields.io/badge/slack-join_chat-brightgreen.svg[Join chat]]
 
-A pure Clojure implementation of the link:{url-webdriver}[Webdriver] protocol named after link:{url-wiki}[Etaoin Shrdlu] -- a typing machine that became alive after a mysterious note was produced on it.
+A pure Clojure implementation of the link:{url-webdriver}[Webdriver] protocol named after link:{url-wiki}[Etaoin Shrdlu] -- a typing machine that came to life after a mysterious note was produced on it.
 
 Use the Etaoin library to automate a browser, test your frontend behaviour, simulate human actions or whatever you want.
 
@@ -61,6 +61,16 @@ Ivan's blog-post about pitfalls that can occur when testing UI.
 * https://www.rate.com/[Guaranteed Rate]
 
 You are welcome to submit your company to this list.
+
+== Versioning
+
+Eatoin uses: `major`.`minor`.`patch`-`test-qualifier`
+
+* `major` increments when a non alpha release API has been broken - something, as a rule, we'd like to avoid.
+* `minor` increments to convey significant new features have been added.
+* `patch` indicates bug fixes or minor changes - it is the total number of releases to date.
+* `test-qualifier` is absent for stable releases.
+Can be `alpha`, `beta`, `rc1`, etc.
 
 == People
 
