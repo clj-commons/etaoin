@@ -17,13 +17,13 @@
   Phantom.js (Ghostdriver) - obsolete and no longer tested
   https://github.com/detro/ghostdriver/blob/
   "
-  (:require [etaoin.proc   :as proc]
-            [etaoin.client :as client]
+  (:require [etaoin.impl.proc   :as proc]
+            [etaoin.impl.client :as client]
             [etaoin.keys   :as keys]
             [etaoin.query  :as query]
             [etaoin.util   :as util :refer [defmethods]]
-            [etaoin.driver :as drv]
-            [etaoin.xpath  :as xpath]
+            [etaoin.impl.driver :as drv]
+            [etaoin.impl.xpath  :as xpath]
 
             [clojure.tools.logging     :as log]
             [clojure.java.io           :as io]

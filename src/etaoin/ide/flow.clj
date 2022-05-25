@@ -7,8 +7,8 @@
    [clojure.set :as cset]
    [clojure.spec.alpha :as s]
    [etaoin.api :refer :all]
-   [etaoin.ide.api :refer [run-command-with-log str->var]]
-   [etaoin.ide.spec :as spec]))
+   [etaoin.ide.impl.api :refer [run-command-with-log str->var]]
+   [etaoin.ide.impl.spec :as spec]))
 
 
 (declare execute-commands)

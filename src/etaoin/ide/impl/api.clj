@@ -1,4 +1,4 @@
-(ns etaoin.ide.api
+(ns ^:no-doc etaoin.ide.impl.api
   "
   Common Selenium IDE implementation.
   https://www.selenium.dev/selenium-ide/docs/en/api/commands

@@ -1,4 +1,4 @@
-(ns etaoin.driver
+(ns ^:no-doc etaoin.impl.driver
   "Some utilities to work with driver's data structure.
 
   Links for development:

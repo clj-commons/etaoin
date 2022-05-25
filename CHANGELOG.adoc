@@ -9,10 +9,38 @@ A release with an intentional breaking changes is marked with:
 
 Minor Breaking Changes
 
-* https://github.com/clj-commons/etaoin/issues/412[#412]: Rename `etaoin.keys/num-.` to `etaoin.keys/num-dot` +
+* https://github.com/clj-commons/etaoin/issues/412[#412]: Rename `etaoin.keys/num-.` to `etaoin.keys/num-dot`. +
 The symbol `num-.` is technically an invalid Clojure symbol and can confuse tooling. +
 A grep.app for `num-.` found Etaoin itself as the only user of this var.
 If your code uses `etaoin.keys/num-.`, you'll need to rename it to `etaoin.keys/num-dot`.
+* https://github.com/clj-commons/etaoin/issues/430[#430]: Declare the public API.
+We made what we think is a good guess at what the public etaoin API is.
+The following namespaces are now considered internal and subject to change:
++
+[%autowidth]
+|===
+| old namespace | new internal namespace
+
+| `etaoin.client`
+| `etaoin.impl.client`
+
+| `etaoin.driver`
+| `etaoin.impl.driver`
+
+| `etaoin.proc`
+| `etaoin.impl.proc`
+
+| `etaoin.xpath`
+| `etaoin.impl.xpath`
+
+| `etaoin.ide.api`
+| `etaoin.ide.impl.api`
+
+| `etaoin.ide.spec`
+| `etaoin.ide.impl.spec`
+
+|===
+If we got this wrong your code will fail, you will tell us, and we can discuss.
 
 Other Changes
 

@@ -1,4 +1,4 @@
-(ns etaoin.client
+(ns ^:no-doc etaoin.impl.client
   (:require [clojure.string :as str]
             [clojure.tools.logging :as log]
             #?(:bb [clj-http.lite.client :as client]
