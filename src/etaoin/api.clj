@@ -21,7 +21,7 @@
             [etaoin.impl.client :as client]
             [etaoin.keys   :as keys]
             [etaoin.query  :as query]
-            [etaoin.util   :as util :refer [defmethods]]
+            [etaoin.impl.util   :as util :refer [defmethods]]
             [etaoin.impl.driver :as drv]
             [etaoin.impl.xpath  :as xpath]
 

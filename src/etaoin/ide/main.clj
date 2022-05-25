@@ -14,7 +14,7 @@
    [clojure.tools.cli :refer [parse-opts]]
    [etaoin.api :as api]
    [etaoin.ide.flow :as flow]
-   [etaoin.util :refer [exit]]))
+   [etaoin.impl.util :refer [exit]]))
 
 
 (def browsers-set

@@ -30,6 +30,9 @@ The following namespaces are now considered internal and subject to change:
 | `etaoin.proc`
 | `etaoin.impl.proc`
 
+| `etaoin.util`
+| `etaoin.impl.util`
+
 | `etaoin.xpath`
 | `etaoin.impl.xpath`
 

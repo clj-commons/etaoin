@@ -7,7 +7,7 @@
             [clojure.test :refer :all]
             [etaoin.api :refer :all]
             [etaoin.test-report :as test-report]
-            [etaoin.util :refer [with-tmp-file]]
+            [etaoin.impl.util :refer [with-tmp-file]]
             [slingshot.slingshot :refer [try+]]))
 
 (defn numeric? [val]
