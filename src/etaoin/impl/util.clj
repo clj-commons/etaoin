@@ -1,8 +1,5 @@
-(ns etaoin.util
-  (:require [babashka.fs :as fs])
-  (:import java.io.File
-           java.nio.file.attribute.FileAttribute
-           java.nio.file.Files))
+(ns ^:no-doc etaoin.impl.util
+  (:import java.io.File))
 
 (defn map-or-nil?
   [x]

@@ -10,7 +10,7 @@
    [clojure.tools.logging :as log]
    [etaoin.api :refer :all]
    [etaoin.keys :as k]
-   [etaoin.util :refer [defmethods]]))
+   [etaoin.impl.util :refer [defmethods]]))
 
 
 (defn absolute-path?

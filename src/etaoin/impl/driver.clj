@@ -33,7 +33,7 @@
   Selenium Python source code for Firefox
   https://github.com/SeleniumHQ/selenium/blob/master/py/selenium/webdriver/firefox/options.py
   "
-  (:require [etaoin.util :refer [defmethods deep-merge]]
+  (:require [etaoin.impl.util :refer [defmethods deep-merge]]
             [babashka.fs :as fs]
             [clojure.string :as string]
             [clojure.tools.logging :as log]))
