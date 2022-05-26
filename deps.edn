@@ -3,7 +3,7 @@
         babashka/fs {:mvn/version "0.1.6"}
         clj-http/clj-http {:mvn/version "3.12.3"} ;; for jvm use
         org.clj-commons/clj-http-lite {:mvn/version "0.4.392"} ;; for babashka use
-        cheshire/cheshire {:mvn/version "5.10.2"}
+        cheshire/cheshire {:mvn/version "5.11.0"}
         org.clojure/tools.cli {:mvn/version "1.0.206"}
         org.clojure/tools.logging {:mvn/version "1.2.4"}}
  :aliases
