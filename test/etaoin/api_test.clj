@@ -75,6 +75,7 @@
 (deftest test-visible
   (doto *driver*
     (-> (visible? {:id :button-visible}) is)
+    (-> (visible? {:id :option-visible}) is)
     (-> (invisible? {:id :button-hidden}) is)
     (-> (invisible? {:id :div-hidden}) is)
     (-> (invisible? {:id :option-hidden}) is)
