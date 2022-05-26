@@ -83,6 +83,7 @@ Can be `alpha`, `beta`, `rc1`, etc.
 * https://github.com/atsman[Aleh Atsman]
 * https://github.com/marco-m[Marco Molteni]
 * https://github.com/nebesnytihohod[Maxim Stasenkov]
+* https://github.com/daveyarwood[Dave Yarwood]
 
 === Current Maintainers
 
