@@ -2147,18 +2147,17 @@
                     :path   [:session (:session driver) :element el :displayed]})))
 
 (defn- effectively-displayed?
-  "Returns true if an element is effectively displayed/visible.
-
-   Rather than checking the browser native `displayed` implementation, which
-   isn't 100% reliable, we are taking a pragmatic approach by checking the
-   `display` and `visibility` CSS properties."
   [driver el]
   {:pre [(some? el)]}
   (and (not= "none" (get-element-css-el driver el :display))
        (not= "hidden" (get-element-css-el driver el :visibility))))
 
 (defmulti displayed-el?
-  "Returns true if an element is displayed by its identifier."
+  "Returns true if an element is effectively displayed/visible.
+
+   Rather than checking the browser native `displayed` implementation, which
+   isn't 100% reliable, we are taking a pragmatic approach by checking the
+   `display` and `visibility` CSS properties."
   dispatch-driver)
 
 (defmethod displayed-el? :default
