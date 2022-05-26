@@ -2132,34 +2132,39 @@
 (def ^{:doc "Opposite of `exists?`."}
   absent? (complement exists?))
 
-(defmulti displayed-el?
-  "Checks whether an element is displayed by its identifier.
+;; NOTE: This doesn't appear to be as reliable as checking the `visibility` and
+;; `display` attributes. See this issue, for example:
+;; https://github.com/clj-commons/etaoin/issues/444
+(defn- displayed-impl-value
+  "Returns the browser native `displayed` attribute for an element.
 
-  Note: Safari does not have native `displayed` implementation, we
-  have to check some common cases manually (CSS display, visibility,
-  etc).
-
-  Returns true or false."
-  dispatch-driver)
-
-(defmethod displayed-el? :default ;;TODO it's only for jwp
+   Reference:
+   https://www.w3.org/TR/webdriver/#element-displayedness"
   [driver el]
   {:pre [(some? el)]}
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session driver) :element el :displayed]})))
 
-(defmethod displayed-el? :safari
+(defn- effectively-displayed?
+  "Returns true if an element is effectively displayed/visible.
+
+   Rather than checking the browser native `displayed` implementation, which
+   isn't 100% reliable, we are taking a pragmatic approach by checking the
+   `display` and `visibility` CSS properties."
   [driver el]
   {:pre [(some? el)]}
-  (cond
-    (= (get-element-css-el driver el :display)
-       "none")
-    false
-    (= (get-element-css-el driver el :visibility)
-       "hidden")
-    false
-    :else true))
+  (and (not= "none" (get-element-css-el driver el :display))
+       (not= "hidden" (get-element-css-el driver el :visibility))))
+
+(defmulti displayed-el?
+  "Returns true if an element is displayed by its identifier."
+  dispatch-driver)
+
+(defmethod displayed-el? :default
+  [driver el]
+  {:pre [(some? el)]}
+  (effectively-displayed? driver el))
 
 (defn displayed?
   "Checks whether an element is displayed an screen."
