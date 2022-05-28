@@ -1,0 +1,25 @@
+{:hooks
+ {:analyze-call
+  {etaoin.api/with-chrome            etaoin.api/with-browser
+   etaoin.api/with-firefox           etaoin.api/with-browser
+   etaoin.api/with-chrome-headless   etaoin.api/with-browser
+   etaoin.api/with-edge              etaoin.api/with-browser
+   etaoin.api/with-edge-headless     etaoin.api/with-browser
+   etaoin.api/with-phantom           etaoin.api/with-browser
+   etaoin.api/with-safari            etaoin.api/with-browser
+
+   etaoin.api/with-driver            etaoin.api/with-driver
+   etaoin.api/with-key-down          etaoin.api/with-key-down
+   etaoin.api/with-pointer-btn-down  etaoin.api/with-pointer-btn-down
+
+   ;; api2 moves to a more conventional let-ish vector syntax
+   etaoin.api2/with-chrome           etaoin.api2/with-browser
+   etaoin.api2/with-chrome-headless  etaoin.api2/with-browser
+   etaoin.api2/with-edge             etaoin.api2/with-browser
+   etaoin.api2/with-edge-headless    etaoin.api2/with-browser
+   etaoin.api2/with-firefox          etaoin.api2/with-browser
+   etaoin.api2/with-firefox-headless etaoin.api2/with-browser
+   etaoin.api2/with-phantom          etaoin.api2/with-browser
+   etaoin.api2/with-safari           etaoin.api2/with-browser}}
+ :lint-as
+ {etaoin.api/with-pointer-left-btn-down clojure.core/->}}

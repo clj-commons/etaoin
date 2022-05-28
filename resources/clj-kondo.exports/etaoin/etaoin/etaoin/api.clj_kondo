@@ -1,0 +1,53 @@
+(ns etaoin.api
+  (:require [clj-kondo.hooks-api :as api]
+            [etaoin.hooks-util :as h]))
+
+(defn- with-bound-arg [node bound-arg-ndx]
+  (let [macro-args (rest (:children node))
+        binding-sym (nth macro-args bound-arg-ndx nil)]
+    (if-not (h/symbol-node? binding-sym)
+      ;; could use clj-kondo findings, but I think this is good for now
+      (throw (ex-info (format "Expected binding symbol as %s arg"
+                              ;; use words instead of numbers to avoid ambiguity
+                              (case 1 "second"
+                                    2 "third")) {}))
+      (let [leading-args (take bound-arg-ndx macro-args)
+            body (drop (inc bound-arg-ndx) macro-args)]
+        {:node (api/list-node
+                (list*
+                 (api/token-node 'let)
+                   ;; simulate the effect, macro is creating a new thing (driver for example)
+                   ;; via binding it. I don't think the bound value matters for the linting process
+                 (api/vector-node [binding-sym (api/map-node [])])
+                   ;; reference the other args so that they are not linted as unused
+                 (api/vector-node leading-args)
+                 body))}))))
+
+(defn- with-x-down [node]
+  (let [macro-args (rest (:children node))
+        [leading-args body] (split-at 2 macro-args)]
+    {:node (api/list-node
+            (list*
+             (api/token-node 'do)
+               ;; dump the body
+             (api/list-node (list* body))
+               ;; reference the other args so that they are not linted as unused (if they happen to be symbols)
+             (api/vector-node leading-args)))}))
+
+(defn with-browser
+  "Covers etaoin.api/with-chrome and all its variants
+  [opt bind & body]"
+  [{:keys [node]}]
+  (with-bound-arg node 1))
+
+(defn with-driver
+  "Very similar to with-browser but bound arg is 1 deeper
+  [type opt bind & body]"
+  [{:keys [node]}]
+  (with-bound-arg node 2))
+
+(defn with-key-down [{:keys [node]}]
+  (with-x-down node))
+
+(defn with-pointer-btn-down [{:keys [node]}]
+  (with-x-down node))

@@ -189,9 +189,11 @@ See `script/bb_test_runner.clj` and tweak if necessary.
 Sometimes tools like WireShark can also be helpful.
 @lread personally used a combination of RawCap and WireShark on Windows to successfully diagnose an issue.
 
-=== Clj-kondo Export Config [COMING SOON]
+=== Clj-kondo Export Config
 
 Users of Etaoin and clj-kondo benefit from our clj-kondo export configuration.
+As is the convention, you'll find it under `./resources/clj-kondo.exports/`.
+We keep any clj-kondo config containing our local linting preferences, and pertinent to only our internal code, in `.clj-kondo/config.edn`.
 
 This configuration is included in the Etaoin release jar and available when folks reference Etaoin from their `deps.edn` form a `git` dependency.
 

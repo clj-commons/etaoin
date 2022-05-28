@@ -1,17 +1,12 @@
-{:config-paths ^:replace [] ;; don't adopt any user preferences
- :cljc {:features [:clj]}
+{:config-paths ^:replace ;; don't adopt any user preferences
+ ["../resources/clj-kondo.exports/etaoin/etaoin"] ;; include our exported public config
+ :cljc {:features [:clj]} ;; our bb reader conditionals might make some tools also assume cljs, state otherwise
  :hooks
- ;; for now we'll use the simple macroexpand, can move to hooks for finer grained errors later
+ ;; for internal stuff, I'm fine with using macroexpand, our external config uses analyze-call for
+ ;; finer grained error reporting
  {:macroexpand
   {etaoin.impl.util/defmethods etaoin.impl.util/defmethods
-   etaoin.impl.util/with-tmp-file etaoin.impl.util/with-tmp-file
-
-   etaoin.api/with-key-down etaoin.api/with-key-down
-   etaoin.api/with-pointer-btn-down etaoin.api/with-pointer-btn-down
-   etaoin.api/with-pointer-left-btn-down etaoin.api/with-pointer-left-btn-down
-   etaoin.api/with-driver etaoin.api/with-driver
-   etaoin.api/with-chrome etaoin.api/with-chrome
-   etaoin.api/with-firefox etaoin.api/with-firefox}}
+   etaoin.impl.util/with-tmp-file etaoin.impl.util/with-tmp-file}}
 
  :linters
  ;; etaoin is dsl-ish and does make use of :refer :all, can decide if we like that at some later date
