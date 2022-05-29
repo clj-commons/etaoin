@@ -51,9 +51,7 @@
   (status/line :head "clj-kondo: linting")
   (let [{:keys [exit]}
         (shell/clojure {:continue true}
-                       "-M:clj-kondo --lint src test script env deps.edn bb.edn"
-                       "resources/clj-kondo.exports/etaoin/etaoin"
-                       ".clj-kondo/hooks")]
+                       "-M:clj-kondo --lint src test script env deps.edn bb.edn")]
     (cond
       (= 2 exit) (status/die exit "clj-kondo found one or more lint errors")
       (= 3 exit) (status/die exit "clj-kondo found one or more lint warnings")
