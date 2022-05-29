@@ -1,5 +1,6 @@
 (ns etaoin.impl.util)
 
+#_{:clj-kondo/ignore [:redefined-var]}
 (defmacro defmethods
   "Declares multimethods in batch. For each dispatch value from
   dispatch-vals, creates a new method."
@@ -8,6 +9,7 @@
      (defmethod ~multifn dispatch-val# ~@fn-tail)))
 
 ;; essence only for linting
-(defmacro with-tmp-file [prefix suffix bind & body]
+#_{:clj-kondo/ignore [:redefined-var ]}
+(defmacro with-tmp-file #_{:clj-kondo/ignore [:unused-binding]} [prefix suffix bind & body]
   `(let [~bind "somepath"]
      ~@body))
