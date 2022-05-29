@@ -25,9 +25,9 @@
         bb-cp (bbcp/get-classpath)]
 
     (status/line :detail "- copying configs")
-    (shell/command "clojure -M:clj-kondo --skip-lint --copy-configs --lint" clj-cp bb-cp)
+    (shell/clojure "-M:clj-kondo --skip-lint --copy-configs --lint" clj-cp bb-cp)
     (status/line :detail "- creating cache")
-    (shell/command "clojure -M:clj-kondo --dependencies --lint" clj-cp bb-cp)))
+    (shell/clojure "-M:clj-kondo --dependencies --lint" clj-cp bb-cp)))
 
 (defn- check-cache [{:keys [rebuild-cache]}]
   (status/line :head "clj-kondo: cache check")
@@ -50,8 +50,8 @@
   (check-cache opts)
   (status/line :head "clj-kondo: linting")
   (let [{:keys [exit]}
-        (shell/command {:continue true}
-                       "clojure -M:clj-kondo --lint src test script env deps.edn bb.edn")]
+        (shell/clojure {:continue true}
+                       "-M:clj-kondo --lint src test script env deps.edn bb.edn")]
     (cond
       (= 2 exit) (status/die exit "clj-kondo found one or more lint errors")
       (= 3 exit) (status/die exit "clj-kondo found one or more lint warnings")
