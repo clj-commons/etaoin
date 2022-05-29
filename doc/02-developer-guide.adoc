@@ -140,7 +140,8 @@ To lint Etaoin sources:
 bb lint
 ----
 
-We like to keep our code free of lint warnings, but don't currently fail CI if there are lint issues.
+We like to keep our code free of lint warnings and fail CI if there are any lint issues.
+This keeps our code tidy and also helps us to ensure our <<clj-kondo-export,clj-kondo export config>> is working as expected.
 
 TIP: https://github.com/borkdude/clj-kondo/blob/master/doc/editor-integration.md[Integrate clj-kondo into your editor] to catch mistakes as you type them.
 
@@ -189,6 +190,7 @@ See `script/bb_test_runner.clj` and tweak if necessary.
 Sometimes tools like WireShark can also be helpful.
 @lread personally used a combination of RawCap and WireShark on Windows to successfully diagnose an issue.
 
+[[clj-kondo-export]]
 === Clj-kondo Export Config
 
 Users of Etaoin and clj-kondo benefit from our clj-kondo export configuration.
