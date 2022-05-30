@@ -26,6 +26,4 @@ build.xml
 /.cpcache
 # clj-kondo will copy our own exported config under resources to ./clj-kondo,
 # we don't need this duplicate.
-# note that we do not ignore /.clj-kondo/etaoin because it does include some macro hooks
-# that are not part of our export config
-/.clj-kondo/etaoin/etaoin
+/.clj-kondo/etaoin
