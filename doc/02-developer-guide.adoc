@@ -114,6 +114,42 @@ bb test --help
 We'll likely add finer grained test selection to satisfy developer needs.
 For now, temporarily tweak `./script/test.clj` if you need to.
 
+==== Testing within Docker
+
+If you wish, you can build a local docker image for testing on Linux.
+You may want to try this because:
+
+* you are developing on macOS and want to run a sanity test on Linux
+* or maybe you'd like to isolate a test run without windows popping up hither and thither (on docker we use a virtual display)
+
+To build a local docker image with Chrome and Firefox support:
+[source,shell]
+----
+bb docker-build
+----
+
+TIP: This will build a docker image with current releases of Chrome, Firefox and their respective WebDrivers.
+Rerun the command as necessary.
+
+You can use this image interactively:
+[source,shell]
+----
+bb docker-run
+bb test all
+----
+
+Or you can use it to run a single command:
+[source,shell]
+----
+bb docker-run bb test all
+----
+
+NOTE: `docker-run` plunks you automatically into `/etaoin` which maps to the etaoin project root
+
+There is nothing magic about the babashka docker tasks.
+They are here for our convenience.
+Feel free to run docker commands directly if that is more your thing.
+
 === WebDriver Processes
 
 Sometimes WebDriver process might hang around longer than you'd like.

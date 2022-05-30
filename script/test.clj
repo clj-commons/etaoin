@@ -62,6 +62,9 @@
               (Thread/sleep 500)
               (recur))))))))
 
+(defn- running-in-docker? []
+  (fs/exists? "/.dockerenv"))
+
 (def valid-browsers ["chrome" "firefox" "edge" "safari"])
 (def valid-platforms ["jvm" "bb"])
 
@@ -90,7 +93,7 @@ Options:
 Notes:
 - ide tests default to firefox and chrome only.
 - api tests default browsers based on OS on which they are run.
-- launching a virtual display is necessary for GitHub Actions but not for CircleCI"
+- launching a virtual display is automatic when in docker"
                     (string/replace "{{valid-browsers}}" (valid-opts valid-browsers))
                     (string/replace "{{valid-platforms}}" (valid-opts valid-platforms))))
 
@@ -110,14 +113,16 @@ Notes:
                                     (doric/table [:os :cmd :desc]))))
 
         :else
-        (let [env (cond-> {}
+        (let [virtual-display? (or (get opts "--launch-virtual-display")
+                                   (running-in-docker?))
+              env (cond-> {}
                     (seq browsers)
                     (assoc (if (get opts "api")
                              "ETAOIN_TEST_DRIVERS"
                              "ETAOIN_IDE_TEST_DRIVERS")
                            (mapv keyword browsers))
 
-                    (get opts "--launch-virtual-display")
+                    virtual-display?
                     (assoc "DISPLAY" ":99.0"))
               shell-opts (if (seq env)
                            {:extra-env env}
@@ -140,7 +145,7 @@ Notes:
                                  "unit" ["--namespace-regex" ".*unit.*-test$"]
                                  "all" [])
               test-cmd-args (concat cp-args test-runner-args)]
-          (when (get opts "--launch-virtual-display")
+          (when virtual-display?
             (status/line :head "Launching virtual display")
             (launch-xvfb))
           (status/line :head "Running %s tests on %s%s"
