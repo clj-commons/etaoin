@@ -8,6 +8,6 @@
      (defmethod ~multifn dispatch-val# ~@fn-tail)))
 
 ;; essence only for linting
-(defmacro with-tmp-file [prefix suffix bind & body]
+(defmacro with-tmp-file #_{:clj-kondo/ignore [:unused-binding]} [prefix suffix bind & body]
   `(let [~bind "somepath"]
      ~@body))

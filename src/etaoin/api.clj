@@ -2132,20 +2132,6 @@
 (def ^{:doc "Opposite of `exists?`."}
   absent? (complement exists?))
 
-;; NOTE: This doesn't appear to be as reliable as checking the `visibility` and
-;; `display` attributes. See this issue, for example:
-;; https://github.com/clj-commons/etaoin/issues/444
-(defn- displayed-impl-value
-  "Returns the browser native `displayed` attribute for an element.
-
-   Reference:
-   https://www.w3.org/TR/webdriver/#element-displayedness"
-  [driver el]
-  {:pre [(some? el)]}
-  (:value (execute {:driver driver
-                    :method :get
-                    :path   [:session (:session driver) :element el :displayed]})))
-
 (defn- effectively-displayed?
   [driver el]
   {:pre [(some? el)]}

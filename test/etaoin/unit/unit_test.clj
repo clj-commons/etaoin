@@ -3,6 +3,7 @@
             [clojure.spec.alpha :as s]
             [clojure.test :refer :all]
             [etaoin.api :refer :all]
+            [etaoin.api2 :as e2]
             [etaoin.ide.flow :as ide]
             [etaoin.ide.impl.spec :as spec]
             [etaoin.test-report]
@@ -42,12 +43,19 @@
         (is profile-path
             (get-element-text driver :profile_path))))))
 
+(deftest test-chrome-profile-using-v2-api
+  (fs/with-temp-dir [chrome-dir {:prefix "chrome-dir"}]
+    (let [profile-path (str (fs/file chrome-dir "chrome-profile"))]
+      (e2/with-chrome [driver {:profile profile-path :args ["--no-sandbox"]} ]
+        (go driver "chrome://version")
+        (is profile-path
+            (get-element-text driver :profile_path))))))
+
 (deftest test-fail-run-driver
   (is (thrown-with-msg?
         clojure.lang.ExceptionInfo
         #"wrong-driver-path"
         (chrome {:path-driver "wrong-driver-path"}))))
-
 
 (deftest test-actions
   (let [keyboard        (-> (make-key-input)
