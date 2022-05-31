@@ -37,5 +37,17 @@
                   :task tools-versions/-main}
   download-deps  {:doc "download all deps (useful for CI prep)"
                   :task download-deps/-main}
-  outdated       {:task (shell/clojure {:continue true} "-M:outdated")
-                  :doc "report on outdated dependencies"}}}
+  outdated       {:doc "report on outdated dependencies"
+                  :task (shell/clojure {:continue true} "-M:outdated")}
+
+  docker-build   {:doc "build etaoin docker image"
+                  :task (shell/command "docker build --no-cache -t etaoin:latest .")}
+  -docker-install {:doc "helper to setup docker image"
+                   :task docker-install/-main}
+  docker-run     {:doc "run etaoin docker image (specify no commmands for interactive)"
+                  :task (apply shell/command {:continue true}
+                               "docker run -it --rm -v"
+                               (str (fs/cwd) ":/etaoin")
+                               "-w" "/etaoin"
+                               "etaoin:latest"
+                               *command-line-args*)}}}
