@@ -1,6 +1,7 @@
 (ns ^:no-doc etaoin.impl.proc
-  (:require [clojure.java.io :as io]
-            [clojure.string :as str]))
+  (:require
+   [clojure.java.io :as io]
+   [clojure.string :as str]))
 
 (def windows? (str/starts-with? (System/getProperty "os.name") "Windows"))
 

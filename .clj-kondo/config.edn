@@ -7,8 +7,4 @@
  ;; finer grained error reporting
  {:macroexpand
   {etaoin.impl.util/defmethods etaoin.impl.util/defmethods
-   etaoin.impl.util/with-tmp-file etaoin.impl.util/with-tmp-file}}
-
- :linters
- ;; etaoin is dsl-ish and does make use of :refer :all, can decide if we like that at some later date
- {:refer-all {:level :off}}}
+   etaoin.impl.util/with-tmp-file etaoin.impl.util/with-tmp-file}}}

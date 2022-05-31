@@ -1,45 +1,44 @@
-#_{:clj-kondo/ignore [:use]}
-(use 'etaoin.api)
-(require '[etaoin.keys :as k])
+(require '[etaoin.api :as e]
+         '[etaoin.keys :as k])
 
-(def driver (chrome))
+(def driver (e/chrome))
 
-(go driver "https://en.wikipedia.org/")
+(e/go driver "https://en.wikipedia.org/")
 
 (def query-search {:tag :input :name :search})
 
-(wait-visible driver [{:id :simpleSearch} query-search])
+(e/wait-visible driver [{:id :simpleSearch} query-search])
 
 ;; search for something
-(fill driver query-search "Clojure programming language")
+(e/fill driver query-search "Clojure programming language")
 
-(clear driver query-search)
+(e/clear driver query-search)
 
-(fill-human driver query-search "Clojure programming language")
+(e/fill-human driver query-search "Clojure programming language")
 
-(fill driver query-search k/enter)
-(wait-visible driver {:class :mw-search-results})
+(e/fill driver query-search k/enter)
+(e/wait-visible driver {:class :mw-search-results})
 
-(scroll-down driver 100)
+(e/scroll-down driver 100)
 
 ;; I'm sure the first link is what I was looking for
-(click driver [{:class :mw-search-results}
-               {:class :mw-search-result-heading}
-               {:tag :a}])
+(e/click driver [{:class :mw-search-results}
+                 {:class :mw-search-result-heading}
+                 {:tag :a}])
 
-(wait-visible driver {:id :firstHeading})
+(e/wait-visible driver {:id :firstHeading})
 
-(get-url driver)
-(get-title driver)
+(e/get-url driver)
+(e/get-title driver)
 
-(has-text? driver "Clojure")
+(e/has-text? driver "Clojure")
 
 ;; navigate on history
-(back driver)
-(forward driver)
-(refresh driver)
+(e/back driver)
+(e/forward driver)
+(e/refresh driver)
 
-(screenshot driver "clojure.png")
+(e/screenshot driver "clojure.png")
 
 ;; stops Firefox and HTTP server
-(quit driver)
+(e/quit driver)

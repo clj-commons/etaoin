@@ -11,10 +11,10 @@
   (:require
    [clojure.java.io :as io]
    [clojure.string :as str]
-   [clojure.tools.cli :refer [parse-opts]]
+   [clojure.tools.cli :as cli]
    [etaoin.api :as api]
    [etaoin.ide.flow :as flow]
-   [etaoin.impl.util :refer [exit]]))
+   [etaoin.impl.util :as util]))
 
 
 (def browsers-set
@@ -109,7 +109,7 @@ Options:")
   "
   [& args]
   (let [{:keys [errors summary options]}
-        (parse-opts args cli-options)
+        (cli/parse-opts args cli-options)
 
         {:keys [help file resource]}
         options]
@@ -117,22 +117,22 @@ Options:")
     (cond
 
       errors
-      (exit 1 (error-msg errors))
+      (util/exit 1 (error-msg errors))
 
       help
-      (exit 0 (usage summary))
+      (util/exit 0 (usage summary))
 
       file
       (let [ide-file (io/file file)]
         (when-not (and (.exists ide-file)
                        (not (.isDirectory ide-file)))
-          (exit 1 "The IDE file not found"))
+          (util/exit 1 "The IDE file not found"))
         (run-script ide-file options))
 
       resource
       (if-let [r (io/resource resource)]
         (run-script r options)
-        (exit 1 "Resource not found"))
+        (util/exit 1 "Resource not found"))
 
       :else
-      (exit 1 "Specify the path to the ide file: `--file` or `--resource`"))))
+      (util/exit 1 "Specify the path to the ide file: `--file` or `--resource`"))))

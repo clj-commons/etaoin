@@ -1,5 +1,5 @@
 (ns etaoin.unit.xpath-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest testing is]]
             [etaoin.test-report]
             [etaoin.impl.xpath :as xpath]))
 

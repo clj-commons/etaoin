@@ -1,4 +1,7 @@
-{:hooks
+{:linters
+ {:etaoin/with-x-action {:level :error}
+  :etaoin/binding-sym {:level :error}}
+ :hooks
  {:analyze-call
   {etaoin.api/with-chrome            etaoin.api/with-browser
    etaoin.api/with-firefox           etaoin.api/with-browser

@@ -1,7 +1,8 @@
 (ns etaoin.query
   "A module to deal with querying elements."
-  (:require [etaoin.impl.util :as util]
-            [etaoin.impl.xpath :as xpath]))
+  (:require
+   [etaoin.impl.util :as util]
+   [etaoin.impl.xpath :as xpath]))
 
 ;; todo duplicates with api.clj
 (def locator-xpath "xpath")

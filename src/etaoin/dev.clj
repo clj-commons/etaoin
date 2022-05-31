@@ -3,10 +3,9 @@
   A namespace to cover Chrome's devtools features.
   "
   (:require
-   [clojure.string :as str]
    [cheshire.core :as json]
+   [clojure.string :as str]
    [etaoin.api :as api]))
-
 
 (defn try-parse-int
   [line]
@@ -14,11 +13,9 @@
        (catch Exception _e
          line)))
 
-
 (defn parse-json
   [string]
   (json/parse-string string true))
-
 
 (defn parse-method
   "
@@ -31,7 +28,6 @@
         (-> (str/lower-case method)
             (str/split #"\." 2))]
     (keyword topname lowname)))
-
 
 (defn process-log
   "
@@ -48,14 +44,12 @@
         (merge message)
         (assoc :_type _type))))
 
-
 (defn request?
   "
   True if a log entry belongs to a network domain.
   "
   [log]
   (some-> log :_type namespace (= "network")))
-
 
 (defn group-requests
   "
@@ -66,7 +60,6 @@
     (fn [log]
       (some-> log :message :params :requestId))
     logs))
-
 
 (defn log->request
   "

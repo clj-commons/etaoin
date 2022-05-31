@@ -67,6 +67,9 @@ All documentation is written in AsciiDoc.
 
 We host our docs on cljdoc and have support for <<cljdoc-preview,previewing>>
 
+
+
+
 == Babashka Tasks
 
 We use Babashka tasks, to see all available tasks run:
@@ -113,6 +116,19 @@ bb test --help
 
 We'll likely add finer grained test selection to satisfy developer needs.
 For now, temporarily tweak `./script/test.clj` if you need to.
+
+==== Testing User Guide Code Blocks
+
+There are many code examples in the user guide.
+In an attempt to ensure they are in working order, we run a selection of them through https://github.com/lread/test-doc-blocks[test-doc-blocks].
+
+[source,shell]
+----
+bb test-doc
+----
+
+If you are updating the user guide, it preferable if your code block can be run through test-doc-blocks.
+But if this is impractal, you can also have test-doc-blocks skip a code block.
 
 ==== Testing within Docker
 

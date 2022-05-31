@@ -1,10 +1,11 @@
 (ns etaoin.ide-test
-  (:require [clojure.edn :as edn]
-            [etaoin.api :as api]
-            [etaoin.ide.flow :as ide]
-            [etaoin.test-report :as test-report]
-            [clojure.test :refer :all]
-            [clojure.java.io :as io]))
+  (:require
+   [clojure.edn :as edn]
+   [clojure.java.io :as io]
+   [clojure.test :refer [deftest is testing use-fixtures]]
+   [etaoin.api :as e]
+   [etaoin.ide.flow :as ide]
+   [etaoin.test-report :as test-report]))
 
 (def ^:dynamic *driver*)
 (def ^:dynamic *base-url*)
@@ -25,8 +26,8 @@
   (let [base-url       (-> "html" io/resource str)
         test-file-path (-> "ide/test.side" io/resource str)]
     (doseq [type drivers]
-      (api/with-driver type {:args ["--no-sandbox"]} driver
-        (api/go driver base-url)
+      (e/with-driver type {:args ["--no-sandbox"]} driver
+        (e/go driver base-url)
         (binding [*driver*         driver
                   *base-url*       base-url
                   *test-file-path* test-file-path
