@@ -2164,6 +2164,17 @@ This is a bypass OS security model.
 
 A similar problem is described https://stackoverflow.com/questions/50642308/webdriverexception-unknown-error-devtoolsactiveport-file-doesnt-exist-while-t[here]
 
+
+=== Selectors not working
+
+*Problem:* Selectors for locating element are not working, even though the elements are clearly available.
+
+Possible cause: Your script may have clicked a link that opened a new tab or window.
+Even though the new window is in the foreground, the driver instance is still connected to the original window.
+
+*Solution:* Call `switch-window-next` when a new tab or window is opened to point the driver to the new tab/window.
+
+
 == API v2
 
 The `etaoin.api2` namespace brings some bits of alternative macros and functions.
