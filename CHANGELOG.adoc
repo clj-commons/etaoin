@@ -65,6 +65,7 @@ Fixed.
 * Docs
 ** https://github.com/clj-commons/etaoin/issues/393[#393]: Add changelog
 ** https://github.com/clj-commons/etaoin/issues/426[#426]: Reorganize into separate guides
+** https://github.com/clj-commons/etaoin/commit/f3f0370fb76bc353c14293243410db1641f99c70[f3f0370]: A new troubleshooting tip (thanks https://github.com/jkrasnay[@jkrasnay]!)
 ** https://github.com/clj-commons/etaoin/issues/396[#396]: Move from Markdown to AsciiDoc
 * Internal quality
 ** https://github.com/clj-commons/etaoin/issues/382[#382]: Fix process fork testing on Windows
