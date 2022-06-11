@@ -212,11 +212,15 @@ See <<troubleshooting>> if you have problems - or reach out on link:{url-slack}[
 The great news is that you can automate your browser directly from your Babashka or Clojure REPL.
 Let's interact with Wikipedia:
 
-// A little invisible cheat for better test-doc-block reporting when running generated tests
+// A little invisible codeblock for some setup
 ifdef::env-test-doc-blocks[]
 [source,clojure]
 ----
+(require '[babashka.fs :as fs])
+;; for better test-doc-block reporting when running generated tests
 (require '[etaoin.test-report])
+;; for screenshots save dir (dir must currently exist)
+(fs/create-dirs "target/etaoin-play")
 ----
 endif::[]
 
