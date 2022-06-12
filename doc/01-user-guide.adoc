@@ -913,6 +913,7 @@ A quick example of entering ordinary characters while holding Shift:
 [source,clojure]
 ----
 (e/refresh driver)
+(e/wait 1) ;; maybe we need a sec for active element to focus
 (e/fill-active driver (k/with-shift "caps is great"))
 (e/get-element-value driver :active)
 ;; => "CAPS IS GREAT"
