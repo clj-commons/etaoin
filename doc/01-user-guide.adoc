@@ -7,9 +7,9 @@
 :project-src-coords: clj-commons/etaoin
 :project-mvn-coords: etaoin/etaoin
 :url-webdriver: https://www.w3.org/TR/webdriver/
-:url-sample-page: http://{project-src-coords}/doc/user-guide-sample.html
+:url-sample-page: /doc/user-guide-sample.html
 :url-doc: https://cljdoc.org/d/{project-mvn-coords}
-:url-tests: https://github.com/{project-src-coords}/blob/master/test/etaoin/api_test.clj
+:url-tests: /test/etaoin/api_test.clj
 :url-slack: https://clojurians.slack.com/archives/C7KDM0EKW
 
 == Introduction
@@ -22,7 +22,8 @@ It is a thin abstraction atop the link:{url-webdriver}[W3C WebDriver protocol] t
 Ivan Grishaev (https://github.com/igrishaev[@igrishaev]) created Etaoin and published its first release to Clojars in Feb of 2017.
 He and his band of faithful contributors grew Etaoin into a well respected goto-library for browser automation.
 
-In May of 2022, finding his time had gravitated more to back-end development, Ivan offered Etaoin for adoption to clj-commons where it is now currently under the loving care of https://github.com/lread[@lread] and https://github.com/borkdude[@borkdude].
+In May 2022, finding his time had gravitated more to back-end development, Ivan offered Etaoin for adoption to clj-commons.
+It is now currently under the loving care of https://github.com/lread[@lread] and https://github.com/borkdude[@borkdude].
 
 === Interesting Alternatives
 
@@ -58,14 +59,14 @@ Etaoin's test suite covers the following OSes and browsers for both Clojure and 
 
 |===
 
-NOTE: At one point we did also test against PhantomJS, but since work has long ago stopped on this project we have dropped testing.
+NOTE: We once did test against PhantomJS, but since work has long ago stopped on this project, we have dropped testing
 
 == Installation
 
 There are two steps to installation:
 
 . Add the `etaoin` library as a dependency to your project
-. Install the WebDriver for each web browser you'd like control with Etaoin
+. Install the WebDriver for each web browser that you want to control with Etaoin
 
 === Installing the Etaoin Library
 
@@ -124,11 +125,12 @@ See https://github.com/babashka/spec.alpha[babashka/spec.alpha] for current docs
 === Installing the Browser WebDrivers
 
 Etaoin controls web browsers via their WebDrivers.
-Each browser has its own WebDriver implementation which must be installed.
+Each browser has its own WebDriver implementation that must be installed.
 
 [TIP]
 ====
-If it is not already installed, download the web browser you'd like to control (Chrome, Firefox, Edge) as per normal - which is usually by downloading it from its official site.
+If it is not already installed, you will need to install the web browser too (Chrome, Firefox, Edge).
+This is usually via a download from its official site.
 Safari comes bundled with macOS.
 ====
 
@@ -166,7 +168,9 @@ Edge and `msedgedriver` must match so you might need to specify the version:
 ** Windows: `scoop install phantomjs`
 ** Download: link:{url-phantom-dl}[Official PhantomJS download site]
 
-Now, check your installation launching any of these commands. For each command, an endless process with a local HTTP server should start.
+Check your WebDriver installations launching by launching these commands.
+Each should start a process that includes its own local HTTP server.
+Use Ctrl-C to terminate.
 
 [source,bash]
 ----
@@ -177,9 +181,10 @@ msedgedriver
 phantomjs --wd
 ----
 
-If you like, you can run Etaoin's test suite to verify your installation.
+You can optionally run the Etaoin test suite to verify your installation.
 
-TIP: Some Etaoin API tests rely on ImageMagick, install it prior to running test.
+TIP: Some Etaoin API tests rely on ImageMagick.
+Install it prior to running test.
 
 From a clone of the https://github.com/clj-commons/etaoin[Etaoin GitHub repo]
 
@@ -202,8 +207,8 @@ bb test all
 bb test api --browser chrome
 ----
 
-When tests are running, you'll see browser windows open and close in series.
-The tests use a local HTML file with a special layout to validate most interactions.
+During the test run, browser windows will open and close in series.
+The tests use a local handcrafted HTML file to validate most interactions.
 
 See <<troubleshooting>> if you have problems - or reach out on link:{url-slack}[Clojurians Slack #etaoin] or https://github.com/clj-commons/etaoin/issues[GitHub issues].
 
@@ -296,11 +301,13 @@ A portion of the above rewritten with `doto`:
 == Playing Along in your REPL
 We encourage you to try the examples in from this user guide in your REPL.
 
-The Interwebs is in constant change, so while using live sites is attractive, this code in this user guide has instead been tested to work against our link:{url-sample-page}[little sample page].
+The Interwebs is constantly changing.
+This makes testing against live sites impractical.
+The code in this user guide has instead been tested to work against our link:{url-sample-page}[little sample page].
 
 Until we figure out something more clever, it might be easiest to clone the etaoin GitHub repository and run a REPL from there.
 
-Unless otherwise directed, our examples throughout the rest of this guide will assume you've already done the equivalent of:
+Unless otherwise directed, our examples throughout the rest of this guide will assume you've already executed the equivalent of:
 
 [source,clojure]
 ----
@@ -363,7 +370,7 @@ This will ensure that the WebDriver process is closed regardless of what happens
 
 == Unit Tests as Docs
 
-The sections that follow describe, how to use Etaoin in more depth.
+The sections that follow describe how to use Etaoin in more depth.
 
 In addition to these docs, the link:{url-tests}[Etaoin api tests] are also a good reference.
 
@@ -413,7 +420,7 @@ The v2 API has ergonomic `with-<browser>` functions that handle cleanup nicely:
 Replace `chrome` with `firefox`, `edge` or `safari` for other variants.
 See link:{url-doc}[API docs] for details.
 
-See <<parameters>> for all options available when creating a driver
+See <<parameters>> for all options available when creating a driver.
 
 == Selecting Elements [[querying]]
 
@@ -431,7 +438,7 @@ Queries (aka selectors) are used to select the elements on the page that Etaoin 
 
 [TIP]
 ====
-* A query returns a unique element identifier that is typically meaningful only as a selector to other functions it is passed to.
+* A query returns a unique element identifier typically meaningful only as a selector to other functions it is passed to.
 * Many functions accept a query directly. For example:
 +
 [source,clojure]]
@@ -447,8 +454,8 @@ Queries (aka selectors) are used to select the elements on the page that Etaoin 
 
 [TIP]
 ====
-If a query does not find the element, an exception will be thrown.
-Use `exists?` to check if a query returns an element.
+An exception is thrown if a query does not find an element.
+Use exists? to check for element existence:
 
 [source,clojure]
 ----
@@ -465,7 +472,7 @@ Use `exists?` to check if a query returns an element.
 :css-sel: https://www.w3schools.com/cssref/css_selectors.asp
 
 * `:active` finds the current active element.
-The Google page, for example, automatically places the focus on the main search input.
+The Google page, for example, automatically places the focus on the search input.
 So there is no need to click on it first:
 +
 [source,clojure]
@@ -523,7 +530,7 @@ Defaults to `*`.
 * An `:index` key expands into the trailing XPath `[x]` clause.
 Useful when you need to select a third row from a table, for example.
 * Any non-special key represents an attribute and its value.
-* A special key has `:fn/` namespace and expands into something specific.
+* `:fn/` is a prefix followed by a supported query function.
 
 Examples:
 
@@ -743,8 +750,8 @@ Notice:
 ==== Querying a Tree
 
 `query-tree` pipes selectors.
-Every next selector queries elements from the previous one.
-The fist selector finds elements from the root, subsquent selectors find elements downward from each of the previous found elements.
+Every selector queries elements from the previous one.
+The first selector finds elements from the root, subsquent selectors find elements downward from each of the previous found elements.
 
 Given the following HTML:
 [source,html]
@@ -859,7 +866,7 @@ It acts the same but raises an exception when querying the page returns multiple
 
 Although double-clicking is rarely purposefully employed on web sites, some naive users might think it is the correct way to click on a button or link.
 
-A double click can be simulated with `double-click` function (Chrome, Phantom.js).
+A double-click can be simulated with `double-click` function (Chrome, Phantom.js).
 It can be used, for example, to check your handling of disallowing multiple form submissions.
 
 [source,clojure]
@@ -886,7 +893,7 @@ Another set of functions do the same but move the mouse pointer to a specified e
 (e/right-click-on driver {:tag :a})
 ----
 
-A middle mouse click is useful to open a link in a new background tab.
+A middle mouse click can open a link in a new background tab.
 The right click sometimes is used to imitate a context menu in web applications.
 
 === Keyboard Chords
@@ -938,16 +945,16 @@ Finally, you press delete to clear the selected text:
 
 There are also `with-ctrl` and `with-command` functions that act as you would expect.
 
-NOTE: Pay attention, these functions do not apply to the global browser's shortcuts.
+NOTE: These functions do not apply to the global browser's shortcuts.
 For example, neither "Command + R" nor "Command + T" reload the page or open a new tab.
 
 All the `etaoin.keys/with-*` functions are just wrappers upon the `etaoin.keys/chord` function that might be used for complex cases.
 
 === File Uploading
 
-Clicking on a file input button opens an OS-specific dialog that you are not allowed to interact with using WebDriver protocol.
+Clicking on a file input button opens an OS-specific dialog.
+You technically cannot interact with this dialog using the WebDriver protocol.
 Use the `upload-file` function to attach a local file to a file input widget.
-The function takes a selector that points to a file input and either path as a string or a native `java.io.File` instance.
 An exception will be thrown if the local file is not found.
 
 [source,clojure]
@@ -1088,7 +1095,7 @@ To reach nested frames, you can dig down like so:
 (e/switch-frame-parent driver)
 ----
 
-You can also use the `with-frame` macro to temporarily switch to a target frame, do some work, returning its last expression, all while preserving your original frame context.
+Use the `with-frame` macro to temporarily switch to a target frame, do some work, returning its last expression, while preserving your original frame context.
 
 [source,clojure]
 ----
@@ -1108,7 +1115,7 @@ Use `js-execute` to evaluate a Javascript code in the browser:
 (e/dismiss-alert driver)
 ----
 
-Pass any additional parameters into the call inside a script with the `arguments` array-like object.
+Pass any additional parameters to the script with the `arguments` array-like object.
 [source,clojure]
 ----
 (e/js-execute driver "alert(arguments[2].foo)" 1 false {:foo "hello again!"})
@@ -1137,9 +1144,9 @@ Notice that the JSON has been automatically converted to edn.
 
 ==== Asynchronous Scripts
 
-If your script performs AJAX requests or operates on `setTimeout` or any other async strategies, you cannot just `return` the result.
-Instead, a special callback must be called against the data you'd like to resolve.
-The WebDriver passes this callback by adding it as the last argument for your script.
+Use `js-async` to deal with scripts that rely on async strategies such as `setTimeout`.
+The WebDriver creates and passes a callback as the last argument to your script.
+To indicate that work is complete, you must call this callback.
 
 Example:
 
@@ -1187,7 +1194,7 @@ or for a block of code via `with-script-timeout`:
 
 The main difference between a program and a human being is that the first one operates very fast.
 A computer operates so fast, that sometimes a browser cannot render new HTML in time.
-After each action, you might consider including a `wait-<something>` function that polls a browser until the predicate evaluates into true.
+After each action, you might consider including a `wait-<something>` function that polls a browser until the predicate evaluates to true.
 Or just `(wait <seconds>)` if you don't care about optimization.
 
 The `with-wait` macro might be helpful when you need to prepend each action with `(wait n)`.
@@ -1195,7 +1202,7 @@ For example, the following form:
 
 [source,clojure]
 ----
-(e/with-wait 1 
+(e/with-wait 1
   (e/refresh driver)
   (e/fill driver :uname "my username")
   (e/fill driver :text "some text"))
@@ -1273,7 +1280,7 @@ Wait text:
 === Load Strategy [[load-strategy]]
 
 When you navigate to a page, the driver waits until the whole page has been completely loaded.
-What's fine in most cases, but doesn't reflect the way human beings interact with the Internet.
+That's fine in most cases but doesn't reflect the way human beings interact with the Internet.
 
 Change this default behavior with the `:load-strategy` option:
 
@@ -1435,8 +1442,8 @@ or a `File` object:
 
 === Screenshots for Specific Elements
 
-With Firefox and Chrome, you can also capture a single element within a page, say a div, an input widget or whatever.
-It doesn't work with other browsers as this time.
+With Firefox and Chrome, you can also capture a single element within a page, say a div, an input widget, or whatever.
+It doesn't work with other browsers at this time.
 
 [source,clojure]
 ----
@@ -1446,7 +1453,7 @@ It doesn't work with other browsers as this time.
 === Screenshots after each form
 
 Use `with-screenshots` to take a screenshot to the specified directory after each form is executed in the code block.
-The filenaming convention is `<webdriver-name>-<milliseconds-since-1970>.png`
+The file naming convention is `<webdriver-name>-<milliseconds-since-1970>.png`
 
 [source,clojure]
 ----
@@ -1508,9 +1515,9 @@ Phantom.js wipes the logs when the page location changes.
 
 === DevTools: Tracking HTTP Requests, XHR (Ajax)
 
-You can trace events which come from the DevTools panel.
+You can trace events that come from the DevTools panel.
 This means that everything you see in the developer console now is available through the Etaoin API.
-This currenty only works for Google Chrome.
+This currently only works for Google Chrome.
 
 To start a driver with devtools support enabled specify a `:dev` map.
 
@@ -1747,7 +1754,7 @@ To check if a request has been finished, done or failed, use these predicates:
 Note that `request-done?` doesn't mean the request has succeeded.
 It only means its pipeline has reached a final step.
 
-TIP: when you read dev logs, you consume them from an internal buffer which gets flushed.
+TIP: when you read dev logs, you consume them from an internal buffer that gets flushed.
 The second call to `get-requests` or `get-ajax` will return an empty list.
 
 Perhaps you want to collect these logs.
@@ -1823,8 +1830,8 @@ Unlike `get-requests` and `get-ajax`, they are pure functions and won't flush an
 ;;     :done? true}
 ----
 
-When working with logs and requests, pay attention it their count and size.
-The maps have plenty of keys and the amount of items in collections came be very large.
+When working with logs and requests, pay attention to their count and size.
+The maps have plenty of keys and the number of items in collections can become very large.
 Printing a slew of events might freeze your editor.
 Consider using `clojure.pprint/pprint` as it relies on max level and length limits.
 
@@ -1959,7 +1966,7 @@ Example: `:args ["--incognito" "--app" "http://example.com"]`
 | <not set>
 
 a| `:log-level` *web browser* minimal console log level.
-Only message with this level and above will be collected.
+Only messages with this level and above will be collected.
 From least to most verbose:
 
 * `nil`, `:off` or `:none` for no messages
@@ -2055,24 +2062,24 @@ Example: `:load-strategy :none`
 
 | `:capabilities` *WebDriver*-specific options.
 Read vendor docs for WebDriver before setting anything here.
-You'll find an example ussage under <<http-proxy>>.
+You'll find an example usage under <<http-proxy>>.
 | <none>
 
 |===
 
 === Using Headless Drivers [[headless]]
 
-Google Chrome, Firefox and Microsoft Edge can be run in headless mode.
-When headless, none of UI windows appear on the screen.
+Google Chrome, Firefox, and Microsoft Edge can be run in headless mode.
+When headless, none of the UI windows appear on the screen.
 Running without a UI is helpful when:
 
-* running integration tests on servers that do not have graphical output device
+* running integration tests on servers that do not have a graphical output device
 * running local tests without having them take over your local UI
 
-Ensure your browser supports headless mode by checking if it accepts `--headless` command line argument when running it from the terminal.
+Ensure your browser supports headless mode by checking if it accepts `--headless` command-line argument when running it from the terminal.
 The Phantom.js driver is headless by its nature (it was never been developed for rendering UI).
 
-When starting a driver, pass `:headless` boolean flag to switch into headless mode.
+When starting a driver, pass the `:headless` boolean flag to switch into headless mode.
 This flag is ignored for Safari which, as of June 2022, still does not support headless mode.
 
 //{:test-doc-blocks/test-ns user-guide-headless-test}
@@ -2125,7 +2132,7 @@ There are several shortcuts to run Chrome or Firefox in headless mode:
   (e/go driver "https://clojure.org"))
 ----
 
-There are also `when-headless` and `when-not-headless` macros that allow to perform a block of commands only if a browser is in headless mode or not respectively:
+There are also the `when-headless` and `when-not-headless` macros that conditonally execute a block of commands:
 
 //{:test-doc-blocks/test-ns user-guide-headless-test}
 [source,clojure]
@@ -2180,7 +2187,7 @@ Set a custom `User-Agent` header with the `:user-agent` option when creating a d
 ;; => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"
 ----
 
-Setting this header is important when using <<headless,headless browsers>> as many web sites implement some sort of blocking when the User-Agent includes the "headless" string.
+Setting this header is important when using <<headless,headless browsers>> as many websites implement some sort of blocking when the User-Agent includes the "headless" string.
 This can lead to 403 response or some weird behavior of the site.
 
 === HTTP Proxy [[http-proxy]]
@@ -2245,7 +2252,7 @@ Example:
 === Setting the Browser Profile [[browser-profile]]
 
 When running Chrome or Firefox, you may specify a special web browser profile made for test purposes.
-A profile is a folder that keeps browser settings, history, bookmarks and other user-specific data.
+A profile is a folder that keeps browser settings, history, bookmarks, and other user-specific data.
 
 Imagine, for example, that you'd like to run your integration tests against a user that turned off Javascript execution or image rendering.
 
@@ -2421,14 +2428,14 @@ In that case, your fixture may become a bit more complex:
 
 Now, each test will be run twice.
 Once for Firefox and then once Chrome.
-Please note the test call is prepended with `testing` macro that puts driver name into the report.
-Once you've got an error, you'll easy find what driver failed the tests exactly.
+Please note the test call is prepended with the `testing` macro that puts the driver name into the report.
+Once you've got an error, you'll easily find what driver failed the tests exactly.
 
 TIP: See also link:{url-tests}[Etaoin's API tests] for an example of this strategy.
 
 === Postmortem Handler To Collect Artifacts
 
-To save some artifacts in case of an exception, wrap the body of your test into `with-postmortem` handler as follows:
+To save some artifacts in case of an exception, wrap the body of your test into the `with-postmortem` handler as follows:
 
 //:test-doc-blocks/skip
 [source,clojure]
@@ -2442,9 +2449,9 @@ To save some artifacts in case of an exception, wrap the body of your test into 
       )))
 ----
 
-Now that, if any exception occurs in that test, artifacts will be saved.
+If any exception occurs in that test, artifacts will be saved.
 
-To not copy and paste the options map, declare it on at the top of the module.
+To not copy and paste the options map, declare it at the top of the module.
 If you use Circle CI, it would be great to save the data into a special artifacts directory that might be downloaded as a zip file once the build has been finished:
 
 //:test-doc-blocks/skip
@@ -2633,7 +2640,7 @@ We support the following arguments (check them out using the `clojure -M -m etao
 
 Pay attention to `--params`.
 This must be an EDN string representing a Clojure map.
-That's the same map that you pass into a driver when initiate it.
+That's the same map that you pass into a driver at creation time.
 
 Please note the IDE support is still experimental.
 If you encounter unexpected behavior feel free to open an issue.
@@ -2657,7 +2664,7 @@ for https://hub.docker.com/r/instrumentisto/geckodriver[Firefox]:
 docker run --name geckodriver -p 4444:4444 -d instrumentisto/geckodriver
 ----
 
-To connect to an exisiting running WebDriver process you need to specify the `:host`.
+To connect to an existing running WebDriver process you need to specify the `:host`.
 In this example `:host` would be `localhost` or `127.0.0.1`.
 The `:port` would be the appropirate port for the running WebDriver process as exposed by docker.
 If the port is not specified, the <<parameters,default>> port is set.
@@ -2723,14 +2730,14 @@ Cause:: You cannot interact with an element that is not visible or is so small t
 
 === Selectors not Working
 
-Symptom:: Selectors for locating element are not working, even though the elements are clearly available.
+Symptom:: Selectors for locating elements are not working, even though the elements are clearly available.
 
 Possible cause:: Your script may have clicked a link that opened a new tab or window.
 Even though the new window is in the foreground, the driver instance is still connected to the original window.
 
 Solution:: Call `switch-window-next` when a new tab or window is opened to point the driver to the new tab/window.
 
-=== Unpredictable errors in Chrome when window is not active
+=== Unpredictable errors in Chrome when the window is not active
 
 Reproduction:: when you focus on another window, a WebDriver session that is run under Google Chrome fails.
 
