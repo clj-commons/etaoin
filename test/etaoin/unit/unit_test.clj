@@ -1,73 +1,66 @@
 (ns etaoin.unit.unit-test
-  (:require [babashka.fs :as fs]
-            [clojure.spec.alpha :as s]
-            [clojure.test :refer :all]
-            [etaoin.api :refer :all]
-            [etaoin.api2 :as e2]
-            [etaoin.ide.flow :as ide]
-            [etaoin.ide.impl.spec :as spec]
-            [etaoin.test-report]
-            etaoin.impl.proc))
+  (:require
+   [babashka.fs :as fs]
+   [clojure.spec.alpha :as s]
+   [clojure.test :refer [deftest is testing]]
+   [etaoin.api :as e]
+   [etaoin.api2 :as e2]
+   [etaoin.ide.flow :as ide]
+   [etaoin.ide.impl.spec :as spec]
+   [etaoin.impl.proc :as proc]
+   [etaoin.test-report]))
 
 (deftest test-firefox-driver-args
   (with-redefs
-    [etaoin.impl.proc/run  (fn [_ _])
-     wait-running     identity
-     create-session   (fn [_ _] "session-key")
-     etaoin.impl.proc/kill identity
-     delete-session   identity]
+   [etaoin.impl.proc/run  (fn [_ _])
+    e/wait-running     identity
+    e/create-session   (fn [_ _] "session-key")
+    proc/kill identity
+    e/delete-session   identity]
     (testing "Session"
-      (with-firefox {} driver
+      (e2/with-firefox [driver]
         (is (= "session-key"
                (:session driver)))))
     (testing "No custom args"
-      (with-firefox {:port 1234} driver
+      (e2/with-firefox [driver {:port 1234}]
         (is (= ["geckodriver" "--port" 1234]
                (:args driver)))))
     (testing "Default `--marionette-port` is assigned when `:profile` is specified"
-      (with-firefox {:port 1234 :profile "/tmp/firefox-profile/1"} driver
+      (e2/with-firefox [driver {:port 1234 :profile "/tmp/firefox-profile/1"}]
         (is (= ["geckodriver" "--port" 1234 "--marionette-port" 2828]
                (:args driver)))))
     (testing "Custom `--marionette-port` is assigned when `:profile` is specified"
-      (with-firefox {:port        1234
-                     :profile     "/tmp/firefox-profile/1"
-                     :args-driver ["--marionette-port" 2821]} driver
+      (e2/with-firefox [driver {:port        1234
+                                :profile     "/tmp/firefox-profile/1"
+                                :args-driver ["--marionette-port" 2821]}]
         (is (= ["geckodriver" "--port" 1234 "--marionette-port" 2821]
                (:args driver)))))))
 
 (deftest test-chrome-profile
   (fs/with-temp-dir [chrome-dir {:prefix "chrome-dir"}]
     (let [profile-path (str (fs/file chrome-dir "chrome-profile"))]
-      (with-chrome {:profile profile-path :args ["--no-sandbox"]} driver
-        (go driver "chrome://version")
+      (e2/with-chrome [driver {:profile profile-path :args ["--no-sandbox"]}]
+        (e/go driver "chrome://version")
         (is profile-path
-            (get-element-text driver :profile_path))))))
-
-(deftest test-chrome-profile-using-v2-api
-  (fs/with-temp-dir [chrome-dir {:prefix "chrome-dir"}]
-    (let [profile-path (str (fs/file chrome-dir "chrome-profile"))]
-      (e2/with-chrome [driver {:profile profile-path :args ["--no-sandbox"]} ]
-        (go driver "chrome://version")
-        (is profile-path
-            (get-element-text driver :profile_path))))))
+            (e/get-element-text driver :profile_path))))))
 
 (deftest test-fail-run-driver
   (is (thrown-with-msg?
         clojure.lang.ExceptionInfo
         #"wrong-driver-path"
-        (chrome {:path-driver "wrong-driver-path"}))))
+        (e/chrome {:path-driver "wrong-driver-path"}))))
 
 (deftest test-actions
-  (let [keyboard        (-> (make-key-input)
-                            (with-key-down "H")
-                            add-pause
-                            (with-key-down "I")
+  (let [keyboard        (-> (e/make-key-input)
+                            (e/with-key-down "H")
+                            e/add-pause
+                            (e/with-key-down "I")
                             (dissoc :id))
-        mouse           (-> (make-mouse-input)
-                            add-pointer-click
-                            add-pause
-                            (with-pointer-left-btn-down
-                              (add-pointer-move-to-el "123"))
+        mouse           (-> (e/make-mouse-input)
+                            e/add-pointer-click
+                            e/add-pause
+                            (e/with-pointer-left-btn-down
+                              (e/add-pointer-move-to-el "123"))
                             (dissoc :id))
         keyboard-result {:type "key",
                          :actions

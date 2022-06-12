@@ -17,24 +17,24 @@
   Phantom.js (Ghostdriver) - obsolete and no longer tested
   https://github.com/detro/ghostdriver/blob/
   "
-  (:require [etaoin.impl.proc   :as proc]
-            [etaoin.impl.client :as client]
-            [etaoin.keys   :as keys]
-            [etaoin.query  :as query]
-            [etaoin.impl.util   :as util :refer [defmethods]]
-            [etaoin.impl.driver :as drv]
-            [etaoin.impl.xpath  :as xpath]
+  (:require
+   [babashka.fs :as fs]
+   [cheshire.core :as json]
+   [clojure.java.io :as io]
+   [clojure.string :as str]
+   [clojure.tools.logging :as log]
+   [etaoin.impl.client :as client]
+   [etaoin.impl.driver :as drv]
+   [etaoin.impl.proc :as proc]
+   [etaoin.impl.util :as util :refer [defmethods]]
+   [etaoin.impl.xpath :as xpath]
+   [etaoin.keys :as k]
+   [etaoin.query :as query]
+   [slingshot.slingshot :refer [throw+ try+]])
 
-            [clojure.tools.logging     :as log]
-            [clojure.java.io           :as io]
-            [clojure.string            :as str]
-
-            [babashka.fs :as fs]
-            [cheshire.core       :refer [generate-stream]]
-            [slingshot.slingshot :refer [try+ throw+]])
-
-  (:import (java.util Date Base64)
-           java.text.SimpleDateFormat))
+  (:import
+   java.text.SimpleDateFormat
+   (java.util Base64 Date)))
 
 ;;
 ;; defaults
@@ -426,7 +426,7 @@
 ;;
 
 (defn go
-  "Open the URL the current window.
+  "Open the `url` in the current window.
 
   Example:
 
@@ -633,8 +633,6 @@
 (defn query-tree
   "Takes selectors and acts like a tree.
   Every next selector queries elements from the previous ones.
-  The fist selector relies on find-elements,
-  and the rest ones use find-elements-from
 
   {:tag :div} {:tag :a}
   means
@@ -642,7 +640,7 @@
   div1 -> [a1 a2 a3]
   div2 -> [a4 a5 a6]
   div3 -> [a7 a8 a9]
-  so the result will be [a1 ... a9]
+  so the result will be #{a1 ... a9}
   "
   [driver q & qs]
   (reduce (fn [elements q]
@@ -733,13 +731,13 @@
   [input & [button]]
   (add-action input {:type     "pointerDown"
                      :duration 0
-                     :button   (or button keys/mouse-left)}))
+                     :button   (or button k/mouse-left)}))
 
 (defn add-pointer-up
   [input & [button]]
   (add-action input {:type     "pointerUp"
                      :duration 0
-                     :button   (or button keys/mouse-left)}))
+                     :button   (or button k/mouse-left)}))
 
 (defn add-pointer-cancel
   [input]
@@ -1056,17 +1054,17 @@
 (defn left-click
   "A shortcut for `mouse-click` with the left button."
   [driver]
-  (mouse-click driver keys/mouse-left))
+  (mouse-click driver k/mouse-left))
 
 (defn right-click
   "A shortcut for `mouse-click` with the right button."
   [driver]
-  (mouse-click driver keys/mouse-right))
+  (mouse-click driver k/mouse-right))
 
 (defn middle-click
   "A shortcut for `mouse-click` with the middle button."
   [driver]
-  (mouse-click driver keys/mouse-middle))
+  (mouse-click driver k/mouse-middle))
 
 (defn mouse-click-on
   "
@@ -1084,7 +1082,7 @@
   that one, use `click` instead.
   "
   [driver q]
-  (mouse-click-on driver keys/mouse-left q))
+  (mouse-click-on driver k/mouse-left q))
 
 (defn right-click-on
   "
@@ -1092,7 +1090,7 @@
   and right click on it.
   "
   [driver q]
-  (mouse-click-on driver keys/mouse-right q))
+  (mouse-click-on driver k/mouse-right q))
 
 (defn middle-click-on
   "
@@ -1101,7 +1099,7 @@
   in a new tab.
   "
   [driver q]
-  (mouse-click-on driver keys/mouse-middle q))
+  (mouse-click-on driver k/mouse-middle q))
 
 
 ;;
@@ -1932,7 +1930,7 @@
 
 (defn- dump-logs
   [logs filename & [opt]]
-  (generate-stream
+  (json/generate-stream
     logs
     (io/writer filename)
     (merge {:pretty true} opt)))
@@ -2728,7 +2726,7 @@
       (when (< (rand) mistake-prob)
         (fill-el driver el (rand-char))
         (wait-key)
-        (fill-el driver el keys/backspace)
+        (fill-el driver el k/backspace)
         (wait-key))
       (fill-el driver el key)
       (wait-key))))
@@ -2835,7 +2833,7 @@
 (defn submit
   "Sends Enter button value to an element found with query."
   [driver q]
-  (fill driver q keys/enter))
+  (fill driver q k/enter))
 
 ;;
 ;; timeouts

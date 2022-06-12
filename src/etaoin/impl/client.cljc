@@ -1,10 +1,11 @@
 (ns ^:no-doc etaoin.impl.client
-  (:require [clojure.string :as str]
-            [clojure.tools.logging :as log]
-            #?(:bb [clj-http.lite.client :as client]
-               :clj [clj-http.client :as client])
-            [cheshire.core :as json]
-            [slingshot.slingshot :refer [throw+]]))
+  (:require
+   [cheshire.core :as json]
+   [clojure.string :as str]
+   [clojure.tools.logging :as log]
+   #?(:bb [clj-http.lite.client :as client]
+      :clj [clj-http.client :as client])
+   [slingshot.slingshot :refer [throw+]]))
 
 ;;
 ;; defaults

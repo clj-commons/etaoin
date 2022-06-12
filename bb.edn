@@ -27,6 +27,8 @@
                                          "--nrepl-server"))}
   test           {:doc "run all or a subset of tests, use --help for args"
                   :task test/-main}
+  test-doc       {:doc "test code blocks in user guide"
+                  :task test-doc/-main}
   drivers        {:doc "[list|kill] any running WebDrivers"
                   :task drivers/-main}
   lint           {:doc "[--rebuild] lint source code"

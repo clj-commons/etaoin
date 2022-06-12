@@ -22,8 +22,23 @@
   ;; for babashka testing, allows us to use cognitect test-runner
   :bb-test {:extra-deps {org.clojure/tools.namespace {:git/url "https://github.com/babashka/tools.namespace"
                                                       :git/sha "a13b037215e21a2e71aa34b27e1dd52c801a2a7b"}}}
+
+  ;; test-doc-blocks - gen tests
+  :test-doc-blocks {:replace-deps {org.clojure/clojure {:mvn/version "1.11.1"}
+                                   com.github.lread/test-doc-blocks  {:mvn/version "1.0.166-alpha"}}
+                    :replace-paths []
+                    :ns-default lread.test-doc-blocks
+                    :exec-args {:docs ["doc/01-user-guide.adoc"]}}
+
+  ;; test-doc-blocks - run tests
+  ;; usage: test:test-docs
+  :test-docs {:override-deps {org.clojure/clojure {:mvn/version "1.11.1"}}
+              :extra-paths ["target/test-doc-blocks/test"]
+              :main-opts ["-m" "cognitect.test-runner"
+                          "-d" "target/test-doc-blocks/test"]}
+
   ;; for consistent linting we use a specific version of clj-kondo through the jvm
-  :clj-kondo {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2022.05.29"}}
+  :clj-kondo {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2022.05.31"}}
               :main-opts ["-m" "clj-kondo.main"]}
 
   :build {:deps {io.github.clojure/tools.build {:git/tag "v0.8.2" :git/sha "ba1a2bf"}

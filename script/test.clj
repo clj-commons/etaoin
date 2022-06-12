@@ -40,7 +40,8 @@
                                (and (= "windows" os) (= "safari" browser))))]
             (test-def os "api" platform browser)))
          (sort-by :desc)
-         (into [{:os "ubuntu" :cmd "bb lint" :desc "lint"}]))))
+         (into [{:os "ubuntu" :cmd "bb lint" :desc "lint"}
+                {:os "macos" :cmd "bb test-doc" :desc "test-doc"}]))))
 
 (defn- launch-xvfb []
   (if (fs/which "Xvfb")

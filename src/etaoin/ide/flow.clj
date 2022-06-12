@@ -6,20 +6,17 @@
    [cheshire.core :as json]
    [clojure.set :as cset]
    [clojure.spec.alpha :as s]
-   [etaoin.api :refer :all]
+   [etaoin.api :as e]
    [etaoin.ide.impl.api :refer [run-command-with-log str->var]]
    [etaoin.ide.impl.spec :as spec]))
 
-
 (declare execute-commands)
-
 
 (defn execute-branch
   [driver {:keys [this branch]} opt]
   (when (run-command-with-log driver this opt)
     (execute-commands driver branch opt)
     true))
-
 
 (defn execute-if
   [driver {:keys [if else-if else end]} opt]
@@ -28,14 +25,12 @@
       (execute-commands driver (:branch else) opt))
   (run-command-with-log driver end opt))
 
-
 (defn execute-times
   [driver {:keys [this branch end]} opt]
   (let [n (run-command-with-log driver this opt)]
     (doseq [commands (repeat n branch)]
       (execute-commands driver commands opt))
     (run-command-with-log driver end opt)))
-
 
 (defn execute-do
   [driver {:keys [this branch repeat-if]} opt]
@@ -45,13 +40,11 @@
     (when (run-command-with-log driver repeat-if opt)
       (recur commands))))
 
-
 (defn execute-while
   [driver {:keys [this branch end]} opt]
   (while (run-command-with-log driver this opt)
     (execute-commands driver branch opt))
   (run-command-with-log driver end opt))
-
 
 (defn execute-for-each
   [driver {:keys [this branch end]} {vars :vars :as opt}]
@@ -61,16 +54,14 @@
       (execute-commands driver branch opt))
     (run-command-with-log driver end opt)))
 
-
 (defn execute-cmd-with-open-window
   [driver {:keys [windowHandleName windowTimeout] :as cmd} {vars :vars :as opt}]
-  (let [init-handles  (set (get-window-handles driver))
+  (let [init-handles  (set (e/get-window-handles driver))
         _             (run-command-with-log driver cmd opt)
-        _             (wait (/ windowTimeout 1000))
-        final-handles (set (get-window-handles driver))
+        _             (e/wait (/ windowTimeout 1000))
+        final-handles (set (e/get-window-handles driver))
         handle        (first (cset/difference final-handles init-handles))]
     (swap! vars assoc (str->var windowHandleName) handle)))
-
 
 (defn execute-commands
   [driver commands opt]
@@ -85,7 +76,6 @@
       :cmd                  (run-command-with-log driver cmd opt)
       (throw (ex-info "Command is not valid" {:command cmd})))))
 
-
 (defn run-ide-test
   [driver {:keys [commands]} & [opt]]
   (let [command->kw   (fn [{:keys [command] :as cmd}]
@@ -97,7 +87,6 @@
                       {:explain-data (s/explain-data ::spec/commands commands)})))
     (execute-commands driver commands-tree opt)))
 
-
 (defn get-tests-by-suite-id
   [suite-id id {:keys [suites tests]}]
   (let [test-ids    (-> (filter #(= suite-id (id %)) suites)
@@ -106,7 +95,6 @@
                         set)
         suite-tests (filter #(test-ids (:id %)) tests)]
     suite-tests))
-
 
 (defn find-tests
   [{:keys [test-id test-ids suite-id suite-ids test-name suite-name test-names suite-names]}
@@ -124,7 +112,6 @@
     (if (empty? tests-found)
       tests
       tests-found)))
-
 
 (defn run-ide-script
   "
