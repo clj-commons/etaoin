@@ -1,27 +1,22 @@
 (ns etaoin.dev
-  "
-  A namespace to cover Chrome's devtools features.
-  "
+  "Chrome devtools features"
   (:require
    [cheshire.core :as json]
    [clojure.string :as str]
    [etaoin.api :as api]))
 
-(defn try-parse-int
+(defn- try-parse-int
   [line]
   (try (Integer/parseInt line)
        (catch Exception _e
          line)))
 
-(defn parse-json
+(defn- parse-json
   [string]
   (json/parse-string string true))
 
-(defn parse-method
-  "
-  Turns a string like 'Network.SomeAction'
-  into a keyword :network/someaction.
-  "
+(defn- parse-method
+  "Turns a string like 'Network.SomeAction' into a keyword :network/someaction."
   [^String method]
   (let [[topname
          lowname]
@@ -29,13 +24,9 @@
             (str/split #"\." 2))]
     (keyword topname lowname)))
 
-(defn process-log
-  "
-  Takes a log map, parses its message and merges
-  the message into the map.
-  "
+(defn- process-log
+  "Takes a log map, parses its message and merges the message into the map."
   [log]
-
   (let [{:keys [message]} log
         message           (parse-json message)
         _type             (some-> message :message :method parse-method)]
@@ -44,28 +35,22 @@
         (merge message)
         (assoc :_type _type))))
 
-(defn request?
-  "
-  True if a log entry belongs to a network domain.
-  "
+(defn- request?
+  "Return true if `log` entry belongs to a network domain."
   [log]
   (some-> log :_type namespace (= "network")))
 
-(defn group-requests
-  "
-  Group a set of request logs by their ID.
-  "
+(defn- group-requests
+  "Group a set of request `logs` by their ID."
   [logs]
   (group-by
     (fn [log]
       (some-> log :message :params :requestId))
     logs))
 
-(defn log->request
-  "
-  A helper for a further reduce (see below).
-  Acc is an accumulation map.
-  "
+(defn- log->request
+  "A helper for a further reduce (see below).
+  Acc is an accumulation map."
   [acc log]
 
   (let [{:keys [_type message]} log
@@ -116,20 +101,13 @@
       ;; default
       acc)))
 
-
-(defn build-request
-  "
-  Takes a vector of request logs of the same ID
-  and builda request map.
-  "
+(defn- build-request
+  "Takes a vector of request logs of the same ID and build a request map."
   [logs]
   (reduce log->request {} logs))
 
-
 (defn logs->requests
-  "
-  From a list of log entries, create a list of requests.
-  "
+  "Return list of log entries `logs` converted to requests."
   [logs]
   (->> logs
        (filter request?)
@@ -137,77 +115,54 @@
        vals
        (mapv build-request)))
 
-
 (defn ajax?
-  "
-  Whether it's an XHR request.
-  "
+  "Return true when `request` is XHR."
   [request]
   (:xhr? request))
 
-
 (defn logs->ajax
-  "
-  The same as `logs->requests` but return only AJAX requests.
-  "
+  "The same as [[logs->requests]] but returns only AJAX requests."
   [logs]
   (->> logs
        logs->requests
        (filterv ajax?)))
 
-
 (defn request-done?
-  "
-  Whether a request has been done. It doesn't necessarily
-  mean it was successful though.
-  "
+  "Return true when `request` has concluded.
+  Completion does not indicate success. See [[request-success?]], [[request-failed?]]"
   [request]
   (:done? request))
 
-
 (defn request-failed?
-  "
-  True if a request has been failed.
-  "
+  "Return true when `request` has failed. Does not indicate completion, see [[request-done?]]"
   [request]
   (:failed? request))
 
-
 (def request-success?
-  "True when a request has been finished and not failed."
+  "Return true when `request` has completed and not failed."
   (every-pred request-done? (complement request-failed?)))
 
-
-;;
-;; API
-;;
-
-
 (defn get-performance-logs
-  "
-  Get a seq of special `performance` logs that come from
-  a dev console. Works only when a special `perfLoggingPrefs`
-  was set (see the `:dev` key when running a driver).
-  "
+  "Have `driver` return a seq of special performance logs from the dev console.
+
+  Works only when `perfLoggingPrefs` is enabled, see [DevTools](/doc/01-user-guide.adoc#devtools)."
   [driver]
   (->> (api/get-logs driver "performance")
        (mapv (comp process-log api/process-log))))
 
-
 (defn get-requests
-  "
-  Return a list of HTTP requests made by a browser.
-  "
+  "Have `driver` return a list of HTTP requests made by the browser.
+
+  Works only when `perfLoggingPrefs` is enabled, see [DevTools](/doc/01-user-guide.adoc#devtools)."
   [driver]
   (-> driver
       get-performance-logs
       logs->requests))
 
-
 (defn get-ajax
-  "
-  Return a list of XHR (Ajax) HTTP requests made by a browser.
-  "
+  "Have `driver` return a list of XHR (Ajax) HTTP requests made by the browser.
+
+  Works only when `perfLoggingPrefs` is enabled, see [DevTools](/doc/01-user-guide.adoc#devtools)."
   [driver]
   (-> driver
       get-performance-logs

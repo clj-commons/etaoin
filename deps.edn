@@ -16,7 +16,7 @@
                       org.slf4j/jcl-over-slf4j {:mvn/version "2.0.0-alpha7"}}
          :main-opts ["-m" "cognitect.test-runner"]}
   :script {:extra-paths ["script"]}
-  ;; for babashka testing, needed for eatoin.ide
+  ;; for babashka testing, needed for etaoin.ide
   :bb-spec {:extra-deps {org.babashka/spec.alpha {:git/url "https://github.com/babashka/spec.alpha"
                                                   :sha "8df0712896f596680da7a32ae44bb000b7e45e68"}}}
   ;; for babashka testing, allows us to use cognitect test-runner

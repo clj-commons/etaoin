@@ -3,9 +3,11 @@
   Provide an CLI entry point for running IDE files.
   Example:
 
+  ```shell
   clojure -M -m etaoin.ide.main -d firefox -p '{:port 8888 :args [\"--no-sandbox\"]}' -f /path/to/script.side
+  ```
 
-  See the readme file for more info.
+  See the [User Guide](/doc/01-user-guide.adoc#selenium-ide-cli) for more info.
   "
   (:gen-class)
   (:require
@@ -16,17 +18,14 @@
    [etaoin.ide.flow :as flow]
    [etaoin.impl.util :as util]))
 
-
-(def browsers-set
+(def ^:private browsers-set
   #{:chrome :safari :firefox :edge :phantom})
 
-
-(defn str->vec
+(defn- str->vec
   [string]
   (str/split string #","))
 
-
-(def cli-options
+(def ^:private cli-options
   [["-d" "--driver-name name" "The name of driver. The default is `chrome`"
     :default :chrome
     :parse-fn keyword
@@ -57,8 +56,7 @@
 
    ["-h" "--help"]])
 
-
-(def help
+(def ^:private help
   "
 This is a CLI interface for running Selenium IDE files.
 
@@ -72,26 +70,22 @@ java -cp .../poject.jar -m etaoin.ide.main -d firefox -p '{:port 8888}' -f ide/t
 
 Options:")
 
-
-(defn usage [options-summary]
+(defn ^:private usage [options-summary]
   (->> [help options-summary]
        (str/join \newline)))
 
-
-(defn error-msg [errors]
+(defn ^:private error-msg [errors]
   (str "The following errors occurred while parsing your command:\n\n"
        (str/join \newline errors)))
 
-
-(def opt-fields
+(def ^:private opt-fields
   [:base-url
    :test-ids
    :test-names
    :suite-ids
    :suite-names])
 
-
-(defn run-script
+(defn- run-script
   "
   Run a Selenium IDE file. The `source` is something
   that might be `slurp`ed.
@@ -102,11 +96,10 @@ Options:")
     (api/with-driver driver-name params driver
       (flow/run-ide-script driver source opt))))
 
-
 (defn -main
-  "
-  The main CLI entrypoint.
-  "
+  "The main CLI entrypoint.
+
+  See [Selenium IDE CLI docs](/doc/01-user-guide.adoc#selenium-ide-cli)"
   [& args]
   (let [{:keys [errors summary options]}
         (cli/parse-opts args cli-options)

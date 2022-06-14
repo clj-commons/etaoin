@@ -14,23 +14,23 @@ https://clojars.org/{project-mvn-coords}[image:https://img.shields.io/clojars/v/
 https://babashka.org[image:https://raw.githubusercontent.com/babashka/babashka/master/logo/badge.svg[bb compatible]]
 https://clojurians.slack.com/archives/C7KDM0EKW[image:https://img.shields.io/badge/slack-join_chat-brightgreen.svg[Join chat]]
 
-A pure Clojure implementation of the link:{url-webdriver}[Webdriver] protocol named after link:{url-wiki}[Etaoin Shrdlu] -- a typing machine that came to life after a mysterious note was produced on it.
+A pure Clojure implementation of the link:{url-webdriver}[Webdriver] protocol, named after link:{url-wiki}[Etaoin Shrdlu] -- a typing machine that came to life after a mysterious note was produced on it.
 
 Use the Etaoin library to automate a browser, test your frontend behaviour, simulate human actions or whatever you want.
 
 == Benefits
 
-* Selenium-free: no long dependencies, no tons of downloaded jars, etc.
+* Selenium-free: no big dependencies, no tons of downloaded jars, etc.
 * Lightweight, fast.
 Simple, easy to understand.
-* Compact: just one main module with a couple of helpers.
+* Compact: just one main namespace with a couple of helpers.
 * Declarative: the code is just a list of actions.
 
 == Capabilities
 
 * Currently supports Chrome, Firefox, Safari and Edge.
-* May either connect to a remote driver or run it on your local machine.
-* Run your unit tests directly from Emacs pressing `C-t t` as usual.
+* Can either connect to a remote WebDriver process, or have Etaoin launch one for you.
+* Run your unit tests directly from Emacs by pressing `C-t t` as usual.
 * Can imitate human-like behaviour (delays, typos, etc).
 
 == Documentation
@@ -54,13 +54,12 @@ Ivan's blog-post about pitfalls that can occur when testing UI.
 
 * https://www.exoscale.com/[Exoscale]
 * https://www.flyerbee.com/[Flyerbee]
-* https://www.roomkey.com/[Roomkey]
 * http://www.barrick.com/[Barrick Gold]
 * http://drevidence.com/[Doctor Evidence]
 * https://kevel.com/[Kevel (formerly Adzerk)]
 * https://www.rate.com/[Guaranteed Rate]
 
-You are welcome to submit your company to this list.
+You are most welcome to submit your company or project to this list.
 
 == Versioning
 
@@ -95,8 +94,8 @@ Can be `alpha`, `beta`, `rc1`, etc.
 
 * https://github.com/igrishaev[Ivan Grishaev]
 
-The project is open for your improvements and ideas.
-If any of unit tests fail on your machine please submit an issue giving your OS version, browser and console output.
+Etaoin is open for your improvements and ideas.
+If any of unit tests fail on your machine, please submit an issue giving your OS version, browser and console output.
 
 == License
 

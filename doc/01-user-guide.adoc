@@ -59,7 +59,7 @@ Etaoin's test suite covers the following OSes and browsers for both Clojure and 
 
 |===
 
-NOTE: We once did test against PhantomJS, but since work has long ago stopped on this project, we have dropped testing
+NOTE: We did once test against PhantomJS, but since work has long ago stopped on this project, we have dropped testing
 
 == Installation
 
@@ -68,7 +68,7 @@ There are two steps to installation:
 . Add the `etaoin` library as a dependency to your project
 . Install the WebDriver for each web browser that you want to control with Etaoin
 
-=== Installing the Etaoin Library
+=== Add the Etaoin Library Dependency
 
 ==== For Clojure Users
 
@@ -420,7 +420,7 @@ The v2 API has ergonomic `with-<browser>` functions that handle cleanup nicely:
 Replace `chrome` with `firefox`, `edge` or `safari` for other variants.
 See link:{url-doc}[API docs] for details.
 
-See <<parameters>> for all options available when creating a driver.
+See <<driver-options>> for all options available when creating a driver.
 
 == Selecting Elements [[querying]]
 
@@ -747,7 +747,7 @@ Notice:
 * The nth offset of 1 instead of 2. Clojure's nth is 0-based, and our search indexes are 1-based.
 ====
 
-==== Querying a Tree
+==== Querying a Tree [[query-tree]]
 
 `query-tree` pipes selectors.
 Every selector queries elements from the previous one.
@@ -1313,7 +1313,7 @@ Load strategy option of `:none`:
 
 The `:eager` option only works with Firefox at the moment.
 
-=== Actions
+=== Actions [[actions]]
 
 Etaoin supports link:{actions}[Webdriver Actions].
 They are described as "virtual input devices".
@@ -1514,7 +1514,7 @@ The message text and the source type will vary by browser vendor.
 Chrome wipes the logs once they have been read.
 Phantom.js wipes the logs when the page location changes.
 
-=== DevTools: Tracking HTTP Requests, XHR (Ajax)
+=== DevTools: Tracking HTTP Requests, XHR (Ajax) [[devtools]]
 
 You can trace events that come from the DevTools panel.
 This means that everything you see in the developer console now is available through the Etaoin API.
@@ -1899,9 +1899,9 @@ The available `with-postmortem` options are:
  :date-format "yyyy-MM-dd-HH-mm-ss"}
 ----
 
-== Additional Driver Parameters [[parameters]]
+== Driver Options [[driver-options]]
 
-When creating a driver instance, a map of additional parameters can be passed to tweak the WebDriver and web browser behaviour.
+When creating a driver instance, a map of additional parameters can optionally be passed to tweak the WebDriver and web browser behaviour.
 
 Here, for example, we set an explicit path to the chrome WebDriver binary:
 
@@ -2236,7 +2236,7 @@ To connect to an existing WebDriver, specify the `:host` parameter.
 TIP: When the `:host` parameter is not specified Etaoin will create a new WebDriver process.
 
 The `:host` can be a hostname (localhost, some.remote.host.net) or an IP address (127.0.0.1, 183.102.156.31).
-If the port is not specified, the <<parameters,default>> `:port` is assumed.
+If the port is not specified, the <<driver-options,default>> `:port` is assumed.
 
 Example:
 
@@ -2553,8 +2553,7 @@ Example:
   (is found (format "No *.xlsx file found in %s directory." DL-DIR)))
 ----
 
-[[selenium-ide]]
-== Running Selenium IDE files
+== Running Selenium IDE files [[selenium-ide]]
 
 Etaoin can play the files produced by link:{ide}[Selenium IDE].
 Selenium IDE allows you to record web interactions for later playback.
@@ -2605,7 +2604,7 @@ Now that you have a `test.side` file, you could do something like this:
 
 Everything related to the IDE feature can be found under the link:{url-doc}/CURRENT/api/etaoin.ide[etaoin.ide] namespace.
 
-=== CLI Arguments
+=== CLI Arguments [[selenium-ide-cli]]
 
 You may also run a `.side` script from the command line.
 Here is a `clojure` example:
@@ -2668,7 +2667,7 @@ docker run --name geckodriver -p 4444:4444 -d instrumentisto/geckodriver
 To connect to an existing running WebDriver process you need to specify the `:host`.
 In this example `:host` would be `localhost` or `127.0.0.1`.
 The `:port` would be the appropirate port for the running WebDriver process as exposed by docker.
-If the port is not specified, the <<parameters,default>> port is set.
+If the port is not specified, the <<driver-options,default>> port is set.
 
 //:test-doc-blocks/skip
 [source,clojure]
