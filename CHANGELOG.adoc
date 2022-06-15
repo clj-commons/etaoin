@@ -114,6 +114,7 @@ Fixed.
 *** Reviewed, re-organized, hopefully clarified some things
 *** Checking code blocks with https://github.com/lread/test-doc-blocks[test-doc-blocks]
 *** https://github.com/clj-commons/etaoin/commit/f3f0370fb76bc353c14293243410db1641f99c70[f3f0370]: A new troubleshooting tip (thanks https://github.com/jkrasnay[@jkrasnay]!)
+*** https://github.com/clj-commons/etaoin/pull/364[#364]: A new usage example (thanks https://github.com/kidd[kidd]!)
 * Internal quality
 ** https://github.com/clj-commons/etaoin/issues/382[#382]: Fix process fork testing on Windows
 ** https://github.com/clj-commons/etaoin/issues/391[#391]: Identify browser name on failed ide tests
