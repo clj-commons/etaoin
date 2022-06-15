@@ -2091,7 +2091,7 @@
 ;; exceptions
 ;;
 
-(defmacro ^:private with-exception [catch fallback & body]
+(defmacro ^:no-doc with-exception [catch fallback & body]
   `(try+
      ~@body
      (catch ~catch ~(quote _)
