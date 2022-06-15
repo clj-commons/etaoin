@@ -272,7 +272,28 @@ endif::[]
 (e/get-title driver)
 ;; => "Clojure - Wikipedia"
 
-;; stops Firefox WebDriver
+;; let's explore the info box
+;; What's its caption? Let's select it with a css query:
+(e/get-element-text driver {:css "table.infobox caption"})
+;; => "Clojure"
+
+;; Ok,now let's try something trickier
+;; Maybe we are interested what value the infobox holds for the Family row:
+(let [wikitable (e/query driver {:css "table.infobox.vevent tbody"})
+      row-els (e/children driver wikitable {:tag :tr})]
+  (for [row row-els
+        :let [header-col-text (e/with-http-error
+                                (e/get-element-text-el driver
+                                                       (e/child driver row {:tag :th})))]
+        :when (= "Family" header-col-text)]
+    (e/get-element-text-el driver (e/child driver row {:tag :td}))))
+;; => ("Lisp")
+
+;; Etaoin gives you many options, we can do the same-ish in one swoop in XPath:
+(e/get-element-text driver "//table[@class='infobox vevent']/tbody/tr/th[text()='Family']/../td")
+;; => "Lisp"
+
+;; When we are done we quit, which stops the Firefox WebDriver
 (e/quit driver) ;; the Firefox Window should close
 ----
 
