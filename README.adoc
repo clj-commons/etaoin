@@ -1,0 +1,104 @@
+= Etaoin
+:toclevels: 4
+:project-src-coords: clj-commons/etaoin
+:project-mvn-coords: etaoin/etaoin
+:url-webdriver: https://www.w3.org/TR/webdriver/
+:url-wiki: https://en.wikipedia.org/wiki/Etaoin_shrdlu#Literature
+:url-doc: https://cljdoc.org/d/{project-mvn-coords}
+:url-slack: https://clojurians.slack.com/messages/C7KDM0EKW/
+
+// Badges
+link:{url-doc}[image:https://cljdoc.org/badge/{project-mvn-coords}[cljdoc]]
+https://github.com/{project-src-coords}/actions/workflows/test.yml[image:https://github.com/{project-src-coords}/actions/workflows/test.yml/badge.svg[GitHub Actions Tests]]
+https://clojars.org/{project-mvn-coords}[image:https://img.shields.io/clojars/v/{project-mvn-coords}.svg[Clojars project]]
+https://babashka.org[image:https://raw.githubusercontent.com/babashka/babashka/master/logo/badge.svg[bb compatible]]
+https://clojurians.slack.com/archives/C7KDM0EKW[image:https://img.shields.io/badge/slack-join_chat-brightgreen.svg[Join chat]]
+
+A pure Clojure implementation of the link:{url-webdriver}[Webdriver] protocol, named after link:{url-wiki}[Etaoin Shrdlu] -- a typing machine that came to life after a mysterious note was produced on it.
+
+Use the Etaoin library to automate a browser, test your frontend behaviour, simulate human actions or whatever you want.
+
+== Benefits
+
+* Selenium-free: no big dependencies, no tons of downloaded jars, etc.
+* Lightweight, fast.
+Simple, easy to understand.
+* Compact: just one main namespace with a couple of helpers.
+* Declarative: the code is just a list of actions.
+
+== Capabilities
+
+* Currently supports Chrome, Firefox, Safari and Edge.
+* Can either connect to a remote WebDriver process, or have Etaoin launch one for you.
+* Run your unit tests directly from Emacs by pressing `C-t t` as usual.
+* Can imitate human-like behaviour (delays, typos, etc).
+
+== Documentation
+
+API docs and articles are best viewed on link:{url-doc}[cljdoc]:
+
+* link:doc/01-user-guide.adoc[User Guide]
+* link:doc/02-developer-guide.adoc[Developer Guide]
+
+See also:
+
+:ui-test: http://grishaev.me/en/ui-test
+:stream: https://www.youtube.com/watch?v=cLL_5rETLWY
+
+* link:{url-slack}[Slack channel]
+* link:{ui-test}[Thoughts on UI tests]
+Ivan's blog-post about pitfalls that can occur when testing UI.
+* link:{stream}[Live-coding session] where Ivan works through some Etaoin issues.
+
+== Who uses Etaoin?
+
+* https://www.exoscale.com/[Exoscale]
+* https://www.flyerbee.com/[Flyerbee]
+* http://www.barrick.com/[Barrick Gold]
+* http://drevidence.com/[Doctor Evidence]
+* https://kevel.com/[Kevel (formerly Adzerk)]
+* https://www.rate.com/[Guaranteed Rate]
+
+You are most welcome to submit your company or project to this list.
+
+== Versioning
+
+Eatoin uses: `major`.`minor`.`patch`-`test-qualifier`
+
+* `major` increments when a non alpha release API has been broken - something, as a rule, we'd like to avoid.
+* `minor` increments to convey significant new features have been added.
+* `patch` indicates bug fixes or minor changes - it is the total number of releases to date.
+* `test-qualifier` is absent for stable releases.
+Can be `alpha`, `beta`, `rc1`, etc.
+
+== People
+
+=== Contributors
+
+* https://github.com/Uunnamed[Alexey Shipilov]
+* https://github.com/AdamFrey[Adam Frey]
+* https://github.com/jwkoelewijn[JW Koelewijn]
+* https://github.com/nenadalm[Miloslav Nenadál]
+* https://github.com/atsman[Aleh Atsman]
+* https://github.com/marco-m[Marco Molteni]
+* https://github.com/nebesnytihohod[Maxim Stasenkov]
+* https://github.com/daveyarwood[Dave Yarwood]
+* https://github.com/jkrasnay[John Krasnay]
+
+=== Current Maintainers
+
+* https://github.com/lread[Lee Read]
+* https://github.com/borkdude[Michiel Borkent]
+
+=== Founder
+
+* https://github.com/igrishaev[Ivan Grishaev]
+
+Etaoin is open for your improvements and ideas.
+If any of unit tests fail on your machine, please submit an issue giving your OS version, browser and console output.
+
+== License
+
+Copyright © 2017&mdash;2020 Ivan Grishaev.
+
+Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.

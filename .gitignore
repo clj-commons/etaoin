@@ -1,7 +1,6 @@
 /target
 /classes
 /checkouts
-pom.xml
 pom.xml.asc
 *.jar
 *.class
@@ -18,3 +17,13 @@ TAGS
 *.iml
 build.xml
 /.idea
+
+# ignore cache under .clj-kondo and .lsp
+.cache
+# VSCode Calva extension
+/.calva
+# Clojure tools cli classpath cache
+/.cpcache
+# clj-kondo will copy our own exported config under resources to ./clj-kondo,
+# we don't need this duplicate.
+/.clj-kondo/etaoin

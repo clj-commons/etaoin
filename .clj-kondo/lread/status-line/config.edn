@@ -1,0 +1,2 @@
+{:lint-as {lread.status-line/line clojure.tools.logging/infof
+           lread.status-line/die clojure.tools.logging/infof}}

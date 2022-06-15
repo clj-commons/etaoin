@@ -1,0 +1,96 @@
+name: Test
+
+on:
+  push:
+    branches: ['master']
+  pull_request:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+
+    outputs:
+      tests: ${{ steps.set-tests.outputs.tests }}
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Clojure deps cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.m2/repository
+          ~/.deps.clj
+          ~/.gitlibs
+        key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
+        restore-keys: cljdeps-
+
+    - name: "Setup Java"
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '11'
+
+    - name: Install Clojure Tools
+      uses: DeLaGuardo/setup-clojure@5.1
+      with:
+        bb: 'latest'
+
+    # This assumes downloaded deps are same for all OSes
+    - name: Bring down deps
+      run: bb download-deps
+
+    - id: set-tests
+      name: Set test var for matrix
+      # run test.clj directly instead of via bb task to avoid generic task output
+      run: echo "::set-output name=tests::$(bb script/test.clj matrix-for-ci --format=json)"
+
+  build:
+    needs: setup
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{fromJSON(needs.setup.outputs.tests)}}
+
+    name: ${{ matrix.desc }}
+
+    steps:
+
+    - uses: actions/checkout@v3
+
+    - name: Clojure deps cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.m2/repository
+          ~/.deps.clj
+          ~/.gitlibs
+        key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
+        restore-keys: cljdeps-
+
+    - name: "Install Missing Windows Bits"
+      if: ${{ matrix.os == 'windows' }}
+      run: |
+        Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
+        choco install --no-progress --yes imagemagick
+        refreshenv
+        Write-Output "$env:PATH" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - name: "Setup Java"
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '11'
+
+    - name: Install Clojure Tools
+      uses: DeLaGuardo/setup-clojure@5.1
+      with:
+        bb: 'latest'
+
+    - name: Tools versions
+      run: bb tools-versions
+
+    - name: Run Tests
+      # To see all commands: bb test matrix-for-ci
+      run: ${{ matrix.cmd }}

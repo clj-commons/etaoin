@@ -1,0 +1,79 @@
+(ns etaoin.api
+  (:require [clj-kondo.hooks-api :as api]
+            [etaoin.hooks-util :as h]))
+
+(defn- with-bound-arg [node bound-arg-ndx]
+  (let [macro-args (rest (:children node))
+        binding-sym (nth macro-args bound-arg-ndx nil)]
+    (if-not (h/symbol-node? binding-sym)
+      ;; could use clj-kondo findings, but I think this is good for now
+      (api/reg-finding! (assoc (if binding-sym
+                                 (meta binding-sym)
+                                 (meta node))
+                               :message (format "Expected binding symbol as %s arg"
+                                                ;; use words instead of numbers to avoid ambiguity
+                                                (case bound-arg-ndx 1 "second" 2 "third"))
+                               :type :etaoin/binding-sym))
+      (let [leading-args (take bound-arg-ndx macro-args)
+            body (drop (inc bound-arg-ndx) macro-args)]
+        {:node (api/list-node
+                (list*
+                 (api/token-node 'let)
+                   ;; simulate the effect, macro is creating a new thing (driver for example)
+                   ;; via binding it. I don't think the bound value matters for the linting process
+                 (api/vector-node [binding-sym (api/map-node [])])
+                   ;; reference the other args so that they are not linted as unused
+                 (api/vector-node leading-args)
+                 body))}))))
+
+(defn- with-x-down
+  "This is somewhat of a maybe an odd duck.
+  I think it is assumed to be used within a threading macro.
+  And itself employs a threadfirst macro.
+  So each body form need to have an action (dummy or not) threaded into it."
+  [node]
+  (let [macro-args (rest (:children node))
+        [input x & body] macro-args
+        dummy-action (api/map-node [])]
+    {:node (api/list-node
+            (apply list*
+                   (api/token-node 'do)
+                   ;; reference x and input just in case they contain something lint-relevant
+                   x input
+                   ;; dump the body, threading a dummy action in as first arg
+                   (map (fn [body-form]
+                          (cond
+                            ;; not certain this is absolutely what we want, but maybe close enough
+                            (h/symbol-node? body-form) (api/list-node (list* body-form dummy-action))
+                            (api/list-node? body-form) (let [children (:children body-form)]
+                                                         (assoc body-form :children (apply list*
+                                                                                           (first children)
+                                                                                           dummy-action
+                                                                                           (rest children))))
+                            :else
+                            (api/reg-finding! (assoc (meta body-form)
+                                                     :message "expected to be threaded through an action"
+                                                     :type :etaoin/with-x-action))))
+                        body)))}))
+
+(defn with-browser
+  "Covers etaoin.api/with-chrome and all its variants
+  [opt bind & body]"
+  [{:keys [node]}]
+  (with-bound-arg node 1))
+
+(defn with-driver
+  "Very similar to with-browser but bound arg is 1 deeper
+  [type opt bind & body]"
+  [{:keys [node]}]
+  (with-bound-arg node 2))
+
+(defn with-key-down
+  "[input key & body]"
+  [{:keys [node]}]
+  (with-x-down node))
+
+(defn with-pointer-btn-down
+  "[input button & body]"
+  [{:keys [node]}]
+  (with-x-down node))

@@ -1,7 +1,12 @@
 (ns etaoin.query
-  "A module to deal with querying elements."
-  (:require [etaoin.util :as util]
-            [etaoin.xpath :as xpath]))
+  "A module to deal with querying elements.
+
+  This feels like a internal namespace.
+  Why do folks need to use this directly?
+  Maybe they are extending defmulti with more conversions?"
+  (:require
+   [etaoin.impl.util :as util]
+   [etaoin.impl.xpath :as xpath]))
 
 ;; todo duplicates with api.clj
 (def locator-xpath "xpath")
@@ -19,7 +24,13 @@
   (query locator-css term))
 
 (defmulti to-query
-  (fn [driver q]
+  "Return query for `q` for `driver`.
+
+  Conversion depends on type of `q`.
+  - keyword -> converts to search on element id for q`
+  - string -> converts to xpath query (or css if default is changed)
+  - map -> converts to :xpath or :css query or map query"
+  (fn [_driver q]
     (type q)))
 
 (defmethod to-query clojure.lang.Keyword
@@ -31,16 +42,18 @@
   (query (:locator driver) q))
 
 (defmethod to-query clojure.lang.IPersistentMap
-  [driver {:keys [xpath css] :as q}]
+  [_driver {:keys [xpath css] :as q}]
   (cond
     xpath (query-xpath xpath)
     css   (query-css css)
     :else (query-xpath (xpath/expand q))))
 
 (defmethod to-query :default
-  [driver q]
+  [_driver q]
   (util/error "Wrong query: %s" q))
 
-(defn expand [driver q]
+(defn expand
+  "Return expanded query `q` for `driver`."
+  [driver q]
   (let [query (to-query driver q)]
     [(:locator query) (:term query)]))

@@ -3,30 +3,29 @@
   Provide an CLI entry point for running IDE files.
   Example:
 
-  lein run -m etaoin.ide.main -d firefox -p '{:port 8888 :args [\"--no-sandbox\"]}' -f /path/to/script.side
+  ```shell
+  clojure -M -m etaoin.ide.main -d firefox -p '{:port 8888 :args [\"--no-sandbox\"]}' -f /path/to/script.side
+  ```
 
-  See the readme file for more info.
+  See the [User Guide](/doc/01-user-guide.adoc#selenium-ide-cli) for more info.
   "
   (:gen-class)
   (:require
    [clojure.java.io :as io]
    [clojure.string :as str]
-   [clojure.tools.cli :refer [parse-opts]]
+   [clojure.tools.cli :as cli]
    [etaoin.api :as api]
    [etaoin.ide.flow :as flow]
-   [etaoin.util :refer [exit]]))
+   [etaoin.impl.util :as util]))
 
-
-(def browsers-set
+(def ^:private browsers-set
   #{:chrome :safari :firefox :edge :phantom})
 
-
-(defn str->vec
+(defn- str->vec
   [string]
   (str/split string #","))
 
-
-(def cli-options
+(def ^:private cli-options
   [["-d" "--driver-name name" "The name of driver. The default is `chrome`"
     :default :chrome
     :parse-fn keyword
@@ -57,41 +56,36 @@
 
    ["-h" "--help"]])
 
-
-(def help
+(def ^:private help
   "
 This is a CLI interface for running Selenium IDE files.
 
 Usage examples:
 
-;; from lein
-lein run -m etaoin.ide.main -d firefox -p '{:port 8888 :args [\"--no-sandbox\"]}' -r ide/test.side
+;; from clojure
+clojure -M -m etaoin.ide.main -d firefox -p '{:port 8888 :args [\"--no-sandbox\"]}' -r ide/test.side
 
 ;; from a jar
 java -cp .../poject.jar -m etaoin.ide.main -d firefox -p '{:port 8888}' -f ide/test.side
 
 Options:")
 
-
-(defn usage [options-summary]
+(defn ^:private usage [options-summary]
   (->> [help options-summary]
        (str/join \newline)))
 
-
-(defn error-msg [errors]
+(defn ^:private error-msg [errors]
   (str "The following errors occurred while parsing your command:\n\n"
        (str/join \newline errors)))
 
-
-(def opt-fields
+(def ^:private opt-fields
   [:base-url
    :test-ids
    :test-names
    :suite-ids
    :suite-names])
 
-
-(defn run-script
+(defn- run-script
   "
   Run a Selenium IDE file. The `source` is something
   that might be `slurp`ed.
@@ -102,14 +96,13 @@ Options:")
     (api/with-driver driver-name params driver
       (flow/run-ide-script driver source opt))))
 
-
 (defn -main
-  "
-  The main CLI entrypoint.
-  "
+  "The main CLI entrypoint.
+
+  See [Selenium IDE CLI docs](/doc/01-user-guide.adoc#selenium-ide-cli)"
   [& args]
   (let [{:keys [errors summary options]}
-        (parse-opts args cli-options)
+        (cli/parse-opts args cli-options)
 
         {:keys [help file resource]}
         options]
@@ -117,22 +110,22 @@ Options:")
     (cond
 
       errors
-      (exit 1 (error-msg errors))
+      (util/exit 1 (error-msg errors))
 
       help
-      (exit 0 (usage summary))
+      (util/exit 0 (usage summary))
 
       file
       (let [ide-file (io/file file)]
         (when-not (and (.exists ide-file)
                        (not (.isDirectory ide-file)))
-          (exit 1 "The IDE file not found"))
+          (util/exit 1 "The IDE file not found"))
         (run-script ide-file options))
 
       resource
       (if-let [r (io/resource resource)]
         (run-script r options)
-        (exit 1 "Resource not found"))
+        (util/exit 1 "Resource not found"))
 
       :else
-      (exit 1 "Specify the path to the ide file: `--file` or `--resource`"))))
+      (util/exit 1 "Specify the path to the ide file: `--file` or `--resource`"))))
