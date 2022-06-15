@@ -1,5 +1,7 @@
 (ns etaoin.keys
-  "https://www.w3.org/TR/webdriver/#keyboard-actions")
+  "Key and mouse constants. And chords.
+
+  Sourced from [WebDriver spec](https://www.w3.org/TR/webdriver/#keyboard-actions).")
 
 (def unidentified       \uE000)
 (def cancel             \uE001)
@@ -74,24 +76,34 @@
 
 (def command            meta-left)
 
-
 (defn chord
-  [text & more]
-  (str (apply str text more) unidentified))
+  "Apply `key` to `more` where `more` can be more keys or regular text.
 
+  Any keys that are pressed are released.
 
-(def with-shift
+  Example:
+  ```Clojure
+  (chord shift-left \"help\" backspace \"lo\")
+  ;; would effectively be: HELLO
+  ```"
+  [key & more]
+  (str (apply str key more) unidentified))
+
+(def ^{:arglists '([& more])} with-shift
+  "Apply shift key to `more` where `more` can be more keys or regular text."
   (partial chord shift-left))
 
-(def with-ctrl
+(def ^{:arglists '([& more])} with-ctrl
+  "Apply ctrl key to `more` where `more` can be more keys or regular text."
   (partial chord control-left))
 
-(def with-alt
+(def ^{:arglists '([& more])} with-alt
+  "Apply alt key to `more` where `more` can be more keys or regular text."
   (partial chord alt-left))
 
-(def with-command
+(def ^{:arglists '([& more])} with-command
+  "Apply command key to `more` where `more` can be more keys or regular text."
   (partial chord command))
-
 
 ;;
 ;; Mouse codes

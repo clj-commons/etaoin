@@ -1,5 +1,9 @@
 (ns etaoin.query
-  "A module to deal with querying elements."
+  "A module to deal with querying elements.
+
+  This feels like a internal namespace.
+  Why do folks need to use this directly?
+  Maybe they are extending defmulti with more conversions?"
   (:require
    [etaoin.impl.util :as util]
    [etaoin.impl.xpath :as xpath]))
@@ -20,6 +24,12 @@
   (query locator-css term))
 
 (defmulti to-query
+  "Return query for `q` for `driver`.
+
+  Conversion depends on type of `q`.
+  - keyword -> converts to search on element id for q`
+  - string -> converts to xpath query (or css if default is changed)
+  - map -> converts to :xpath or :css query or map query"
   (fn [_driver q]
     (type q)))
 
@@ -42,6 +52,8 @@
   [_driver q]
   (util/error "Wrong query: %s" q))
 
-(defn expand [driver q]
+(defn expand
+  "Return expanded query `q` for `driver`."
+  [driver q]
   (let [query (to-query driver q)]
     [(:locator query) (:term query)]))

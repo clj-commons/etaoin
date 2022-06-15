@@ -1,7 +1,5 @@
 (ns etaoin.ide.flow
-  "
-  Flow stuff (if/else, for/while/repeat, etc).
-  "
+  "Selenium IDE flow control (if/else, for/while/repeat, etc). "
   (:require
    [cheshire.core :as json]
    [clojure.set :as cset]
@@ -12,27 +10,27 @@
 
 (declare execute-commands)
 
-(defn execute-branch
+(defn- execute-branch
   [driver {:keys [this branch]} opt]
   (when (run-command-with-log driver this opt)
     (execute-commands driver branch opt)
     true))
 
-(defn execute-if
+(defn- execute-if
   [driver {:keys [if else-if else end]} opt]
   (or (execute-branch driver if opt)
       (some #(execute-branch driver % opt) else-if)
       (execute-commands driver (:branch else) opt))
   (run-command-with-log driver end opt))
 
-(defn execute-times
+(defn- execute-times
   [driver {:keys [this branch end]} opt]
   (let [n (run-command-with-log driver this opt)]
     (doseq [commands (repeat n branch)]
       (execute-commands driver commands opt))
     (run-command-with-log driver end opt)))
 
-(defn execute-do
+(defn- execute-do
   [driver {:keys [this branch repeat-if]} opt]
   (run-command-with-log driver this opt)
   (loop [commands branch]
@@ -40,13 +38,13 @@
     (when (run-command-with-log driver repeat-if opt)
       (recur commands))))
 
-(defn execute-while
+(defn- execute-while
   [driver {:keys [this branch end]} opt]
   (while (run-command-with-log driver this opt)
     (execute-commands driver branch opt))
   (run-command-with-log driver end opt))
 
-(defn execute-for-each
+(defn- execute-for-each
   [driver {:keys [this branch end]} {vars :vars :as opt}]
   (let [[var-name arr] (run-command-with-log driver this opt)]
     (doseq [val arr]
@@ -54,7 +52,7 @@
       (execute-commands driver branch opt))
     (run-command-with-log driver end opt)))
 
-(defn execute-cmd-with-open-window
+(defn- execute-cmd-with-open-window
   [driver {:keys [windowHandleName windowTimeout] :as cmd} {vars :vars :as opt}]
   (let [init-handles  (set (e/get-window-handles driver))
         _             (run-command-with-log driver cmd opt)
@@ -63,7 +61,7 @@
         handle        (first (cset/difference final-handles init-handles))]
     (swap! vars assoc (str->var windowHandleName) handle)))
 
-(defn execute-commands
+(defn- execute-commands
   [driver commands opt]
   (doseq [[cmd-name cmd] commands]
     (case cmd-name
@@ -76,7 +74,7 @@
       :cmd                  (run-command-with-log driver cmd opt)
       (throw (ex-info "Command is not valid" {:command cmd})))))
 
-(defn run-ide-test
+(defn- run-ide-test
   [driver {:keys [commands]} & [opt]]
   (let [command->kw   (fn [{:keys [command] :as cmd}]
                         (assoc cmd :command (keyword command)))
@@ -87,7 +85,7 @@
                       {:explain-data (s/explain-data ::spec/commands commands)})))
     (execute-commands driver commands-tree opt)))
 
-(defn get-tests-by-suite-id
+(defn- get-tests-by-suite-id
   [suite-id id {:keys [suites tests]}]
   (let [test-ids    (-> (filter #(= suite-id (id %)) suites)
                         first
@@ -96,7 +94,7 @@
         suite-tests (filter #(test-ids (:id %)) tests)]
     suite-tests))
 
-(defn find-tests
+(defn ^:no-doc find-tests
   [{:keys [test-id test-ids suite-id suite-ids test-name suite-name test-names suite-names]}
    {:keys [tests] :as parsed-file}]
   (let [test-ids    (cond-> #{}
@@ -114,25 +112,20 @@
       tests-found)))
 
 (defn run-ide-script
-  "
-  Run a Selenium IDE file.
+  "Run a Selenium IDE file.
+
+  See [Selenium IDE docs](/doc/01-user-guide.adoc#selenium-ide)
 
   Arguments:
 
   - `driver`: a driver instance;
-
   - `source`: either a file path, or an `io/file`, or an `io/resource`;
-
   - `opt`: a map of optional parameters:
-
-  -- `:test-...` and `:suite-...` (`id`, `ids`, `name`, `names`)
-      are used for selection of specific tests. When not passed,
-      all the tests get run;
-
-  -- `:base-url` the URL of the main page from which the tests start.
-      Use it override the default URL from an IDE file.
-  "
-
+      - `:test-...` and `:suite-...` (`id`, `ids`, `name`, `names`)
+         are used for selection of specific tests. When not passed,
+         all the tests get run;
+      - `:base-url` the URL of the main page from which the tests start.
+         Use it override the default URL from an IDE file."
   [driver source & [opt]]
   (let [parsed-file (-> source
                         slurp

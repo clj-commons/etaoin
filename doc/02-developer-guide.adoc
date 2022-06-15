@@ -257,3 +257,9 @@ Etaoin contains a fair number of macros.
 Clj-kondo can need special configuration (including hooks) to understand the effects of these macros.
 So, when adding any new macros, think also about our Etaoin users and our clj-kondo export configuration.
 ====
+
+== Useful References
+
+* https://chromium.googlesource.com/chromium/src/+/master/chrome/test/chromedriver/[chromedriver]
+* https://github.com/mozilla/geckodriver[firefox geckodriver], https://searchfox.org/mozilla-central/source/testing/webdriver[sources]
+* https://github.com/detro/ghostdriver/blob/[Phantom.js (obsolete, no longer tested)]
