@@ -78,27 +78,26 @@
   [{driver-type :type :keys [host port webdriver-url] :as driver}
    method path-args payload]
   (let [path   (get-url-path path-args)
-        url    (if (str/blank? webdriver-url)
-                 (format "http://%s:%s/%s" host port path)
-                 (format "%s/%s" webdriver-url path))
+        url    (if webdriver-url
+                 (format "%s/%s" webdriver-url path)
+                 (format "http://%s:%s/%s" host port path))
         params (cond-> (merge
-                         default-api-params
-                         {:url              url
-                          :method           method
-                          :throw-exceptions false})
+                        default-api-params
+                        {:url              url
+                         :method           method
+                         :throw-exceptions false})
                  (= :post method)
                  #?(:bb (assoc :body (.getBytes (json/generate-string (or payload {}))
                                                 "UTF-8"))
                     :clj (assoc :form-params (or payload {}))))
         _ (log/debugf "%s %s %6s %s %s"
                       (name driver-type)
-                      (if (str/blank? webdriver-url)
-                        (str host ":" port)
-                        (util/strip-url-creds webdriver-url))
+                      (if webdriver-url
+                        (util/strip-url-creds webdriver-url)
+                        (str host ":" port))
                       (-> method name str/upper-case)
                       path
                       (-> payload (or "")))
-
         resp  (client/request params)
         body  #?(:bb (-> resp :body parse-json)
                  :clj (:body resp))

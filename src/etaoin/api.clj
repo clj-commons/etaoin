@@ -3337,8 +3337,8 @@
                  :webdriver-url webdriver-url
                  :locator       locator}]
     (if webdriver-url
-      (log/debugf "Created driver: %s %s:%s" (name type) host port)
-      (log/debugf "Created driver: %s %s" (name type) (util/strip-url-creds webdriver-url)))
+      (log/debugf "Created driver: %s %s" (name type) (util/strip-url-creds webdriver-url))
+      (log/debugf "Created driver: %s %s:%s" (name type) host port))
     driver))
 
 (defn- proxy-env
