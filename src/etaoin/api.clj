@@ -1,47 +1,168 @@
 (ns etaoin.api
+  "A wrapper over the [W3C WebDriver Specification](https://www.w3.org/TR/webdriver/) to automate popular browsers.
+
+  Tries to normalize differences across the various implementations.
+
+  See the [User Guide](/doc/01-user-guide.adoc) for details and examples.
+
+  This is a rich API:
+
+  **WebDriver**
+  - [[with-driver]] [[boot-driver]] [[defaults]] [[when-not-drivers]]
+  - [[with-chrome]] [[with-chrome-headless]] [[chrome]] [[chrome-headless]] [[chrome?]] [[when-chrome]] [[when-not-chrome]]
+  - [[with-edge]] [[with-edge-headless]] [[edge]] [[edge-headless]] [[when-edge]] [[when-not-edge]]
+  - [[with-firefox]] [[with-firefox-headless]] [[firefox]] [[firefox-headless]] [[firefox?]] [[when-firefox]] [[when-not-firefox]]
+  - [[with-phantom]] [[phantom]] [[phantom?]] [[when-phantom]] [[when-not-phantom]]
+  - [[with-safari]] [[safari]] [[safari?]] [[when-safari]] [[when-not-safari]]
+  - [[driver?]] [[running?]] [[headless?]] [[when-headless]] [[when-not-headless]]
+  - [[disconnect-driver]] [[stop-driver]] [[quit]]
+  - see also [[etaoin.api2]]
+
+  **WebDriver Lower Level Comms**
+  -  [[execute]] [[with-http-error]]
+
+  **Driver Sessions**
+  - [[get-status]] [[create-session]] [[delete-session]]
+
+  **Querying/Selecting DOM Elements**
+  - [[query]] [[query-all]] [[query-tree]]
+  - [[exists?]] [[absent?]]
+  - [[displayed?]] [[displayed-el?]] [[enabled?]] [[enabled-el?]] [[disabled?]] [[invisible?]] [[visible?]]
+  - [[child]] [[children]]
+  - [[get-element-tag]] [[get-element-tag-el]]
+  - [[get-element-attr]] [[get-element-attr-el]] [[get-element-attrs]]
+  - [[get-element-property]] [[get-element-properties]]
+  - [[has-class?]] [[has-class-el?]] [[has-no-class?]]
+  - [[get-element-css]] [[get-element-csss]]
+  - [[get-element-text]] [[get-element-text-el]] [[has-text?]]
+  - [[get-element-inner-html]] [[get-element-inner-html-el]]
+  - [[get-element-value]] [[get-element-value-el]]
+  - [[get-element-size]] [[get-element-size-el]] [[get-element-location]] [[get-element-location-el]] [[get-element-box]] [[intersects?]]
+  - [[use-css]] [[with-css]] [[use-xpath]] [[with-xpath]]
+
+  **Browser Navigation**
+  - [[go]] [[get-url]] [[get-hash]] [[set-hash]]
+  - [[back]] [[forward]]
+  - [[refresh]] [[reload]]
+
+  **Mouse/Pointer**
+  - [[click]] [[click-el]] [[click-single]] [[click-multi]]
+  - [[left-click]] [[left-click-on]]
+  - [[middle-click]] [[middle-click-on]]
+  - [[right-click]] [[right-click-on]]
+  - [[mouse-click]] [[mouse-move-to]] [[mouse-click-on]]
+  - [[double-click]] [[double-click-el]]
+  - [[drag-and-drop]] [[mouse-btn-down]] [[mouse-btn-up]]
+  - [[touch-down]] [[touch-move]] [[touch-tap]] [[touch-up]]
+
+  **Inputs/Forms**
+  - [[fill]] [[fill-active]] [[fill-el]] [[fill-multi]]
+  - [[fill-human]] [[fill-human-el]] [[fill-human-multi]]
+  - [[select]] [[selected?]] [[selected-el?]]
+  - [[upload-file]] [[remote-file]]
+  - [[disabled?]] [[enabled?]]
+  - [[clear]] [[clear-el]]
+  - [[submit]]
+
+  **Cookies**
+  - [[get-cookie]] [[get-cookies]]
+  - [[set-cookie]]
+  - [[delete-cookie]] [[delete-cookies]]
+
+  **Alerts**
+  - [[has-alert?]] [[has-no-alert?]]
+  - [[get-alert-text]]
+  - [[accept-alert]] [[dismiss-alert]]
+
+  **Scrolling**
+  - [[get-scroll]]
+  - [[scroll]] [[scroll-by]]
+  - [[scroll-bottom]] [[scroll-top]]
+  - [[scroll-down]] [[scroll-up]] [[scroll-left]] [[scroll-right]]
+  - [[scroll-offset]]
+  - [[scroll-query]]
+
+  **Scripting**
+  - [[js-execute]] [[js-async]] [[js-localstorage-clear]] [[el->ref]] [[add-script]]
+
+  **Browser Windows**
+  - [[get-window-handle]] [[get-window-handles]]
+  - [[get-window-position]] [[set-window-position]]
+  - [[get-window-size]] [[set-window-size]]
+  - [[maximize]]
+  - [[switch-window]] [[switch-window-next]]
+  - [[close-window]]
+
+  **Frames**
+  - [[switch-frame]] [[switch-frame-first]] [[switch-frame-parent]] [[switch-frame-top]] [[with-frame]]
+
+  **Page Info**
+  - [[get-source]] [[get-title]]
+
+  **Screenshots**
+  - [[screenshot]] [[screenshot-element]] [[with-screenshots]]
+
+  **Browser Info**
+  - [[supports-logs?]] [[get-log-types]] [[get-logs]]
+  - [[get-user-agent]]
+  - [[with-postmortem]]
+
+  **Waiting**
+  - [[doto-wait]] [[wait]] [[with-wait]]
+  - [[*wait-interval*]] [[*wait-timeout*]] [[with-wait-interval]] [[with-wait-timeout]]
+  - [[wait-exists]] [[wait-absent]]
+  - [[wait-visible]] [[wait-invisible]]
+  - [[wait-disabled]] [[wait-enabled]]
+  - [[wait-has-alert]]
+  - [[wait-has-class]]
+  - [[wait-has-text]] [[wait-has-text-everywhere]]
+  - [[wait-predicate]]
+  - [[wait-running]]
+
+  **Browser Timeouts**
+  - [[get-implicit-timeout]] [[set-implicit-timeout]]
+  - [[get-page-load-timeout]] [[set-page-load-timeout]]
+  - [[get-script-timeout]] [[set-script-timeout]] [[with-script-timeout]]
+
+  **WebDriver Actions**
+  - [[make-action-input]] [[make-key-input]] [[make-mouse-input]] [[make-pen-input]] [[make-pointer-input]] [[make-touch-input]]
+  - [[add-action]]
+  - [[add-double-pause]]
+  - [[add-key-down]] [[add-key-press]] [[add-key-up]] [[with-key-down]]
+  - [[add-pause]]
+  - [[add-pointer-click]] [[add-pointer-click-el]] [[add-pointer-double-click]] [[add-pointer-double-click-el]]
+  - [[add-pointer-down]] [[add-pointer-up]]
+  - [[with-pointer-btn-down]] [[with-pointer-left-btn-down]] [[with-mouse-btn]]
+  - [[add-pointer-move]] [[add-pointer-move-to-el]]
+  - [[add-pointer-cancel]]
+  - [[perform-actions]] [[release-actions]]
+
+  **Convenience**
+  - [[rand-uuid]] [[when-predicate]] [[when-not-predicate]]
   "
-  The API below was written regarding to the source code
-  of different Webdriver implementations. All of them partially
-  differ from the official W3C specification.
-
-  The standard:
-  https://www.w3.org/TR/webdriver/
-
-  Chrome:
-  https://chromium.googlesource.com/chromium/src/+/master/chrome/test/chromedriver/
-
-  Firefox (Geckodriver):
-  https://github.com/mozilla/geckodriver
-  https://github.com/mozilla/webdriver-rust/
-
-  Phantom.js (Ghostdriver)
-  https://github.com/detro/ghostdriver/blob/
-  "
-  (:require [etaoin.proc   :as proc]
-            [etaoin.client :as client]
-            [etaoin.keys   :as keys]
-            [etaoin.query  :as query]
-            [etaoin.util   :as util :refer [defmethods]]
-            [etaoin.driver :as drv]
-            [etaoin.xpath  :as xpath]
-
-            [clojure.data.codec.base64 :as b64]
-            [clojure.tools.logging     :as log]
-            [clojure.java.io           :as io]
-            [clojure.string            :as str]
-
-            [cheshire.core       :refer [generate-stream]]
-            [slingshot.slingshot :refer [try+ throw+]])
-
-  (:import java.util.Date
-           java.text.SimpleDateFormat
-           (java.io IOException)))
+  (:require
+   [babashka.fs :as fs]
+   [cheshire.core :as json]
+   [clojure.java.io :as io]
+   [clojure.string :as str]
+   [clojure.tools.logging :as log]
+   [etaoin.impl.client :as client]
+   [etaoin.impl.driver :as drv]
+   [etaoin.impl.proc :as proc]
+   [etaoin.impl.util :as util :refer [defmethods]]
+   [etaoin.impl.xpath :as xpath]
+   [etaoin.keys :as k]
+   [etaoin.query :as query]
+   [slingshot.slingshot :refer [throw+ try+]])
+  (:import
+   java.text.SimpleDateFormat
+   (java.util Base64 Date)))
 
 ;;
-;; defaults
+;; WebDriver defaults
 ;;
 
-(def defaults
+(def ^{:doc "WebDriver defaults"} defaults
   {:firefox {:port 4444
              :path "geckodriver"}
    :chrome  {:port 9515
@@ -53,15 +174,15 @@
    :edge    {:port 17556
              :path "msedgedriver"}})
 
-(def default-locator "xpath")
-(def locator-xpath "xpath")
-(def locator-css "css selector")
+(def ^:no-doc default-locator "xpath")
+(def ^:no-doc locator-xpath "xpath")
+(def ^:no-doc locator-css "css selector")
 
 ;;
 ;; utils
 ;;
 
-(defn dispatch-driver
+(defn ^:no-doc dispatch-driver
   "Returns the current driver's type. Used as dispatcher in
   multimethods."
   [driver & _]
@@ -77,37 +198,31 @@
 ;;
 
 (defn execute
-  "Executes an HTTP request to a driver's server. Performs the body
-  within result data bound to the `result` clause.
+  "Return response from having `:driver` execute HTTP `:method` request to `:path` with body `:data`.
 
-  Arguments:
+  Response body automatically converted from JSON to a clojure keywordized map.
+  Any HTTP status failure code results in a throw.
 
-  - `driver`: a driver instance,
+  - `:method` HTTP method, e.g. `:get`, `:post`, `:delete`, etc.
+  - `:path` a vector of strings/keywords representing a server's path. For example:
+      - this: `[:session \"aaaa-bbbb-cccc\" :element \"dddd-eeee\" :find]`
+      - becomes: `\"/session/aaaa-bbbb-cccc/element/dddd-eeee/find\"`.
+  - `:data` optional body to send. Automatically converted to JSON.
 
-  - `method`: a keyword represents HTTP method, e.g. `:get`, `:post`,
-  `:delete`, etc.
+  This can be useful to call when you want to invoke some WebDriver
+  implementation specific feature that Etaoin has not otherwise exposed.
 
-  - `path`: a vector of strings/keywords represents a server's
-  path. For example:
+  For example, if Etaoin did not already have [[get-url]]:
 
-  `[:session \"aaaa-bbbb-cccc\" :element \"dddd-eeee\" :find]`
-
-  will turn into \"/session/aaaa-bbbb-cccc/element/dddd-eeee/find\".
-
-  - `data`: any data sctructure to be sent as JSON body. Put `nil` For
-  `GET` requests.
-
-  - `result`: a symbol to bind the data from the HTTP response with
-  `let` form before executing the body.
-
-  Example:
-
-  (def driver (firefox))
-  (println (execute {:driver driver
-                     :method :get
-                     :path [:session (:session driver) :element :active])))
-  "
-  [{:keys [driver method path data result]}]
+  ```Clojure
+  (def driver (e/firefox))
+  (e/go driver \"https://clojure.org\")
+  (e/execute {:driver driver
+              :method :get
+              :path [:session (:session driver) :url]})
+  ;; => {:value \"https://clojure.org/\"}
+  ```"
+  [{:keys [driver method path data]}]
   (client/call driver method path data))
 
 ;;
@@ -115,32 +230,38 @@
 ;;
 
 (defn get-status
-  "Returns the current Webdriver status info. The content depends on
-  specific driver."
+  "Returns `driver` status.
+
+  Can indicate readiness to create a new session.
+
+  The return varies for different driver implementations."
   [driver]
   (:value (execute {:driver driver
                     :method :get
                     :path   [:status]})))
 
-;; TODO safari: "Request body does not contain required parameter 'capabilities'."
 (defn create-session
-  "Initiates a new session for a driver. Opens a browser window as a
-  side-effect. All the further requests are made within specific
-  session. Some drivers may work with only one active session. Returns
-  a long string identifier."
+  "Have `driver` create a new session and return resulting session-id string.
+
+  Opens a browser window as a side-effect (visible if not running headless).
+  Further requests to this driver will be for this session.
+  Etaoin assumes one active session per driver."
   [driver & [capabilities]]
-  (let [data   (if (= (dispatch-driver driver) :safari) ;; tmp
-                 {:capabilities (or capabilities {})}
+  (let [data   (if (= (dispatch-driver driver) :safari)
+                 {:capabilities (or capabilities {})} ;; required for safari even if empty
                  {:desiredCapabilities (or capabilities {})})
         result (execute {:driver driver
                          :method :post
                          :path   [:session]
                          :data   data})]
     (or (:sessionId result)               ;; default
-        (:sessionId (:value result)))))   ;; firefox
+        (:sessionId (:value result)))))   ;; firefox, safari
 
 (defn delete-session
-  "Deletes a session. Closes a browser window."
+  "Have `driver` delete the active session.
+  Closes the browser window.
+
+  See also: [[quit]]."
   [driver]
   (execute {:driver driver
             :method :delete
@@ -151,18 +272,14 @@
 ;;
 
 (defmulti ^:private get-active-element*
-  "Returns the currect active element selected by mouse or a
-  keyboard (Tab, arrows)."
+  "Have `driver` return the active element on the page.
+
+  An active element is the one with the current focus.
+  It was selected for example by mouse click, a keyboard (tab, arrows), or `autofocus`."
   dispatch-driver)
 
-(defmethod get-active-element* :firefox
-  [driver]
-  (-> (execute {:driver driver
-                :method :get
-                :path   [:session (:session driver) :element :active]})
-      :value first second))
-
-(defmethod get-active-element* :safari
+(defmethods get-active-element*
+  [:firefox :safari]
   [driver]
   (-> (execute {:driver driver
                 :method :get
@@ -183,7 +300,7 @@
 ;;
 
 (defmulti get-window-handle
-  "Returns the current active window handler as a string."
+  "Have `driver` return the current browser window handle string."
   {:arglists '([driver])}
   dispatch-driver)
 
@@ -193,30 +310,20 @@
                     :method :get
                     :path   [:session (:session driver) :window_handle]})))
 
-(defmethod get-window-handle :safari
-  [driver]
-  (:value (execute {:driver driver
-                    :method :get
-                    :path   [:session (:session driver) :window]})))
-
-(defmethod get-window-handle :firefox
+(defmethods get-window-handle
+  [:firefox :safari]
   [driver]
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session driver) :window]})))
 
 (defmulti get-window-handles
-  "Returns a vector of all window handlers."
+  "Have `driver` return a vector of all browser window handle strings."
   {:arglists '([driver])}
   dispatch-driver)
 
-(defmethod get-window-handles :firefox
-  [driver]
-  (:value (execute {:driver driver
-                    :method :get
-                    :path   [:session (:session driver) :window :handles]})))
-
-(defmethod get-window-handles :safari
+(defmethods get-window-handles
+  [:firefox :safari]
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -230,7 +337,7 @@
                     :path   [:session (:session driver) :window_handles]})))
 
 (defmulti switch-window
-  "Switches a browser to another window."
+  "Have `driver` switch to browser window with `handle`."
   {:arglists '([driver handle])}
   dispatch-driver)
 
@@ -242,16 +349,8 @@
             :path   [:session (:session driver) :window]
             :data   {:handle handle}}))
 
-(defmethod switch-window
-  :phantom
-  [driver handle]
-  (execute {:driver driver
-            :method :post
-            :path   [:session (:session driver) :window]
-            :data   {:name handle}}))
-
-(defmethod switch-window
-  :chrome
+(defmethods switch-window
+  [:chrome :edge :phantom]
   [driver handle]
   (execute {:driver driver
             :method :post
@@ -259,6 +358,7 @@
             :data   {:name handle}}))
 
 (defn switch-window-next
+  "Have `driver` switch to next browser window."
   [driver]
   (let [current-handle (try
                          (get-window-handle driver)
@@ -272,7 +372,8 @@
     (switch-window driver next-handle)))
 
 (defmulti close-window
-  "Closes the current browser window."
+  "Have `driver` close current browser window."
+  {:arglists '([driver])}
   dispatch-driver)
 
 (defmethod close-window :default
@@ -282,17 +383,12 @@
             :path   [:session (:session driver) :window]}))
 
 (defmulti maximize
-  "Makes the browser window as wide as your screen allows."
-  {:arglists '([driver])} ;; todo it does't work
+  "Have `driver` make the current browser window as large as your screen allows."
+  {:arglists '([driver])}
   dispatch-driver)
 
-(defmethod maximize :firefox
-  [driver]
-  (execute {:driver driver
-            :method :post
-            :path   [:session (:session driver) :window :maximize]}))
-
-(defmethod maximize :safari
+(defmethods maximize
+  [:firefox :safari]
   [driver]
   (execute {:driver driver
             :method :post
@@ -307,19 +403,12 @@
               :path   [:session (:session driver) :window h :maximize]})))
 
 (defmulti get-window-size
-  "Returns a window size a map with `:width` and `:height` keys."
+  "Have `driver` return the current browser window size in pixels as a map of `:width` and `:height`."
   {:arglists '([driver])}
   dispatch-driver)
 
-(defmethod get-window-size :firefox
-  [driver]
-  (-> (execute {:driver driver
-                :method :get
-                :path   [:session (:session driver) :window :rect]})
-      :value
-      (select-keys [:width :height])))
-
-(defmethod get-window-size :safari
+(defmethods get-window-size
+  [:firefox :safari]
   [driver]
   (-> (execute {:driver driver
                 :method :get
@@ -337,20 +426,13 @@
         (select-keys [:width :height]))))
 
 (defmulti get-window-position
-  "Returns a window position relative to your screen as a map with
-  `:x` and `:y` keys."
+  "Have `driver` return the current window position, in pixels relative to the screen, as a map of
+  `:x` and `:y`."
   {:arglists '([driver])}
   dispatch-driver)
 
-(defmethod get-window-position :safari
-  [driver]
-  (-> (execute {:driver driver
-                :method :get
-                :path   [:session (:session driver) :window :rect]})
-      :value
-      (select-keys [:x :y])))
-
-(defmethod get-window-position :firefox
+(defmethods get-window-position
+  [:firefox :safari]
   [driver]
   (-> (execute {:driver driver
                 :method :get
@@ -392,7 +474,8 @@
               :data   {:width width :height height}})))
 
 (defn set-window-size
-  "Sets new size for a window. Absolute precision is not guaranteed."
+  "Have `driver` set the `width` and `height` in pixels of the current window.
+  Absolute precision is not guaranteed."
   ([driver {:keys [width height]}]
    (set-window-size* driver width height))
   ([driver width height]
@@ -423,25 +506,29 @@
                :data   {:x x :y y}}))))
 
 (defn set-window-position
-  "Sets new position for a window. Absolute precision is not
-  guaranteed."
+  "Have `driver` set the `x` `y` position of the current browser window.
+
+  Position is in pixels and relative to your screen.
+  Absolute precision is not guaranteed."
   ([driver {:keys [x y]}]
    (set-window-position* driver x y))
   ([driver x y]
    (set-window-position* driver x y)))
+
 
 ;;
 ;; navigation
 ;;
 
 (defn go
-  "Open the URL the current window.
+  "Have `driver` open `url` in the current browser window.
 
   Example:
 
+  ```Clojure
   (def ff (firefox))
   (go ff \"http://google.com\")
-  "
+  ```"
   [driver url]
   (execute {:driver driver
             :method :post
@@ -449,23 +536,23 @@
             :data   {:url url}}))
 
 (defn back
-  "Move backwards in a browser's history."
+  "Have `driver` navigate backward in the browser history."
   [driver]
   (execute {:driver driver
             :method :post
             :path   [:session (:session driver) :back]}))
 
 (defn refresh
-  "Reloads the current window."
+  "Have `driver` reload the content in the current browser window."
   [driver]
   (execute {:driver driver
             :method :post
             :path   [:session (:session driver) :refresh]}))
 
-(def reload refresh) ;; just an alias
+(def ^{:arglists '([driver])} reload "Alias for [[refresh]]" refresh)
 
 (defn forward
-  "Move forwards in a browser's history."
+  "Have `driver` navigate forward in the browser's history."
   [driver]
   (execute {:driver driver
             :method :post
@@ -476,14 +563,14 @@
 ;;
 
 (defn get-url
-  "Returns the current URL string."
+  "Have `driver` return the current url location as a string."
   [driver]
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session driver) :url]})))
 
 (defn get-title
-  "Returns the current window's title."
+  "Have `driver` return the current page title."
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -495,17 +582,8 @@
 
 (defmulti ^:private find-element* dispatch-driver)
 
-(defmethod find-element* :firefox
-  [driver locator term]
-  (-> (execute {:driver driver
-                :method :post
-                :path   [:session (:session driver) :element]
-                :data   {:using locator :value term}})
-      :value
-      first
-      second))
-
-(defmethod find-element* :safari
+(defmethods find-element*
+  [:firefox :safari]
   [driver locator term]
   (-> (execute {:driver driver
                 :method :post
@@ -523,7 +601,7 @@
                 :data   {:using locator :value term}})
       :value :ELEMENT))
 
-(defmulti find-elements* dispatch-driver)
+(defmulti ^:no-doc find-elements* dispatch-driver)
 
 (defmethod find-elements* :default
   [driver locator term]
@@ -536,18 +614,8 @@
 
 (defmulti ^:private find-element-from* dispatch-driver)
 
-(defmethod find-element-from* :firefox
-  [driver el locator term]
-  {:pre [(some? el)]}
-  (-> (execute {:driver driver
-                :method :post
-                :path   [:session (:session driver) :element el :element]
-                :data   {:using locator :value term}})
-      :value
-      first
-      second))
-
-(defmethod find-element-from* :safari
+(defmethods find-element-from*
+  [:firefox :safari]
   [driver el locator term]
   {:pre [(some? el)]}
   (-> (execute {:driver driver
@@ -585,21 +653,30 @@
 ;;
 
 (defn query
-  "Finds an element on a page.
+  "Use `driver` to find and return the first element on current page matching `q`.
 
-   A query might be:
+   Query `q` can be:
 
-   - a string with an XPath expression;
-   - a keyword `:active` that means to get the current active element;
-   - any other keyword which stands for an element's ID attribute;
-   - a map with either `:xpath` or `:css` key with a string value
-     of corresponding selector type (XPath or CSS);
-   - any other map that will be expanded into XPath term (see README.md);
-   - a vector of any expressions mentioned above. In that case, each next
-     term is searched from the previous one.
+   - `:active` the current active element
+   - a keyword to find element by it's ID attribute:
+     - `:my-id`
+     - (use `{:id \"my-id\"}` for ids that cannot be represented as keywords)
+   - an XPath expression:
+     - `\".//input[@id='uname']\"`
+   - a map with either `:xpath` or `:css`:
+     - `{:xpath \".//input[@id='uname']\"`}`
+     - `{:css \"input#uname[name='username']\"}`
+   - any other map is converted to an XPath expression:
+     - `{:tag :div}`
+     - is equivalent to XPath: `\".//div\"`
+   - multiple of the above (wrapped in a vector or not).
+     The result of each expression is fed into the next.
+     - `{:tag :div} \".//input[@id='uname']\"`
+     - `[{:tag :div} \".//input[@id='uname']\"]`
 
-   Returns a element's unique identifier."
+   Returns the found element's unique identifier, or throws when not found.
 
+   See [Selecting Elements](/doc/01-user-guide.adoc#querying) for more details."
   ([driver q]
    (cond
 
@@ -620,10 +697,9 @@
      (reduce folder (query driver q) more))))
 
 (defn query-all
-  "Finds multiple elements on a page.
-  See `query` function for incoming params.
-  Returns a vector of element identifiers."
+  "Use `driver` to return a vector of all elements on current page matching `q`.
 
+  See [[query]] for details on `q`."
   ([driver q]
    (cond
 
@@ -640,19 +716,13 @@
      (find-elements-from* driver el loc term))))
 
 (defn query-tree
-  "Takes selectors and acts like a tree.
-  Every next selector queries elements from the previous ones.
-  The fist selector relies on find-elements,
-  and the rest ones use find-elements-from
+  "Use `driver` to return a collection of all elements matching piped queries.
 
-  {:tag :div} {:tag :a}
-  means
-  {:tag :div} -> [div1 div2 div3]
-  div1 -> [a1 a2 a3]
-  div2 -> [a4 a5 a6]
-  div3 -> [a7 a8 a9]
-  so the result will be [a1 ... a9]
-  "
+  The results of `q` are queried by `qs1` which in turn are queried by `qs2`, and so on.
+
+  See [[query]] for details on `q`.
+
+  See [User Guide](/doc/01-user-guide.adoc#query-tree) for an example."
   [driver q & qs]
   (reduce (fn [elements q]
             (let [[loc term] (query/expand driver q)]
@@ -664,14 +734,18 @@
           qs))
 
 (defn child
-  "Finds a single element under given root element."
+  "Uses `driver` to return single element satisfying query `q` under given `ancestor-el` element.
+
+  See [[query]] for details on `q`."
   [driver ancestor-el q]
   {:pre [(some? ancestor-el)]}
   (let [[loc term] (query/expand driver q)]
     (find-element-from* driver ancestor-el loc term)))
 
 (defn children
-  "Finds multiple elements under given root element."
+  "Use `driver` to return a vector of unique elements satisfying query `q` under given `ancestor-el` element.
+
+  See [[query]] for details on `q`."
   [driver ancestor-el q]
   {:pre [(some? ancestor-el)]}
   (let [[loc term] (query/expand driver q)]
@@ -682,139 +756,173 @@
 (declare el->ref wait)
 
 (defn rand-uuid
+  "Return a random UUID string."
   []
   (str (java.util.UUID/randomUUID)))
 
 (defn make-action-input
+  "Return a new action input source of `type`."
   [type]
   {:type (name type) :id (rand-uuid) :actions []})
 
 (defn make-pointer-input
+  "Return a new pointer input source of pointer `type`."
   [type]
   (-> (make-action-input :pointer)
       (assoc-in [:parameters :pointerType] type)))
 
 (defn make-mouse-input
+  "Return a new mouse input source."
   []
   (make-pointer-input :mouse))
 
 (defn make-touch-input
+  "Return a new touch input source."
   []
   (make-pointer-input :touch))
 
 (defn make-pen-input
+  "Return a new pen input source."
   []
   (make-pointer-input :pen))
 
 (defn make-key-input
+  "Return a new key input source."
   []
   (make-action-input :key))
 
 (defn add-action
+  "Return `input` with `action` added."
   [input action]
   (update input :actions conj action))
 
 (defn add-pause
+  "Return `input` source with a pause action added.
+
+  Optionally specify a `duration`, defaults to 0."
   [input & [duration]]
   (add-action input {:type "pause" :duration (or duration 0)}))
 
 (defn add-double-pause
+  "Return `input` source with two pause actions added.
+
+  Optionally specify a `duration`, defaults to 0."
   [input & [duration]]
   (-> input
       (add-pause duration)
       (add-pause duration)))
 
 (defn add-key-down
+  "Return `input` source with `key` down action added."
   [input key]
   (add-action input {:type "keyDown" :value key}))
 
 (defn add-key-up
+  "Return `input` source with `key` up action added."
   [input key]
   (add-action input {:type "keyUp" :value key}))
 
 (defn add-key-press
+  "Return `input` source with `key` down and up actions added."
   [input key]
   (-> input
       (add-key-down key)
       (add-key-up key)))
 
 (defn add-pointer-down
-  [input & [button]]
+  "Return `input` source with `pointer-button` down action added.
+
+  `button` defaults to [[etaoin.keys/mouse-left]]"
+  [input & [pointer-button]]
   (add-action input {:type     "pointerDown"
                      :duration 0
-                     :button   (or button keys/mouse-left)}))
+                     :button   (or pointer-button k/mouse-left)}))
 
 (defn add-pointer-up
-  [input & [button]]
+  "Return `input` source with `pointer-button` up action added.
+
+  `button` defaults to [[etaoin.keys/mouse-left]]"
+  [input & [pointer-button]]
   (add-action input {:type     "pointerUp"
                      :duration 0
-                     :button   (or button keys/mouse-left)}))
+                     :button   (or pointer-button k/mouse-left)}))
 
 (defn add-pointer-cancel
+  "Return `input` with a pointer cancel action added."
   [input]
   (add-action input {:type "pointerCancel"}))
 
-(def default-duration 250)
-(def default-origin "viewport")
-
 (defn add-pointer-move
-  "
-  Move the pointer from `origin` to `x` and `y` offsets
-  with `duration` in milliseconds.
+  "Return `input` source with pointer move action added.
+
+  Moves the pointer from `origin` to offset `x` `y` with optional `duration` in milliseconds.
 
   Possible `origin` values are:
+  - `\"viewport\"` move to `x` `y` offset in viewport. This is the default.
+  - `\"pointer\"` `x` `y` are interpreted as offsets from the current pointer location.
+  - a map that represents a web element for example via [[el->ref]]:
+      ```Clojure
+      (el->ref (query driver q))
+      ```
+      where `q` is [[query]] to find the element.
 
-    - 'viewport'; the final x axis will be equal to `x` offset
-    and the final y equal to `y` offset. This is the default
-    value.
-
-    - 'pointer'; the final x will be equal to start x of pointer + `x` offset
-    and the final y equal to start y of pointer + `y` offset.
-
-    - a map that represents a web element. To get it, pass the result
-    of the `query` function into the `el->ref`, for example:
-
-    (el->ref (query driver q))
-
-    where `q` is a query term to find an element.
-  "
+  Optionally specify `:duration` in milliseconds, defaults to 250."
   [input & [{:keys [x y origin duration]}]]
-  (add-action input {:type     "pointerMove"
-                     :x        (or x 0)
-                     :y        (or y 0)
-                     :origin   (or origin default-origin)
-                     :duration (or duration default-duration)}))
+  (let [default-duration 250
+        default-origin "viewport"]
+    (add-action input {:type     "pointerMove"
+                       :x        (or x 0)
+                       :y        (or y 0)
+                       :origin   (or origin default-origin)
+                       :duration (or duration default-duration)})))
 
 (defn add-pointer-move-to-el
+  "Return `input` source with pointer move to element `el` action added.
+
+  Optionally specify `:duration` in milliseconds, defaults to 250."
   [input el & [{:keys [duration]}]]
   (add-pointer-move input {:duration duration
                            :origin   (el->ref el)}))
 
 (defn add-pointer-click
-  [input & [button]]
+  "Return `input` source with `pointer-button` down and up actions added.
+
+  `pointer-button` defaults to [[etaoin.keys/mouse-left]]"
+  [input & [pointer-button]]
   (-> input
-      (add-pointer-down button)
-      (add-pointer-up button)))
+      (add-pointer-down pointer-button)
+      (add-pointer-up pointer-button)))
 
 (defn add-pointer-click-el
-  [input el & [button]]
+  "Return `input` source with `pointer-button` down and up actions on element `el` added.
+
+  `pointer-button` defaults to [[etaoin.keys/mouse-left]]"
+  [input el & [pointer-button]]
   (-> input
       (add-pointer-move-to-el el)
-      (add-pointer-click button)))
+      (add-pointer-click pointer-button)))
 
 (defn add-pointer-double-click
-  [input & [button]]
+  "Return `input` source with `pointer-button` down, up, down, up actions added.
+
+  `pointer-button` defaults to [[etaoin.keys/mouse-left]]"
+  [input & [pointer-button]]
   (-> input
-      (add-pointer-click button)
-      (add-pointer-click button)))
+      (add-pointer-click pointer-button)
+      (add-pointer-click pointer-button)))
 
 (defn add-pointer-double-click-el
-  [input el & [button]]
+  "Return `input` source with `pointer-button` down, up, down, up actions on element `el` added.
+
+  `pointer-button` defaults to [[etaoin.keys/mouse-left]]"
+  [input el & [pointer-button]]
   (-> input
       (add-pointer-move-to-el el)
-      (add-pointer-double-click button)))
+      (add-pointer-double-click pointer-button)))
 
 (defmacro with-key-down
+  "Returns `input` source piped through `key` down,
+  then presumably a `body` of more actions then a `key` up action."
   [input key & body]
   `(-> ~input
        (add-key-down ~key)
@@ -822,20 +930,31 @@
        (add-key-up ~key)))
 
 (defmacro with-pointer-btn-down
-  [input button & body]
+  "Returns `input` source piped through `pointer-button` down action,
+  then presumably a `body` of more actions then a pointer `pointer-button` up action.
+
+  `pointer-button` should be, for example, [[etaoin.keys/mouse-left]]"
+  [input pointer-button & body]
   `(-> ~input
-       (add-pointer-down ~button)
+       (add-pointer-down ~pointer-button)
        ~@body
-       (add-pointer-up ~button)))
+       (add-pointer-up ~pointer-button)))
 
 (defmacro with-pointer-left-btn-down
+  "Returns `input` source piped through pointer left button down action,
+  then presumably a `body` of more actions then a pointer left button up action."
   [input & body]
   `(-> ~input
        add-pointer-down
        ~@body
        add-pointer-up))
 
-(defmulti perform-actions dispatch-driver)
+(defmulti perform-actions
+  "Have `driver` perform actions defined in `input` source(s) simultaneously.
+
+  See [Actions](/doc/01-user-guide.adoc#actions) for more details."
+  {:arglists '([driver input & inputs])}
+  dispatch-driver)
 
 (defmethod perform-actions
   :default
@@ -847,10 +966,14 @@
 
 (defmethod perform-actions
   :phantom
-  [driver input & inputs]
+  [_driver _input & _inputs]
   (util/error "Phantom doesn't support w3c actions."))
 
-(defmulti release-actions dispatch-driver)
+(defmulti release-actions
+  "Have `driver` clear any active action state.
+  This includes any key presses and/or a pointer button being held down."
+  {:arglists '([driver])}
+  dispatch-driver)
 
 (defmethod release-actions
   :default
@@ -859,10 +982,9 @@
             :method :delete
             :path   [:session (:session driver) :actions]}))
 
-
 (defmethod release-actions
   :phantom
-  [driver input & inputs]
+  [_driver _input & _inputs]
   (util/error "Phantom doesn't support w3c actions."))
 
 ;;
@@ -870,7 +992,7 @@
 ;;
 
 (defmulti mouse-btn-down
-  "Puts down a button of a virtual mouse."
+  "Have `driver` press down on the button of the virtual mouse."
   {:arglists '([driver])}
   dispatch-driver)
 
@@ -882,7 +1004,7 @@
             :path   [:session (:session driver) :buttondown]}))
 
 (defmulti mouse-btn-up
-  "Puts up a button of a virtual mouse."
+  "Have `driver` release button of the virtual mouse."
   {:arglists '([driver])}
   dispatch-driver)
 
@@ -894,8 +1016,8 @@
             :path   [:session (:session driver) :buttonup]}))
 
 (defmulti mouse-move-to
-  "Moves a virtual mouse pointer either to an element
-  or by `x` and `y` offset."
+  "Have `driver` moves the virtual mouse pointer either to an element found by query `q`
+  or to a specific by `x` and `y` pixel offset within the browser window."
   {:arglists '([driver q] [driver x y])}
   dispatch-driver)
 
@@ -913,7 +1035,7 @@
              :data   {:xoffset x :yoffset y}})))
 
 (defmacro with-mouse-btn
-  "Performs the body keeping mouse botton pressed."
+  "Have `driver` press the virtual mouse button, execute `body`, then release the virtual mouse button."
   [driver & body]
   `(do
      (mouse-btn-down ~driver)
@@ -923,28 +1045,18 @@
          (mouse-btn-up ~driver)))))
 
 (defmulti drag-and-drop
-  "Performs drag and drop operation as a sequence of the following steps:
+  "Have `driver` perform a drag and drop from element found by `q-from` to element found by `q-to`:
 
   1. moves mouse pointer to an element found with `q-from` query;
-  2. puts down mouse button;
+  2. holds down the mouse button;
   3. moves mouse to an element found with `q-to` query;
-  4. puts up mouse button.
+  4. releases the mouse button.
 
-  Arguments:
-
-  - `driver`: a driver instance,
-
-  - `q-from`: from what element to start dragging; any expression that
-  `query` function may accept;
-
-  - `q-to`: to what element to drag, a seach term.
+  See [[query]] for details on `q-from`, `q-to`.
 
   Notes:
-
   - does not work in Phantom.js since it does not have a virtual mouse API;
-
-  - does not work in Safari.
-  "
+  - does not work in Safari."
   {:arglists '([driver q-from q-to])}
   dispatch-driver)
 
@@ -970,9 +1082,8 @@
 ;; Clicking
 ;;
 
-
 (defn click-el
-  "Click on an element having its system id."
+  "Have `driver` click on element `el`."
   [driver el]
   {:pre [(some? el)]}
   (execute {:driver driver
@@ -980,16 +1091,18 @@
             :path   [:session (:session driver) :element el :click]}))
 
 (defn click
-  "Clicks on an element (a link, a button, etc)."
+  "Have `driver` click on element found by query `q`.
+
+  See [[query]] for details on `q`."
   [driver q]
   (click-el driver (query driver q)))
 
 
 (defn click-single
-  "
-  Click on an element checking that there is only one element found.
-  Throw an exception otherwise.
-  "
+  "Have `driver` click on element found by query `q`.
+  If `q` returns more than one element, throws.
+
+  See [[query]] for details on `q`."
   [driver q]
   (let [elements (query-all driver q)]
     (if (> (count elements) 1)
@@ -999,11 +1112,12 @@
       (click-el driver (first elements)))))
 
 (defn click-multi
-  "Clicks on a multiple elements in batch.
+  "Have `driver` click on first element found by each query in vector `qs`.
 
-  `qs`  a vector of [query1 query2 query3 ...]
-  `pause` a pause between click in seconds, default is 0"
+  - `qs`  a vector of queries `[query1 query2 query3 ...]`
+  - `pause` a pause prior to each click in seconds, default is `0`.
 
+  See [[query]] for details on `q`s."
   [driver qs & [pause]]
   (doseq [q qs]
     (wait (or pause 0))
@@ -1011,24 +1125,34 @@
 
 ;; Double click
 
-(defmulti double-click-el dispatch-driver)
-
-(defmethods double-click-el
-  [:chrome :phantom]
-  [driver el]
-  {:pre [(some? el)]}
-  (execute {:driver driver
-            :method :post
-            :path   [:session (:session driver) :element el :doubleclick]}))
-
-(defn double-click
-  "Performs double click on an element.
+(defmulti double-click-el
+  "Have `driver` double-click on element `el`.
 
   Note:
+  - the supported browsers are Chrome, and Phantom.js.
+  - for Firefox and Safari, your may try to simulate it as a `click, wait, click` sequence."
+  {:arglists '([driver el])}
+  dispatch-driver)
 
-  the supported browsers are Chrome, and Phantom.js.
-  For Firefox and Safari, your may try to simulate it as a `click, wait, click`
-  sequence."
+(defmethod double-click-el
+  :default
+  [driver el]
+  {:pre [(some? el)]}
+  (let [mouse   (-> (make-mouse-input)
+                    (add-pointer-move-to-el el)
+                    add-pointer-click
+                    (add-pause 10)
+                    add-pointer-click)]
+    (perform-actions driver mouse)))
+
+(defn double-click
+  "Have `driver` double-click on element found by query `q`.
+
+  See [[query]] for details on `q`.
+
+  Note:
+  - the supported browsers are Chrome, and Phantom.js.
+  - for Firefox and Safari, your may try to simulate via `click, wait, click` sequence."
   [driver q]
   (double-click-el driver (query driver q)))
 
@@ -1036,85 +1160,84 @@
 ;; Blind click
 
 (defmulti mouse-click
-  "
-  Click on a mouse button using the *current* mouse position.
-  The `btn` is a mouse button code. See `keys/mouse-*` constants.
-  "
-  {:arglists '([driver btn])}
+  "Have `driver` click `mouse-button` at current mouse pointer position.
+
+  `mouse-button` should be `etaoin.keys/mouse-left`,`etaoin.keys/mouse-middle` or `etaoin.keys/mouse-right`."
+  {:arglists '([driver mouse-button])}
   dispatch-driver)
 
 (defmethod mouse-click
   :default
-  [driver btn]
+  [driver mouse-button]
   (let [{driver-type :type} driver]
     (throw (ex-info "Mouse click is not supported for that browser"
-                    {:button      btn
+                    {:button      mouse-button
                      :driver-type driver-type}))))
 
 (defmethod mouse-click
   :chrome ;; TODO: try safari once the issue with it is solved
-  [driver btn]
+  [driver mouse-button]
   (execute {:driver driver
             :method :post
             :path   [:session (:session driver) :click]
-            :data   {:button btn}}))
+            :data   {:button mouse-button}}))
 
 (defn left-click
-  "A shortcut for `mouse-click` with the left button."
+  "Have `driver` click the left mouse button at current mouse pointer position."
   [driver]
-  (mouse-click driver keys/mouse-left))
+  (mouse-click driver k/mouse-left))
 
 (defn right-click
-  "A shortcut for `mouse-click` with the right button."
+  "Have `driver` click the right mouse button at current mouse pointer position."
   [driver]
-  (mouse-click driver keys/mouse-right))
+  (mouse-click driver k/mouse-right))
 
 (defn middle-click
-  "A shortcut for `mouse-click` with the middle button."
+  "Have `driver` click the middle mouse button at current mouse pointer position."
   [driver]
-  (mouse-click driver keys/mouse-middle))
+  (mouse-click driver k/mouse-middle))
 
 (defn mouse-click-on
-  "
-  Mouse click on a specific element and a button.
-  Moves the mouse pointer to the element first.
-  "
+  "Have `driver` move mouse pointer to element found by `q` then click `mouse-button`.
+
+  - `mouse-button` should be `etaoin.keys/mouse-left`,`etaoin.keys/mouse-middle` or `etaoin.keys/mouse-right`.
+  - `q` see [[query]] for details."
   [driver btn q]
   (doto driver
     (mouse-move-to q)
     (mouse-click btn)))
 
 (defn left-click-on
-  "
-  Left mouse click on an element. Probably don't need
-  that one, use `click` instead.
-  "
+  "Have `driver` move mouse pointer to element found by `q` then click left mouse button.
+
+  See [[query]] for details on `q`."
   [driver q]
-  (mouse-click-on driver keys/mouse-left q))
+  (mouse-click-on driver k/mouse-left q))
 
 (defn right-click-on
-  "
-  Move pointer to an element found with a query
-  and right click on it.
-  "
+  "Have `driver` move mouse pointer to element found by `q` then click right mouse button.
+
+  See [[query]] for details on `q`."
   [driver q]
-  (mouse-click-on driver keys/mouse-right q))
+  (mouse-click-on driver k/mouse-right q))
 
 (defn middle-click-on
-  "
-  Move pointer to an element found with a query
-  and middle click on it. Useful for opening links
-  in a new tab.
-  "
-  [driver q]
-  (mouse-click-on driver keys/mouse-middle q))
+  "Have `driver` move mouse pointer to element found by `q` then click middle mouse button.
 
+  See [[query]] for details on `q`.
+
+  Useful for opening links in a new tab."
+  [driver q]
+  (mouse-click-on driver k/mouse-middle q))
 
 ;;
 ;; Element size
 ;;
 
-(defmulti get-element-size-el dispatch-driver)
+(defmulti get-element-size-el
+  "Have `driver` return map of `:width` and `:height`, in pixels, of element `el`."
+  {:arglists '([driver el])}
+  dispatch-driver)
 
 (defmethods get-element-size-el
   [:chrome :edge :phantom]
@@ -1126,16 +1249,8 @@
       :value
       (select-keys [:width :height])))
 
-(defmethod get-element-size-el :firefox
-  [driver el]
-  {:pre [(some? el)]}
-  (-> (execute {:driver driver
-                :method :get
-                :path   [:session (:session driver) :element el :rect]})
-      :value
-      (select-keys [:width :height])))
-
-(defmethod get-element-size-el :safari
+(defmethods get-element-size-el
+  [:firefox :safari]
   [driver el]
   {:pre [(some? el)]}
   (-> (execute {:driver driver
@@ -1145,7 +1260,9 @@
       (select-keys [:width :height])))
 
 (defn get-element-size
-  "Returns an element size as a map with :width and :height keys."
+  "Have `driver` return map of `:width` and `:height`, in pixels, of element found by query `q`.
+
+  See [[query]] for details on `q`."
   [driver q]
   (get-element-size-el driver (query driver q)))
 
@@ -1153,7 +1270,10 @@
 ;; element location
 ;;
 
-(defmulti get-element-location-el dispatch-driver)
+(defmulti get-element-location-el
+  "Have `driver` return map of `:x` `:y` offset, in pixels of element `el`."
+  {:arglists '([driver el])}
+  dispatch-driver)
 
 (defmethods get-element-location-el
   [:chrome :edge :phantom]
@@ -1165,16 +1285,8 @@
       :value
       (select-keys [:x :y])))
 
-(defmethod get-element-location-el :firefox
-  [driver el]
-  {:pre [(some? el)]}
-  (-> (execute {:driver driver
-                :method :get
-                :path   [:session (:session driver) :element el :rect]})
-      :value
-      (select-keys [:x :y])))
-
-(defmethod get-element-location-el :safari
+(defmethods get-element-location-el
+  [:firefox :safari]
   [driver el]
   {:pre [(some? el)]}
   (-> (execute {:driver driver
@@ -1184,7 +1296,9 @@
       (select-keys [:x :y])))
 
 (defn get-element-location
-  "Returns an element location on a page as a map with :x and :x keys."
+  "Have `driver` return map of `:x` `:y` offset, in pixels of element found by query `q`.
+
+  See [[query]] for details on `q`."
   [driver q]
   (get-element-location-el driver (query driver q)))
 
@@ -1193,7 +1307,9 @@
 ;;
 
 (defn get-element-box
-  "Returns a bounding box for an element found with a query term.
+  "Have `driver` return map describing a bounding box for element found by query `q`.
+
+  See [[query]] for details on `q`.
 
   The result is a map with the following keys:
 
@@ -1202,8 +1318,7 @@
   - `:x2`: bottom right `x` coordinate;
   - `:y2`: bottom right `y` coordinate;
   - `:width`: width as a difference b/w `:x2` and `:x1`;
-  - `:height`: height as a difference b/w `:y2` and `:y1`.
-  "
+  - `:height`: height as a difference b/w `:y2` and `:y1`. "
   [driver q]
   (let [el                     (query driver q)
         {:keys [width height]} (get-element-size-el driver el)
@@ -1216,18 +1331,10 @@
      :height height}))
 
 (defn intersects?
-  "Determines whether two elements intersects in geometry meaning.
+  "Return true if bounding boxes found by `driver` for element found by query `q1`
+  intersects element found by query `q2`.
 
-  The implementation compares bounding boxes for each element
-  analyzing their arrangement.
-
-  Arguments:
-
-  - `q1` and `q2` are query terms to find elements to check for
-  intersection.
-
-  Returns true or false.
-  "
+  Compares bounding boxes of found elements."
   [driver q1 q2]
   (let [a (get-element-box driver q1)
         b (get-element-box driver q2)]
@@ -1240,7 +1347,8 @@
 ;; properties
 ;;
 
-(defn- get-element-property-el
+(defn get-element-property-el
+  "Have `driver` return value for `property` of element `el`."
   [driver el property]
   {:pre [(some? el)]}
   (:value (execute {:driver driver
@@ -1248,28 +1356,26 @@
                     :path   [:session (:session driver) :element el :property (name property)]})))
 
 (defn get-element-property
-  "Returns a property of an element (value, etc).
+  "Have `driver` value for  `property` of element found by query `q`.
 
-  Arguments:
+  Found property value is returned as string.
+  When element is found but property is absent, returns `nil`.
 
-  - `driver`: a driver instance,
-
-  - `q`: a query term to find an element,
-
-  - `name`: either a string or a keyword with a name of a property.
-
-  Returns: a string with the attribute value, `nil` if no such
-  property for that element."
-  [driver q name]
-  (get-element-property-el driver (query driver q) name))
+  See [[query]] for details on `q`."
+  [driver q property]
+  (get-element-property-el driver (query driver q) property))
 
 (defn get-element-properties
-  "Returns multiple properties in batch. The result is a vector of
-  corresponding properties."
-  [driver q & props]
+  "Have `driver` return a vector of property values matching `properties` of element found by query `q`.
+
+  Found property values are returned as strings.
+  When element is found but property is absent, result is included in vector as `nil`.
+
+  See [[query]] for details on `q`."
+  [driver q & properties]
   (let [el (query driver q)]
     (vec
-      (for [prop props]
+      (for [prop properties]
         (get-element-property-el driver el prop)))))
 
 ;;
@@ -1277,101 +1383,119 @@
 ;;
 
 (defn get-element-attr-el
-  [driver el attr]
+  "Have `driver` return value for `attribute` of element `el`, or `nil` if attribute does not exist."
+  [driver el attribute]
   {:pre [(some? el)]}
   (:value (execute {:driver driver
                     :method :get
-                    :path   [:session (:session driver) :element el :attribute (name attr)]})))
+                    :path   [:session (:session driver) :element el :attribute (name attribute)]})))
 
 (defn get-element-attr
-  "Returns an HTTP attribute of an element (class, id, href, etc).
+  "Have `driver` return value for `attribute` of element found by `q`.
 
-  Arguments:
+  Found attribute value is returned as string.
+  When element is found but attribute is absent, returns `nil`.
 
-  - `driver`: a driver instance,
+  See [[query]] for details on `q`.
 
-  - `q`: a query term to find an element,
-
-  - `name`: either a string or a keyword with a name of an attribute.
-
-  Returns: a string with the attribute value, `nil` if no such
-  attribute for that element.
-
-  Note: it does not split CSS classes! A single string with spaces is
-  returned.
+  Note: there is no special treatment of the `class` attribute.
+  A single string with spaces is returned.
 
   Example:
 
+  ```Clojure
   (def driver (firefox))
   (get-element-attr driver {:tag :a} :class)
-  >> \"link link__external link__button\" ;; see note above
-  "
-  [driver q name]
-  (get-element-attr-el driver (query driver q) name))
+  ;; => \"link link__external link__button\"
+  ```"
+  [driver q attribute]
+  (get-element-attr-el driver (query driver q) attribute))
 
 (defn get-element-attrs
-  "Returns multiple attributes in batch. The result is a vector of
-  corresponding attributes."
-  [driver q & attrs]
+  "Have `driver` return values for `attributes` of element found by query `q`.
+
+  Found attribute values are returned as strings.
+  When element is found but attribute is absent, result is included in vector as `nil`.
+
+  See [[query]] for details on `q`."
+  [driver q & attributes]
   (let [el (query driver q)]
     (vec
-      (for [attr attrs]
+      (for [attr attributes]
         (get-element-attr-el driver el attr)))))
 
 ;;
 ;; css
 ;;
 
-(defn- get-element-css-el
-  [driver el name*]
+(defn get-element-css-el
+  "Have `driver` return value for CSS style `property` of element `el`, or `nil` if property does not exist."
+  [driver el property]
   {:pre [(some? el)]}
   (-> (execute {:driver driver
                 :method :get
-                :path   [:session (:session driver) :element el :css (name name*)]})
+                :path   [:session (:session driver) :element el :css (name property)]})
       :value
       not-empty))
 
 (defn get-element-css
-  "Returns a CSS property of an element. The property might be both
-  own or inherited.
+  "Have `driver` return the CSS style `property` of element found by query `q`.
 
-  Arguments:
+  `property` is a string/keyword representing a CSS name.
+  Examples: `:font` or `\"background-color\"`
 
-  - `driver`: a driver instance,
+  The property will be returned if it was defined for the element itself or inherited.
 
-  - `q`: a query term,
+  Found property value is returned as string.
+  When element is found but property is absent, returns `nil`.
 
-  - `name`: a string/keyword with a CSS name (:font, \"background-color\", etc).
+  See [[query]] for details on `q`.
 
-  Returns a string with a value, `nil` if there is no such property.
-
-  Note: colors, fonts and some other properties may be represented in
-  their own ways depending on a browser.
+  Note: colors, fonts and some other properties may be represented differently for different browsers.
 
   Example:
-
+  ```Clojure
   (def driver (firefox))
+  (e/go driver \"https://clojars.org\")
   (get-element-css driver {:id :content} :background-color)
-  >> \"rgb(204, 204, 204)\" ;; or \"rgba(204, 204, 204, 1)\"
-  "
-  [driver q prop]
-  (get-element-css-el driver (query driver q) prop))
+  ;; => \"rgb(226, 228, 227)\"
+  ```"
+  [driver q property]
+  (get-element-css-el driver (query driver q) property))
 
 
 (defn get-element-csss
-  "Returns multiple CSS properties in batch. The result is a vector of
-  corresponding properties."
-  [driver q & props]
+  "Have `driver` return CSS style properties matching `properties` of element found by query `q`.
+
+  See [[query]] for details on `q`.
+
+  Found property values are returned as strings.
+  When element is found but property is absent, result is included in vector as `nil`.
+
+  Note: colors, fonts and some other properties may be represented differently for different browsers.
+
+  Example:
+  ```Clojure
+  (def driver (firefox))
+  (e/go driver \"https://clojars.org\")
+  (e/get-element-csss driver {:tag :body} :background-color :typo :line-height :font-size)
+  ;; => [\"rgb(226, 228, 227)\" nil \"20px\" \"14px\"]
+  ```"
+  [driver q & properties]
   (let [el (query driver q)]
     (vec
-      (for [prop props]
+      (for [prop properties]
         (get-element-css-el driver el prop)))))
 
 ;;
 ;; element inner HTML
 ;;
 (defmulti get-element-inner-html-el
-  "Returns element's inner text by its identifier."
+  "Have `driver` return inner text of element `el`.
+
+  For element with `my-id` in `<div id=\"my-id\"><p class=\"foo\">hello</p></div>` return will be
+  `\"<p class=\"foo\">hello</p>\"`."
+  {:arglists '([driver el])}
   dispatch-driver)
 
 (defmethod get-element-inner-html-el
@@ -1391,11 +1515,12 @@
                     :path   [:session (:session driver) :element el :attribute :innerHTML]})))
 
 (defn get-element-inner-html
-  "Returns element's inner HTML.
+  "Have `driver` return inner text of element found by query `q`.
 
-  For element `el` in `<div id=\"el\"><p class=\"foo\">hello</p></div>` it will
-  be \"<p class=\"foo\">hello</p>\" string.
-  "
+  See [[query]] for details on `q`.
+
+  For element with `my-id` in `<div id=\"my-id\"><p class=\"foo\">hello</p></div>` return will be
+  `\"<p class=\"foo\">hello</p>\"`."
   [driver q]
   (get-element-inner-html-el driver (query driver q)))
 
@@ -1404,7 +1529,7 @@
 ;;
 
 (defn get-element-tag-el
-  "Returns element's tag name by its identifier."
+  "Have `driver` return tag name of element `el`."
   [driver el]
   {:pre [(some? el)]}
   (:value (execute {:driver driver
@@ -1412,12 +1537,16 @@
                     :path   [:session (:session driver) :element el :name]})))
 
 (defn get-element-tag
-  "Returns element's tag name (\"div\", \"input\", etc)."
+  "Have `driver` return tag name of element found by query `q`.
+
+  See [[query]] for details on `q`."
   [driver q]
   (get-element-tag-el driver (query driver q)))
 
 (defn get-element-text-el
-  "Returns element's inner text by its identifier."
+  "Have `driver` return text of element `el`.
+
+  Text return for `<p class=\"foo\">hello</p>` is  `\"hello\"`."
   [driver el]
   {:pre [(some? el)]}
   (:value (execute {:driver driver
@@ -1425,10 +1554,11 @@
                     :path   [:session (:session driver) :element el :text]})))
 
 (defn get-element-text
-  "Returns inner element's text.
+  "Have `driver` return inner text of element found by query `q`.
 
-  For `<p class=\"foo\">hello</p>` it will be \"hello\" string.
-  "
+  See [[query]] for details on `q`.
+
+  Text return for `<p class=\"foo\">hello</p>` is  `\"hello\"`."
   [driver q]
   (get-element-text-el driver (query driver q)))
 
@@ -1436,8 +1566,10 @@
 ;; Element value
 ;;
 
-(defn- get-element-value-el
-  "Low level: returns element's value by its identifier."
+(defn get-element-value-el
+  "Have `driver` return the value of element `el`.
+
+  To be used on input elements."
   [driver el]
   {:pre [(some? el)]}
   (:value (execute {:driver driver
@@ -1445,7 +1577,11 @@
                     :path   [:session (:session driver) :element el :value]})))
 
 (defmulti get-element-value
-  "Returns the current element's value (input text)."
+  "Have `driver` return the value of element found by query `q`.
+
+  To be used on input elements.
+
+  See [[query]] for details on `q`."
   {:arglists '([driver q])}
   dispatch-driver)
 
@@ -1459,47 +1595,38 @@
   [driver q]
   (get-element-attr driver q :value))
 
-(defmethod get-element-value
-  :firefox
-  [driver q]
-  (get-element-property driver q :value))
-
-(defmethod get-element-value
-  :safari
+(defmethods get-element-value
+  [:firefox :safari]
   [driver q]
   (get-element-property driver q :value))
 
 ;;
-;; cookes
+;; cookies
 ;;
 
 (defn get-cookies
-  "Returns all the cookies browser keeps at the moment.
+  "Have `driver` return a vector of current browser cookies.
 
   Each cookie is a map with structure:
 
+  ```Clojure
   {:name \"cookie1\",
-  :value \"test1\",
-  :path \"/\",
-  :domain \"\",
-  :expiry nil,
-  :secure false,
-  :httpOnly false}
-  "
+   :value \"test1\",
+   :path \"/\",
+   :domain \"\",
+   :expiry nil,
+   :secure false,
+   :httpOnly false}
+  ```"
   [driver]
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session driver) :cookie]})))
 
 (defn get-cookie
-  "Returns the first cookie with such name.
+  "Have `driver` return first cookie matching `cookie-name`.
 
-  Arguments:
-
-  - `driver`: a driver instance,
-
-  - `cookie-name`: a string/keyword witn a cookie name.
-  "
+  When `cookie-name` is a keyword it will be converted appropriately."
   [driver cookie-name]
   (->> driver
        get-cookies
@@ -1507,15 +1634,10 @@
        first))
 
 (defn set-cookie
-  "Sets a new cookie.
+  "Have `driver` set a `cookie`.
 
-  Arguments:
-
-  - `driver`: a driver instance,
-
-  - `cookie`: a map with structure described in `get-cookies`. At
-  least `:name` and `:value` fields should be populated.
-  "
+  `cookie` is a map with structure described in [[get-cookies]].
+  At least `:name` and `:value` keys should be populated."
   [driver cookie]
   (execute {:driver driver
             :method :post
@@ -1523,14 +1645,14 @@
             :data   {:cookie cookie}}))
 
 (defn delete-cookie
-  "Deletes a cookie by its name."
+  "Have `driver` delete cookie with cookie `cookie-name`."
   [driver cookie-name]
   (execute {:driver driver
             :method :delete
             :path   [:session (:session driver) :cookie (name cookie-name)]}))
 
 (defmulti delete-cookies
-  "Deletes all the cookies for all domains."
+  "Have `driver` delete all browser cookies for all domains."
   {:arglists '([driver])}
   dispatch-driver)
 
@@ -1553,7 +1675,7 @@
 ;;
 
 (defn get-source
-  "Returns browser's current HTML markup as a string."
+  "Have `driver` return browser's current page HTML markup as a string."
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -1564,34 +1686,33 @@
 ;;
 
 (defn el->ref
-  "Turns machinery-wise element ID into an object
-  that Javascript use to reference existing DOM element.
+  "Return map representing an element reference for WebDriver.
 
-  The magic constant below is taken from the standard:
-  https://www.w3.org/TR/webdriver/#elements
+  The magic `:element-` constant in source is taken from the [WebDriver Spec](https://www.w3.org/TR/webdriver/#elements).
 
-  Passing such an object to `js-execute` automatically expands into a
-  DOM node. For example:
+  Passing the element reference map to `js-execute` automatically expands it
+  into a DOM node. For example:
 
-  ;; returns long UUID
+  ```Clojure
+  ;; returns UUID string for the element
   (def el (query driver :button-ok))
 
   ;; the first argument will the an Element instance.
   (js-execute driver \"arguments[0].scrollIntoView()\", (el->ref el))
-  "
+  ```"
   [el]
   {:ELEMENT                             el
    :element-6066-11e4-a52e-4f735466cecf el})
 
 (defmulti js-execute
-  "Executes Javascript code in browser synchronously.
+  "Return result of `driver` executing Javascript `script` with `args` synchronously in the browser.
 
-  The code is sent as a string (might be multi-line). Under the hood,
-  a browser wraps your code into a function so avoid using `function`
+  The script is sent as a string (can be multi-line). Under the hood,
+  the browser wraps your code into a function, so avoid using the `function`
   clause at the top level.
 
   Don't forget to add `return <something>` operator if you are
-  interested in the result value.
+  interested in a resulting value.
 
   You may access arguments through the built-in `arguments`
   pseudo-array from your code. You may pass any data structures that
@@ -1601,21 +1722,14 @@
   pipeline (JS objects turn to Clojure maps, arrays into vectors and
   so on).
 
-  Arguments:
-
-  - `driver`: a driver instance,
-
-  - `script`: a string with the code to execute.
-
-  - `args`: additional arguments for your code. Any data that might be
-  serialized into JSON.
+  - `args`: additional arguments for your script. Automatically converted to JSON.
 
   Example:
-
+  ```Clojure
   (def driver (chrome))
   (js-execute driver \"return arguments[0] + 1;\" 42)
-  >> 43
-  "
+  ;; => 43
+  ```"
   {:arglists '([driver script & args])}
   dispatch-driver)
 
@@ -1626,14 +1740,8 @@
                     :path   [:session (:session driver) :execute]
                     :data   {:script script :args (vec args)}})))
 
-(defmethod js-execute :firefox
-  [driver script & args]
-  (:value (execute {:driver driver
-                    :method :post
-                    :path   [:session (:session driver) :execute :sync]
-                    :data   {:script script :args (vec args)}})))
-
-(defmethod js-execute :safari
+(defmethods js-execute
+  [:firefox :safari]
   [driver script & args]
   (:value (execute {:driver driver
                     :method :post
@@ -1641,21 +1749,27 @@
                     :data   {:script script :args (vec args)}})))
 
 (defmulti js-async
-  "Executes an asynchronous script in the browser and returns the result.
-  An asynchronous script is a such one that performs any kind of IO operations,
-  say, AJAX request to the server. When running such kind of a script, you cannot
-  just use the `return` statement like you do in ordinary scripts. Instead, the
-  driver passes a special handler as the last argument that should be called
+  "Return result of `driver` executing JavaScript `script` with `args` asynchornously in the browser.
+
+  Executes an asynchronous script in the browser and returns the result.
+  An asynchronous script one that typically performs some kind of IO operation,
+  like an AJAX request to the server. You cannot just use the `return` statement
+  like you do in synchronous scripts.
+
+  The driver passes a special handler as the last argument that should be called
   to return the final result.
 
   *Note:* calling this function requires the `script` timeout to be set properly,
-  meaning non-zero positive value. See `get-script-timeout`, `get-script-timeout`
-  and `with-script-timeout` functions/macroses.
+  meaning non-zero positive value. See [[get-script-timeout]], [[set-script-timeout]]
+  and [[with-script-timeout]].
+
+  - `args`: additional arguments for your code. Automatically converted to JSON.
 
   Example of a script:
 
+  ```Clojure
   // the `arguments` would be an array of something like:
-  // [1, 2, true, ..., <special callback>]
+  // [1, 2, true, ..., <special callback added by driver>]
 
   var callback = arguments[arguments.length-1];
 
@@ -1668,16 +1782,7 @@
       callback({error: getErrorData(result)});
     }
   }});
-
-  Arguments:
-
-  - `driver`: a driver instance,
-
-  - `script`: a string with the code to execute.
-
-  - `args`: additional arguments for your code. Any data that might be
-  serialized into JSON.
-  "
+  ```"
   {:arglists '([driver script & args])}
   dispatch-driver)
 
@@ -1688,29 +1793,36 @@
                     :path   [:session (:session driver) :execute_async]
                     :data   {:script script :args (vec args)}})))
 
-(defmethod js-async :firefox
+(defmethod js-async
+  [:firefox :safari]
   [driver script & args]
   (:value (execute {:driver driver
                     :method :post
                     :path   [:session (:session driver) :execute :async]
                     :data   {:script script :args (vec args)}})))
 
-(defmethod js-async :safari
-  [driver script & args]
-  (:value (execute {:driver driver
-                    :method :post
-                    :path   [:session (:session driver) :execute :async]
-                    :data   {:script script :args (vec args)}})))
+;;
+;; User-Agent
+;;
+
+(defn get-user-agent
+  "Have `driver` return the browser `User-Agent`"
+  [driver]
+  (js-execute driver "return navigator.userAgent"))
+
 
 ;;
 ;; Javascript helpers
 ;;
 
 (defn js-localstorage-clear
+  "Have `driver` clear local storage."
   [driver]
   (js-execute driver "localStorage.clear()"))
 
-(defn add-script [driver url]
+(defn add-script
+  "Have `driver` add script with src `url` to page."
+  [driver url]
   (let [script
         (str "var s = document.createElement('script');"
              "s.type = 'text/javascript';"
@@ -1723,28 +1835,27 @@
 ;;
 
 (defn scroll
-  "Scrolls the window into absolute position (jumps to exact place)."
+  "Have `driver` scroll page to `x` `y` absolute pixel coordinates."
   ([driver x y]
    (js-execute driver "window.scroll(arguments[0], arguments[1]);" x y))
   ([driver {:keys [x y]}]
    (scroll driver x y)))
 
 (defn scroll-by
-  "Scrolls the window by offset (relatively the current position)."
+  "Have `driver` scroll by `x` `y` relative pixel offset."
   ([driver x y]
    (js-execute driver "window.scrollBy(arguments[0], arguments[1]);" x y))
   ([driver {:keys [x y]}]
    (scroll-by driver x y)))
 
 (defn scroll-query
-  "Scrolls to the first element found with a query.
+  "Have `driver` scroll to the element found by query `q`.
+
+  See [[query]] for details on `q`.
 
   Invokes element's `.scrollIntoView()` method. Accepts extra `param`
   argument that might be either boolean or object for more control.
-
-  See this page for details:
-  https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
-  "
+  See [Mozilla's docs for values](https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView)."
   ([driver q]
    (let [el (query driver q)]
      (js-execute driver "arguments[0].scrollIntoView();" (el->ref el))))
@@ -1753,54 +1864,57 @@
      (js-execute driver "arguments[0].scrollIntoView(arguments[1]);" (el->ref el) param))))
 
 (defn get-scroll
-  "Returns the current scroll position as a map
-  with `:x` and `:y` keys and integer values."
+  "Have `driver` return the current scroll position as a map of `:x` `:y`."
   [driver]
   (js-execute driver "return {x: window.scrollX, y: window.scrollY};"))
 
 (defn scroll-top
-  "Scrolls to top of the page keeping current horizontal position."
+  "Have `driver` scroll vertically to the top of the page keeping current horizontal position."
   [driver]
-  (let [{:keys [x y]} (get-scroll driver)]
+  (let [{:keys [x _y]} (get-scroll driver)]
     (scroll driver x 0)))
 
 (defn scroll-bottom
-  "Scrolls to bottom of the page keeping current horizontal position."
+  "Have `driver` scroll vertically to bottom of the page keeping current horizontal position."
   [driver]
   (let [y-max         (js-execute driver "return document.body.scrollHeight;")
-        {:keys [x y]} (get-scroll driver)]
+        {:keys [x _y]} (get-scroll driver)]
     (scroll driver x y-max)))
 
 (def ^{:doc "Default scroll offset in pixels."}
   scroll-offset 100)
 
 (defn scroll-up
-  "Scrolls the page up by specific number of pixels.
-  The `scroll-offset` constant is used when not passed."
+  "Have `driver` scroll the page up by `offset` pixels.
+
+  `offset` defaults to [[scroll-offset]]."
   ([driver offset]
    (scroll-by driver 0 (- offset)))
   ([driver]
    (scroll-up driver scroll-offset)))
 
 (defn scroll-down
-  "Scrolls the page down by specific number of pixels.
-  The `scroll-offset` constant is used when not passed."
+  "Have `driver` scroll the page down by `offset` pixels.
+
+  `offset` defaults to [[scroll-offset]]."
   ([driver offset]
    (scroll-by driver 0 offset))
   ([driver]
    (scroll-down driver scroll-offset)))
 
 (defn scroll-left
-  "Scrolls the page left by specific number of pixels.
-  The `scroll-offset` constant is used when not passed."
+  "Have `driver` scroll the page left by `offset` pixels.
+
+  `offset` defaults to [[scroll-offset]]."
   ([driver offset]
    (scroll-by driver (- offset) 0))
   ([driver]
    (scroll-left driver scroll-offset)))
 
 (defn scroll-right
-  "Scrolls the page right by specific number of pixels.
-  The `scroll-offset` constant is used when not passed."
+  "Have `driver` scroll the page right by `offset` pixels.
+
+  `offset` defaults to [[scroll-offset]]."
   ([driver offset]
    (scroll-by driver offset 0))
   ([driver]
@@ -1810,8 +1924,10 @@
 ;; iframes
 ;;
 
-(defn switch-frame*
-  "Switches to an (i)frame by its index or an element reference."
+(defn ^:no-doc switch-frame*
+  "Have `driver` switch context to (i)frame by its `id`
+
+  `id` can be an index or the element `id` attribute."
   [driver id]
   (execute {:driver driver
             :method :post
@@ -1819,31 +1935,35 @@
             :data   {:id id}}))
 
 (defn switch-frame
-  "Switches to an (i)frame quering the page for it."
+  "Have `driver` switch context to (i)frame element found by query `q`.
+
+  See [[query]] for details on `q`."
   [driver q]
   (let [el (query driver q)]
     (switch-frame* driver (el->ref el))))
 
 (defn switch-frame-first
-  "Switches to the first (i)frame."
+  "Have `driver` switch context to the first (i)frame."
   [driver]
   (switch-frame* driver 0))
 
 (defn switch-frame-parent
-  "Switches to the parent of the current (i)frame."
+  "Have `driver` switch context to the parent of the current (i)frame."
   [driver]
   (execute {:driver driver
             :method :post
             :path   [:session (:session driver) :frame :parent]}))
 
 (defn switch-frame-top
-  "Switches to the most top of the page."
+  "Have `driver` switch context the main page."
   [driver]
   (switch-frame* driver nil))
 
 (defmacro with-frame
-  "Switches to the (i)frame temporary while executing the body
-  returning the result of the last expression."
+  "Excecute `body` within context of frame found via `driver` by query `q`.
+
+  Frame context is restored after call.
+  Result of `body` is returned."
   [driver q & body]
   `(do
      (switch-frame ~driver ~q)
@@ -1856,7 +1976,7 @@
 ;;
 
 (defmulti get-log-types
-  "Returns a set of log types the browser supports."
+  "Have `driver` return a vector of log types the browser supports."
   {:arglists '([driver])}
   dispatch-driver)
 
@@ -1867,7 +1987,7 @@
                     :method :get
                     :path   [:session (:session driver) :log :types]})))
 
-(defn process-log
+(defn ^:no-doc process-log
   "Remaps some of the log's fields."
   [entry]
   (-> entry
@@ -1876,30 +1996,6 @@
       (assoc :datetime (java.util.Date. ^long (:timestamp entry)))))
 
 (defmulti ^:private get-logs*
-  "Returns Javascript log entries. Each log entry is a map
-  with the following structure:
-
-  {:level :warning,
-   :message \"1,2,3,4  anonymous (:1)\",
-   :timestamp 1511449388366,
-   :source nil,
-   :datetime #inst \"2017-11-23T15:03:08.366-00:00\"}
-
-  Empirical knowledge about browser differences:
-
-  * Chrome:
-  - Returns all recorded logs.
-  - Clears the logs once they have been read.
-  - JS console logs have `:console-api` for `:source` field.
-  - Entries about errors will have SEVERE level.
-
-  * PhantomJS:
-  - Return all recorded logs since the last URL change.
-  - Does not clear recorded logs on subsequent invocations.
-  - JS console logs have nil for `:source` field.
-  - Entries about errors will have WARNING level, as coded here:
-      https://github.com/detro/ghostdriver/blob/be7ffd9d47c1e76c7bfa1d47cdcde9164fd40db8/src/session.js#L494
-  "
   {:arglists '([driver logtype])}
   dispatch-driver)
 
@@ -1913,27 +2009,47 @@
        :value
        (mapv process-log)))
 
-
 (defn get-logs
+  "Have `driver` return Javascript console log entries.
+
+  Each log entry is a map with the following structure:
+  ```Clojure
+  {:level :warning,
+   :message \"1,2,3,4  anonymous (:1)\",
+   :timestamp 1511449388366,
+   :source nil,
+   :datetime #inst \"2017-11-23T15:03:08.366-00:00\"}
+  ```
+
+  Empirical knowledge about browser differences:
+
+  - Chrome:
+    - Returns all recorded logs.
+    - Clears the logs once they have been read.
+    - JS console logs have `:console-api` for `:source` field.
+    - Entries about errors will have SEVERE level.
+
+  - PhantomJS (obsolete and no longer tested):
+    - Return all recorded logs since the last URL change.
+    - Does not clear recorded logs on subsequent invocations.
+    - JS console logs have nil for `:source` field.
+    - Entries about errors will have WARNING level, as coded [here](https://github.com/detro/ghostdriver/blob/be7ffd9d47c1e76c7bfa1d47cdcde9164fd40db8/src/session.js#L494)."
   ([driver]
    (get-logs driver "browser"))
   ([driver logtype]
    (get-logs* driver logtype)))
 
-
 (defn supports-logs?
-  "Checks whether a driver supports getting console logs."
+  "Returns true if `driver` supports getting console logs."
   [driver]
   (implemented? driver get-logs*))
 
-
 (defn- dump-logs
   [logs filename & [opt]]
-  (generate-stream
+  (json/generate-stream
     logs
     (io/writer filename)
     (merge {:pretty true} opt)))
-
 
 ;;
 ;; get/set hash
@@ -1943,56 +2059,85 @@
   (str/split url #"#" 2))
 
 (defn set-hash
-  "Sets a new hash fragment for the current page.
-  Don't include the leading # symbol. Useful when navigating
-  on single page applications."
+  "Have `driver` set a new `hash` fragment for the current page.
+
+  Don't include the leading `#` character in `hash`.
+
+  Useful when navigating on single page applications. See also: [[get-hash]]."
   [driver hash]
   (let [[url _] (split-hash (get-url driver))
         new     (format "%s#%s" url hash)]
     (go driver new)))
 
 (defn get-hash
-  "Returns the current hash fragment (nil when not set)."
+  "Have `driver` fetch the current hash fragment for the current page (nil when not set).
+
+  Example:
+  ```Clojure
+  (def driver (chrome))
+  (go driver \"https://en.wikipedia.org/wiki/Clojure\")
+  (get-hash driver)
+  ;; => nil
+  (go driver \"https://en.wikipedia.org/wiki/Clojure#Popularity\")
+  (get-hash driver)
+  ;; => \"Popularity\"
+  ````
+
+  See also: [[set-hash]]."
   [driver]
   (let [[_ hash] (split-hash (get-url driver))]
     hash))
-
 ;;
 ;; exceptions
 ;;
 
-(defmacro with-exception [catch fallback & body]
+(defmacro ^:no-doc with-exception [catch fallback & body]
   `(try+
      ~@body
      (catch ~catch ~(quote _)
        ~fallback)))
 
-(defmacro with-http-error [& body]
+(defmacro with-http-error
+  "Executes `body` suppressing catching any exception that would normally occur due to HTTP non-success status
+  when communicating with a WebDriver.
+
+  Instead returns false on first HTTP non-success status."
+  [& body]
   `(with-exception [:type :etaoin/http-error] false
      ~@body))
 
 ;;
-;; locators TODO: drop or refactor
+;; default locators
 ;;
 
-(defn use-locator [driver locator]
+(defn- use-locator
+  "Return `driver` with new default `locator`"
+  [driver locator]
   (assoc driver :locator locator))
 
-(defn use-xpath [driver]
+(defn use-xpath
+  "Return new `driver` with default locator set to XPath."
+  [driver]
   (use-locator driver locator-xpath))
 
-(defn use-css [driver]
+(defn use-css
+  "Return new `driver` with default locator set to CSS."
+  [driver]
   (use-locator driver locator-css))
 
-(defmacro with-locator [driver locator & body]
+(defmacro ^:no-doc with-locator [driver locator & body]
   `(binding [~driver (assoc ~driver :locator ~locator)]
      ~@body))
 
-(defmacro with-xpath [driver & body]
+(defmacro with-xpath
+  "Execute `body` with default locator set to XPath."
+  [driver & body]
   `(with-locator ~driver locator-xpath
      ~@body))
 
-(defmacro with-css [driver & body]
+(defmacro with-css
+  "Execute `body` with default locator set to CSS."
+  [driver & body]
   `(with-locator ~driver locator-css
      ~@body))
 
@@ -2001,16 +2146,12 @@
 ;;
 
 (defmulti get-alert-text
-  "Returns a string of text that appears in alert dialog (if present)."
+  "Have `driver` return text string from alert dialog (if present)."
+  {:arglists '([driver])}
   dispatch-driver)
 
-(defmethod get-alert-text :firefox
-  [driver]
-  (:value (execute {:driver driver
-                    :method :get
-                    :path   [:session (:session driver) :alert :text]})))
-
-(defmethod get-alert-text :safari
+(defmethods get-alert-text
+  [:firefox :safari]
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -2024,16 +2165,12 @@
                     :path   [:session (:session driver) :alert_text]})))
 
 (defmulti dismiss-alert
-  "Simulates cancelling an alert dialog (pressing cross button)."
+  "Have `driver` cancel open alert dialog."
+  {:arglists '([driver])}
   dispatch-driver)
 
-(defmethod dismiss-alert :firefox
-  [driver]
-  (execute {:driver driver
-            :method :post
-            :path   [:session (:session driver) :alert :dismiss]}))
-
-(defmethod dismiss-alert :safari
+(defmethods dismiss-alert
+  [:firefox :safari]
   [driver]
   (execute {:driver driver
             :method :post
@@ -2047,16 +2184,12 @@
             :path   [:session (:session driver) :dismiss_alert]}))
 
 (defmulti accept-alert
-  "Simulates submitting an alert dialog (pressing OK button)."
+  "Have `driver` accept open alert dialog."
+  {:arglists '([driver])}
   dispatch-driver)
 
-(defmethod accept-alert :firefox
-  [driver]
-  (execute {:driver driver
-            :method :post
-            :path   [:session (:session driver) :alert :accept]}))
-
-(defmethod accept-alert :safari
+(defmethods accept-alert
+  [:firefox :safari]
   [driver]
   (execute {:driver driver
             :method :post
@@ -2074,8 +2207,12 @@
 ;;
 
 (defn running?
-  "Check whether a driver runs HTTP server."
+  "Return true if `driver` seems accessable via its `:host` and `:port`.
+
+  Throws if using `:webdriver-url`"
   [driver]
+  (when (:webdriver-url driver)
+    (throw (ex-info "Not supported for driver using :webdriver-url" {})))
   (util/connectable? (:host driver)
                      (:port driver)))
 
@@ -2083,96 +2220,102 @@
 ;; predicates
 ;;
 
-(defn driver? [driver type]
+(defn driver?
+  "Return true if `driver` is of `type` (e.g. on of: `:chrome`, `:edge`, `:firefox`, `:safari`, `:phantom`)"
+  [driver type]
   (= (dispatch-driver driver) type))
 
 (defn chrome?
-  "Returns true if a driver is a Chrome instance."
+  "Returns true if a `driver` is Chrome."
   [driver]
   (driver? driver :chrome))
 
 (defn edge?
-  "Returns true if a driver is an Edge  instance."
+  "Returns true if a `driver` is Edge."
   [driver]
   (driver? driver :edge))
 
 (defn firefox?
-  "Returns true if a driver is a Firefox instance."
+  "Returns true if a `driver` is Firefox."
   [driver]
   (driver? driver :firefox))
 
 (defn phantom?
-  "Returns true if a driver is a Phantom.js instance."
+  "Returns true if a `driver` is Phantom.js."
   [driver]
   (driver? driver :phantom))
 
 (defn safari?
-  "Returns true if a driver is a Safari instance."
+  "Returns true if a `driver` is Safari."
   [driver]
   (driver? driver :safari))
 
 (defn headless?
-  "Returns true if a driver is run in headless mode (without UI window)."
+  "Returns true if a `driver` is in headless mode (without UI window)."
   [driver]
   (drv/is-headless? driver))
 
 (defn exists?
-  "Returns true if an element exists on the page.
+  "Return true if `driver` can find element via query `q`.
 
-  Keep in mind it does not validates whether the element is visible,
-  clickable and so on."
+  See [[query]] for details on `q`.
+
+  Keep in mind this does not validate whether the found element is visible, clickable and so on."
   [driver q & more]
   (with-http-error
     (apply query driver q more)
     true))
 
-(def ^{:doc "Opposite of `exists?`."}
+(def ^{:doc "Opposite of [[exists?]]."
+       :arglists '([driver q & more])}
   absent? (complement exists?))
 
+;; TODO: I think we might have broken this! @lread
+(defn- effectively-displayed?
+  [driver el]
+  {:pre [(some? el)]}
+  (and (not= "none" (get-element-css-el driver el :display))
+       (not= "hidden" (get-element-css-el driver el :visibility))))
+
 (defmulti displayed-el?
-  "Checks whether an element is displayed by its identifier.
+  "Return true if `driver` finds `el` is effectively displayed/visible.
 
-  Note: Safari does not have native `displayed` implementation, we
-  have to check some common cases manually (CSS display, visibility,
-  etc).
+  See [[query]] for details on `q`.
 
-  Returns true or false."
+  Rather than checking the browser native `displayed` implementation, which
+  isn't 100% reliable, we are taking a pragmatic approach by checking the
+  `display` and `visibility` CSS properties."
+  {:arglists '([driver el])}
   dispatch-driver)
 
-(defmethod displayed-el? :default ;;TODO it's only for jwp
+(defmethod displayed-el? :default
   [driver el]
   {:pre [(some? el)]}
-  (:value (execute {:driver driver
-                    :method :get
-                    :path   [:session (:session driver) :element el :displayed]})))
-
-(defmethod displayed-el? :safari
-  [driver el]
-  {:pre [(some? el)]}
-  (cond
-    (= (get-element-css-el driver el :display)
-       "none")
-    false
-    (= (get-element-css-el driver el :visibility)
-       "hidden")
-    false
-    :else true))
+  (effectively-displayed? driver el))
 
 (defn displayed?
-  "Checks whether an element is displayed an screen."
+  "Return true if element found by `driver` with query `q` is effectively displayed."
   [driver q]
   (displayed-el? driver (query driver q)))
 
 (defn visible?
-  "Checks whether an element is visible on the page."
+  "Return true if element found by `driver` with query `q` exists and is effectively displayed.
+
+  See [[query]] for details on `q`.
+
+  Same as [[displayed?]] but does not throw if element does not exist."
   [driver q]
   (and (exists? driver q)
        (displayed? driver q)))
 
-(def ^{:doc "Oppsite to `visible?`."}
+(def ^{:doc "Oppsite of  [[visible?]]."
+       :arglists '([driver q])}
   invisible? (complement visible?))
 
 (defn selected-el?
+  "Return true if `driver` determines element `el` is selected.
+
+  For use on input elements like checkboxes, radio buttons and option elements."
   [driver el]
   {:pre [(some? el)]}
   (:value (execute {:driver driver
@@ -2180,11 +2323,18 @@
                     :path   [:session (:session driver) :element el :selected]})))
 
 (defn selected?
-  "Checks whether an element is selected."
+  "Return true if `driver` determines element found by query `q` is selected.
+
+  See [[query]] for details on `q`.
+
+  For use on input elements like checkboxes, radio buttons and option elements."
   [driver q]
   (selected-el? driver (query driver q)))
 
-(defn enabled-el? 
+(defn enabled-el?
+  "Return true if `driver` determines element `el` is enabled.
+
+  For use on form elements."
   [driver el]
   {:pre [(some? el)]}
   (:value (execute {:driver driver
@@ -2192,16 +2342,23 @@
                     :path   [:session (:session driver) :element el :enabled]})))
 
 (defn enabled?
-  "Checks whether an element is enabled."
+  "Returns true if `driver` determines element found by query `q` is enabled.
+
+  See [[query]] for details on `q`.
+
+  For use on form elements."
   [driver q]
   (enabled-el? driver (query driver q)))
 
-(def disabled? (complement enabled?))
+(def ^{:doc "Opposite of [[enabled?]]"
+       :arglists '([query q])}
+  disabled?  (complement enabled?))
 
 (defn has-text?
-  "Returns true if a passed text appears anywhere on a page.
-  With a leading query expression, finds a text inside the first
-  element that matches the query."
+  "Return true if `driver` finds that `text` appears anywhere on a page.
+
+  When `q` is specified, restricts search inside the element that matches query `q`.
+  See [[query]] for details on `q`."
   ([driver text]
    (with-http-error
      (boolean
@@ -2216,6 +2373,7 @@
            (query driver q x)))))))
 
 (defn has-class-el?
+  "Returns true if `driver` finds that element `el` includes `class` in its class attribute."
   [driver el class]
   {:pre [(some? el)]}
   (let [classes (get-element-attr-el driver el "class")]
@@ -2225,73 +2383,81 @@
       (str/includes? classes (name class)))))
 
 (defn has-class?
-  "Checks whether an element has a specific class."
+  "Returns true if `driver` finds that element found by query `q` includes `class` in its class attribute.
+
+  See [[query]] for details on `q`."
   [driver q class]
   (has-class-el? driver (query driver q) class))
 
-(def ^{:doc "Opposite to `has-class?`."}
+(def ^{:doc "Opposite of [[has-class?]]."
+       :arglists '([query q class])}
   has-no-class? (complement has-class?))
 
 (defn has-alert?
-  "Checks if there is an alert dialog opened on the page."
+  "Returns true if `driver` sees an open alert dialog."
   [driver]
   (with-http-error
     (get-alert-text driver)
     true))
 
-(def ^{:doc "Opposite to `has-alert?`."}
+(def ^{:doc "Opposite of [[has-alert?]]."
+       :arglists '([driver])}
   has-no-alert? (complement has-alert?))
 
 ;;
 ;; wait functions
 ;;
 
-(def ^:dynamic *wait-timeout* 7)
-(def ^:dynamic *wait-interval* 0.33)
-
+(def ^:dynamic *wait-timeout* "Maximum seconds to wait, default for `wait-*` functions." 7)
+(def ^:dynamic *wait-interval* "Frequency in seconds to check if we should still wait, default for `wait-*` functions." 0.33)
 
 (defmacro with-wait-timeout
-  [sec & body]
-  `(binding [*wait-timeout* ~sec]
+  "Execute `body` with a [[*wait-timeout*]] of `seconds`"
+  [seconds & body]
+  `(binding [*wait-timeout* ~seconds]
      ~@body))
 
 (defmacro with-wait-interval
-  [sec & body]
-  `(binding [*wait-interval* ~sec]
+  "Execute `body` with a [[*wait-interval*]] of `seconds` (which can be fractional)."
+  [seconds & body]
+  `(binding [*wait-interval* ~seconds]
      ~@body))
 
 (defn wait
-  "Sleeps for N seconds."
-  ([driver sec]
-   (wait sec))
-  ([sec]
-   (Thread/sleep (* sec 1000))))
+  "Sleep for `seconds`."
+  (#_{:clj-kondo/ignore [:unused-binding]} [driver seconds]
+   (wait seconds))
+  ([seconds]
+   (Thread/sleep (* seconds 1000))))
 
 (defmacro with-wait
-  "Executes the body waiting for n seconds before each form.
-  Returns a value of the last form. Use that macros to perform
-  a bunch of actions slowly. Some SPA applications need extra time
+  "Execute `body` waiting `seconds` before each form.
+
+  Returns the value of the last form.
+
+  Can be used to perform actions slowly. Some SPA applications need extra time
   to re-render the content."
-  [n & body]
-  `(do ~@(interleave (repeat `(wait ~n)) body)))
+  [seconds & body]
+  `(do ~@(interleave (repeat `(wait ~seconds)) body)))
 
 (defmacro doto-wait
-  "The same as doto but prepends each form with (wait n) clause."
-  [n obj & body]
+  "The same as `clojure.core/doto` but prepends each form with ([[wait]] `seconds`) clause."
+  [seconds obj & body]
   `(doto ~obj
-     ~@(interleave (repeat `(wait ~n)) body)))
+     ~@(interleave (repeat `(wait ~seconds)) body)))
 
 (defn wait-predicate
-  "Sleeps continuously calling a predicate until it returns true.
-  Raises a slingshot exception when timeout is reached.
+  "Wakes up every `:interval` seconds to call `pred`.
+  Keeps this up until either `pred` returns true or `:timeout` has elapsed.
+  When `:timeout` has elapsed a slingshot exception is throws with `:message`.
 
   Arguments:
 
-  - `pred`: a zero-argument predicate to call;
+  - `pred`: a zero-argument predicate to call
   - `opt`: a map of optional parameters:
-  -- `:timeout` wait limit in seconds, 20 by default;
-  -- `:interval` how long to wait b/w calls, 0.33 by default;
-  -- `:message` a message that becomes a part of exception when timeout is reached."
+    - `:timeout` wait limit in seconds, [[*wait-timeout*]] by default;
+    - `:interval` how long to wait between calls, [[*wait-interval*]] by default;
+    - `:message` a message that becomes a part of exception when timeout is reached."
 
   ([pred]
    (wait-predicate pred {}))
@@ -2317,153 +2483,133 @@
                      :times (inc times)))))))
 
 (defn wait-exists
-  "Waits until an element exists on a page (but may not be visible though).
+  "Waits until `driver` finds element [[exists?]] via `q`.
 
-  Arguments:
-
-  - `driver`: a driver instance;
-  - `q`: a query term (see `query`);
-  - `opt`: a map of options (see `wait-predicate`)."
+  - `opt`: see [[wait-predicate]] opt."
 
   [driver q & [opt]]
-  (wait-predicate #(exists? driver q) opt))
+  (let [message (format "Wait until %s element exists" q)]
+    (wait-predicate #(exists? driver q)
+                    (merge {:message message} opt))))
 
 (defn wait-absent
-  "Waits until an element is absent.
+  "Waits until `driver` determines element is not found by `q` (is [[absent?]]).
 
-  Arguments:
+  See [[query]] for details on `q`.
 
-  - `driver`: a driver instance;
-  - `q`: a query term (see `query`);
-  - `opt`: a map of options (see `wait-predicate`)."
+  - `opt`: see [[wait-predicate]] opt."
 
   [driver q & [opt]]
-  (let [message (format "Wait for %s element is absent" q)]
+  (let [message (format "Wait until %s element is absent" q)]
     (wait-predicate #(absent? driver q)
-                    (assoc opt :message message))))
+                    (merge {:message message} opt))))
 
 (defn wait-visible
-  "Waits until an element presents and is visible.
+  "Waits until `driver` determines element found by `q` is [[visible?]].
 
-  Arguments:
+  See [[query]] for details on `q`.
 
-  - `driver`: a driver instance;
-  - `q`: a query term (see `query`);
-  - `opt`: a map of options (see `wait-predicate`)."
-
+  - `opt`: see [[wait-predicate]] opt."
   [driver q & [opt]]
-  (let [message (format "Wait for %s element is visible" q)]
+  (let [message (format "Wait until %s element is visible" q)]
     (wait-predicate #(visible? driver q)
-                    (assoc opt :message message))))
+                    (merge {:message message} opt))))
 
 (defn wait-invisible
-  "Waits until an element presents but not visible.
+  "Waits until `driver` determines element found by `q` is [[invisible?]].
 
-  Arguments:
+  See [[query]] for details on `q`.
 
-  - `driver`: a driver instance;
-  - `q`: a query term (see `query`);
-  - `opt`: a map of options (see `wait-predicate`)."
-
+  - `opt`: see [[wait-predicate]] opt."
   [driver q & [opt]]
-  (wait-predicate #(invisible? driver q) opt))
+  (let [message (format "Wait until %s element is invisible" q)]
+    (wait-predicate #(invisible? driver q)
+                    (merge {:message message} opt))))
 
 (defn wait-enabled
-  "Waits until an element is enabled (usually an input element).
+  "Waits until `driver` determines element found by `q` is [[enabled?]].
 
-  Arguments:
+  See [[query]] for details on `q`.
 
-  - `driver`: a driver instance;
-  - `q`: a query term (see `query`);
-  - `opt`: a map of options (see `wait-predicate`)."
-
+  - `opt`: see [[wait-predicate]] opt."
   [driver q & [opt]]
-  (wait-predicate #(enabled? driver q) opt))
+  (let [message (format "Wait until %s element is enabled" q)]
+    (wait-predicate #(enabled? driver q)
+                    (merge {:message message} opt))))
 
 (defn wait-disabled
-  "Waits until an element is disabled (usually an input element).
+  "Waits until `driver` determines element found by `q` is [[disabled?]].
 
-  Arguments:
+  See [[query]] for details on `q`.
 
-  - `driver`: a driver instance;
-  - `q`: a query term (see `query`);
-  - `opt`: a map of options (see `wait-predicate`)."
-
+  - `opt`: see [[wait-predicate]] opt."
   [driver q & [opt]]
-  (wait-predicate #(disabled? driver q) opt))
+  (let [message (format "Wait until %s element is disabled" q)]
+    (wait-predicate #(disabled? driver q)
+                    (merge {:message message} opt))))
 
 (defn wait-has-alert
-  "Waits until an alert dialog appears on the screen.
+  "Waits until `driver` finds page [[has-alert?]].
 
-  Arguments:
-
-  - `driver`: a driver instance;
-  - `q`: a query term (see `query`);
-  - `opt`: a map of options (see `wait-predicate`)."
-
+  - `opt`: see [[wait-predicate]] opt."
   [driver & [opt]]
-  (wait-predicate #(has-alert? driver) opt))
+  (let [message "Wait until element has alert"]
+    (wait-predicate #(has-alert? driver)
+                    (merge {:message message} opt))))
 
 (defn wait-has-text
-  "Waits until an element has text anywhere inside it (including inner HTML).
+  "Waits until `driver` finds element via `q` with `text` anywhere inside it (including inner HTML).
 
-  Arguments:
+  See [[query]] for details on `q`.
 
-  - `driver`: a driver instance;
-  - `q`: a query term (see `query`).
-  - `text`: a string to search;
-  - `opt`: a map of options (see `wait-predicate`)."
+  - `opt`: see [[wait-predicate]] opt."
   [driver q text & [opt]]
-  (let [message (format "Wait for %s element has text %s"
+  (let [message (format "Wait until %s element has text %s"
                         q text)]
     (wait-predicate #(has-text? driver q text)
-                    (assoc opt :message message))))
+                    (merge {:message message} opt))))
 
 (defn wait-has-text-everywhere
-  "Like `wait-has-text` but searches for text across the entire page.
+  "Waits until `driver` finds `text` anywhere on the current page.
 
-  Arguments:
-
-  - `driver`: a driver instance;
-  - `text`: a string to search;
-  - `opt`: a map of options (see `wait-predicate`)."
+  - `opt`: see [[wait-predicate]] opt."
   [driver text & [opt]]
   (let [q {:xpath "*"}]
     (wait-has-text driver q text opt)))
 
 (defn wait-has-class
-  "Waits until an element has specific class.
+  "Waits until `driver` finds element via `q` [[has-class?]] `class`.
 
-  Arguments:
+  See [[query]] for details on `q`.
 
-  - `driver`: a driver instance;
-  - `q`: a query term (see `query`);
-  - `class`: a class to search as string;
-  - `opt`: a map of options (see `wait-predicate`)."
-
+  - `opt`: see [[wait-predicate]] opt."
   [driver q class & [opt]]
-  (wait-predicate #(has-class? driver q class) opt))
+  (let [message (format "Wait until %s element has class %s"
+                        q class)]
+    (wait-predicate #(has-class? driver q class)
+                    (merge {:message message} opt))))
 
-(defn wait-running [driver & [opt]]
-  (if (str/blank? (:webdriver-url driver))
-    (do
-      (log/debugf "Waiting for %s:%s is running"
-                  (:host driver) (:port driver))
-      (wait-predicate #(running? driver) opt))
-    (log/debugf "Skipped wait for driver to become available since a webdriver-url is specified")))
+(defn wait-running
+  "Waits until `driver` is reachable via its host and port via [[running?]].
+
+  Throws if using `:webdriver-url`.
+
+  - `opt`: see [[wait-predicate]] opt."
+  [driver & [opt]]
+  (when (:webdriver-url driver)
+    (throw (ex-info "Not supported for driver using :webdriver-url" {})))
+  (log/debugf "Waiting until %s:%s is running"
+              (:host driver) (:port driver))
+  (wait-predicate #(running? driver) opt))
+
 ;;
 ;; visible actions
 ;;
 
 (defn click-visible
-  "Waits until an element becomes visible, then clicks on it.
+  "Waits until `driver` finds visible element via query `q` then clicks on it.
 
-  Arguments:
-
-  - `driver`: a driver instance;
-  - `q`: a query term (see `query`);
-  - `opt`: a map of options (see `wait-predicate`)."
-
+  - `opt`: see [[wait-predicate]] opt."
   [driver q & [opt]]
   (doto driver
     (wait-visible q opt)
@@ -2473,7 +2619,12 @@
 ;; touch
 ;;
 
-(defmulti touch-tap dispatch-driver)
+(defmulti touch-tap
+  "Have `driver` touch tap element found by query `q`.
+
+  See [[query]] for details on `q`."
+  {:arglists '([driver q])}
+  dispatch-driver)
 
 (defmethod touch-tap
   :chrome
@@ -2483,7 +2634,14 @@
             :path   [:session (:session driver) :touch :click]
             :data   {:element (query driver q)}}))
 
-(defmulti touch-down dispatch-driver)
+(defmulti touch-down
+  "Have `driver` touch down
+  - on element found by query `q`
+  - or `x` `y` coordinate
+
+  See [[query]] for details on `q`."
+  {:arglists '([driver q] [driver x y])}
+  dispatch-driver)
 
 (defmethod touch-down
   :chrome
@@ -2497,7 +2655,14 @@
              :path   [:session (:session driver) :touch :down]
              :data   {:x (int x) :y (int y)}})))
 
-(defmulti touch-up dispatch-driver)
+(defmulti touch-up
+  "Have `driver` touch up
+  - on element found by query `q`
+  - or `x` `y` coordinate
+
+  See [[query]] for details on `q`."
+  {:arglists '([driver q] [driver x y])}
+  dispatch-driver)
 
 (defmethod touch-up
   :chrome
@@ -2511,7 +2676,14 @@
              :path   [:session (:session driver) :touch :up]
              :data   {:x (int x) :y (int y)}})))
 
-(defmulti touch-move dispatch-driver)
+(defmulti touch-move
+  "Have `driver` touch move
+  - on element found by query `q`
+  - or `x` `y` coordinate
+
+  See [[query]] for details on `q`."
+  {:arglists '([driver q] [driver x y])}
+  dispatch-driver)
 
 (defmethod touch-move
   :chrome
@@ -2529,85 +2701,80 @@
 ;; skip/when driver
 ;;
 
-(defmacro when-not-predicate [predicate & body]
+(defmacro when-not-predicate
+  "Executes `body` when `predicate` returns falsy."
+  [predicate & body]
   `(when-not (~predicate)
      ~@body))
 
 (defmacro when-not-drivers
-  "Executes the body only if a browsers is NOT in set #{:browser1 :browser2}"
+  "Executes `body` when browser `driver` is NOT in `browsers`, ex: `#{:chrome :safari}`"
   [browsers driver & body]
   `(when-not-predicate #((set ~browsers) (dispatch-driver ~driver)) ~@body))
 
 (defmacro when-not-chrome
-  "Executes the body only if a browser is NOT Chrome."
+  "Executes `body` when browser `driver` is NOT Chrome."
   [driver & body]
   `(when-not-predicate #(chrome? ~driver) ~@body))
 
 (defmacro when-not-edge
-  "Executes the body only if a browser is NOT Edge."
+  "Executes `body` when browser `driver` is NOT Edge."
   [driver & body]
   `(when-not-predicate #(edge? ~driver) ~@body))
 
 (defmacro when-not-phantom
-  "Executes the body only if a browser is NOT Phantom.js."
+  "Executes `body` when browser `driver` is NOT Phantom.js."
   [driver & body]
   `(when-not-predicate #(phantom? ~driver) ~@body))
 
 (defmacro when-not-firefox
-  "Executes the body only if a browser is NOT Firefox."
+  "Executes `body` when browser `driver` is NOT Firefox."
   [driver & body]
   `(when-not-predicate #(firefox? ~driver) ~@body))
 
 (defmacro when-not-safari
-  "Executes the body only if a browser is NOT Safari."
+  "Executes `body` when browser `driver` is NOT Safari."
   [driver & body]
   `(when-not-predicate #(safari? ~driver) ~@body))
 
 (defmacro when-not-headless
-  "Executes the body only if a browser is NOT run in headless mode."
+  "Executes `body` when browser `driver` is NOT in headless mode."
   [driver & body]
   `(when-not-predicate #(headless? ~driver) ~@body))
 
 (defmacro when-predicate
-  "Executes the body only if a predicate returns true."
+  "Executes `body` when `predicate` returns truthy."
   [predicate & body]
   `(when (~predicate)
      ~@body))
 
 (defmacro when-chrome
-  "Executes the body only if the driver is Chrome.
-
-  Example:
-
-  (def driver (chrome))
-  (when-chrome driver
-    (println \"It's Chrome!\")"
-
+  "Executes `body` when browser `driver` is Chrome."
   [driver & body]
   `(when-predicate #(chrome? ~driver) ~@body))
 
 (defmacro when-phantom
-  "Executes the body only if the driver is Phantom.js."
+  "Executes `body` when browser `driver` is Phantom.js."
   [driver & body]
   `(when-predicate #(phantom? ~driver) ~@body))
 
 (defmacro when-firefox
-  "Executes the body only if the driver is Firefox."
+  "Executes `body` when browser `driver` is Firefox."
   [driver & body]
   `(when-predicate #(firefox? ~driver) ~@body))
 
 (defmacro when-edge
-  "Executes the body only if the driver is Edge."
+  "Executes `body` when browser `driver` is Edge."
   [driver & body]
   `(when-predicate #(edge? ~driver) ~@body))
 
 (defmacro when-safari
-  "Executes the body only if the driver is Safari."
+  "Executes `body` when browser `driver` is Safari."
   [driver & body]
   `(when-predicate #(safari? ~driver) ~@body))
 
 (defmacro when-headless
-  "Executes the body only if the driver is run in headless mode."
+  "Executes `body` when the `driver` is in headless mode."
   [driver & body]
   `(when-predicate #(headless? ~driver) ~@body))
 
@@ -2619,7 +2786,7 @@
   (mapv str (apply str text more)))
 
 (defmulti fill-el
-  "Fills an element with text by its identifier."
+  "Have `driver` fill input element `el` with `text` (and optionally `more` text)."
   {:arglists '([driver el text & more])}
   dispatch-driver)
 
@@ -2632,17 +2799,8 @@
             :path   [:session (:session driver) :element el :value]
             :data   {:value (apply make-input* text more)}}))
 
-(defmethod fill-el
-  :firefox ;; todo support the old version for :default
-  [driver el text & more]
-  {:pre [(some? el)]}
-  (execute {:driver driver
-            :method :post
-            :path   [:session (:session driver) :element el :value]
-            :data   {:text (str/join (apply make-input* text more))}}))
-
-(defmethod fill-el
-  :safari
+(defmethods fill-el
+  [:firefox :safari]
   [driver el text & more]
   {:pre [(some? el)]}
   (execute {:driver driver
@@ -2662,41 +2820,38 @@
             :path   [:session (:session driver) :keys]
             :data   {:value (apply make-input* text more)}}))
 
-(defmethod fill-active*
-  :firefox
-  [driver text & more]
-  (let [el (get-active-element* driver)]
-    (apply fill-el driver el text more)))
-
-(defmethod fill-active*
-  :safari
+(defmethods fill-active*
+  [:firefox :safari]
   [driver text & more]
   (let [el (get-active-element* driver)]
     (apply fill-el driver el text more)))
 
 (defn fill-active
-  "Fills an active element with keys."
+  "Have `driver` fill active element with `text` (and optionally `more` text)."
   [driver text & more]
   (apply fill-active* driver text more))
 
 (defn fill
-  "Fills an element found with a query with a given text.
+  "Have `driver` fill input element found by `q` with `text` (and optionally `more` text).
 
-  0.1.6: now the rest parameters are supported. They will
-  joined using \"str\":
+  See [[query]] for details on `q`.
 
+  Example:
+  ```Clojure
   (fill driver :simple-input \"foo\" \"baz\" 1)
-  ;; fills the input with  \"foobaz1\""
+  ;; fills the input with text: foobaz1
+  ```"
   [driver q text & more]
   (apply fill-el driver (query driver q) text more))
 
 (defn fill-multi
-  "Fills multiple inputs in batch.
+  "Have `driver` fill multiple inputs via `q-text`.
 
-  `q-text` could be:
+  `q-text` can be:
+  - a map of `{q1 \"text1\" q2 \"text2\" ...}`
+  - a vector of `[q1 \"text1\" q2 \"text2\" ...]`
 
-  - a map of {query -> text}
-  - a vector of [query1 text1 query2 text2 ...]"
+  See [[query]] for details on `q`s."
   [driver q-text]
   (cond
     (map? q-text)
@@ -2711,6 +2866,11 @@
                    :arg     q-text})))
 
 (defn fill-human-el
+  "Have `driver` fill element `el` with `text` as if it were a real human using `opt`.
+
+  `opt`
+  - `:mistake-prob` probability of making a typo (0 to 1.0) (default: `0.1`)
+  - `:pause-max` maximum amount of time in seconds to pause between keystrokes (can be fractional) (default: `0.2`)"
   [driver el text opt]
   {:pre [(some? el)]}
   (let [{:keys [mistake-prob pause-max]
@@ -2725,27 +2885,36 @@
       (when (< (rand) mistake-prob)
         (fill-el driver el (rand-char))
         (wait-key)
-        (fill-el driver el keys/backspace)
+        (fill-el driver el k/backspace)
         (wait-key))
       (fill-el driver el key)
       (wait-key))))
 
 (defn fill-human
-  "Fills text like humans do: with error, corrections and pauses.
+  "Have `driver` fill element found by `q` with `text` as if it were a real human using `opt`.
 
-  Arguments:
+  See [[query]] for details on `q`.
 
-  - `driver`: a driver instance,
-
-  - `q`: a query term, see `query` function for more info,
-
-  - `text`: a string to input."
+  `opt`
+  - `:mistake-prob` probability of making a typo (0 to 1.0) (default: `0.1`)
+  - `:pause-max` maximum amount of time in seconds to pause between keystrokes (can be fractional) (default: `0.2`)"
   ([driver q text]  (fill-human driver q text {}))
   ([driver q text opt]
    (fill-human-el driver (query driver q) text opt)))
 
 (defn fill-human-multi
-  "`fill-human` + `fill-multi`"
+  "Have `driver` fill multiple elements as if it were a real human being via `q-text` using `opt`.
+
+  `q-text` can be:
+  - a map of `{q1 \"text1\" q2 \"text2\" ...}`
+  - a vector of `[q1 \"text1\" q2 \"text2\" ...]`
+
+
+  See [[query]] for details on `q`s.
+
+  `opt`
+  - `:mistake-prob` probability of making a typo (0 to 1.0) (default: `0.1`)
+  - `:pause-max` maximum amount of time in seconds to pause between keystrokes (can be fractional) (default: `0.2`)"
   ([driver q-text]  (fill-human-multi driver q-text {}))
   ([driver q-text opt]
    (cond
@@ -2761,21 +2930,18 @@
                     :arg     q-text}))))
 
 (defn select
-  "Select element in select-box by visible text on click.
+  "Have `driver` select option with matching `text` for select element found by query `q`.
+  The select element is clicked, then the option.
 
-  Arguments:
-
-  - `driver`: a driver instance,
-
-  - `q`: a query term, see `query` function for more info,
-
-  - `text`: a string, text in the option you want to select"
+  See [[query]] for details on `q`."
   [driver q text]
-  (let [el (query driver q {:tag :option :fn/has-text text})]
-    (click-el driver el)))
+  (let [select-el (query driver q)]
+    (click-el driver select-el)
+    (let [option-el (query driver q {:tag :option :fn/has-text text})]
+      (click-el driver option-el))))
 
 (defn clear-el
-  "Clears an element by its identifier."
+  "Have `driver` clear input element `el`"
   [driver el]
   {:pre [(some? el)]}
   (execute {:driver driver
@@ -2783,11 +2949,11 @@
             :path   [:session (:session driver) :element el :clear]}))
 
 (defn clear
-  "Clears an element (input, textarea) found with a query.
+  "Have `driver` clear input element found by `q` (and optionally `more-qs`).
 
-  0.1.6: multiple queries added."
-  [driver q & more]
-  (doseq [q (cons q more)]
+  See [[query]] for details on `q`."
+  [driver q & more-qs]
+  (doseq [q (cons q more-qs)]
     (clear-el driver (query driver q))))
 
 ;;
@@ -2796,42 +2962,37 @@
 
 (defrecord RemoteFile [file])
 (defn remote-file
-  "Attaches a remote file to a file input field, a remote file exists
-  on the host where the webdriver runs.
+  "Wraps `remote-file-path` for use with [[upload-file]] to avoid local file existence check.
 
-  Arguments:
-
-  - `remote-file-path` is the path of a file on the remote webdriver host.
-  This argument is sent to the server as is without any local validation.
-
-  Example:
-
+  Example usage:
+  ```Clojure
   (upload-file (remote-file \"C:/Users/hello/url.txt\"))
-  "
+  ```"
   [remote-file-path]
   (RemoteFile. remote-file-path))
 
 (defmulti upload-file
-  "Attaches a local file to a file input field.
+  "Have `driver` attach a file `path` to a file input field element found by query `q`.
 
   Arguments:
 
-  - `q` is a query term that refers to a file input;
-  - `file` is either a string or java.io.File object
-  that references a local file. The file should exist.
+  - `q` see [[query]] for details;
+  - `file`
+    - when a string or java.io.File object, the file must exist locally.
+    - when [[remote-file]] file is assumed to exist remotely and no local existence check is performed.
 
-  Under the hood, it sends the file's name as a sequence of keys
-  to the input."
-  (fn [driver q file]
+  Under the hood, we send the file's name as a sequence of keys to the input."
+  {:arglists '([driver q path])}
+  (fn [_driver _q file]
     (type file)))
 
 (defmethod upload-file String
   [driver q path]
-  (upload-file driver q (io/file path)))
+  (upload-file driver q (fs/file path)))
 
 (defmethod upload-file RemoteFile
   [driver q path]
-  ;; directly send the path without any local validation
+  ;; directly send the path without any local file existence validation
   (fill driver q (:file path)))
 
 (defmethod upload-file java.io.File
@@ -2849,9 +3010,11 @@
 ;;
 
 (defn submit
-  "Sends Enter button value to an element found with query."
+  "Have `driver` submit a form by sending the enter key to input element found by query `q`.
+
+  See [[query]] for details on `q`."
   [driver q]
-  (fill driver q keys/enter))
+  (fill driver q k/enter))
 
 ;;
 ;; timeouts
@@ -2880,18 +3043,18 @@
             :data   {:type type :ms (util/sec->ms sec)}}))
 
 (defmulti set-script-timeout
-  "Sets timeout for executing JS sctipts."
-  {:arglists '([driver sec])}
+  "Sets `driver` timeout `seconds` for executing JavaScript."
+  {:arglists '([driver seconds])}
   dispatch-driver)
 
 (defmethod set-script-timeout
   :default
-  [driver sec]
-  (set-timeout* driver :script sec))
+  [driver seconds]
+  (set-timeout* driver :script seconds))
 
 (defmulti set-page-load-timeout
-  "Sets timeout for loading pages."
-  {:arglists '([driver sec])}
+  "Sets `driver` timeout `seconds` for loading a page."
+  {:arglists '([driver seconds])}
   dispatch-driver)
 
 (defmethod set-page-load-timeout
@@ -2901,18 +3064,18 @@
 
 (defmethod set-page-load-timeout
   :chrome
-  [driver sec]
-  (set-timeout* driver "page load" sec))
+  [driver seconds]
+  (set-timeout* driver "page load" seconds))
 
 (defmulti set-implicit-timeout
-  "Sets timeout that is used when finding elements on the page."
-  {:arglists '([driver sec])}
+  "Sets `driver` timeout `seconds` to find elements on the page."
+  {:arglists '([driver seconds])}
   dispatch-driver)
 
 (defmethod set-implicit-timeout
   :default
-  [driver sec]
-  (set-timeout* driver :implicit sec))
+  [driver seconds]
+  (set-timeout* driver :implicit seconds))
 
 (defmulti ^:private get-timeout*
   "Basic method to get a map of all the timeouts."
@@ -2927,26 +3090,26 @@
                     :path   [:session (:session driver) :timeouts]})))
 
 (defn get-script-timeout
-  "Returns the current script timeout in seconds."
+  "Returns `driver` timeout in seconds for executing JavaScript."
   [driver]
   (-> driver get-timeout* :script util/ms->sec))
 
 (defn get-page-load-timeout
-  "Returns the current page load timeout in seconds."
+  "Returns `driver` timeout in seconds for loading a page."
   [driver]
   (-> driver get-timeout* :pageLoad util/ms->sec))
 
 (defn get-implicit-timeout
-  "Returns the current implicit timeout in seconds."
+  "Returns `driver` timeout in seconds to find elements on the page."
   [driver]
   (-> driver get-timeout* :implicit util/ms->sec))
 
 (defmacro with-script-timeout
-  "Performs the body setting the script timeout temporary.
-  Useful for async JS scripts."
-  [driver sec & body]
+  "Execute `body` temporarily setting `driver` to timeout `seconds` for executing JavaScript.
+  Useful for asynchronous scripts."
+  [driver seconds & body]
   `(let [prev# (get-script-timeout ~driver)]
-     (set-script-timeout ~driver ~sec)
+     (set-script-timeout ~driver ~seconds)
      (try
        ~@body
        (finally
@@ -2955,6 +3118,10 @@
 ;;
 ;; screenshots
 ;;
+
+(defn- b64-decode [s]
+  (-> (Base64/getDecoder)
+      (.decode s)))
 
 (defmulti ^:private b64-to-file
   "Dumps a Base64-encoded string into a file.
@@ -2971,18 +3138,13 @@
   [String String]
   [^String b64str filepath]
   (with-open [out (io/output-stream filepath)]
-    (.write out ^bytes (b64/decode (.getBytes b64str)))))
+    (.write out ^bytes (b64-decode b64str))))
 
 (defmulti screenshot
-  "Takes a screenshot of the current page. Saves it in a *.png file on disk.
-  Rises exception if a screenshot was empty.
+  "Have `driver` save a PNG format screenshot of the current page to `file`.
+  Throws if screenshot is empty.
 
-  Arguments:
-
-  - `driver`: driver instance,
-
-  - `file`: either a path to a file or a native `java.io.File` instance.
-  "
+  `file` can be either a string or `java.io.File`."
   {:arglists '([driver file])}
   dispatch-driver)
 
@@ -2996,16 +3158,19 @@
       (b64-to-file b64str file)
       (util/error "Empty screenshot"))))
 
-;; TODO add w3c screenshot
 (defmulti screenshot-element
+  "Have `driver` save a PNG format screenshot of the element found by query `q` to `file`.
 
+  See [[query]] for details on `q`.
+
+  `file` can be either a string or `java.io.File`."
   {:arglists '([driver q file])}
   dispatch-driver)
 
 (defmethod screenshot-element
   :default
-  [driver q file]
-  (util/error "This driver doesn't support screening elements."))
+  [_driver _q _file]
+  (util/error "This driver doesn't support screenshots on elements."))
 
 (defmethods screenshot-element
   [:chrome :edge :firefox]
@@ -3019,16 +3184,18 @@
       (b64-to-file b64str file)
       (util/error "Empty screenshot, query: %s" q))))
 
-(defn make-screenshot-file-path
+(defn ^:no-doc make-screenshot-file-path
   [driver-type dir]
   (->> (.getTime (java.util.Date.))
        (format "-%d.png")
        (str (name driver-type))
-       (io/file dir)
+       (fs/file dir)
        str))
 
 (defmacro with-screenshots
-  "Makes a screenshot after each form"
+  "Have `driver` save a PNG imge screenshot to `dir` after each form in `body` is executed.
+
+  Filenames will contain an epoch timestamp."
   [driver dir & body]
   (let [screenshot-form# `(screenshot ~driver (make-screenshot-file-path (:type ~driver) ~dir))
         new-body         (interleave body (repeat screenshot-form#))]
@@ -3038,19 +3205,19 @@
 ;; postmortem
 ;;
 
-(defn get-pwd []
+(defn- get-pwd []
   (System/getProperty "user.dir"))
 
-(defn join-path
+(defn- join-path
   "Joins two and more path components into a single file path OS-wisely."
   [p1 p2 & more]
-  (.getPath ^java.io.File (apply io/file p1 p2 more)))
+  (.getPath ^java.io.File (apply fs/file p1 p2 more)))
 
-(defn format-date
+(defn- format-date
   [date pattern]
   (.format (SimpleDateFormat. pattern) date))
 
-(defn postmortem-handler
+(defn ^:no-doc postmortem-handler
   "Internal postmortem handler that creates files.
   See the `with-postmortem`'s docstring below for more info."
   [driver {:keys [dir dir-src dir-img dir-log date-format]}]
@@ -3075,9 +3242,9 @@
         path-src (join-path dir-src file-src)
         path-log (join-path dir-log file-log)]
 
-    (clojure.java.io/make-parents path-img)
-    (clojure.java.io/make-parents path-src)
-    (clojure.java.io/make-parents path-log)
+    (io/make-parents path-img)
+    (io/make-parents path-src)
+    (io/make-parents path-log)
 
     (log/debugf "Writing screenshot: %s" path-img)
     (screenshot driver path-img)
@@ -3090,37 +3257,23 @@
       (dump-logs (get-logs driver) path-log))))
 
 (defmacro with-postmortem
-  "Wraps the body with postmortem handler. If any error occurs,
-  it will save a screenshot, the page's source code and console logs
-  (if supported) on disk before rising an exception. Having them
-  could help you to discover what happened.
+  "Executes `body` with postmortem handling.
+  Good for forensics.
 
-  Note: do not use it in test's fixtures. The standard `clojure.test`
-  framework has its own way of handling exceptions, so wrapping a fixture
-  with `(with-postmortem...)` would be in vain.
+  If an exception occurs, saves:
+  - screenshot `.png` to `:dir-img` else `:dir` else current working directory
+  - page source `.html` to `:dir-scr` else `:dir`  else current working directory
+  - console log `.json` to `:dir-log` else `:dir` else current working directory
 
-  Arguments:
+  Dirs are automatically created if necessary.
 
-  - `driver`: a driver instance,
+  `:date-format` used in filename to keep them unique.
+  See Java SDK `SimpleDateFormat` for available patterns.
+  Defaults to `\"yyyy-MM-dd-HH-mm-ss\"`.
 
-  - `opt`: a map of options, where:
-
-  -- `:dir` path to a directory where to store artifacts by default.
-  Might not exist, will be created otherwise. When not passed,
-  the current working directory (`pwd`) is used.
-
-  -- `:dir-img`: path to a directory where to store `.png`
-  files (screenshots). If `nil`, `:dir` value is used.
-
-  -- `:dir-src`: path to a directory where to store `.html`
-  files (page source). If `nil`, `:dir` value is used.
-
-  -- `:dir-log`: path to a directory where to store `.json`
-  files with console logs. If `nil`, `:dir` value is used.
-
-  -- `:date-format`: a string represents date(time) pattern to make
-  filenames unique. Default is \"yyyy-MM-dd-HH-mm-ss\". See Oracle
-  Java `SimpleDateFormat` class manual for more patterns."
+  Tip: don't bother using `with-postmortem` in test fixtures.
+  The standard `clojure.test`framework has its own way of handling exceptions,
+  so wrapping a fixture with `(with-postmortem...)` would be in vain."
   [driver opt & body]
   `(try
      ~@body
@@ -3132,8 +3285,8 @@
 ;; driver management
 ;;
 
-(defn make-url
-  "Makes an Webdriver URL from a host and port."
+(defn- make-url
+  "Returns a WebDriver url string for `host` and `port`."
   [host port]
   (format "http://%s:%s" host port))
 
@@ -3183,20 +3336,18 @@
                  :url           url
                  :webdriver-url webdriver-url
                  :locator       locator}]
-    (if (str/blank? webdriver-url)
+    (if webdriver-url
       (log/debugf "Created driver: %s %s:%s" (name type) host port)
       (log/debugf "Created driver: %s %s" (name type) (util/strip-url-creds webdriver-url)))
     driver))
 
-
-(defn proxy-env
+(defn- proxy-env
   [proxy]
   (let [http (System/getenv "HTTP_PROXY")
         ssl  (System/getenv "HTTPS_PROXY")]
     (cond-> proxy
       http (assoc :http http)
       ssl  (assoc :ssl ssl))))
-
 
 (defn- -run-driver
   "Runs a driver process locally.
@@ -3323,17 +3474,20 @@
   to the browser's process.
 
   See https://www.w3.org/TR/webdriver/#capabilities"
-  [driver & [{:keys [url
+  [driver & [{:keys [webdriver-url
+                     url
                      size
                      args
                      prefs
                      proxy
                      profile
                      headless
+                     user-agent
                      capabilities
                      load-strategy
                      desired-capabilities]}]]
-  (wait-running driver)
+  (when (not webdriver-url)
+    (wait-running driver))
   (let [type          (:type driver)
         caps          (get-in defaults [type :capabilities])
         proxy         (proxy-env proxy)
@@ -3347,45 +3501,46 @@
                         load-strategy (drv/set-load-strategy load-strategy)
                         prefs         (drv/set-prefs prefs)
                         profile       (drv/set-profile profile)
-                        true          (drv/set-capabilities caps)
-                        true          (drv/set-capabilities capabilities)
-                        true          (drv/set-capabilities desired-capabilities))
+                        user-agent    (drv/set-user-agent user-agent)
+                        :else
+                        (->
+                         (drv/set-capabilities caps)
+                         (drv/set-capabilities capabilities)
+                         (drv/set-capabilities desired-capabilities)))
         caps          (:capabilities driver)
         session       (create-session driver caps)]
     (assoc driver :session session)))
 
 (defn disconnect-driver
-  "Disconnects from a running Webdriver server.
+  "Returns new `driver` after disconnecting from a running WebDriver process.
 
   Closes the current session that is stored in the driver if it still exists.
-  Removes the session from the driver instance. Returns modified driver."
+  Removes the session from `driver`."
   [driver]
 
   (try (delete-session driver)
        (catch Exception e
-         (if (not (= 404 (:status (ex-data e))))
+         (when (not (= 404 (:status (ex-data e))))
            ;; the exception was caused by something other than "session not found"
            (throw e))))
 
   (dissoc driver :session))
 
 (defn stop-driver
-  "Stops the driver's process. Removes proces's data from the driver
-  instance. Returns a modified driver."
+  "Returns new `driver` after killing its WebDriver process."
   [driver]
   (proc/kill (:process driver))
   (dissoc driver :process :args :env :capabilities))
 
 (defn boot-driver
-  "Three-in-one: creates a driver, starts a process and creates a new
-  session. Returns the driver instance.
+  "Launch and return a driver of `type` (e.g. `:chrome`, `:firefox` `:safari` `:edge` `:phantom`)
+  with `opt` options.
 
-  Arguments:
+  - creates a driver
+  - launches a WebDriver process (or connects to an existing running process if `:host` is specified)
+  - creates a session for driver
 
-  - `type` a keyword determines a driver type.
-
-  - `opt` a map of all possible parameters that `-create-driver`,
-  `-run-driver` and `-connect-driver` may accept."
+  `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   ([type]
    (boot-driver type {}))
   ([type {:keys [host webdriver-url] :as opt}]
@@ -3396,7 +3551,7 @@
      true                      (-connect-driver opt))))
 
 (defn quit
-  "Closes the current session and stops the driver."
+  "Have `driver` close the current session, then, if Etaoin launched it, kill the WebDriver process."
   [driver]
   (let [process (:process driver)]
     (try
@@ -3405,69 +3560,77 @@
         (when process
           (stop-driver driver))))))
 
-(def firefox
-  "Launches Firefox driver. A shortcut for `boot-driver`."
+(def ^{:arglists '([] [opt])} firefox
+  "Launch and return a Firefox driver.
+
+  `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   (partial boot-driver :firefox))
 
-(def edge
-  "Launches Edge driver. A shortcut for `boot-driver`."
+(def ^{:arglists '([] [opt])} edge
+  "Launch and return an Edge driver.
+
+  `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   (partial boot-driver :edge))
 
-(def chrome
-  "Launches Chrome driver. A shortcut for `boot-driver`."
+(def ^{:arglists '([] [opt])} chrome
+  "Launch and return a Chrome driver.
+
+  `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   (partial boot-driver :chrome))
 
-(def phantom
-  "Launches Phantom.js driver. A shortcut for `boot-driver`."
+(def ^{:arglists '([] [opt])} phantom
+  "Launch and return a Phantom.js driver.
+
+  `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   (partial boot-driver :phantom))
 
-(def safari
-  "Launches Safari driver. A shortcut for `boot-driver`."
+(def ^{:arglists '([] [opt])} safari
+  "Launch and return a Safari driver.
+
+  `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   (partial boot-driver :safari))
 
 (defn chrome-headless
-  "Launches headless Chrome driver. A shortcut for `boot-driver`."
+  "Launch and return a headless Chrome driver.
+
+  `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   ([]
    (chrome-headless {}))
   ([opt]
    (boot-driver :chrome (assoc opt :headless true))))
 
 (defn firefox-headless
-  "Launches headless Firefox driver. A shortcut for `boot-driver`."
+  "Launch and return a headless Firefox driver.
+
+  `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   ([]
    (firefox-headless {}))
   ([opt]
    (boot-driver :firefox (assoc opt :headless true))))
 
 (defn edge-headless
-  "Launches headless Edge driver. A shortcut for `boot-driver`."
+  "Launch and return a headless Edge driver.
+
+  `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   ([]
    (edge-headless {}))
   ([opt]
    (boot-driver :edge (assoc opt :headless true))))
 
 (defmacro with-driver
-  "Performs the body within a driver session.
+  "Executes `body` with a driver session of `type` (e.g. `:chrome`, `:firefox` `:safari` `:edge` `:phantom`)
+  with `opt` options, binding driver instance to `bind`.
 
-  Launches a driver of a given type. Binds the driver instance to a
-  passed `bind` symbol. Executes the body once the driver has
-  started. Shutdowns the driver finally (even if an exception
-  occurred).
+  Driver is automatically launched and terminated (even if an exception occurs).
 
-  Arguments:
-
-  - `type` is a keyword what driver type to start.
-
-  - `opt` is a map with driver's options. See `boot-driver` for more
-  details.
-
-  - `bind` is a symbol to bind a driver reference.
+  `opt` - can be `{}` or `nil`, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
 
   Example:
 
+  ```Clojure
   (with-driver :firefox {} driver
-    (go driver \"http://example.com\"))
-  "
+    (go driver \"https://clojure.org\"))
+  ```"
   [type opt bind & body]
   `(client/with-pool {}
      (let [~bind (boot-driver ~type ~opt)]
@@ -3477,59 +3640,139 @@
            (quit ~bind))))))
 
 (defmacro with-firefox
-  "Performs the body with Firefox session. A shortcut for
-  `with-driver`."
+  "Executes `body` with a Firefox driver session bound to `bind`.
+
+  Driver is automatically launched and terminated (even if an exception occurs).
+
+  `opt` - can be `{}` or `nil`, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
+
+  Example:
+
+  ```Clojure
+  (with-firefox {} driver
+    (go driver \"https://clojure.org\"))
+  ```"
   [opt bind & body]
   `(with-driver :firefox ~opt ~bind
      ~@body))
 
 (defmacro with-chrome
-  "Performs the body with Chrome session. A shortcut for
-  `with-driver`."
+  "Executes `body` with a Chrome driver session bound to `bind`.
+
+  Driver is automatically launched and terminated (even if an exception occurs).
+
+  `opt` - can be `{}` or `nil`, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
+
+  Example:
+
+  ```Clojure
+  (with-chrome {} driver
+    (go driver \"https://clojure.org\"))
+  ```"
   [opt bind & body]
   `(with-driver :chrome ~opt ~bind
      ~@body))
 
+
+
 (defmacro with-edge
-  "Performs the body with Edge session. A shortcut for
-  `with-driver`."
+  "Executes `body` with an Edge driver session bound to `bind`.
+
+  Driver is automatically launched and terminated (even if an exception occurs).
+
+  `opt` - can be `{}` or `nil`, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
+
+  Example:
+
+  ```Clojure
+  (with-edge {} driver
+    (go driver \"https://clojure.org\"))
+  ```"
   [opt bind & body]
   `(with-driver :edge ~opt ~bind
      ~@body))
 
 (defmacro with-phantom
-  "Performs the body with Phantom.js session. A shortcut for
-  `with-driver`."
+  "Executes `body` with an Phantom.JS driver session bound to `bind`.
+
+  Driver is automatically launched and terminated (even if an exception occurs).
+
+  `opt` - can be `{}` or `nil`, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
+
+  Example:
+
+  ```Clojure
+  (with-phantom {} driver
+    (go driver \"https://clojure.org\"))
+  ```"
   [opt bind & body]
   `(with-driver :phantom ~opt ~bind
      ~@body))
 
 (defmacro with-safari
-  "Performs the body with Safari session. A shortcut for
-  `with-driver`."
+  "Executes `body` with a Safari driver session bound to `bind`.
+
+  Driver is automatically launched and terminated (even if an exception occurs).
+
+  `opt` - can be `{}` or `nil`, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
+
+  Example:
+
+  ```Clojure
+  (with-safari {} driver
+    (go driver \"https://clojure.org\"))
+  ```"
   [opt bind & body]
   `(with-driver :safari ~opt ~bind
      ~@body))
 
 (defmacro with-chrome-headless
-  "Performs the body with headless Chrome session. A shortcut for
-  `with-driver`."
+  "Executes `body` with a headless Chrome driver session bound to `bind`.
+
+  Driver is automatically launched and terminated (even if an exception occurs).
+
+  `opt` - can be `{}` or `nil`, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
+
+  Example:
+
+  ```Clojure
+  (with-chrome-headless {} driver
+    (go driver \"https://clojure.org\"))
+  ```"
   [opt bind & body]
   `(with-driver :chrome (assoc ~opt :headless true) ~bind
      ~@body))
 
 (defmacro with-firefox-headless
-  "Performs the body with headless Firefox session. A shortcut for
-  `with-driver`."
+  "Executes `body` with a headless Firefox driver session bound to `bind`.
+
+  Driver is automatically launched and terminated (even if an exception occurs).
+
+  `opt` - can be `{}` or `nil`, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
+
+  Example:
+
+  ```Clojure
+  (with-firefox-headless {} driver
+    (go driver \"https://clojure.org\"))
+  ```"
   [opt bind & body]
   `(with-driver :firefox (assoc ~opt :headless true) ~bind
      ~@body))
 
 (defmacro with-edge-headless
-  "Performs the body with headless Edge session. A shortcut for
-  `with-driver`."
+  "Executes `body` with a headless Edge driver session bound to `bind`.
+
+  Driver is automatically launched and terminated (even if an exception occurs).
+
+  `opt` - can be `{}` or `nil`, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
+
+  Example:
+
+  ```Clojure
+  (with-edge-headless {} driver
+    (go driver \"https://clojure.org\"))
+  ```"
   [opt bind & body]
   `(with-driver :edge (assoc ~opt :headless true) ~bind
      ~@body))
-
-

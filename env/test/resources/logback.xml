@@ -1,0 +1,19 @@
+<configuration>
+    <!-- Stop output INFO at start -->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder>
+        <pattern>%date %-5level %logger{36} - %message%n</pattern>
+      </encoder>
+    </appender>
+
+    <logger name="etaoin" level="info" additivity="false">
+      <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <root level="info">
+      <appender-ref ref="STDOUT"/>
+    </root>
+
+</configuration>

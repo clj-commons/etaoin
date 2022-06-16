@@ -1,0 +1,55 @@
+{:min-bb-version "0.8.2"
+ :paths ["script"]
+ :deps {doric/doric {:mvn/version "0.9.0"}
+        lread/status-line {:git/url "https://github.com/lread/status-line.git"
+                           :sha "35ed39645038e81b42cb15ed6753b8462e60a06d"}
+        dev.nubank/docopt {:mvn/version "0.6.1-fix7"}}
+ :tasks
+ {;; setup
+  :requires ([babashka.classpath :as cp]
+             [babashka.fs :as fs]
+             [clojure.string :as string]
+             [helper.shell :as shell]
+             [lread.status-line :as status])
+  :enter (let [{:keys [name]} (current-task)] (status/line :head "TASK %s %s" name (string/join " " *command-line-args*)))
+  :leave (let [{:keys [name]} (current-task)] (status/line :detail "\nTASK %s done." name))
+
+  ;; commands
+
+  dev            {:doc "start a Clojure nrepl server/prompt"
+                  :task (shell/command "clj" "-M:test:repl/cider")}
+  bb-dev         {:doc "start a Babashka nrepl server"
+                  :task (let [cp (-> (shell/clojure "-Spath -M:test:bb-spec:bb-test")
+                                     with-out-str)
+                              bbcp (cp/get-classpath)]
+                          (shell/command "bb"
+                                         "--classpath" (str cp fs/path-separator bbcp)
+                                         "--nrepl-server"))}
+  test           {:doc "run all or a subset of tests, use --help for args"
+                  :task test/-main}
+  test-doc       {:doc "test code blocks in user guide"
+                  :task test-doc/-main}
+  drivers        {:doc "[list|kill] any running WebDrivers"
+                  :task drivers/-main}
+  lint           {:doc "[--rebuild] lint source code"
+                  :task lint/-main}
+  cljdoc-preview {:doc "preview what docs will look like on cljdoc, use --help for args"
+                  :task cljdoc-preview/-main}
+  tools-versions {:doc "report on tools versions"
+                  :task tools-versions/-main}
+  download-deps  {:doc "download all deps (useful for CI prep)"
+                  :task download-deps/-main}
+  outdated       {:doc "report on outdated dependencies"
+                  :task (shell/clojure {:continue true} "-M:outdated")}
+
+  docker-build   {:doc "build etaoin docker image"
+                  :task (shell/command "docker build --no-cache -t etaoin:latest .")}
+  -docker-install {:doc "helper to setup docker image"
+                   :task docker-install/-main}
+  docker-run     {:doc "run etaoin docker image (specify no commmands for interactive)"
+                  :task (apply shell/command {:continue true}
+                               "docker run -it --rm -v"
+                               (str (fs/cwd) ":/etaoin")
+                               "-w" "/etaoin"
+                               "etaoin:latest"
+                               *command-line-args*)}}}

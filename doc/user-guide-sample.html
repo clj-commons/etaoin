@@ -1,0 +1,171 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Etaoin User Guide Sample Page</title>
+  <style>
+    label,input,textarea {
+      display: block;
+      margin-bottom: 0.3em;
+    }
+    form.formy {
+      border: 1px solid black;
+      padding: 1em;
+      border-radius: 3px;
+    }
+  </style>
+  <script>
+    var submit_count = 0;
+    function formSubmitted() {
+      submit_count += 1;
+      document.getElementById("submit-count").innerHTML = submit_count;
+      const formData = new FormData(document.getElementById("sample-form"));
+      document.getElementById("submitted").innerHTML = JSON.stringify(Object.fromEntries(formData));
+      document.getElementById("sample-form").reset();
+    }
+
+    function linkClicked(obj) {
+      console.log(obj.textContent);
+      console.log(obj.innerText);
+      document.getElementById('clicked').innerHTML = obj.textContent || obj.innerText;
+    }
+    // trap all the clicks
+    document.addEventListener("click", function(event) {
+      var anchor = event.target.closest('a');
+      if(anchor !== null) {
+        event.preventDefault();
+        document.getElementById("clicked").innerHTML = anchor.textContent;
+      }
+    });
+
+  </script>
+</head>
+
+<body>
+  <h1>Etaoin User Guide - Sample Page</h1>
+  <p>A little sample page to illustrate some concepts described in the Etaoin user guide.</p>
+
+  <h2>Form</h2>
+  <div>Last submitted:
+    <pre id="submitted">{}</pre>
+  </div>
+
+  <form id="sample-form" method="GET" class="formy" onSubmit="formSubmitted(); return false;">
+    <!-- keep name and id different to avoid confusion in tutorial -->
+    <label>
+      username
+      <input id="uname" name="username" type="text" size="80" enabled=true autofocus/>
+    </label>
+    <label>
+      password
+      <input id="pw" name="password" type="password" size="80"/>
+    </label>
+    <label>
+      formal question
+      <input id="fq" name="formal-question" type="text" size="80"/>
+    </label>
+     <label>
+      textarea
+      <textarea id="text" name="remarks" rows=3 cols=80></textarea>
+    </label>
+    <label>
+      not enabled
+      <input id="ne" name="not-enabled" type="text" disabled="true" value="not enabled" size="80"/>
+    </label>
+    <button name="submit">Submit Form</button> (submits: <span id="submit-count">0</span>)
+  </form>
+
+  <h2>Links</h2>
+
+  <div>Last clicked:
+    <pre id="clicked">none</pre>
+  </div>
+
+  <div class="some-links">
+    <ul>
+      <li><a href="#">link 1</a></li>
+      <li><a href="#" class="active">link 2 (active)</a></li>
+      <li><a href="https://clojure.org">link 3 (clojure.org)</a></li>
+      <li style="display:none"><a id="cantseeme" href="#">link 4 (not visible)</a></li>
+    </ul>
+
+    <!-- an example used in user guide -->
+    <ul>
+        <li class="search-result">
+            <a href="a">a</a>
+        </li>
+        <li class="search-result">
+            <a href="b">b</a>
+        </li>
+        <li class="search-result">
+            <a href="c">c</a>
+        </li>
+    </ul>
+  </div>
+
+  <h2>Mish Mash</h2>
+  <div id="mishmash">
+    <span class="class1 class3">blarg in a span</span>
+    <div class="class2 class3 class4 class5">blarg in a div</div>
+    <p>blarg in a p</p>
+    <p>some other paragraph</p>
+  </div>
+
+  <h2>Query Tree Example</h2>
+  <div id="query-tree-example">
+    <div id="one">
+      <a href="#">a1</a>
+      <a href="#">a2</a>
+      <a href="#">a3</a>
+    </div>
+    <div id="two">
+      <a href="#">a4</a>
+      <a href="#">a5</a>
+      <a href="#">a6</a>
+    </div>
+    <div id="three">
+      <a href="#">a7</a>
+      <a href="#">a8</a>
+      <a href="#">a9</a>
+    </div>
+  </div>
+
+  <h2>Frames</h2>
+  <p id="in-main-page">In main page paragraph</p>
+  <iframe id="frame1" src="user-guide-sample-frame1.html"></iframe>
+
+  <h2>A longer section</h2>
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Sed turpis tincidunt id aliquet risus feugiat in ante. Dui faucibus in ornare quam viverra. Turpis in eu mi bibendum neque egestas congue. Quam lacus suspendisse faucibus interdum posuere lorem ipsum. Nisl nunc mi ipsum faucibus vitae aliquet. Bibendum enim facilisis gravida neque convallis a cras semper. Vestibulum morbi blandit cursus risus at ultrices mi. Pellentesque diam volutpat commodo sed egestas. Id nibh tortor id aliquet lectus proin. Mauris nunc congue nisi vitae suscipit tellus. Eleifend donec pretium vulputate sapien nec sagittis aliquam malesuada bibendum. Pulvinar pellentesque habitant morbi tristique. At risus viverra adipiscing at in tellus integer feugiat scelerisque. Felis donec et odio pellentesque diam volutpat commodo sed. Neque sodales ut etiam sit amet nisl purus in. Nulla posuere sollicitudin aliquam ultrices sagittis orci a scelerisque. Lorem ipsum dolor sit amet consectetur adipiscing elit duis.
+
+Malesuada bibendum arcu vitae elementum. Nunc faucibus a pellentesque sit. Aliquet eget sit amet tellus cras. Pellentesque id nibh tortor id. Id nibh tortor id aliquet. Et molestie ac feugiat sed lectus vestibulum. Integer quis auctor elit sed vulputate mi sit amet. Metus aliquam eleifend mi in nulla posuere sollicitudin. Gravida in fermentum et sollicitudin ac orci phasellus egestas tellus. Sed felis eget velit aliquet sagittis id. Enim facilisis gravida neque convallis a cras semper auctor neque. Massa vitae tortor condimentum lacinia quis vel.
+
+Ut tortor pretium viverra suspendisse potenti nullam. Sed vulputate mi sit amet mauris commodo quis imperdiet massa. Mi in nulla posuere sollicitudin. Elit at imperdiet dui accumsan sit amet nulla. Urna nec tincidunt praesent semper feugiat nibh sed. Egestas purus viverra accumsan in. Aliquam sem fringilla ut morbi tincidunt augue. Commodo ullamcorper a lacus vestibulum sed arcu. In massa tempor nec feugiat nisl pretium fusce. Nibh mauris cursus mattis molestie a. Nunc consequat interdum varius sit. In est ante in nibh. Augue interdum velit euismod in pellentesque massa placerat. Tincidunt id aliquet risus feugiat in ante. Ac turpis egestas integer eget aliquet nibh praesent tristique magna. Quam adipiscing vitae proin sagittis nisl. Tellus id interdum velit laoreet id donec ultrices tincidunt.
+
+Molestie at elementum eu facilisis sed odio morbi. Mauris rhoncus aenean vel elit scelerisque mauris. Maecenas volutpat blandit aliquam etiam. Amet consectetur adipiscing elit pellentesque habitant morbi tristique senectus et. Urna et pharetra pharetra massa massa ultricies mi. Turpis egestas maecenas pharetra convallis posuere morbi leo urna molestie. Sed viverra tellus in hac habitasse. Gravida dictum fusce ut placerat orci. Tellus pellentesque eu tincidunt tortor aliquam nulla facilisi cras. Facilisis mauris sit amet massa vitae. In hendrerit gravida rutrum quisque.
+
+Sed vulputate odio ut enim blandit. Vulputate eu scelerisque felis imperdiet proin fermentum leo. Et malesuada fames ac turpis egestas integer eget. Ante in nibh mauris cursus mattis molestie a iaculis. Bibendum neque egestas congue quisque egestas diam in arcu. Sed adipiscing diam donec adipiscing tristique. Non consectetur a erat nam at lectus. Orci nulla pellentesque dignissim enim. Velit ut tortor pretium viverra suspendisse potenti nullam. Dolor morbi non arcu risus quis. Nulla facilisi etiam dignissim diam quis enim. Dolor morbi non arcu risus quis varius quam. Nunc sed blandit libero volutpat sed cras ornare. Libero volutpat sed cras ornare arcu. Scelerisque varius morbi enim nunc faucibus a. Euismod in pellentesque massa placerat. Scelerisque in dictum non consectetur.
+
+Neque gravida in fermentum et sollicitudin. Vel orci porta non pulvinar neque laoreet suspendisse interdum consectetur. Risus feugiat in ante metus. Cursus in hac habitasse platea dictumst quisque sagittis. Dolor morbi non arcu risus quis varius quam. Habitasse platea dictumst vestibulum rhoncus est pellentesque elit. In hac habitasse platea dictumst. Porttitor eget dolor morbi non arcu. Nunc mattis enim ut tellus elementum sagittis vitae et. Accumsan sit amet nulla facilisi morbi tempus. Vestibulum mattis ullamcorper velit sed ullamcorper morbi tincidunt. Feugiat pretium nibh ipsum consequat nisl vel pretium. Ut tristique et egestas quis ipsum suspendisse ultrices gravida.
+
+Aliquam sem fringilla ut morbi tincidunt augue interdum. Fermentum dui faucibus in ornare quam viverra orci. Donec ac odio tempor orci dapibus ultrices in. Volutpat commodo sed egestas egestas. Rhoncus est pellentesque elit ullamcorper dignissim. Aliquam eleifend mi in nulla posuere. Vitae elementum curabitur vitae nunc sed velit. Proin sed libero enim sed faucibus turpis. Id ornare arcu odio ut. Proin nibh nisl condimentum id venenatis a. Donec pretium vulputate sapien nec sagittis aliquam. Eu lobortis elementum nibh tellus molestie nunc non blandit massa. Sagittis purus sit amet volutpat consequat mauris nunc. Eget sit amet tellus cras adipiscing. Curabitur vitae nunc sed velit. Risus pretium quam vulputate dignissim suspendisse in est ante. Aenean pharetra magna ac placerat. Gravida arcu ac tortor dignissim convallis aenean et tortor. Nulla aliquet porttitor lacus luctus accumsan tortor posuere ac ut.
+
+Lectus quam id leo in vitae turpis massa. Etiam non quam lacus suspendisse. Gravida quis blandit turpis cursus in hac. Urna neque viverra justo nec ultrices dui. Nec feugiat in fermentum posuere. Elit at imperdiet dui accumsan. Quis eleifend quam adipiscing vitae proin. Integer quis auctor elit sed vulputate mi sit. Quam id leo in vitae turpis massa sed. Sagittis aliquam malesuada bibendum arcu vitae. Tincidunt eget nullam non nisi est sit amet facilisis magna. Nunc mi ipsum faucibus vitae aliquet.
+
+Feugiat scelerisque varius morbi enim nunc faucibus a pellentesque. Aenean sed adipiscing diam donec adipiscing tristique risus nec feugiat. Ultricies leo integer malesuada nunc vel risus commodo viverra. Urna neque viverra justo nec. Interdum velit euismod in pellentesque massa. Sed cras ornare arcu dui vivamus arcu felis. Risus quis varius quam quisque id. Cursus metus aliquam eleifend mi in. Eget felis eget nunc lobortis mattis aliquam faucibus purus in. Nunc scelerisque viverra mauris in aliquam sem fringilla ut. Morbi tincidunt ornare massa eget egestas purus. Nisl vel pretium lectus quam id leo.
+
+Enim praesent elementum facilisis leo. Placerat in egestas erat imperdiet sed euismod nisi. Volutpat sed cras ornare arcu dui vivamus arcu felis bibendum. Erat imperdiet sed euismod nisi. Mauris commodo quis imperdiet massa tincidunt nunc pulvinar sapien et. Ultrices mi tempus imperdiet nulla malesuada pellentesque elit eget. Pretium vulputate sapien nec sagittis aliquam. Arcu cursus vitae congue mauris rhoncus aenean vel elit scelerisque. Amet consectetur adipiscing elit duis. Arcu cursus vitae congue mauris. Volutpat maecenas volutpat blandit aliquam. At ultrices mi tempus imperdiet nulla malesuada pellentesque elit. Purus non enim praesent elementum facilisis leo vel fringilla est. Massa eget egestas purus viverra accumsan in nisl nisi.
+   <h2 id="last-section">Last section</h2>
+   <pre>
+   Avast, me proud beauty! Wanna know why my Roger is so Jolly? You’re drinking a Salty Dog? How’d you like to try the real thing? Drink up me hearties yoho …a pirates life for me Always be yourself, unless you can be a pirate. Then always be a pirate. STOP BLOWING HOLES IN MY SHIP!!! Work like a captain, play like a pirate. Arrrrrrrr Ahoy! lets trouble the water!
+
+   Come on up and see me urchins. Yes, that is a hornpipe in my pocket and I am happy to see you. Why is the rum gone? The average man will bristle if you say his father was dishonest, but he will brag a little if he discovers that his great- grandfather was a pirate.
+
+   You can always trust the untrustworthy because you can always trust that they will be untrustworthy. Its the trustworthy you can’t trust. Not all treasure is silver and gold Yarrrr! there be ony two ranks of leader amongst us pirates! Captain and if your really notorious then it’s Cap’n! Whats a pirate’s favorite fast food restaurant?  Arrrrbys! Arrrrrrrr
+
+   That’s some treasure chest you’ve got there. What are YOU doing here? Why is the rum gone? Drink up me hearties yoho …a pirates life for me Suddenly you’re like a pirate, you’re 65 years old and you’ve got an ear- ring. Work like a captain, play like a pirate. Well actualy piracy is a democracy with captains voted for by the crew. Arrrrrrrr
+
+   Have ya ever met a man with a real yardarm? You’re drinking a Salty Dog? How’d you like to try the real thing? So, tell me, why do they call ye, “Cap’n Feathersword?” You can always trust the untrustworthy because you can always trust that they will be untrustworthy. Its the trustworthy you can’t trust.
+   </pre>
+</body>
+</html>

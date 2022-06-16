@@ -1,0 +1,24 @@
+<configuration>
+    <!-- Stop output INFO at start -->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder>
+        <pattern>%date %-5level %logger{36} - %message%n</pattern>
+      </encoder>
+    </appender>
+
+    <!-- uncomment org.apache.http for more details when using clj-http -->
+    <!--logger name="org.apache.http" level="debug" additivity="false">
+      <appender-ref ref="STDOUT"/>
+    </logger -->
+
+    <logger name="etaoin" level="debug" additivity="false">
+      <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <root level="info">
+      <appender-ref ref="STDOUT"/>
+    </root>
+
+</configuration>
