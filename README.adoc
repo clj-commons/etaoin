@@ -85,6 +85,8 @@ Can be `alpha`, `beta`, `rc1`, etc.
 * https://github.com/daveyarwood[Dave Yarwood]
 * https://github.com/jkrasnay[John Krasnay]
 * https://github.com/kidd[Raimon Grau]
+* https://github.com/verma[Uday Verma]
+* https://github.com/mjmeintjes[Matt Meintjes]
 
 === Current Maintainers
 
