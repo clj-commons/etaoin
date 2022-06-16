@@ -69,3 +69,16 @@
        ~@body
        (finally
          (.delete tmp#)))))
+
+(defn strip-url-creds
+  "Return `url` with any http credentials stripped, https://user:pass@hello.com -> https://hello.com.
+  Use when logging urls to avoid spilling secrets."
+  ^String [^String url]
+  (let [u (java.net.URL. url)]
+    (.toExternalForm
+      (java.net.URL.
+        (.getProtocol u)
+        (.getHost u)
+        (.getPort u)
+        (.getFile u)
+        (.getRef u)))))

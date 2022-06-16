@@ -91,6 +91,7 @@ Other Changes
 
 * https://github.com/clj-commons/etaoin/issues/380[#380]: Etaoin is now Babashka compatible!
 * https://github.com/clj-commons/etaoin/issues/413[#413]: Etaoin now exports a clj-kondo config to help with the linting of its many handy macros
+* https://github.com/clj-commons/etaoin/pull/357[#357]: Add support for connecting to a remote WebDriver via `:webdriver-url` (thanks https://github.com/verma[@verma] for the PR and https://github.com/mjmeintjes[@mjmeintjes] for the example usage!)
 * https://github.com/clj-commons/etaoin/issues/383[#383]: Drop testing for Safari on Windows, Apple no longer releases Safari for Windows
 * https://github.com/clj-commons/etaoin/issues/388[#388]: Drop testing for PhantomJS, development has long ago stopped for PhantomJS
 * https://github.com/clj-commons/etaoin/issues/387[#387]: No longer testing multiple key modifiers for a single webdriver send keys request

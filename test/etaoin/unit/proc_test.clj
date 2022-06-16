@@ -55,12 +55,24 @@
       (is (= 2 (get-count-chromedriver-instances))))
     (proc/kill process)))
 
-(deftest test-process-forking-connect-existing
+(deftest test-process-forking-connect-existing-host
   (let [port    9999
         process (proc/run ["chromedriver" (format "--port=%d" port)])
         _       (e/wait-running {:port port :host "localhost"})
+        ;; should connect, not launch
         driver  (e/chrome {:host "localhost" :port port :args ["--no-sandbox"]})]
-    (e/wait-running driver)
+    (is (= 1 (get-count-chromedriver-instances)))
+    (e/quit driver)
+    (proc/kill process)))
+
+(deftest test-process-forking-connect-existing-webdriver-url
+  (let [port    9999
+        process (proc/run ["chromedriver" (format "--port=%d" port)])
+        ;; normally would not call wait-running for a remote service, we are simulating here and want
+        ;; to make sure the process we launched is up and running
+        _       (e/wait-running {:port port :host "localhost"})
+        ;; should connect, not launch
+        driver  (e/chrome {:webdriver-url (format "http://localhost:%d" port) :args ["--no-sandbox"]})]
     (is (= 1 (get-count-chromedriver-instances)))
     (e/quit driver)
     (proc/kill process)))

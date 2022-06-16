@@ -3,6 +3,7 @@
    [cheshire.core :as json]
    [clojure.string :as str]
    [clojure.tools.logging :as log]
+   [etaoin.impl.util :as util]
    #?(:bb [clj-http.lite.client :as client]
       :clj [clj-http.client :as client])
    [slingshot.slingshot :refer [throw+]]))
@@ -74,28 +75,29 @@
 ;;
 
 (defn call
-  [{driver-type :type :keys [host port] :as driver}
+  [{driver-type :type :keys [host port webdriver-url] :as driver}
    method path-args payload]
   (let [path   (get-url-path path-args)
-        url    (format "http://%s:%s/%s" host port path)
+        url    (if webdriver-url
+                 (format "%s/%s" webdriver-url path)
+                 (format "http://%s:%s/%s" host port path))
         params (cond-> (merge
-                         default-api-params
-                         {:url              url
-                          :method           method
-                          :throw-exceptions false})
+                        default-api-params
+                        {:url              url
+                         :method           method
+                         :throw-exceptions false})
                  (= :post method)
                  #?(:bb (assoc :body (.getBytes (json/generate-string (or payload {}))
                                                 "UTF-8"))
                     :clj (assoc :form-params (or payload {}))))
-
-        _ (log/debugf "%s %s:%s %6s %s %s"
+        _ (log/debugf "%s %s %6s %s %s"
                       (name driver-type)
-                      host
-                      port
+                      (if webdriver-url
+                        (util/strip-url-creds webdriver-url)
+                        (str host ":" port))
                       (-> method name str/upper-case)
                       path
                       (-> payload (or "")))
-
         resp  (client/request params)
         body  #?(:bb (-> resp :body parse-json)
                  :clj (:body resp))
@@ -103,6 +105,7 @@
                       :status   (:status resp)
                       :driver   driver
                       :response (error-response body)
+                      :webdriver-url webdriver-url
                       :host     host
                       :port     port
                       :method   method

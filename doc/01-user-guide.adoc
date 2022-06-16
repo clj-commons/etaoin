@@ -997,6 +997,16 @@ An exception will be thrown if the local file is not found.
 (e/upload-file driver file-input my-file)
 ----
 
+When interacting with a remote WebDriver process, you'll need to avoid the local file existence check by using `remote-file` like so:
+
+//:test-doc-blocks/skip
+[source,clojure]
+----
+(e/upload-file driver file-input (e/remote-file "/yes/i/really/do/exist.png"))
+----
+The remote file is assumed to exist where the WebDriver is running.
+The WebDriver will throw an error if it does not exist.
+
 === Scrolling
 
 Etaoin includes functions to scroll the web page.
@@ -1938,9 +1948,11 @@ Here, for example, we set an explicit path to the chrome WebDriver binary:
 
 a|`:host` for *WebDriver* process. When:
 
-* omitted, creates a new local WebDriver process.
+* omitted, creates a new local WebDriver process (unless `:webdriver-url` was specified).
 * specified, attempts to connect to an existing running WebDriver process.
 See <<connecting-existing>>.
+
+Alternative: see `:webdriver-url` below.
 
 Example: `:host "192.68.1.12"`
 | <not set>
@@ -1957,6 +1969,19 @@ a| Varies by vendor:
 * safari `4445`
 * edge `17556`
 * phantom `8910`
+
+a| `:webdriver-url` for *WebDriver* process. When:
+
+* omitted, creates a new local WebDriver process (unless `:host` was specified).
+* specified, attempts to connect to an existing running WebDriver process. 
+
+See <<connecting-existing>>.
+
+Alternative: see `:host` above.
+
+Example: `"https://chrome.browserless.io/webdriver"`
+
+| <not set>
 
 | `:path-driver` to *WebDriver* binary. +
 Typically used if your WebDriver is not on the PATH.
@@ -2254,10 +2279,12 @@ To fine tune the proxy you use the original https://www.w3.org/TR/webdriver/#pro
 
 To connect to an existing WebDriver, specify the `:host` parameter.
 
-TIP: When the `:host` parameter is not specified Etaoin will create a new WebDriver process.
+TIP: When neither the `:host` nor the `:webdriver-url` parameter is specified Etaoin will launch a new WebDriver process.
 
 The `:host` can be a hostname (localhost, some.remote.host.net) or an IP address (127.0.0.1, 183.102.156.31).
 If the port is not specified, the <<driver-options,default>> `:port` is assumed.
+
+Both `:host` and `:port` are ignored if `:webdriver-url` is specified.
 
 Example:
 
@@ -2269,6 +2296,19 @@ Example:
 
 ;; Connect to an existing geckodriver process on remote most on default port
 (def driver (e/firefox {:host "192.168.1.11"})) ;; the default port for firefox is 4444
+
+;; Connect to a chrome instance on browserless.io via :webdriver-url
+;; (replace YOUR-API-TOKEN with a valid browserless.io api token if you want to try this out)
+(e2/with-chrome [driver
+                 {:webdriver-url "https://chrome.browserless.io/webdriver"
+                  :capabilities {"browserless:token" "YOUR-API-TOKEN"
+                                 "chromeOptions" {"args" ["--no-sandbox"]}}}]
+  (e/go driver "https://en.wikipedia.org/")
+  (e/wait-visible driver [{:id :simpleSearch} {:tag :input :name :search}])
+  (e/fill driver {:tag :input :name :search} "Clojure programming language")
+  (e/fill driver {:tag :input :name :search} k/enter)
+  (e/get-title driver))
+;; => "Clojure programming language - Search results - Wikipedia"
 ----
 
 === Setting the Browser Profile [[browser-profile]]

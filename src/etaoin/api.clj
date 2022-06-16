@@ -59,7 +59,7 @@
   - [[fill]] [[fill-active]] [[fill-el]] [[fill-multi]]
   - [[fill-human]] [[fill-human-el]] [[fill-human-multi]]
   - [[select]] [[selected?]] [[selected-el?]]
-  - [[upload-file]]
+  - [[upload-file]] [[remote-file]]
   - [[disabled?]] [[enabled?]]
   - [[clear]] [[clear-el]]
   - [[submit]]
@@ -232,7 +232,7 @@
 (defn get-status
   "Returns `driver` status.
 
-  Indicates readiness to create a new session.
+  Can indicate readiness to create a new session.
 
   The return varies for different driver implementations."
   [driver]
@@ -2207,8 +2207,12 @@
 ;;
 
 (defn running?
-  "Return true if `driver` seems accessable via its host and port."
+  "Return true if `driver` seems accessable via its `:host` and `:port`.
+
+  Throws if using `:webdriver-url`"
   [driver]
+  (when (:webdriver-url driver)
+    (throw (ex-info "Not supported for driver using :webdriver-url" {})))
   (util/connectable? (:host driver)
                      (:port driver)))
 
@@ -2586,11 +2590,15 @@
                     (merge {:message message} opt))))
 
 (defn wait-running
-  "Waits until `driver` is [[running?]].
+  "Waits until `driver` is reachable via its host and port via [[running?]].
+
+  Throws if using `:webdriver-url`.
 
   - `opt`: see [[wait-predicate]] opt."
   [driver & [opt]]
-  (log/debugf "Waiting for %s:%s is running"
+  (when (:webdriver-url driver)
+    (throw (ex-info "Not supported for driver using :webdriver-url" {})))
+  (log/debugf "Waiting until %s:%s is running"
               (:host driver) (:port driver))
   (wait-predicate #(running? driver) opt))
 
@@ -2952,13 +2960,26 @@
 ;; file upload
 ;;
 
+(defrecord RemoteFile [file])
+(defn remote-file
+  "Wraps `remote-file-path` for use with [[upload-file]] to avoid local file existence check.
+
+  Example usage:
+  ```Clojure
+  (upload-file (remote-file \"C:/Users/hello/url.txt\"))
+  ```"
+  [remote-file-path]
+  (RemoteFile. remote-file-path))
+
 (defmulti upload-file
-  "Have `driver` attach a local file `path` to a file input field found by query `q`.
+  "Have `driver` attach a file `path` to a file input field element found by query `q`.
 
   Arguments:
 
   - `q` see [[query]] for details;
-  - `file` is either a string or java.io.File object that references a local file. The file should exist.
+  - `file`
+    - when a string or java.io.File object, the file must exist locally.
+    - when [[remote-file]] file is assumed to exist remotely and no local existence check is performed.
 
   Under the hood, we send the file's name as a sequence of keys to the input."
   {:arglists '([driver q path])}
@@ -2968,6 +2989,11 @@
 (defmethod upload-file String
   [driver q path]
   (upload-file driver q (fs/file path)))
+
+(defmethod upload-file RemoteFile
+  [driver q path]
+  ;; directly send the path without any local file existence validation
+  (fill driver q (:file path)))
 
 (defmethod upload-file java.io.File
   [driver q ^java.io.File file]
@@ -3289,10 +3315,14 @@
   from the `defaults` global map if is not passed. If there is no
   port in that map, a random-generated port is used.
 
+  -- `:webdriver-url` is a URL to a web-driver service. This URL is
+  generally provided by web-driver service providers. When specified the
+  `:host` and `:port` parameters are ignored.
+
   -- `:locator` is a string determs what algorithm to use by default
   when finding elements on a page. `default-locator` variable is used
   if not passed."
-  [type & [{:keys [port host locator]}]]
+  [type & [{:keys [port host webdriver-url locator]}]]
   (let [port    (or port
                     (if host
                       (get-in defaults [type :port])
@@ -3300,12 +3330,15 @@
         host    (or host "127.0.0.1")
         url     (make-url host port)
         locator (or locator default-locator)
-        driver  {:type    type
-                 :host    host
-                 :port    port
-                 :url     url
-                 :locator locator}]
-    (log/debugf "Created driver: %s %s:%s" (name type) host port)
+        driver  {:type          type
+                 :host          host
+                 :port          port
+                 :url           url
+                 :webdriver-url webdriver-url
+                 :locator       locator}]
+    (if webdriver-url
+      (log/debugf "Created driver: %s %s" (name type) (util/strip-url-creds webdriver-url))
+      (log/debugf "Created driver: %s %s:%s" (name type) host port))
     driver))
 
 (defn- proxy-env
@@ -3315,7 +3348,6 @@
     (cond-> proxy
       http (assoc :http http)
       ssl  (assoc :ssl ssl))))
-
 
 (defn- -run-driver
   "Runs a driver process locally.
@@ -3442,7 +3474,8 @@
   to the browser's process.
 
   See https://www.w3.org/TR/webdriver/#capabilities"
-  [driver & [{:keys [url
+  [driver & [{:keys [webdriver-url
+                     url
                      size
                      args
                      prefs
@@ -3453,7 +3486,8 @@
                      capabilities
                      load-strategy
                      desired-capabilities]}]]
-  (wait-running driver)
+  (when (not webdriver-url)
+    (wait-running driver))
   (let [type          (:type driver)
         caps          (get-in defaults [type :capabilities])
         proxy         (proxy-env proxy)
@@ -3509,11 +3543,12 @@
   `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   ([type]
    (boot-driver type {}))
-  ([type {:keys [host] :as opt}]
+  ([type {:keys [host webdriver-url] :as opt}]
    (cond-> type
-     true       (-create-driver opt)
-     (not host) (-run-driver opt)
-     true       (-connect-driver opt))))
+     true                      (-create-driver opt)
+     (and (not host)
+          (not webdriver-url)) (-run-driver opt)
+     true                      (-connect-driver opt))))
 
 (defn quit
   "Have `driver` close the current session, then, if Etaoin launched it, kill the WebDriver process."
@@ -3637,6 +3672,8 @@
   [opt bind & body]
   `(with-driver :chrome ~opt ~bind
      ~@body))
+
+
 
 (defmacro with-edge
   "Executes `body` with an Edge driver session bound to `bind`.
