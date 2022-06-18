@@ -1,11 +1,15 @@
 {:linters
  {:etaoin/with-x-action {:level :error}
-  :etaoin/binding-sym {:level :error}}
+  :etaoin/binding-sym {:level :error}
+  :etaoin/opts-map-type {:level :error}
+  :etaoin/opts-map-pos {:level :error}
+  :etaoin/empty-opts {:level :warning}}
  :hooks
  {:analyze-call
   {etaoin.api/with-chrome            etaoin.api/with-browser
-   etaoin.api/with-firefox           etaoin.api/with-browser
    etaoin.api/with-chrome-headless   etaoin.api/with-browser
+   etaoin.api/with-firefox           etaoin.api/with-browser
+   etaoin.api/with-firefox-headless  etaoin.api/with-browser
    etaoin.api/with-edge              etaoin.api/with-browser
    etaoin.api/with-edge-headless     etaoin.api/with-browser
    etaoin.api/with-phantom           etaoin.api/with-browser

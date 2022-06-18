@@ -16,7 +16,6 @@
   - [[with-safari]] [[safari]] [[safari?]] [[when-safari]] [[when-not-safari]]
   - [[driver?]] [[running?]] [[headless?]] [[when-headless]] [[when-not-headless]]
   - [[disconnect-driver]] [[stop-driver]] [[quit]]
-  - see also [[etaoin.api2]]
 
   **WebDriver Lower Level Comms**
   -  [[execute]] [[with-http-error]]
@@ -2045,11 +2044,11 @@
   (implemented? driver get-logs*))
 
 (defn- dump-logs
-  [logs filename & [opt]]
+  [logs filename & [opts]]
   (json/generate-stream
     logs
     (io/writer filename)
-    (merge {:pretty true} opt)))
+    (merge {:pretty true} opts)))
 
 ;;
 ;; get/set hash
@@ -2454,19 +2453,19 @@
   Arguments:
 
   - `pred`: a zero-argument predicate to call
-  - `opt`: a map of optional parameters:
+  - `opts`: a map of optional parameters:
     - `:timeout` wait limit in seconds, [[*wait-timeout*]] by default;
     - `:interval` how long to wait between calls, [[*wait-interval*]] by default;
     - `:message` a message that becomes a part of exception when timeout is reached."
 
   ([pred]
    (wait-predicate pred {}))
-  ([pred opt]
-   (let [timeout   (get opt :timeout *wait-timeout*) ;; refactor this (call for java millisec)
-         time-rest (get opt :time-rest timeout)
-         interval  (get opt :interval *wait-interval*)
-         times     (get opt :times 0)
-         message   (get opt :message)]
+  ([pred opts]
+   (let [timeout   (get opts :timeout *wait-timeout*) ;; refactor this (call for java millisec)
+         time-rest (get opts :time-rest timeout)
+         interval  (get opts :interval *wait-interval*)
+         times     (get opts :times 0)
+         message   (get opts :message)]
      (when (< time-rest 0)
        (throw+ {:type      :etaoin/timeout
                 :message   message
@@ -2478,129 +2477,129 @@
                  (pred))
        (wait interval)
        (recur pred (assoc
-                     opt
+                     opts
                      :time-rest (- time-rest interval)
                      :times (inc times)))))))
 
 (defn wait-exists
   "Waits until `driver` finds element [[exists?]] via `q`.
 
-  - `opt`: see [[wait-predicate]] opt."
+  - `opts`: see [[wait-predicate]] opts."
 
-  [driver q & [opt]]
+  [driver q & [opts]]
   (let [message (format "Wait until %s element exists" q)]
     (wait-predicate #(exists? driver q)
-                    (merge {:message message} opt))))
+                    (merge {:message message} opts))))
 
 (defn wait-absent
   "Waits until `driver` determines element is not found by `q` (is [[absent?]]).
 
   See [[query]] for details on `q`.
 
-  - `opt`: see [[wait-predicate]] opt."
+  - `opts`: see [[wait-predicate]] opts."
 
-  [driver q & [opt]]
+  [driver q & [opts]]
   (let [message (format "Wait until %s element is absent" q)]
     (wait-predicate #(absent? driver q)
-                    (merge {:message message} opt))))
+                    (merge {:message message} opts))))
 
 (defn wait-visible
   "Waits until `driver` determines element found by `q` is [[visible?]].
 
   See [[query]] for details on `q`.
 
-  - `opt`: see [[wait-predicate]] opt."
-  [driver q & [opt]]
+  - `opts`: see [[wait-predicate]] opts."
+  [driver q & [opts]]
   (let [message (format "Wait until %s element is visible" q)]
     (wait-predicate #(visible? driver q)
-                    (merge {:message message} opt))))
+                    (merge {:message message} opts))))
 
 (defn wait-invisible
   "Waits until `driver` determines element found by `q` is [[invisible?]].
 
   See [[query]] for details on `q`.
 
-  - `opt`: see [[wait-predicate]] opt."
-  [driver q & [opt]]
+  - `opts`: see [[wait-predicate]] opts."
+  [driver q & [opts]]
   (let [message (format "Wait until %s element is invisible" q)]
     (wait-predicate #(invisible? driver q)
-                    (merge {:message message} opt))))
+                    (merge {:message message} opts))))
 
 (defn wait-enabled
   "Waits until `driver` determines element found by `q` is [[enabled?]].
 
   See [[query]] for details on `q`.
 
-  - `opt`: see [[wait-predicate]] opt."
-  [driver q & [opt]]
+  - `opts`: see [[wait-predicate]] opts."
+  [driver q & [opts]]
   (let [message (format "Wait until %s element is enabled" q)]
     (wait-predicate #(enabled? driver q)
-                    (merge {:message message} opt))))
+                    (merge {:message message} opts))))
 
 (defn wait-disabled
   "Waits until `driver` determines element found by `q` is [[disabled?]].
 
   See [[query]] for details on `q`.
 
-  - `opt`: see [[wait-predicate]] opt."
-  [driver q & [opt]]
+  - `opts`: see [[wait-predicate]] opts."
+  [driver q & [opts]]
   (let [message (format "Wait until %s element is disabled" q)]
     (wait-predicate #(disabled? driver q)
-                    (merge {:message message} opt))))
+                    (merge {:message message} opts))))
 
 (defn wait-has-alert
   "Waits until `driver` finds page [[has-alert?]].
 
-  - `opt`: see [[wait-predicate]] opt."
-  [driver & [opt]]
+  - `opts`: see [[wait-predicate]] opts."
+  [driver & [opts]]
   (let [message "Wait until element has alert"]
     (wait-predicate #(has-alert? driver)
-                    (merge {:message message} opt))))
+                    (merge {:message message} opts))))
 
 (defn wait-has-text
   "Waits until `driver` finds element via `q` with `text` anywhere inside it (including inner HTML).
 
   See [[query]] for details on `q`.
 
-  - `opt`: see [[wait-predicate]] opt."
-  [driver q text & [opt]]
+  - `opts`: see [[wait-predicate]] opts."
+  [driver q text & [opts]]
   (let [message (format "Wait until %s element has text %s"
                         q text)]
     (wait-predicate #(has-text? driver q text)
-                    (merge {:message message} opt))))
+                    (merge {:message message} opts))))
 
 (defn wait-has-text-everywhere
   "Waits until `driver` finds `text` anywhere on the current page.
 
-  - `opt`: see [[wait-predicate]] opt."
-  [driver text & [opt]]
+  - `opts`: see [[wait-predicate]] opts."
+  [driver text & [opts]]
   (let [q {:xpath "*"}]
-    (wait-has-text driver q text opt)))
+    (wait-has-text driver q text opts)))
 
 (defn wait-has-class
   "Waits until `driver` finds element via `q` [[has-class?]] `class`.
 
   See [[query]] for details on `q`.
 
-  - `opt`: see [[wait-predicate]] opt."
-  [driver q class & [opt]]
+  - `opts`: see [[wait-predicate]] opts."
+  [driver q class & [opts]]
   (let [message (format "Wait until %s element has class %s"
                         q class)]
     (wait-predicate #(has-class? driver q class)
-                    (merge {:message message} opt))))
+                    (merge {:message message} opts))))
 
 (defn wait-running
   "Waits until `driver` is reachable via its host and port via [[running?]].
 
   Throws if using `:webdriver-url`.
 
-  - `opt`: see [[wait-predicate]] opt."
-  [driver & [opt]]
+  - `opts`: see [[wait-predicate]] opts."
+  [driver & [opts]]
   (when (:webdriver-url driver)
     (throw (ex-info "Not supported for driver using :webdriver-url" {})))
   (log/debugf "Waiting until %s:%s is running"
               (:host driver) (:port driver))
-  (wait-predicate #(running? driver) opt))
+  (wait-predicate #(running? driver) opts))
 
 ;;
 ;; visible actions
@@ -2609,10 +2608,10 @@
 (defn click-visible
   "Waits until `driver` finds visible element via query `q` then clicks on it.
 
-  - `opt`: see [[wait-predicate]] opt."
-  [driver q & [opt]]
+  - `opts`: see [[wait-predicate]] opts."
+  [driver q & [opts]]
   (doto driver
-    (wait-visible q opt)
+    (wait-visible q opts)
     (click q)))
 
 ;;
@@ -2866,16 +2865,16 @@
                    :arg     q-text})))
 
 (defn fill-human-el
-  "Have `driver` fill element `el` with `text` as if it were a real human using `opt`.
+  "Have `driver` fill element `el` with `text` as if it were a real human using `opts`.
 
-  `opt`
+  `opts`
   - `:mistake-prob` probability of making a typo (0 to 1.0) (default: `0.1`)
   - `:pause-max` maximum amount of time in seconds to pause between keystrokes (can be fractional) (default: `0.2`)"
-  [driver el text opt]
+  [driver el text opts]
   {:pre [(some? el)]}
   (let [{:keys [mistake-prob pause-max]
          :or   {mistake-prob 0.1
-                pause-max    0.2}} opt
+                pause-max    0.2}} opts
 
         rand-char (fn [] (-> 26 rand-int (+ 97) char))
         wait-key  (fn [] (wait (min (rand) pause-max)))]
@@ -2891,39 +2890,38 @@
       (wait-key))))
 
 (defn fill-human
-  "Have `driver` fill element found by `q` with `text` as if it were a real human using `opt`.
+  "Have `driver` fill element found by `q` with `text` as if it were a real human using `opts`.
 
   See [[query]] for details on `q`.
 
-  `opt`
+  `opts`
   - `:mistake-prob` probability of making a typo (0 to 1.0) (default: `0.1`)
   - `:pause-max` maximum amount of time in seconds to pause between keystrokes (can be fractional) (default: `0.2`)"
   ([driver q text]  (fill-human driver q text {}))
-  ([driver q text opt]
-   (fill-human-el driver (query driver q) text opt)))
+  ([driver q text opts]
+   (fill-human-el driver (query driver q) text opts)))
 
 (defn fill-human-multi
-  "Have `driver` fill multiple elements as if it were a real human being via `q-text` using `opt`.
+  "Have `driver` fill multiple elements as if it were a real human being via `q-text` using `opts`.
 
   `q-text` can be:
   - a map of `{q1 \"text1\" q2 \"text2\" ...}`
   - a vector of `[q1 \"text1\" q2 \"text2\" ...]`
 
-
   See [[query]] for details on `q`s.
 
-  `opt`
+  `opts`
   - `:mistake-prob` probability of making a typo (0 to 1.0) (default: `0.1`)
   - `:pause-max` maximum amount of time in seconds to pause between keystrokes (can be fractional) (default: `0.2`)"
   ([driver q-text]  (fill-human-multi driver q-text {}))
-  ([driver q-text opt]
+  ([driver q-text opts]
    (cond
      (map? q-text)
      (doseq [[q text] q-text]
-       (fill-human driver q text opt))
+       (fill-human driver q text opts))
 
      (vector? q-text)
-     (recur driver (apply hash-map q-text) opt)
+     (recur driver (apply hash-map q-text) opts)
 
      :else (throw+ {:type    :etaoin/argument
                     :message "Wrong argument type"
@@ -3274,11 +3272,11 @@
   Tip: don't bother using `with-postmortem` in test fixtures.
   The standard `clojure.test`framework has its own way of handling exceptions,
   so wrapping a fixture with `(with-postmortem...)` would be in vain."
-  [driver opt & body]
+  [driver opts & body]
   `(try
      ~@body
      (catch Exception e#
-       (postmortem-handler ~driver ~opt)
+       (postmortem-handler ~driver ~opts)
        (throw e#))))
 
 ;;
@@ -3305,7 +3303,7 @@
   - `type` is a keyword determines what driver to use. The supported
   browsers are `:firefox`, `:chrome`, `:phantom` and `:safari`.
 
-  - `opt` is a map with additional options for a driver. The supported
+  - `opts` is a map with additional options for a driver. The supported
   options are:
 
   -- `:host` is a string with either IP or hostname. Use it if the
@@ -3360,7 +3358,7 @@
 
   - `driver` is a map created with `-create-driver` function.
 
-  - `opt` is an optional map with the following possible parameters:
+  - `opts` is an optional map with the following possible parameters:
 
   -- `:path-driver` is a string path to the driver's binary file. When
   not passed, it is taken from defaults.
@@ -3431,7 +3429,7 @@
 
   Arguments:
 
-  - `opt`: an map of the following optional parameters:
+  - `opts`: an map of the following optional parameters:
 
   -- `:capabilities` a map of desired capabilities your
   browser should support;
@@ -3534,21 +3532,21 @@
 
 (defn boot-driver
   "Launch and return a driver of `type` (e.g. `:chrome`, `:firefox` `:safari` `:edge` `:phantom`)
-  with `opt` options.
+  with `opts` options.
 
   - creates a driver
   - launches a WebDriver process (or connects to an existing running process if `:host` is specified)
   - creates a session for driver
 
-  `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
+  `opts` map is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   ([type]
    (boot-driver type {}))
-  ([type {:keys [host webdriver-url] :as opt}]
+  ([type {:keys [host webdriver-url] :as opts}]
    (cond-> type
-     true                      (-create-driver opt)
+     true                      (-create-driver opts)
      (and (not host)
-          (not webdriver-url)) (-run-driver opt)
-     true                      (-connect-driver opt))))
+          (not webdriver-url)) (-run-driver opts)
+     true                      (-connect-driver opts))))
 
 (defn quit
   "Have `driver` close the current session, then, if Etaoin launched it, kill the WebDriver process."
@@ -3560,40 +3558,40 @@
         (when process
           (stop-driver driver))))))
 
-(def ^{:arglists '([] [opt])} firefox
+(def ^{:arglists '([] [opts])} firefox
   "Launch and return a Firefox driver.
 
-  `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
+  `opts` map is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   (partial boot-driver :firefox))
 
-(def ^{:arglists '([] [opt])} edge
+(def ^{:arglists '([] [opts])} edge
   "Launch and return an Edge driver.
 
-  `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
+  `opts` map is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   (partial boot-driver :edge))
 
-(def ^{:arglists '([] [opt])} chrome
+(def ^{:arglists '([] [opts])} chrome
   "Launch and return a Chrome driver.
 
-  `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
+  `opts` map is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   (partial boot-driver :chrome))
 
-(def ^{:arglists '([] [opt])} phantom
+(def ^{:arglists '([] [opts])} phantom
   "Launch and return a Phantom.js driver.
 
-  `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
+  `opts` map is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   (partial boot-driver :phantom))
 
-(def ^{:arglists '([] [opt])} safari
+(def ^{:arglists '([] [opts])} safari
   "Launch and return a Safari driver.
 
-  `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
+  `opts` map is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   (partial boot-driver :safari))
 
 (defn chrome-headless
   "Launch and return a headless Chrome driver.
 
-  `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
+  `opts` map is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   ([]
    (chrome-headless {}))
   ([opt]
@@ -3602,177 +3600,187 @@
 (defn firefox-headless
   "Launch and return a headless Firefox driver.
 
-  `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
+  `opts` map is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   ([]
    (firefox-headless {}))
-  ([opt]
-   (boot-driver :firefox (assoc opt :headless true))))
+  ([opts]
+   (boot-driver :firefox (assoc opts :headless true))))
 
 (defn edge-headless
   "Launch and return a headless Edge driver.
 
-  `opt` is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
+  `opt` map is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   ([]
    (edge-headless {}))
-  ([opt]
-   (boot-driver :edge (assoc opt :headless true))))
+  ([opts]
+   (boot-driver :edge (assoc opts :headless true))))
 
 (defmacro with-driver
   "Executes `body` with a driver session of `type` (e.g. `:chrome`, `:firefox` `:safari` `:edge` `:phantom`)
-  with `opt` options, binding driver instance to `bind`.
+  with `opts` options, binding driver instance to `bind`.
 
   Driver is automatically launched and terminated (even if an exception occurs).
 
-  `opt` - can be `{}` or `nil`, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
+  `opts` map can be omitted, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
 
   Example:
 
   ```Clojure
-  (with-driver :firefox {} driver
+  (with-driver :firefox driver
     (go driver \"https://clojure.org\"))
   ```"
-  [type opt bind & body]
-  `(client/with-pool {}
-     (let [~bind (boot-driver ~type ~opt)]
-       (try
-         ~@body
-         (finally
-           (quit ~bind))))))
+  {:arglists '([type opts? bind & body])}
+  [type & args]
+  (let [[opts bind & body] (if (symbol? (second args))
+                             args
+                             (cons nil args))]
+    `(client/with-pool {}
+       (let [~bind (boot-driver ~type ~opts)]
+         (try
+           ~@body
+           (finally
+             (quit ~bind)))))))
+
+(defmacro ^:no-doc with-headless-driver
+  {:arglists '([type opts? bind & body])}
+  [type & args]
+  (let [[opts bind & body] (if (symbol? (second args))
+                             args
+                             (cons nil args))]
+    `(let [opts# (assoc ~opts :headless true)]
+       (with-driver ~type opts# ~bind ~@body))))
 
 (defmacro with-firefox
   "Executes `body` with a Firefox driver session bound to `bind`.
 
   Driver is automatically launched and terminated (even if an exception occurs).
 
-  `opt` - can be `{}` or `nil`, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
+  `opts` map can be omitted, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
 
   Example:
 
   ```Clojure
-  (with-firefox {} driver
+  (with-firefox driver
     (go driver \"https://clojure.org\"))
   ```"
-  [opt bind & body]
-  `(with-driver :firefox ~opt ~bind
-     ~@body))
+  {:arglists '([opts? bind & body] [bind & body])}
+  [& args]
+  `(with-driver :firefox ~@args))
 
 (defmacro with-chrome
   "Executes `body` with a Chrome driver session bound to `bind`.
 
   Driver is automatically launched and terminated (even if an exception occurs).
 
-  `opt` - can be `{}` or `nil`, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
+  `opts` map can be omitted, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
 
   Example:
 
   ```Clojure
-  (with-chrome {} driver
+  (with-chrome driver
     (go driver \"https://clojure.org\"))
   ```"
-  [opt bind & body]
-  `(with-driver :chrome ~opt ~bind
-     ~@body))
-
-
+  {:arglists '([opts? bind & body])}
+  [& args]
+  `(with-driver :chrome ~@args))
 
 (defmacro with-edge
   "Executes `body` with an Edge driver session bound to `bind`.
 
   Driver is automatically launched and terminated (even if an exception occurs).
 
-  `opt` - can be `{}` or `nil`, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
+  `opts` map can be omitted, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
 
   Example:
 
   ```Clojure
-  (with-edge {} driver
+  (with-edge driver
     (go driver \"https://clojure.org\"))
   ```"
-  [opt bind & body]
-  `(with-driver :edge ~opt ~bind
-     ~@body))
+  {:arglists '([opts? bind & body])}
+  [& args]
+  `(with-driver :edge ~@args))
 
 (defmacro with-phantom
   "Executes `body` with an Phantom.JS driver session bound to `bind`.
 
   Driver is automatically launched and terminated (even if an exception occurs).
 
-  `opt` - can be `{}` or `nil`, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
+  `opts` map can be omitted, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
 
   Example:
 
   ```Clojure
-  (with-phantom {} driver
+  (with-phantom driver
     (go driver \"https://clojure.org\"))
   ```"
-  [opt bind & body]
-  `(with-driver :phantom ~opt ~bind
-     ~@body))
+  {:arglists '([opts? bind & body])}
+  [& args]
+  `(with-driver :phantom ~@args))
 
 (defmacro with-safari
   "Executes `body` with a Safari driver session bound to `bind`.
 
   Driver is automatically launched and terminated (even if an exception occurs).
 
-  `opt` - can be `{}` or `nil`, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
+  `opts` map can be omitted, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
 
   Example:
 
   ```Clojure
-  (with-safari {} driver
+  (with-safari driver
     (go driver \"https://clojure.org\"))
   ```"
-  [opt bind & body]
-  `(with-driver :safari ~opt ~bind
-     ~@body))
+  {:arglists '([opts? bind & body])}
+  [& args]
+  `(with-driver :safari ~@args))
 
 (defmacro with-chrome-headless
   "Executes `body` with a headless Chrome driver session bound to `bind`.
 
   Driver is automatically launched and terminated (even if an exception occurs).
 
-  `opt` - can be `{}` or `nil`, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
+  `opts` map can be omitted, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
 
   Example:
 
   ```Clojure
-  (with-chrome-headless {} driver
+  (with-chrome-headless driver
     (go driver \"https://clojure.org\"))
   ```"
-  [opt bind & body]
-  `(with-driver :chrome (assoc ~opt :headless true) ~bind
-     ~@body))
+  {:arglists '([opts? bind & body])}
+  [& args]
+  `(with-headless-driver :chrome ~@args))
 
 (defmacro with-firefox-headless
   "Executes `body` with a headless Firefox driver session bound to `bind`.
 
   Driver is automatically launched and terminated (even if an exception occurs).
 
-  `opt` - can be `{}` or `nil`, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
+  `opts` map can be omitted, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
 
   Example:
 
   ```Clojure
-  (with-firefox-headless {} driver
+  (with-firefox-headless driver
     (go driver \"https://clojure.org\"))
   ```"
-  [opt bind & body]
-  `(with-driver :firefox (assoc ~opt :headless true) ~bind
-     ~@body))
+  {:arglists '([opts? bind & body])}
+  [& args]
+  `(with-headless-driver :firefox ~@args))
 
 (defmacro with-edge-headless
   "Executes `body` with a headless Edge driver session bound to `bind`.
 
   Driver is automatically launched and terminated (even if an exception occurs).
 
-  `opt` - can be `{}` or `nil`, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
+  `opts` map can be omitted, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
 
   Example:
-
   ```Clojure
-  (with-edge-headless {} driver
+  (with-edge-headless driver
     (go driver \"https://clojure.org\"))
   ```"
-  [opt bind & body]
-  `(with-driver :edge (assoc ~opt :headless true) ~bind
-     ~@body))
+  {:arglists '([opts? bind & body])}
+  [& args]
+  `(with-headless-driver :edge ~@args))

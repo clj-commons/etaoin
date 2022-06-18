@@ -141,7 +141,7 @@ Notes:
                                 (with-out-str (shell/clojure "-Spath" (str "-A" aliases)))
                                 "--main" "bb-test-runner"]))
               test-runner-args (case test-id
-                                 "api" ["--namespace" "etaoin.api-test"]
+                                 "api" ["--namespace-regex" "etaoin.api.*-test$"]
                                  "ide" ["--namespace" "etaoin.ide-test"]
                                  "unit" ["--namespace-regex" ".*unit.*-test$"]
                                  "all" [])

@@ -4,7 +4,6 @@
    [clojure.spec.alpha :as s]
    [clojure.test :refer [deftest is testing]]
    [etaoin.api :as e]
-   [etaoin.api2 :as e2]
    [etaoin.ide.flow :as ide]
    [etaoin.ide.impl.spec :as spec]
    [etaoin.impl.proc :as proc]
@@ -18,28 +17,28 @@
     proc/kill identity
     e/delete-session   identity]
     (testing "Session"
-      (e2/with-firefox [driver]
+      (e/with-firefox driver
         (is (= "session-key"
                (:session driver)))))
     (testing "No custom args"
-      (e2/with-firefox [driver {:port 1234}]
+      (e/with-firefox {:port 1234} driver
         (is (= ["geckodriver" "--port" 1234]
                (:args driver)))))
     (testing "Default `--marionette-port` is assigned when `:profile` is specified"
-      (e2/with-firefox [driver {:port 1234 :profile "/tmp/firefox-profile/1"}]
+      (e/with-firefox {:port 1234 :profile "/tmp/firefox-profile/1"} driver
         (is (= ["geckodriver" "--port" 1234 "--marionette-port" 2828]
                (:args driver)))))
     (testing "Custom `--marionette-port` is assigned when `:profile` is specified"
-      (e2/with-firefox [driver {:port        1234
-                                :profile     "/tmp/firefox-profile/1"
-                                :args-driver ["--marionette-port" 2821]}]
+      (e/with-firefox {:port 1234
+                       :profile     "/tmp/firefox-profile/1"
+                       :args-driver ["--marionette-port" 2821]} driver
         (is (= ["geckodriver" "--port" 1234 "--marionette-port" 2821]
                (:args driver)))))))
 
 (deftest test-chrome-profile
   (fs/with-temp-dir [chrome-dir {:prefix "chrome-dir"}]
     (let [profile-path (str (fs/file chrome-dir "chrome-profile"))]
-      (e2/with-chrome [driver {:profile profile-path :args ["--no-sandbox"]}]
+      (e/with-chrome {:profile profile-path :args ["--no-sandbox"]} driver
         (e/go driver "chrome://version")
         (is profile-path
             (e/get-element-text driver :profile_path))))))
