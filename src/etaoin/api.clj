@@ -3117,6 +3117,10 @@
 ;; screenshots
 ;;
 
+(defn- create-dirs-for-file [f]
+  (when (fs/parent f)
+    (-> f fs/parent fs/create-dirs)))
+
 (defn- b64-decode [s]
   (-> (Base64/getDecoder)
       (.decode s)))
@@ -3142,7 +3146,7 @@
   "Have `driver` save a PNG format screenshot of the current page to `file`.
   Throws if screenshot is empty.
 
-  `file` can be either a string or `java.io.File`."
+  `file` can be either a string or `java.io.File`, any missing parent directories are automatically created."
   {:arglists '([driver file])}
   dispatch-driver)
 
@@ -3152,16 +3156,17 @@
                          :method :get
                          :path   [:session (:session driver) :screenshot]})
         b64str (-> resp :value not-empty)]
-    (if b64str
-      (b64-to-file b64str file)
-      (util/error "Empty screenshot"))))
+    (when (not b64str)
+      (util/error "Empty screenshot"))
+    (create-dirs-for-file file)
+    (b64-to-file b64str file)))
 
 (defmulti screenshot-element
   "Have `driver` save a PNG format screenshot of the element found by query `q` to `file`.
 
   See [[query]] for details on `q`.
 
-  `file` can be either a string or `java.io.File`."
+  `file` can be either a string or `java.io.File`, any missing parent directories are automatically created."
   {:arglists '([driver q file])}
   dispatch-driver)
 
@@ -3178,9 +3183,10 @@
                          :method :get
                          :path   [:session (:session driver) :element el :screenshot]})
         b64str (-> resp :value not-empty)]
-    (if b64str
-      (b64-to-file b64str file)
-      (util/error "Empty screenshot, query: %s" q))))
+    (when (not b64str)
+      (util/error "Empty screenshot, query: %s" q))
+    (create-dirs-for-file file)
+    (b64-to-file b64str file)))
 
 (defn ^:no-doc make-screenshot-file-path
   [driver-type dir]

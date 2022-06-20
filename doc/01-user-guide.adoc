@@ -1456,7 +1456,7 @@ Specify a string:
 
 [source,clojure]
 ----
-(e/screenshot driver "target/etaoin-play/page.png")
+(e/screenshot driver "target/etaoin-play/screens1/page.png")
 ----
 
 or a `File` object:
@@ -1464,7 +1464,7 @@ or a `File` object:
 [source,clojure]
 ----
 (require '[clojure.java.io :as io])
-(e/screenshot driver (io/file "target/etaoin-play/test.png"))
+(e/screenshot driver (io/file "target/etaoin-play/screens2/test.png"))
 ----
 
 === Screenshots for Specific Elements
@@ -1474,7 +1474,7 @@ It doesn't work with other browsers at this time.
 
 [source,clojure]
 ----
-(e/screenshot-element driver {:tag :form :class :formy} "target/etaoin-play/form-element.png")
+(e/screenshot-element driver {:tag :form :class :formy} "target/etaoin-play/screens3/form-element.png")
 ----
 
 === Screenshots after each form
@@ -1484,10 +1484,7 @@ The file naming convention is `<webdriver-name>-<milliseconds-since-1970>.png`
 
 [source,clojure]
 ----
-(require '[clojure.java.io :as io])
-
 (e/refresh driver)
-(.mkdirs (io/file "target/etaoin-play/saved-screenshots"))
 (e/with-screenshots driver "target/etaoin-play/saved-screenshots"
   (e/fill driver :uname "et")
   (e/fill driver :uname "ao")
@@ -1498,10 +1495,7 @@ this is equivalent to something along the lines of:
 
 [source,clojure]
 ----
-(require '[clojure.java.io :as io])
-
 (e/refresh driver)
-(.mkdirs (io/file "target/etaoin-play/saved-screenshots"))
 (e/fill driver :uname "et")
 (e/screenshot driver "target/etaoin-play/saved-screenshots/chrome-1.png")
 (e/fill driver :uname "ao")

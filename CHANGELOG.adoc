@@ -108,6 +108,7 @@ This will allow for easier testing of unreleased versions of Etaoin via git deps
 It also unconvered that our minimum Clojure version was 1.10, instead of the advertised v1.9.
 Fixed.
 * https://github.com/clj-commons/etaoin/issues/444[#444]: Visibility checks fixed for firefox and chrome (thanks https://github.com/daveyarwood[@daveyarwood]!)
+* https://github.com/clj-commons/etaoin/issues/455[#455]: Automatically create specified parent dirs for screenshots
 * https://github.com/clj-commons/etaoin/issues/446[#446]: Bump Etaoin dependencies to current releases
 * Docs
 ** Reviewed and updated API docstrings
