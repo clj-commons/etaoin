@@ -1514,7 +1514,7 @@ this is equivalent to something along the lines of:
 
 Sometimes it is useful to go a little deeper.
 
-=== Invoking WebDriver Specific Features
+=== Invoking WebDriver Implementation Specific Features
 
 The Etaoin API exposes an abstraction of the W3C WebDriver protocol.
 This is normally all you need, but sometimes you'll want to invoke a WebDriver implementation feature that is not part of the WebDriver protocol.
