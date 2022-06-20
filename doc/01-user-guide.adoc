@@ -1512,7 +1512,36 @@ this is equivalent to something along the lines of:
 
 == Peeking deeper
 
-Sometimes it is useful to peek a little deeper.
+Sometimes it is useful to go a little deeper.
+
+=== Invoking WebDriver Implementation Specific Features
+
+The Etaoin API exposes an abstraction of the W3C WebDriver protocol.
+This is normally all you need, but sometimes you'll want to invoke a WebDriver implementation feature that is not part of the WebDriver protocol.
+
+Etaoin talks to the WebDriver process via its `execute` function.
+You can use this lower level function to send whatever you like to the WebDriver process.
+
+As a real-world example, Chrome supports taking screenshots with transparent backgrounds.
+
+Here we use Etaoin's `execute` function to ask Chrome to do this:
+
+[source,clojure]
+----
+(e/with-chrome driver
+  ;; navigate to our sample page
+  (e/go driver sample-page)
+  ;; send the Chrome-specific request for a transparent background
+  (e/execute {:driver driver
+              :method :post
+              :path [:session (:session driver) "chromium" "send_command_and_get_result"]
+              :data {:cmd "Emulation.setDefaultBackgroundColorOverride"
+                     :params {:color {:r 0 :g 0 :b 0 :a 0}}}})
+  ;; and here we take an element screenshot as per normal
+  (e/screenshot-element driver
+                        {:tag :form}
+                        (str "target/etaoin-play/saved-screenshots/form.png")))
+----
 
 === Reading a Browser's Console Logs [[console-logs]]
 
