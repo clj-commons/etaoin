@@ -2,29 +2,63 @@
   (:require [clj-kondo.hooks-api :as api]
             [etaoin.hooks-util :as h]))
 
-(defn- with-bound-arg [node bound-arg-ndx]
+(defn- nil-node? [n]
+  (and (api/token-node? n) (nil? (api/sexpr n))))
+
+(defn- with-bound-arg [node arg-offset]
   (let [macro-args (rest (:children node))
-        binding-sym (nth macro-args bound-arg-ndx nil)]
-    (if-not (h/symbol-node? binding-sym)
-      ;; could use clj-kondo findings, but I think this is good for now
-      (api/reg-finding! (assoc (if binding-sym
-                                 (meta binding-sym)
-                                 (meta node))
-                               :message (format "Expected binding symbol as %s arg"
-                                                ;; use words instead of numbers to avoid ambiguity
-                                                (case bound-arg-ndx 1 "second" 2 "third"))
+        leading-args (take arg-offset macro-args)
+        interesting-args (drop arg-offset macro-args)
+        [opts binding-sym & body] (if (h/symbol-node? (second interesting-args))
+                                    interesting-args
+                                    (cons nil interesting-args))]
+    ;; if the user has specified nil or {} for options we can suggest that is not necessary
+    (when (and opts
+               (or (and (api/map-node? opts) (not (seq (:children opts))))
+                   (nil-node? opts)))
+      (api/reg-finding! (assoc (meta opts)
+                               :message "Empty or nil driver options can be omitted"
+                               :type :etaoin/empty-opts)))
+
+    (cond
+      (not (h/symbol-node? binding-sym))
+      ;; it makes more sense here to report on the incoming node position instead of what we expect to be the binding-sym
+      (api/reg-finding! (assoc (meta node)
+                               :message "Expected binding symbol for driver"
                                :type :etaoin/binding-sym))
-      (let [leading-args (take bound-arg-ndx macro-args)
-            body (drop (inc bound-arg-ndx) macro-args)]
-        {:node (api/list-node
-                (list*
+
+      ;; we don't want to explicitly expect a map because the map might come from
+      ;; an evalution, but we can do some checks
+      (and opts ;; we'll assume a list-node is a function call (eval)
+           (not (nil-node? opts)) ;; nil is actually old-v1 syntax acceptable
+           (not (api/list-node? opts)) ;; some fn call
+           (not (h/symbol-node? opts)) ;; from a binding maybe
+           ;; there are other eval node types... @(something) for example... maybe we'll add them in if folks ask
+           (not (api/map-node? opts)))
+      ;; we can report directly on the opts node, because at this point we know we expect
+      ;; this arg position to be an opts map
+      (api/reg-finding! (assoc (meta opts)
+                               :message "When specified, opts should be a map"
+                               :type :etaoin/opts-map-type))
+
+      ;; one last nicety, if the first form in body is a map, the user has accidentally swapped
+      ;; binding and opt args
+      (api/map-node? (first body))
+      (api/reg-finding! (assoc (meta (first body))
+                               :message "When specified, opts must appear before binding symbol"
+                               :type :etaoin/opts-map-pos))
+
+      :else
+      {:node (api/list-node
+               (list*
                  (api/token-node 'let)
-                   ;; simulate the effect, macro is creating a new thing (driver for example)
-                   ;; via binding it. I don't think the bound value matters for the linting process
+                 ;; simulate the effect, macro is creating a new thing (driver for example)
+                 ;; via binding it. I don't think the bound value matters for the linting process
                  (api/vector-node [binding-sym (api/map-node [])])
-                   ;; reference the other args so that they are not linted as unused
+                 ;; reference the other args so that they are not linted as unused
                  (api/vector-node leading-args)
-                 body))}))))
+                 opts ;; might be a binding, so ref it too
+                 body))})))
 
 (defn- with-x-down
   "This is somewhat of a maybe an odd duck.
@@ -58,15 +92,15 @@
 
 (defn with-browser
   "Covers etaoin.api/with-chrome and all its variants
-  [opt bind & body]"
+  [opt? bind & body]"
   [{:keys [node]}]
-  (with-bound-arg node 1))
+  (with-bound-arg node 0))
 
 (defn with-driver
   "Very similar to with-browser but bound arg is 1 deeper
-  [type opt bind & body]"
+  [type opt? bind & body]"
   [{:keys [node]}]
-  (with-bound-arg node 2))
+  (with-bound-arg node 1))
 
 (defn with-key-down
   "[input key & body]"

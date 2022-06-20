@@ -333,7 +333,6 @@ Unless otherwise directed, our examples throughout the rest of this guide will a
 [source,clojure]
 ----
 (require '[etaoin.api :as e]
-         '[etaoin.api2 :as e2]
          '[etaoin.keys :as k]
          '[clojure.java.io :as io])
 
@@ -378,9 +377,7 @@ To prevent that, we recommend the `with-<browser>` macros:
 
 [source,clojure]
 ----
-(require '[etaoin.api2 :as e2])
-
-(e2/with-firefox [driver]
+(e/with-firefox driver
   (doto driver
     (e/go "https://google.com")
     ;; ... your code here
@@ -425,16 +422,14 @@ Let's say we want to create a chrome headless driver:
 (e/quit driver)
 ----
 
-The v2 API has ergonomic `with-<browser>` functions that handle cleanup nicely:
+The `with-<browser>` functions handle cleanup nicely:
 
 [source,clojure]
 ----
-(require '[etaoin.api2 :as e2])
-
-(e2/with-chrome [driver {:headless true}]
+(e/with-chrome {:headless true} driver
   (e/go driver "https://clojure.org"))
 
-(e2/with-chrome-headless [driver]
+(e/with-chrome-headless driver
   (e/go driver "https://clojure.org"))
 ----
 
@@ -1324,7 +1319,7 @@ For example, the default `:normal` strategy:
 
 [source,clojure]
 ----
-(e2/with-chrome [driver]
+(e/with-chrome driver
   (e/go driver sample-page)
   ;; by default you'll hang on this line until the page loads
   ;; (do-something)
@@ -1335,7 +1330,7 @@ Load strategy option of `:none`:
 
 [source,clojure]
 ----
-(e2/with-chrome [driver {:load-strategy :none}]
+(e/with-chrome {:load-strategy :none} driver
   (e/go driver sample-page)
   ;; no pause, no waiting, acts immediately
   ;; (do-something)
@@ -1557,9 +1552,9 @@ To start a driver with devtools support enabled specify a `:dev` map.
 //{:test-doc-blocks/test-ns user-guide-devtools-test}
 [source,clojure]
 ----
-(require '[etaoin.api2 :as e2])
+(require '[etaoin.api :as e])
 
-(e2/with-chrome [driver {:dev {}}]
+(e/with-chrome driver {:dev {}}
   ;; do some stuff
 )
 ----
@@ -2170,12 +2165,12 @@ There are several shortcuts to run Chrome or Firefox in headless mode:
 
 ;; or
 
-(require '[etaoin.api2 :as e2])
+(require '[etaoin.api :as e])
 
-(e2/with-chrome-headless [driver]
+(e/with-chrome-headless driver
   (e/go driver "https://clojure.org"))
 
-(e2/with-firefox-headless [driver {:log-level :all}] ;; extra settings
+(e/with-firefox-headless {:log-level :all} driver ;; notice extra settings
   (e/go driver "https://clojure.org"))
 ----
 
@@ -2184,7 +2179,7 @@ There are also the `when-headless` and `when-not-headless` macros that conditona
 //{:test-doc-blocks/test-ns user-guide-headless-test}
 [source,clojure]
 ----
-(e2/with-chrome [driver]
+(e/with-chrome driver
   (e/when-not-headless driver
     ;;... some actions that might be not available in headless mode
     )
@@ -2229,7 +2224,8 @@ Set a custom `User-Agent` header with the `:user-agent` option when creating a d
 
 [source,clojure]
 ----
-(e2/with-firefox [driver {:user-agent "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"}]
+(e/with-firefox {:user-agent "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"}
+                driver
   (e/get-user-agent driver))
 ;; => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"
 ----
@@ -2299,10 +2295,10 @@ Example:
 
 ;; Connect to a chrome instance on browserless.io via :webdriver-url
 ;; (replace YOUR-API-TOKEN with a valid browserless.io api token if you want to try this out)
-(e2/with-chrome [driver
-                 {:webdriver-url "https://chrome.browserless.io/webdriver"
-                  :capabilities {"browserless:token" "YOUR-API-TOKEN"
-                                 "chromeOptions" {"args" ["--no-sandbox"]}}}]
+(e/with-chrome {:webdriver-url "https://chrome.browserless.io/webdriver"
+                :capabilities {"browserless:token" "YOUR-API-TOKEN"
+                               "chromeOptions" {"args" ["--no-sandbox"]}}}
+               driver
   (e/go driver "https://en.wikipedia.org/")
   (e/wait-visible driver [{:id :simpleSearch} {:tag :input :name :search}])
   (e/fill driver {:tag :input :name :search} "Clojure programming language")
@@ -2414,13 +2410,12 @@ If for some reason you want to reuse a single driver instance for all tests:
 (ns project.test.integration
   "A module for integration tests"
   (:require [clojure.test :refer [deftest is use-fixtures]]
-            [etaoin.api :as e]
-            [etaoin.api :as e2]))
+            [etaoin.api :as e]))
 
 (def ^:dynamic *driver*)
 
 (defn fixture-browser [f]
-  (e2/with-chrome-headless [driver {:args ["--no-sandbox"]}]
+  (e/with-chrome-headless {:args ["--no-sandbox"]} driver
     (e/disconnect-driver driver)
     (binding [*driver* driver]
       (f))
@@ -2454,7 +2449,7 @@ For faster testing you can use this example:
 .....
 
 (defn fixture-browser [f]
-  (e2/with-chrome-headless [driver {:args ["--no-sandbox"]}]
+  (e/with-chrome-headless {:args ["--no-sandbox"]} driver
     (binding [*driver* driver]
       (f))))
 
@@ -2746,7 +2741,7 @@ Reproduction:: For example, `chromedriver` used to throw an error when calling `
 +
 [source,clojure]
 ----
-(e2/with-chrome [driver]
+(e/with-chrome driver
   (e/maximize driver))
 ;; an exception with "cannot get automation extension" was thrown
 ----
@@ -2851,7 +2846,7 @@ This bypasses OS security model.
 +
 [source,clojure]
 ----
-(e2/with-chrome [driver {:args ["--no-sandbox"]}]
+(e/with-chrome {:args ["--no-sandbox"]} driver
   (e/go driver "https://clojure.org"))
 ----
 

@@ -5,7 +5,6 @@
    [clojure.string :as str]
    [clojure.test :refer [deftest is]]
    [etaoin.api :as e]
-   [etaoin.api2 :as e2]
    [etaoin.impl.proc :as proc]
    [etaoin.test-report]))
 
@@ -47,7 +46,7 @@
   (let [port    9998
         process (proc/run ["chromedriver" (format "--port=%d" port)])
         _       (e/wait-running {:port port :host "localhost"})]
-    (e2/with-chrome [driver {:args ["--no-sandbox"]}]
+    (e/with-chrome {:args ["--no-sandbox"]} driver
       ;; added to diagnose flakyness on windows on CI
       (println "automatically chosen port->" (:port driver))
       ;; added to diagnose flakyness on windows on CI
