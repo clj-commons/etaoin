@@ -101,6 +101,9 @@
   **Screenshots**
   - [[screenshot]] [[screenshot-element]] [[with-screenshots]]
 
+  **Print to PDF**
+  - [[print-page]]
+
   **Browser Info**
   - [[supports-logs?]] [[get-log-types]] [[get-logs]]
   - [[get-user-agent]]
@@ -3204,6 +3207,57 @@
   (let [screenshot-form# `(screenshot ~driver (make-screenshot-file-path (:type ~driver) ~dir))
         new-body         (interleave body (repeat screenshot-form#))]
     `(do ~@new-body)))
+
+;;
+;; print current page to PDF
+;;
+
+(defmulti print-page
+  "Have `driver` print current HTML page to `file` in PDF format.
+
+  `file` can be either a string or `java.io.File`, any missing parent directories are automatically created.
+
+  `opts` map is optional:
+  - `:orientation` is `:landscape` or `:portrait` (default)
+  - `:scale` a number, defaults to `1`, min of `0.1`, max of `2`
+  - `:background` defaults to `false`
+  - `:page` (default is North American Letter size 8.5x11 inches)
+    - `:width` in cm, defaults to `21.59`
+    - `:height` in cm, defaults to `27.94`
+  - `:margin`
+    - `:top` in cm, defaults to`1`
+    - `:bottom` in cm, defaults to `1`
+    - `:left` in cm, defaults to `1`
+    - `:right` in cm, default to `1`
+  - `:shrinkToFit` defaults to `true`
+  - `:pageRanges` a vector, 1-based pages to include, example `[\"1-3\" \"6\"]` or `[]` for all (default)
+
+
+  At the time of this writing current WebDriver support:
+  - chrome, works in headless mode only, supports all opts
+  - edge, works in headless only, supports all opts
+  - firefox, might not support all opts
+  - safari, feature is not implemented"
+  {:arglists '([driver file] [driver file opts])}
+  dispatch-driver)
+
+(defmethod print-page
+  :default
+  [_driver _file & [_opts]]
+  (util/error "This driver doesn't support printing pages to PDF."))
+
+(defmethods print-page
+  [:chrome :edge :firefox]
+  [driver file & [opts]]
+  (let [resp   (execute {:driver driver
+                         :method :post
+                         :path   [:session (:session driver) :print]
+                         :data opts})
+        b64str (-> resp :value not-empty)]
+    (when (not b64str)
+      (util/error "Empty page"))
+    (create-dirs-for-file file)
+    (b64-to-file b64str file)))
 
 ;;
 ;; postmortem
