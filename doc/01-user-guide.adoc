@@ -1515,7 +1515,7 @@ Use `print-page` to print the current page to a PDF file:
   (e/print-page driver "target/etaoin-play/printed.pdf"))
 ----
 
-See link:{url-doc}/CURRENT/api/etaoin.api/print-page[API docs] for details.
+See link:{url-doc}/CURRENT/api/etaoin.api#print-page[API docs] for details.
 
 == Peeking deeper
 
