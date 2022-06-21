@@ -1504,6 +1504,19 @@ this is equivalent to something along the lines of:
 (e/screenshot driver "target/etaoin-play/saved-screenshots/chrome-3.png")
 ----
 
+== Print Page to PDF
+
+Use `print-page` to print the current page to a PDF file:
+
+[source,clojure]
+----
+(e/with-firefox-headless driver
+  (e/go driver sample-page)
+  (e/print-page driver "target/etaoin-play/printed.pdf"))
+----
+
+See link:{url-doc}/CURRENT/api/etaoin.api#print-page[API docs] for details.
+
 == Peeking deeper
 
 Sometimes it is useful to go a little deeper.
