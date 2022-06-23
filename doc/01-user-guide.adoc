@@ -2350,6 +2350,10 @@ A profile is a folder that keeps browser settings, history, bookmarks, and other
 
 Imagine, for example, that you'd like to run your integration tests against a user that turned off Javascript execution or image rendering.
 
+TIP: This is a hypothetical example.
+Turning off JavaScript will affect/break certain WebDriver features.
+And it can affect certain WebDriver implementations, https://github.com/clj-commons/etaoin/issues/363[for example].
+
 ==== Create and Find a Profile in Chrome
 
 . In the right top corner of the main window, click on a user button.
