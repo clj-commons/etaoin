@@ -3437,6 +3437,7 @@
   firefox [fatal, error, warn, info, config, debug, trace]
 
   -- `:log-stdout` and `:log-stderr`. Paths to the driver's log files as strings.
+  Specify `:inherit` to inherit destination from calling process (ex. console).
   When not set, the output goes to /dev/null (or NUL on Windows)
 
   -- `:args-driver` is a vector of additional arguments to the

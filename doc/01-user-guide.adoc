@@ -2072,6 +2072,8 @@ a| * phantomjs `"INFO"`
 
 a| `:log-stdout` and `:log-stderr` *WebDriver* stdout and stderr log files
 
+Specify `:inherit` to have WebDriver process output destination inherit from calling process (for example, the console).
+
 Example:
 [source,clojure]
 ----

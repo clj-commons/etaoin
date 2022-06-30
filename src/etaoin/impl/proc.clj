@@ -1,6 +1,7 @@
 (ns ^:no-doc etaoin.impl.proc
   (:require
-   [clojure.java.io :as io]
+   [babashka.fs :as fs]
+   [babashka.process :as p]
    [clojure.string :as str]))
 
 (def windows? (str/starts-with? (System/getProperty "os.name") "Windows"))
@@ -8,41 +9,54 @@
 (defn- get-null-file ^java.io.File
   []
   (if windows?
-    (io/file "NUL")
-    (io/file "/dev/null")))
+    (fs/file "NUL")
+    (fs/file "/dev/null")))
 
-(defn- get-log-file ^java.io.File
-  [file-path]
-  (if file-path
-    (io/file file-path)
-    (get-null-file)))
+(defn- redirect-opts [val std-key std-file-key]
+  (cond-> {}
+    (= :inherit val)
+    (assoc std-key :inherit)
 
-(defn- java-params ^"[Ljava.lang.String;" [params]
-  (->> params
-       (map str)
-       (into-array String)))
+    (string? val)
+    (assoc std-key :write
+           std-file-key (fs/file val))
+
+    (nil? val)
+    (assoc std-key :write
+           std-file-key (fs/file (get-null-file)))))
 
 (defn run
   ([args] (run args {}))
   ([args {:keys [log-stdout log-stderr env]}]
-   (let [binary      (first args)
-         readme-link "https://github.com/clj-commons/etaoin#installing-the-browser-drivers"
-         pb          (java.lang.ProcessBuilder. (java-params args))
-         pb-env      (.environment pb)]
-     (when env
-       (doseq [[k v] env]
-         (.put pb-env (name k) (str v))))
-     (.redirectOutput pb (get-log-file log-stdout))
-     (.redirectError pb  (get-log-file log-stderr))
+   (let [p-opts (cond-> (redirect-opts log-stdout :out :out-file)
+                  :always (merge (redirect-opts log-stderr :err :err-file))
+                  env (assoc :extra-env env))
+         binary (first args)
+         user-guide-link "https://github.com/clj-commons/etaoin/blob/master/doc/01-user-guide.adoc#installing-the-browser-webdrivers"]
      (try
-       (.start pb)
-       (catch java.io.IOException e
+       (p/process args p-opts)
+       (catch Throwable e
+         ;; not sure if folks will see this helpful message...
          (throw (ex-info
-                  (format "Cannot find a binary file `%s` for the driver.
-Please ensure you have the driver installed and specify the path to it.
-For driver installation, check out the official readme file from Etaoin: %s" binary readme-link)
-                  {:args args} e)))))))
+                 (format "Failed to launch WebDriver binary `%s`.
+Please ensure you have the driver installed.
+If it is not on the PATH specify its location.
+For driver installation, check out the Etaoin user guide: %s" binary user-guide-link)
+                 {:args args} e)))))))
 
-(defn kill [^Process proc]
-  (.destroy proc)
-  (.waitFor proc))
+(defn kill
+  "Ask `p` to die. Use [[result]] to get exit code if you need it."
+  [p]
+  (p/destroy p)
+  @p)
+
+(defn result
+  "Call after killing to get result of `p`.
+  If you call before killing you'll wait until p dies naturally, which a WebDriver should not do, so don't do that."
+  [p]
+  @p)
+
+(defn alive?
+  "Check if `p` has died unexpectedly, use [[result]] to get result."
+  [p]
+  (.isAlive (:proc p)))
