@@ -95,8 +95,9 @@
 
 (defn set-capabilities
   [driver caps]
-  (update driver :capabilities deep-merge caps))
-
+  (if caps
+    (update driver :capabilities deep-merge caps)
+    driver))
 
 (defn set-load-strategy
   [driver strategy]

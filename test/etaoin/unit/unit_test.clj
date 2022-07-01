@@ -7,33 +7,89 @@
    [etaoin.ide.flow :as ide]
    [etaoin.ide.impl.spec :as spec]
    [etaoin.impl.proc :as proc]
+   [etaoin.impl.util :as util]
    [etaoin.test-report]))
 
-(deftest test-firefox-driver-args
+(deftest test-driver-options
   (with-redefs
-   [etaoin.impl.proc/run  (fn [_ _])
+   [etaoin.impl.proc/run  (fn [_ _] {:some :process})
     e/wait-running     identity
     e/create-session   (fn [_ _] "session-key")
     proc/kill identity
-    e/delete-session   identity]
-    (testing "Session"
+    e/delete-session   identity
+    util/get-free-port (constantly 12345)]
+    (testing "defaults"
       (e/with-firefox driver
-        (is (= "session-key"
-               (:session driver)))))
-    (testing "No custom args"
+        (is (= {:args ["geckodriver" "--port" 12345]
+                :capabilities {:loggingPrefs {:browser "ALL"}}
+                :host "127.0.0.1"
+                :locator "xpath"
+                :port 12345
+                :process {:some :process}
+                :session "session-key"
+                :type :firefox
+                :url "http://127.0.0.1:12345"} driver))))
+    (testing "port"
       (e/with-firefox {:port 1234} driver
         (is (= ["geckodriver" "--port" 1234]
                (:args driver)))))
-    (testing "Default `--marionette-port` is assigned when `:profile` is specified"
+    (testing "when host, default to port for driver, process options are not relevant"
+      (e/with-firefox {:host "somehost"} driver
+        (is (= {:host "somehost"
+                :locator "xpath"
+                :port 4444
+                :session "session-key"
+                :type :firefox
+                :url "http://somehost:4444"} driver))))
+    (testing "default `--marionette-port` is assigned when `:profile` is specified"
       (e/with-firefox {:port 1234 :profile "/tmp/firefox-profile/1"} driver
         (is (= ["geckodriver" "--port" 1234 "--marionette-port" 2828]
                (:args driver)))))
-    (testing "Custom `--marionette-port` is assigned when `:profile` is specified"
+    (testing "custom `--marionette-port` is assigned when `:profile` is specified"
       (e/with-firefox {:port 1234
                        :profile     "/tmp/firefox-profile/1"
                        :args-driver ["--marionette-port" 2821]} driver
         (is (= ["geckodriver" "--port" 1234 "--marionette-port" 2821]
-               (:args driver)))))))
+               (:args driver)))))
+    (testing "capabilities are deep merged"
+      (with-redefs
+       [e/defaults-global (assoc e/defaults-global :capabilities {:default-firefox :val1
+                                                                  :some {:deeper {:thing0 0
+                                                                                  :thing1 1
+                                                                                  :thing2 2
+                                                                                  :thing3 3}}})
+        e/defaults (assoc-in e/defaults [:firefox :capabilities] {:default-global :val2
+                                                                  :some {:deeper {:thing0 10
+                                                                                  :thing3 30
+                                                                                  :thing4 40}}})]
+        (e/with-firefox {:capabilities {:specified :val2
+                                        :some {:deeper {:thing1 100
+                                                        :thing3 300
+                                                        :thing5 500}}}
+                         :desired-capabilities {:specified-desired :val3
+                                                :some {:deeper {:thing3 3000
+                                                                :thing6 6000}}}} driver
+          (is (= {:args ["geckodriver" "--port" 12345],
+                  :capabilities
+                  {:default-firefox :val1
+                   :default-global :val2
+                   :loggingPrefs {:browser "ALL"},
+                   :some {:deeper {:thing0 10
+                                   :thing1 100
+                                   :thing2 2
+                                   :thing3 3000
+                                   :thing4 40
+                                   :thing5 500
+                                   :thing6 6000}}
+                   :specified :val2
+                   :specified-desired :val3}
+                  :host "127.0.0.1"
+                  :locator "xpath"
+                  :port 12345
+                  :process {:some :process}
+                  :session "session-key"
+                  :type :firefox
+                  :url "http://127.0.0.1:12345"} driver)))))))
 
 (deftest test-chrome-profile
   (fs/with-temp-dir [chrome-dir {:prefix "chrome-dir"}]

@@ -8,7 +8,7 @@
   This is a rich API:
 
   **WebDriver**
-  - [[with-driver]] [[boot-driver]] [[defaults]] [[when-not-drivers]]
+  - [[with-driver]] [[boot-driver]] [[defaults]] [[defaults-global]] [[when-not-drivers]]
   - [[with-chrome]] [[with-chrome-headless]] [[chrome]] [[chrome-headless]] [[chrome?]] [[when-chrome]] [[when-not-chrome]]
   - [[with-edge]] [[with-edge-headless]] [[edge]] [[edge-headless]] [[when-edge]] [[when-not-edge]]
   - [[with-firefox]] [[with-firefox-headless]] [[firefox]] [[firefox-headless]] [[firefox?]] [[when-firefox]] [[when-not-firefox]]
@@ -163,22 +163,27 @@
 ;;
 ;; WebDriver defaults
 ;;
-
-(def ^{:doc "WebDriver defaults"} defaults
-  {:firefox {:port 4444
-             :path "geckodriver"}
-   :chrome  {:port 9515
-             :path "chromedriver"}
-   :phantom {:port 8910
-             :path "phantomjs"}
-   :safari  {:port 4445
-             :path "safaridriver"}
-   :edge    {:port 17556
-             :path "msedgedriver"}})
-
 (def ^:no-doc default-locator "xpath")
 (def ^:no-doc locator-xpath "xpath")
 (def ^:no-doc locator-css "css selector")
+
+(def ^{:doc "WebDriver global option defaults"} defaults-global
+  {:log-level :all
+   :locator default-locator})
+
+(def ^{:doc "WebDriver driver type specific option defaults.
+             Note that for locally launched WebDriver processes the default port is a random free port."}
+  defaults
+  {:firefox {:port 4444
+             :path-driver "geckodriver"}
+   :chrome  {:port 9515
+             :path-driver "chromedriver"}
+   :phantom {:port 8910
+             :path-driver "phantomjs"}
+   :safari  {:port 4445
+             :path-driver "safaridriver"}
+   :edge    {:port 17556
+             :path-driver "msedgedriver"}})
 
 ;;
 ;; utils
@@ -3348,7 +3353,6 @@
   [host port]
   (format "http://%s:%s" host port))
 
-
 (defn- -create-driver
   "Creates a new driver instance.
 
@@ -3369,31 +3373,23 @@
   -- `:host` is a string with either IP or hostname. Use it if the
   server is run not locally but somethere in your network.
 
-  -- `:port` is an integer value what HTTP port to use. It is taken
-  from the `defaults` global map if is not passed. If there is no
-  port in that map, a random-generated port is used.
+  -- `:port` is an integer value what HTTP port to use.
 
   -- `:webdriver-url` is a URL to a web-driver service. This URL is
   generally provided by web-driver service providers. When specified the
   `:host` and `:port` parameters are ignored.
 
   -- `:locator` is a string determs what algorithm to use by default
-  when finding elements on a page. `default-locator` variable is used
-  if not passed."
+  when finding elements on a page."
   [type & [{:keys [port host webdriver-url locator]}]]
-  (let [port    (or port
-                    (if host
-                      (get-in defaults [type :port])
-                      (util/get-free-port)))
-        host    (or host "127.0.0.1")
+  (let [host    (or host "127.0.0.1")
         url     (make-url host port)
-        locator (or locator default-locator)
-        driver  {:type          type
-                 :host          host
-                 :port          port
-                 :url           url
-                 :webdriver-url webdriver-url
-                 :locator       locator}]
+        driver  (util/assoc-some {:type   type
+                                  :host    host
+                                  :port    port
+                                  :url     url ;; NOTE: not great that this is also used on input to indicate default browser url
+                                  :locator locator}
+                                 :webdriver-url webdriver-url)]
     (if webdriver-url
       (log/debugf "Created driver: %s %s" (name type) (util/strip-url-creds webdriver-url))
       (log/debugf "Created driver: %s %s:%s" (name type) host port))
@@ -3420,15 +3416,14 @@
 
   - `opts` is an optional map with the following possible parameters:
 
-  -- `:path-driver` is a string path to the driver's binary file. When
-  not passed, it is taken from defaults.
+  -- `:path-driver` is a string path to the driver's binary file.
 
   -- `:path-browser` is a string path to the browser's binary
   file. When not passed, the driver discovers it by its own.
 
   -- `:log-level` a keyword to set browser's log level. Used when fetching
   browser's logs. Possible values are: `:off`, `:debug`, `:warn`, `:info`,
-  `:error`, `:all`. When not passed, `:all` is set.
+  `:error`, `:all`.
 
   -- `:driver-log-level` a keyword to set driver's log level.
   The value is a string. Possible values are:
@@ -3456,15 +3451,12 @@
                      path-browser
                      driver-log-level]}]]
 
-  (let [{:keys [type port host]} driver
+  (let [{:keys [port host]} driver
 
         _ (when (util/connectable? host port)
             (throw (ex-info
                      (format "Port %d already in use" port)
                      {:port port})))
-
-        log-level   (or log-level :all)
-        path-driver (or path-driver (get-in defaults [type :path]))
 
         driver    (cond-> driver
                     true             (drv/set-browser-log-level log-level)
@@ -3480,7 +3472,7 @@
         process   (proc/run proc-args {:log-stdout log-stdout
                                        :log-stderr log-stderr
                                        :env        env})]
-    (assoc driver :env env :process process)))
+    (util/assoc-some driver :env env :process process)))
 
 (defn- -connect-driver
   "Connects to a running Webdriver server.
@@ -3534,7 +3526,7 @@
 
   See https://www.w3.org/TR/webdriver/#capabilities"
   [driver & [{:keys [webdriver-url
-                     url
+                     url ;; NOTE: somewhat confusing because we also set a webdriver :url in returned driver
                      size
                      args
                      prefs
@@ -3548,7 +3540,6 @@
   (when (not webdriver-url)
     (wait-running driver))
   (let [type          (:type driver)
-        caps          (get-in defaults [type :capabilities])
         proxy         (proxy-env proxy)
         [with height] size
         driver        (cond-> driver
@@ -3561,9 +3552,12 @@
                         prefs         (drv/set-prefs prefs)
                         profile       (drv/set-profile profile)
                         user-agent    (drv/set-user-agent user-agent)
-                        :else
+                        :always
+                        ;; NOTE: defaults overriding specific capabilities potentially set by above seems suspect
+                        ;; but... maybe... not worth worrying about?
                         (->
-                         (drv/set-capabilities caps)
+                         (drv/set-capabilities (:capabilities defaults-global))
+                         (drv/set-capabilities (get-in defaults [type :capabilities]))
                          (drv/set-capabilities capabilities)
                          (drv/set-capabilities desired-capabilities)))
         caps          (:capabilities driver)
@@ -3576,7 +3570,6 @@
   Closes the current session that is stored in the driver if it still exists.
   Removes the session from `driver`."
   [driver]
-
   (try (delete-session driver)
        (catch Exception e
          (when (not (= 404 (:status (ex-data e))))
@@ -3599,15 +3592,24 @@
   - launches a WebDriver process (or connects to an existing running process if `:host` is specified)
   - creates a session for driver
 
+  Defaults taken from [[defaults-global]] then [[defaults]] for `type`:
+  `:port` - if `:host` not specified, port is randomly generated for local WebDriver process
+  `:capabilities` - are deep merged as part of connect logic.
+
   `opts` map is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   ([type]
    (boot-driver type {}))
   ([type {:keys [host webdriver-url] :as opts}]
-   (cond-> type
-     true                      (-create-driver opts)
-     (and (not host)
-          (not webdriver-url)) (-run-driver opts)
-     true                      (-connect-driver opts))))
+   (let [default-opts (cond-> (merge (dissoc defaults-global :capabilities)
+                                     (dissoc (type defaults) :capabilities))
+                        ;; if host, we are launching webdriver, default port is random
+                        (not host) (assoc :port (util/get-free-port)))
+         opts (merge default-opts opts)]
+     (cond-> type
+       :always                   (-create-driver opts)
+       (and (not host)
+            (not webdriver-url)) (-run-driver opts)
+       :always                   (-connect-driver opts)))))
 
 (defn quit
   "Have `driver` close the current session, then, if Etaoin launched it, kill the WebDriver process."

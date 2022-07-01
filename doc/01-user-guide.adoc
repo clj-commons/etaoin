@@ -1993,7 +1993,7 @@ If `:port` is found to  already in use when creating a new local WebDriver proce
 See also <<connecting-existing>>.
 
 Example: `:port 9997`
-a| Varies by vendor:
+a| Random port when lanching local WebDriver process, else varies by vendor:
 
 * chrome `9515`
 * firefox `4444`
