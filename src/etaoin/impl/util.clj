@@ -1,5 +1,9 @@
 (ns ^:no-doc etaoin.impl.util
-  (:import java.io.File))
+  (:import
+   [java.io File IOException]
+   [java.net InetSocketAddress ServerSocket Socket]))
+
+(set! *warn-on-reflection* true)
 
 (defn map-or-nil?
   [x]
@@ -37,20 +41,19 @@
    (error (apply format tpl args))))
 
 (defn get-free-port []
-  (let [socket (java.net.ServerSocket. 0)]
+  (let [socket (ServerSocket. 0)]
     (.close socket)
     (.getLocalPort socket)))
 
 (defn connectable?
-  "Checks whether it's possible to connect a given host/port pair."
+  "Returns `true` when it is possible to connect a given `host` over `port`."
   [host port]
-  (when-let [^java.net.Socket socket
-             (try
-               (java.net.Socket. ^String host ^int port)
-               (catch java.io.IOException _))]
-    (when (.isConnected socket)
-      (.close socket)
-      true)))
+  (with-open [socket (Socket.)]
+    (try
+      (.connect socket (InetSocketAddress. ^String host ^int port) 1000)
+      true
+      (catch IOException _e
+        false))))
 
 (defn exit
   [code template & args]

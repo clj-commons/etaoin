@@ -8,7 +8,8 @@
    [etaoin.ide.impl.spec :as spec]
    [etaoin.impl.proc :as proc]
    [etaoin.impl.util :as util]
-   [etaoin.test-report]))
+   [etaoin.test-report])
+  (:import [clojure.lang ExceptionInfo]))
 
 (deftest test-driver-options
   (with-redefs
@@ -101,9 +102,51 @@
 
 (deftest test-fail-run-driver
   (is (thrown-with-msg?
-        clojure.lang.ExceptionInfo
+        ExceptionInfo
         #"wrong-driver-path"
         (e/chrome {:path-driver "wrong-driver-path"}))))
+
+(deftest test-retry-launch
+  (testing "give up after max tries"
+    (let [run-calls (atom 0)]
+      (with-redefs
+        [etaoin.impl.proc/run  (fn [_ _]
+                                 (swap! run-calls inc)
+                                 {:some :process})
+         e/running? (fn [_] (throw (ex-info "firefox badness" {})))]
+        (is (thrown-with-msg?
+              ExceptionInfo
+              #"gave up trying to launch :firefox after 8 tries"
+              (e/with-firefox {:webdriver-failed-launch-retries 7} driver
+                driver)))
+        (is (= 8 @run-calls)))))
+  (testing "succeed before max tries"
+    (let [run-calls (atom 0)
+          succeed-when-calls 3]
+      (with-redefs
+        [etaoin.impl.proc/run  (fn [_ _]
+                                 (swap! run-calls inc)
+                                 {:some :process})
+         e/create-session   (fn [_ _] "session-key")
+         proc/kill identity
+         e/delete-session   identity
+         e/running? (fn [_]
+                      (if (< @run-calls succeed-when-calls)
+                        (throw (ex-info "safari badness" {}))
+                        true))
+         util/get-free-port (constantly 12345)]
+        ;; safari driver has a default of 4 retries
+        (e/with-safari driver
+          (is (= {:args ["safaridriver" "--port" 12345]
+                  :capabilities {:loggingPrefs {:browser "ALL"}}
+                  :host "127.0.0.1"
+                  :locator "xpath"
+                  :port 12345
+                  :process {:some :process}
+                  :session "session-key"
+                  :type :safari,
+                  :url "http://127.0.0.1:12345"} driver)))
+        (is (= succeed-when-calls @run-calls))))))
 
 (deftest test-actions
   (let [keyboard        (-> (e/make-key-input)

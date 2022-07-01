@@ -169,7 +169,8 @@
 
 (def ^{:doc "WebDriver global option defaults"} defaults-global
   {:log-level :all
-   :locator default-locator})
+   :locator default-locator
+   :webdriver-failed-launch-retries 0})
 
 (def ^{:doc "WebDriver driver type specific option defaults.
              Note that for locally launched WebDriver processes the default port is a random free port."}
@@ -181,7 +182,8 @@
    :phantom {:port 8910
              :path-driver "phantomjs"}
    :safari  {:port 4445
-             :path-driver "safaridriver"}
+             :path-driver "safaridriver"
+             :webdriver-failed-launch-retries 4}
    :edge    {:port 17556
              :path-driver "msedgedriver"}})
 
@@ -2216,12 +2218,22 @@
 (defn running?
   "Return true if `driver` seems accessable via its `:host` and `:port`.
 
-  Throws if using `:webdriver-url`"
+  Throws
+  - if using `:webdriver-url`
+  - if driver process is found not be running"
   [driver]
   (when (:webdriver-url driver)
     (throw (ex-info "Not supported for driver using :webdriver-url" {})))
+
+  (when-let [process (:process driver)]
+    (when-not (proc/alive? process)
+      (throw (ex-info (format "WebDriver process exited unexpectedly with a value: %d"
+                              (:exit (proc/result process)))
+                      {}))))
   (util/connectable? (:host driver)
                      (:port driver)))
+
+
 
 ;;
 ;; predicates
@@ -2599,7 +2611,9 @@
 (defn wait-running
   "Waits until `driver` is reachable via its host and port via [[running?]].
 
-  Throws if using `:webdriver-url`.
+  Throws
+  - if using `:webdriver-url`.
+  - if driver process is found to be no longer running while waiting
 
   - `opts`: see [[wait-predicate]] opts."
   [driver & [opts]]
@@ -2607,7 +2621,7 @@
     (throw (ex-info "Not supported for driver using :webdriver-url" {})))
   (log/debugf "Waiting until %s:%s is running"
               (:host driver) (:port driver))
-  (wait-predicate #(running? driver) opts))
+  (wait-predicate #(running? driver) (merge {:message "Wait until driver is running"} opts)))
 
 ;;
 ;; visible actions
@@ -3403,43 +3417,7 @@
       http (assoc :http http)
       ssl  (assoc :ssl ssl))))
 
-(defn- -run-driver
-  "Runs a driver process locally.
-
-  Creates a UNIX process with a Webdriver HTTP server. Host and port
-  are taken from a `driver` argument. Updates a driver instance with
-  new fields with process information. Returns modified driver.
-
-  Arguments:
-
-  - `driver` is a map created with `-create-driver` function.
-
-  - `opts` is an optional map with the following possible parameters:
-
-  -- `:path-driver` is a string path to the driver's binary file.
-
-  -- `:path-browser` is a string path to the browser's binary
-  file. When not passed, the driver discovers it by its own.
-
-  -- `:log-level` a keyword to set browser's log level. Used when fetching
-  browser's logs. Possible values are: `:off`, `:debug`, `:warn`, `:info`,
-  `:error`, `:all`.
-
-  -- `:driver-log-level` a keyword to set driver's log level.
-  The value is a string. Possible values are:
-  chrome: [ALL, DEBUG, INFO, WARNING, SEVERE, OFF]
-  phantomjs: [ERROR, WARN, INFO, DEBUG] (default INFO)
-  firefox [fatal, error, warn, info, config, debug, trace]
-
-  -- `:log-stdout` and `:log-stderr`. Paths to the driver's log files as strings.
-  Specify `:inherit` to inherit destination from calling process (ex. console).
-  When not set, the output goes to /dev/null (or NUL on Windows)
-
-  -- `:args-driver` is a vector of additional arguments to the
-  driver's process.
-
-  -- `:env` is a map with system ENV variables. Keys are turned into
-  upper-case strings."
+(defn- -run-driver*
   [driver & [{:keys [dev
                      env
                      log-level
@@ -3450,7 +3428,6 @@
                      download-dir
                      path-browser
                      driver-log-level]}]]
-
   (let [{:keys [port host]} driver
 
         _ (when (util/connectable? host port)
@@ -3473,6 +3450,66 @@
                                        :log-stderr log-stderr
                                        :env        env})]
     (util/assoc-some driver :env env :process process)))
+
+(defn- -run-driver
+  "Runs a driver process locally.
+
+  Creates a UNIX process with a Webdriver HTTP server. Host and port
+  are taken from a `driver` argument. Updates a driver instance with
+  new fields with process information. Returns modified driver.
+
+  Arguments:
+
+  - `driver` is a map created with `-create-driver` function.
+
+  - `opts` is an optional map with the following possible parameters:
+
+  -- `:path-driver` is a string path to the driver's binary file.
+
+  -- `:path-browser` is a string path to the browser's binary
+  file. When not passed, the driver discovers it by its own.
+
+  -- `:webdriver-failed-launch-retries` number of times to retry launching webdriver process.
+
+  -- `:log-level` a keyword to set browser's log level. Used when fetching
+  browser's logs. Possible values are: `:off`, `:debug`, `:warn`, `:info`,
+  `:error`, `:all`.
+
+  -- `:driver-log-level` a keyword to set driver's log level.
+  The value is a string. Possible values are:
+  chrome: [ALL, DEBUG, INFO, WARNING, SEVERE, OFF]
+  phantomjs: [ERROR, WARN, INFO, DEBUG] (default INFO)
+  firefox [fatal, error, warn, info, config, debug, trace]
+
+  -- `:log-stdout` and `:log-stderr`. Paths to the driver's log files as strings.
+  Specify `:inherit` to inherit destination from calling process (ex. console).
+  When not set, the output goes to /dev/null (or NUL on Windows)
+
+  -- `:args-driver` is a vector of additional arguments to the
+  driver's process.
+
+  -- `:env` is a map with system ENV variables. Keys are turned into
+  upper-case strings."
+  [driver {:keys [webdriver-failed-launch-retries] :as opts}]
+  (let [max-tries (inc webdriver-failed-launch-retries)]
+    (loop [try-num 1
+           ex nil]
+      (if (> try-num max-tries)
+        (throw (ex-info (format "gave up trying to launch %s after %d tries" (:type driver) max-tries) {} ex))
+        (do
+          (when ex
+            (log/warnf ex "unexpected exception occurred launching %s, try %d (of a max of %d)"
+                       (:type driver) (dec try-num) max-tries)
+            (Thread/sleep 100))
+          (let [driver (-run-driver* driver opts)
+                res (try
+                      (wait-running driver)
+                      (catch Exception e
+                        {:exception e}))]
+            (if (not (:exception res))
+              driver
+              (recur (inc try-num) (:exception res)))))))))
+
 
 (defn- -connect-driver
   "Connects to a running Webdriver server.
