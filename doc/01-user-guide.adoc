@@ -2032,6 +2032,12 @@ a| As you would expect, varies by vendor:
 Example: `:args-driver ["-b" "/path/to/firefox/binary"]`
 | <not set>
 
+| `:webdriver-failed-launch-retries`
+
+Introduced to compensate for mysterious but recoverable failed launches of safari driver.
+a| - safari `4` (for a total of 5 tries)
+- all other drivers `0`
+
 | `:path-browser` to *web browser* binary. +
 Typically used if your browser is not on the PATH.
 
