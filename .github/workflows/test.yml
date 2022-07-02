@@ -56,6 +56,9 @@ jobs:
     name: ${{ matrix.desc }}
 
     steps:
+    - name: Tune Windows network
+      if: ${{ matrix.os == 'windows' }}
+      run: Disable-NetAdapterChecksumOffload -Name * -TcpIPv4 -UdpIPv4 -TcpIPv6 -UdpIPv6
 
     - uses: actions/checkout@v3
 
@@ -69,7 +72,7 @@ jobs:
         key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
         restore-keys: cljdeps-
 
-    - name: "Install Missing Windows Bits"
+    - name: Install Missing Windows Bits
       if: ${{ matrix.os == 'windows' }}
       run: |
         Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
@@ -77,7 +80,7 @@ jobs:
         refreshenv
         Write-Output "$env:PATH" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-    - name: "Setup Java"
+    - name: Setup Java
       uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
