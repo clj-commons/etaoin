@@ -3,6 +3,7 @@
    [cheshire.core :as json]
    [clojure.string :as str]
    [clojure.tools.logging :as log]
+   [etaoin.impl.proc :as proc]
    [etaoin.impl.util :as util]
    #?(:bb [clj-http.lite.client :as client]
       :clj [clj-http.client :as client])
@@ -13,9 +14,9 @@
 ;;
 
 (def default-timeout
-  "HTTP timeout in seconds. The current value may seems to high,
+  "HTTP timeout in seconds. The current value may seem high,
   but according to my experience with SPA application full of React
-  modules even 20 seconds could not be enough for a driver to process
+  modules even 20 seconds can insufficient time for a driver to process
   your request."
   60)
 
@@ -70,6 +71,23 @@
     (parse-json body)
     body))
 
+(defn- realized-driver
+  "Realize process liveness (or actually deadness, if dead)"
+  [{:keys [process] :as driver}]
+  (try
+    (if (and process (not (proc/alive? process)))
+      (assoc driver :process (proc/result process))
+      driver)
+    (catch Throwable ex
+      ;; if, by chance, something goes wrong while trying to realize process liveness
+      (assoc driver :process-liveness-ex ex))))
+
+
+(defn http-request
+  "an isolated http-request to support mocking"
+  [params]
+  (client/request params))
+
 ;;
 ;; client
 ;;
@@ -98,25 +116,31 @@
                       (-> method name str/upper-case)
                       path
                       (-> payload (or "")))
-        resp  (client/request params)
-        body  #?(:bb (-> resp :body parse-json)
-                 :clj (:body resp))
-        error (delay {:type     :etaoin/http-error
-                      :status   (:status resp)
-                      :driver   driver
-                      :response (error-response body)
+        error (delay {:type     :etaoin/http-ex
+                      :driver   (realized-driver driver)
                       :webdriver-url webdriver-url
                       :host     host
                       :port     port
                       :method   method
                       :path     path
-                      :payload  payload})]
-    (cond
-      (-> resp :status (not= 200))
-      (throw+ @error)
+                      :payload  payload})
+        resp  (try (http-request params)
+                   (catch Throwable ex
+                     {:exception ex}))]
+    (if (:exception resp)
+      (throw+ @error (:exception resp))
+      (let [body  #?(:bb (some-> resp :body parse-json)
+                     :clj (:body resp))
+            error (delay (assoc @error
+                                :type :etaoin/http-error
+                                :status (:status resp)
+                                :response (error-response body)))]
+        (cond
+          (-> resp :status (not= 200))
+          (throw+ @error)
 
-      (-> body :status (or 0) (> 0))
-      (throw+ @error)
+          (-> body :status (or 0) (> 0))
+          (throw+ @error)
 
-      :else
-      body)))
+          :else
+          body)))))

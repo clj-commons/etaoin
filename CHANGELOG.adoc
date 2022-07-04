@@ -97,6 +97,7 @@ Other Changes
 * https://github.com/clj-commons/etaoin/pull/357[#357]: Add support for connecting to a remote WebDriver via `:webdriver-url` (thanks https://github.com/verma[@verma] for the PR and https://github.com/mjmeintjes[@mjmeintjes] for the example usage!)
 * https://github.com/clj-commons/etaoin/issues/355[#355]: Add support for W3C WebDriver print to PDF feature
 * https://github.com/clj-commons/etaoin/issues/466[#466]: WebDriver process output can now also be directed to console
+* https://github.com/clj-commons/etaoin/issues/468[#468]: Failed WebDriver process launch can now be automatically retried
 * https://github.com/clj-commons/etaoin/issues/453[#453]: The `etaoin.api/with-<browser>` macros no longer require `opts` to be specified.
 This makes the advantage of newer `etaoin.api2/with-<browser>` macros maybe less obvious.
 That said, for Etaoin users who have adopted and prefer the api2 versions, they are still there, but no longer documented in the user guide.
@@ -113,6 +114,7 @@ It also unconvered that our minimum Clojure version was 1.10, instead of the adv
 Fixed.
 * https://github.com/clj-commons/etaoin/issues/444[#444]: Visibility checks fixed for firefox and chrome (thanks https://github.com/daveyarwood[@daveyarwood]!)
 * https://github.com/clj-commons/etaoin/issues/455[#455]: Automatically create specified parent dirs for screenshots
+* https://github.com/clj-commons/etaoin/issues/469[#469]: Include WebDriver process liveness in http client exception
 * https://github.com/clj-commons/etaoin/issues/446[#446]: Bump Etaoin dependencies to current releases
 * Docs
 ** Reviewed and updated API docstrings

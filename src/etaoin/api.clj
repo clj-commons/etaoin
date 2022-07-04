@@ -3621,12 +3621,23 @@
   (proc/kill (:process driver))
   (dissoc driver :process :args :env :capabilities))
 
+(defn quit
+  "Have `driver` close the current session, then, if Etaoin launched it, kill the WebDriver process."
+  [driver]
+  (let [process (:process driver)]
+    (try
+      (disconnect-driver driver)
+      (finally
+        (when process
+          (stop-driver driver))))))
+
 (defn boot-driver
   "Launch and return a driver of `type` (e.g. `:chrome`, `:firefox` `:safari` `:edge` `:phantom`)
   with `opts` options.
 
   - creates a driver
-  - launches a WebDriver process (or connects to an existing running process if `:host` is specified)
+  - launches a WebDriver process (or connects to an existing running process if `:host`
+  or `:webdriver-url` is specified)
   - creates a session for driver
 
   Defaults taken from [[defaults-global]] then [[defaults]] for `type`:
@@ -3641,22 +3652,18 @@
                                      (dissoc (type defaults) :capabilities))
                         ;; if host, we are launching webdriver, default port is random
                         (not host) (assoc :port (util/get-free-port)))
-         opts (merge default-opts opts)]
-     (cond-> type
-       :always                   (-create-driver opts)
-       (and (not host)
-            (not webdriver-url)) (-run-driver opts)
-       :always                   (-connect-driver opts)))))
-
-(defn quit
-  "Have `driver` close the current session, then, if Etaoin launched it, kill the WebDriver process."
-  [driver]
-  (let [process (:process driver)]
-    (try
-      (disconnect-driver driver)
-      (finally
-        (when process
-          (stop-driver driver))))))
+         opts (merge default-opts opts)
+         driver (cond-> (-create-driver type opts)
+                  (and (not host) (not webdriver-url)) (-run-driver opts))]
+     (try
+       (-connect-driver driver opts)
+       (catch Throwable ex
+         (when (:process driver)
+           (try
+             (quit driver)
+             ;; silently ignore failure to quit driver on cleanup
+             (catch Throwable _ex)))
+         (throw ex))))))
 
 (def ^{:arglists '([] [opts])} firefox
   "Launch and return a Firefox driver.
