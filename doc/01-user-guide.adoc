@@ -2796,6 +2796,49 @@ Reproduction:: For example, `chromedriver` used to throw an error when calling `
 Cause:: This was a bug in `chromedriver` that was fixed in chromdriver v2.28.
 Solution:: Updating to the current WebDriver resolved the issue.
 
+=== New Versions of WebDrivers can Introduce Bugs
+
+[horizontal]
+Reproduction:: For example, `chromedriver` v103 started sporadically failing with `unknown error: cannot determine loading status\nfrom unknown error: unexpected command response`.
+
+Cause:: Likely a https://bugs.chromium.org/p/chromedriver/issues/detail?id=4121[bug in chromedriver]
+
+Solution:: Upgrade to newer version that fixes bug.
+For this particular bug I simply suffered retrying failed tests while waiting for newer version.
+
+=== Clicking on a Link Does not Work with Safari
+
+[horizontal]
+Reproduction:: An attempt to click on a link does nothing.
++
+Given the following HTML
++
+[source,html]
+----
+<div class="faculty_course_title" title="Course Title">
+ <a href="https://clojure.org">Course Title</a>
+</div>
+----
++
+An attempt to click on the link does nothing:
+//:test-doc-blocks/skip
++
+[source,clojure]
+----
+(e/click-single driver [{:tag :div :class "faculty_course_title"} {:tag :a}])
+----
+
+Cause:: Odd as it may seem, this is a long-standing (maybe on-again-off-again?) bug in `safaridriver`.
+
+Work-around:: You can, if you wish, employ JavaScript to click the link:
+//:test-doc-blocks/skip
++
+[source,clojure]
+----
+(let [elem (e/query driver [{:tag :div :class "faculty_course_title"} {:tag :a}])]
+  (e/js-execute driver "arguments[0].click()" (e/el->ref elem)))
+----
+
 === XPath and Searching from Root vs Current node
 
 Reproduction::
