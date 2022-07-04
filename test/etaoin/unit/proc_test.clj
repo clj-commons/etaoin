@@ -170,7 +170,8 @@
       (with-redefs [client/http-request (fn [_] (throw (ex-info "read timeout" {})))]
         ;; attempt connect, not launch
         (let [ex (try
-                   (e/with-chrome {:webdriver-url (format "http://localhost:%d" port) :args ["--no-sandbox"]} driver
+                   (e/with-chrome {:webdriver-url (format "http://localhost:%d" port)
+                                   :args ["--no-sandbox"]} _driver
                      (is false "should not get here"))
                    (catch Throwable ex
                      {:exception ex}))
