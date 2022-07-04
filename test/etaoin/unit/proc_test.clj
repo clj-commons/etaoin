@@ -136,7 +136,8 @@
                    {:exception ex}))
             exd (-> ex :exception ex-data)]
         (is (= :etaoin/http-ex (:type exd)))
-        (is (= 143 (-> exd :driver :process :exit)))
+        ;; actual exit code varies by OS and is not important for this test
+        (is (integer? (-> exd :driver :process :exit)))
         (is (= 0 (get-count-firefoxdriver-instances)))))))
 
 (deftest http-error-after-create-proc-now-dead
@@ -159,7 +160,8 @@
             exd (-> ex :exception ex-data)]
         (is (= :etaoin/http-error (:type exd)))
         (is (= 418 (:status exd)))
-        (is (= 143 (-> exd :driver :process :exit)))
+        ;; actual exit code varies by OS and is not important for this test
+        (is (integer? (-> exd :driver :process :exit)))
         (is (= 0 (get-count-firefoxdriver-instances)))))))
 
 (deftest test-cleanup-connect-existing-on-create-error
