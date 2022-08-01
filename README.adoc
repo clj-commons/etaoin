@@ -52,12 +52,23 @@ Ivan's blog-post about pitfalls that can occur when testing UI.
 
 == Who uses Etaoin?
 
+Some companies:
+
 * https://www.exoscale.com/[Exoscale]
 * https://www.flyerbee.com/[Flyerbee]
 * http://www.barrick.com/[Barrick Gold]
 * http://drevidence.com/[Doctor Evidence]
 * https://kevel.com/[Kevel (formerly Adzerk)]
 * https://www.rate.com/[Guaranteed Rate]
+
+Some examples usages:
+
+* Control a https://github.com/DaniruKun/spacex-iss-docking-sim-autopilot[SpaceX ISS Docking Simulator].
+* Automatically https://github.com/babashka/book/blob/9853d7ed1d72b328e30342f546071cd450035a3f/script/watch.clj[watch/refresh] the browser when making edits to https://book.babashka.org/[Babashka book].
+* Generate contributor badges for https://github.com/clj-commons/rewrite-clj#people[rewrite-clj], https://github.com/cljdoc/cljdoc#contributors[cljdoc] and https://github.com/lread/test-doc-blocks#people[test-doc-blocks] via a https://github.com/clj-commons/rewrite-clj/blob/1795a71b7f8937a1482cf63de7f8dd90579c2007/script/doc_update_readme.clj[doc-update-readme babashka task].
+* https://github.com/borkdude/re-find.web/blob/1a2cc409b2f2791324798f6e1adb13efc244b3e2/test/re_find/web_test.clj[Test browser behavior] for https://borkdude.github.io/re-find.web/[re-find.web].
+* https://github.com/quil/quil/blob/1f214e712d834ede311fdc652eafe9cc0232c96e/test/clj/quil/snippet.clj#L159[Test browser interactions] for https://github.com/quil/quil[Quil].
+* https://github.com/jarcane/clojurice/blob/96f6af795636903b543b9f29aaea586c49a776c6/test/clj/app/test/integration.clj[Integration tests] for https://github.com/jarcane/clojurice[clojurice].
 
 You are most welcome to submit your company or project to this list.
 
