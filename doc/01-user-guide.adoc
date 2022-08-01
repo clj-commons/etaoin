@@ -29,7 +29,15 @@ It is now currently under the loving care of https://github.com/lread[@lread] an
 
 If Etaoin is not your cup of tea, you might also consider:
 
+Clojure based:
+
 * https://github.com/tatut/clj-chrome-devtools[clj-chrome-devtools]
+
+Other:
+
+* https://www.selenium.dev/[Selenium]
+* https://playwright.dev/[Playwright]
+* https://pptr.dev/[Puppeteer]
 
 [[supported-os-browser]]
 === Supported OSes & Browsers
