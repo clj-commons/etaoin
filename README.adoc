@@ -3,7 +3,7 @@
 :project-src-coords: clj-commons/etaoin
 :project-mvn-coords: etaoin/etaoin
 :url-webdriver: https://www.w3.org/TR/webdriver/
-:url-wiki: https://en.wikipedia.org/wiki/Etaoin_shrdlu#Literature
+:url-short-story: https://archive.org/details/Unknown_v05n05_1942-02_slpn/page/n66/mode/1up
 :url-doc: https://cljdoc.org/d/{project-mvn-coords}
 :url-slack: https://clojurians.slack.com/messages/C7KDM0EKW/
 
@@ -14,7 +14,7 @@ https://clojars.org/{project-mvn-coords}[image:https://img.shields.io/clojars/v/
 https://babashka.org[image:https://raw.githubusercontent.com/babashka/babashka/master/logo/badge.svg[bb compatible]]
 https://clojurians.slack.com/archives/C7KDM0EKW[image:https://img.shields.io/badge/slack-join_chat-brightgreen.svg[Join chat]]
 
-A pure Clojure implementation of the link:{url-webdriver}[Webdriver] protocol, named after link:{url-wiki}[Etaoin Shrdlu] -- a typing machine that came to life after a mysterious note was produced on it.
+A pure Clojure implementation of the link:{url-webdriver}[Webdriver] protocol, named after link:{url-short-story}[Etaoin Shrdlu] -- a typing machine that came to life after a mysterious note was produced on it.
 
 Use the Etaoin library to automate a browser, test your frontend behaviour, simulate human actions or whatever you want.
 
