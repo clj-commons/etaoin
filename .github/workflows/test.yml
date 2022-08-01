@@ -62,7 +62,7 @@ jobs:
 
     - name: Install Ubuntu X11 Utils
       if: ${{ matrix.os == 'ubuntu' }}
-      run: sudo apt install x11-utils
+      run: sudo apt-get -y install x11-utils
 
     - uses: actions/checkout@v3
 
