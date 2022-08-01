@@ -2289,28 +2289,34 @@
        :arglists '([driver q & more])}
   absent? (complement exists?))
 
-;; TODO: I think we might have broken this! @lread
-(defn- effectively-displayed?
-  [driver el]
-  {:pre [(some? el)]}
-  (and (not= "none" (get-element-css-el driver el :display))
-       (not= "hidden" (get-element-css-el driver el :visibility))))
-
 (defmulti displayed-el?
-  "Return true if `driver` finds `el` is effectively displayed/visible.
+  "Return true if `driver` finds `el` is displayed/visible.
 
   See [[query]] for details on `q`.
 
-  Rather than checking the browser native `displayed` implementation, which
-  isn't 100% reliable, we are taking a pragmatic approach by checking the
-  `display` and `visibility` CSS properties."
+  Note: Safari webdriver has not implemented `displayed`, for it
+  we currently default to some naive CSS display/visibilty checks."
   {:arglists '([driver el])}
   dispatch-driver)
 
 (defmethod displayed-el? :default
   [driver el]
   {:pre [(some? el)]}
-  (effectively-displayed? driver el))
+  (:value (execute {:driver driver
+                    :method :get
+                    :path   [:session (:session driver) :element el :displayed]})))
+
+(defmethod displayed-el? :safari
+  [driver el]
+  {:pre [(some? el)]}
+  (cond
+    (= (get-element-css-el driver el :display)
+       "none")
+    false
+    (= (get-element-css-el driver el :visibility)
+       "hidden")
+    false
+    :else true))
 
 (defn displayed?
   "Return true if element found by `driver` with query `q` is effectively displayed."
