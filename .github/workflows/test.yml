@@ -60,6 +60,10 @@ jobs:
       if: ${{ matrix.os == 'windows' }}
       run: Disable-NetAdapterChecksumOffload -Name * -TcpIPv4 -UdpIPv4 -TcpIPv6 -UdpIPv6
 
+    - name: Install Ubuntu X11 Utils
+      if: ${{ matrix.os == 'ubuntu' }}
+      run: sudo apt install x11-utils
+
     - uses: actions/checkout@v3
 
     - name: Clojure deps cache
