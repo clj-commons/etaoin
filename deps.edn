@@ -1,7 +1,7 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.9.0"} ;; min clojure version
         babashka/fs {:mvn/version "0.1.6"}
-        babashka/process {:mvn/version "0.1.4"}
+        babashka/process {:mvn/version "0.1.7"}
         clj-http/clj-http {:mvn/version "3.12.3"} ;; for jvm use
         org.clj-commons/clj-http-lite {:mvn/version "0.4.392"} ;; for babashka use
         cheshire/cheshire {:mvn/version "5.11.0"}
@@ -39,22 +39,22 @@
                           "-d" "target/test-doc-blocks/test"]}
 
   ;; for consistent linting we use a specific version of clj-kondo through the jvm
-  :clj-kondo {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2022.05.31"}}
+  :clj-kondo {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2022.06.22"}}
               :main-opts ["-m" "clj-kondo.main"]}
 
-  :build {:deps {io.github.clojure/tools.build {:git/tag "v0.8.2" :git/sha "ba1a2bf"}
+  :build {:deps {io.github.clojure/tools.build {:git/tag "v0.8.3" :git/sha "0d20256"}
                  slipset/deps-deploy {:mvn/version "0.2.0"}}
           :ns-default build}
 
-  :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "1.6.774"}
+  :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "1.9.874"}
                           org.slf4j/slf4j-simple {:mvn/version "1.7.36"} ;; to rid ourselves of logger warnings
                           }
              :main-opts ["-m" "antq.core"]}
 
   :repl/cider
   {:extra-deps {nrepl/nrepl                {:mvn/version "0.9.0"}
-                cider/cider-nrepl          {:mvn/version "0.28.4"}
-                refactor-nrepl/refactor-nrepl {:mvn/version "3.5.2"}}
+                cider/cider-nrepl          {:mvn/version "0.28.5"}
+                refactor-nrepl/refactor-nrepl {:mvn/version "3.5.4"}}
    :jvm-opts ["-XX:-OmitStackTraceInFastThrow"]
    :main-opts  ["-m" "nrepl.cmdline"
                 "--middleware" "[refactor-nrepl.middleware/wrap-refactor,cider.nrepl/cider-middleware]"
