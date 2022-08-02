@@ -44,6 +44,7 @@
 
   :build {:deps {io.github.clojure/tools.build {:git/tag "v0.8.3" :git/sha "0d20256"}
                  slipset/deps-deploy {:mvn/version "0.2.0"}}
+          :extra-paths ["build"]
           :ns-default build}
 
   :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "1.9.874"}

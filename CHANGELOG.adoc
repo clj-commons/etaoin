@@ -132,6 +132,7 @@ Fixed.
 ** https://github.com/clj-commons/etaoin/issues/391[#391]: Identify browser name on failed ide tests
 ** https://github.com/clj-commons/etaoin/issues/390[#390]: Add internal clj-kondo config
 ** https://github.com/clj-commons/etaoin/issues/381[#381]: In addition to ubuntu, now also testing on macOS and Windows (using GitHub Actions https://github.com/clj-commons/etaoin/issues/392[#392] with parallelization https://github.com/clj-commons/etaoin/issues/420[#420])
+** https://github.com/clj-commons/etaoin/issues/422[#422]: Automate release workflow
 
 == v0.4.6
 

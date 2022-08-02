@@ -1,5 +1,5 @@
 {:min-bb-version "0.8.2"
- :paths ["script"]
+ :paths ["script" "build"]
  :deps {doric/doric {:mvn/version "0.9.0"}
         lread/status-line {:git/url "https://github.com/lread/status-line.git"
                            :sha "35ed39645038e81b42cb15ed6753b8462e60a06d"}
@@ -52,4 +52,6 @@
                                (str (fs/cwd) ":/etaoin")
                                "-w" "/etaoin"
                                "etaoin:latest"
-                               *command-line-args*)}}}
+                               *command-line-args*)}
+  ci-release     {:doc "release tasks, use --help for args"
+                  :task ci-release/-main }}}

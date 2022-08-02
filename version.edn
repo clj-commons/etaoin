@@ -1,0 +1,6 @@
+;; describes last release and is also a template for the next release
+;; :release is incremented by the release workflow is meant to represent the total number of releases
+;; omit :qualifier (ex. :qualifier "alpha") for official releases
+{:major 1
+ :minor 0
+ :release 37}

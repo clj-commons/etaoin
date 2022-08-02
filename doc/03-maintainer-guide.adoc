@@ -1,6 +1,66 @@
 = Maintainer Guide
 :toclevels: 5
 :toc:
+:url-release-action: https://github.com/clj-commons/etaoin/actions?query=workflow%3A%22Release%22 
 
 == Introduction
-Coming soon
+Notes for project maintainers.
+
+== Release Workflow
+
+The release workflow is handled by our link:{url-release-action}[Release] GitHub Action.
+
+. Fail fast if:
+.. Change log not ready
+. Bump `version.edn` for release version
+. Create thin jar using release version
+. Apply release version to the following docs:
+.. user guide for usage examples
+.. change log "unreleased" heading
+. Deploy jar to clojars
+. Commit changes made to docs and `version.edn`
+. Create and push a release tag back to the project repo
+. Inform cljdoc of the new release
+
+[IMPORTANT]
+====
+At this time, the release workflow does not run tests.
+The assumption is that you've waited for the last CI test run to complete and are happy with the results.
+====
+
+== Updating the Version
+
+Release num is bumped automatically by release workflow.
+
+Edit `major` and `minor` by editing `version.edn` in the project root.
+
+== Local Verification
+
+To check if things seeem ready:
+
+[source,shell]
+----
+bb ci-release validate
+----
+
+If you want to run everything up to, but not including, commit and push:
+
+[source,shell]
+----
+bb ci-release prep
+----
+
+IMPORTANT: You will NOT want to check in changes made by `prep`.
+
+== Special Setup
+
+GitHub has been configured with necessary secrets for GitHub Actions to deploy to clojars.
+
+== Invoking
+
+As a maintainer you should have sufficient privileges to see a "Run Workflow" dropdown button on the link:{url-release-action}[Release] action page.
+The dropdown will prompt for a branch.
+I did not see a way to disable this prompt, simply leave it at "master" and run the workflow.
+
+TIP: Don't forget to pull after a release to get the changes made by the release workflow.
+
