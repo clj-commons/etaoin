@@ -60,6 +60,12 @@ jobs:
       if: ${{ matrix.os == 'windows' }}
       run: Disable-NetAdapterChecksumOffload -Name * -TcpIPv4 -UdpIPv4 -TcpIPv6 -UdpIPv6
 
+    - name: Tune macOS network
+      if: ${{ matrix.os == 'macos' }}
+      run: |
+        sudo sysctl -w net.link.generic.system.hwcksum_tx=0
+        sudo sysctl -w net.link.generic.system.hwcksum_rx=0
+
     - name: Install Ubuntu X11 Utils
       if: ${{ matrix.os == 'ubuntu' }}
       run: sudo apt-get -y install x11-utils
