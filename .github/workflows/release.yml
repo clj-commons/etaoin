@@ -1,0 +1,77 @@
+name: Release
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    environment: release
+
+    runs-on: ubuntu-latest
+    # I do not know of a way to restrict to the main branch so try to skip the whole job if
+    # user selected some other branch from GitHub Actions GUI
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Setup Git User so that we can later commit
+      uses: fregante/setup-git-user@v1
+
+    - name: Clojure deps cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.m2/repository
+          ~/.deps.clj
+          ~/.gitlibs
+        key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
+        restore-keys: cljdeps-
+
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '11'
+
+    - name: Install Clojure Tools
+      uses: DeLaGuardo/setup-clojure@9.3
+      with:
+        bb: 'latest'
+
+    - name: Tools Versions
+      run: |
+        echo "bb --version"
+        bb --version
+        echo "java -version"
+        java -version
+
+    - name: Download Clojure Dependencies
+      run: bb download-deps
+
+    - name: Release Prep (step 1 of 4)
+      run: bb ci-release prep
+
+    - name: Release Deploy (step 2 of 4)
+      env:
+        CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
+        CLOJARS_PASSWORD: ${{ secrets.CLOJARS_PASSWORD }}
+      run: bb ci-release deploy-remote
+
+    - name: Release Commit (step 3 of 4)
+      run: bb ci-release commit
+
+    - name: Make GitHub Actions aware of target version tag
+      run: echo "::set-output name=tag::v$(bb clojure -T:build built-version)"
+      id: target-version
+
+    - name: Create GitHub release (step 4 of 4)
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.target-version.outputs.tag}}
+        release_name: ${{ steps.target-version.outputs.tag}}
+        commitish: main
