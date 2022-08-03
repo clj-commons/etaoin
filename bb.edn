@@ -1,5 +1,5 @@
 {:min-bb-version "0.8.2"
- :paths ["script" "build"]
+ :paths ["script"]
  :deps {doric/doric {:mvn/version "0.9.0"}
         lread/status-line {:git/url "https://github.com/lread/status-line.git"
                            :sha "35ed39645038e81b42cb15ed6753b8462e60a06d"}
