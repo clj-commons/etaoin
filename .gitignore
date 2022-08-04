@@ -27,3 +27,7 @@ build.xml
 # clj-kondo will copy our own exported config under resources to ./clj-kondo,
 # we don't need this duplicate.
 /.clj-kondo/etaoin
+
+# ignore lee's fiddling
+/fiddle.clj
+/fiddle/
