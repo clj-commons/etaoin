@@ -7,9 +7,9 @@ jobs:
     environment: release
 
     runs-on: ubuntu-latest
-    # I do not know of a way to restrict to the main branch so try to skip the whole job if
+    # I do not know of a way to restrict to the master branch so try to skip the whole job if
     # user selected some other branch from GitHub Actions GUI
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
 
     steps:
     - name: Checkout
@@ -74,4 +74,4 @@ jobs:
       with:
         tag_name: ${{ steps.target-version.outputs.tag}}
         release_name: ${{ steps.target-version.outputs.tag}}
-        commitish: main
+        commitish: master
