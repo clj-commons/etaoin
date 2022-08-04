@@ -5,7 +5,9 @@ A release with an intentional breaking changes is marked with:
 * [breaking] you probably need to change your code
 * [minor breaking] you likely don't need to change your code
 
-== Unreleased [minor breaking]
+== Unreleased
+
+== v1.0.38 [minor breaking]
 
 Minor Breaking Changes
 
@@ -134,6 +136,8 @@ Fixed.
 ** https://github.com/clj-commons/etaoin/issues/390[#390]: Add internal clj-kondo config
 ** https://github.com/clj-commons/etaoin/issues/381[#381]: In addition to ubuntu, now also testing on macOS and Windows (using GitHub Actions https://github.com/clj-commons/etaoin/issues/392[#392] with parallelization https://github.com/clj-commons/etaoin/issues/420[#420])
 ** https://github.com/clj-commons/etaoin/issues/422[#422]: Automate release workflow
+
+https://github.com/clj-commons/etaoin/compare/0.4.6\...v1.0.38[Full commit log]
 
 == v0.4.6
 
