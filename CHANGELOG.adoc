@@ -116,6 +116,7 @@ Fixed.
 * https://github.com/clj-commons/etaoin/issues/469[#469]: Include WebDriver process liveness in http client exception
 * https://github.com/clj-commons/etaoin/issues/446[#446]: Bump Etaoin dependencies to current releases
 * Docs
+** https://github.com/clj-commons/etaoin/issues/399[#399]: We now have an Etaoin logo! (a very nice parting gift from Etaoin's founder https://github.com/igrishaev[@igrishaev])
 ** Reviewed and updated API docstrings
 ** https://github.com/clj-commons/etaoin/issues/393[#393]: Add changelog
 ** https://github.com/clj-commons/etaoin/issues/426[#426]: Reorganize into separate guides
