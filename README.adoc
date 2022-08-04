@@ -1,3 +1,6 @@
+
+image::art/pattern-small.jpg[]
+
 = Etaoin
 :toclevels: 4
 :project-src-coords: clj-commons/etaoin
