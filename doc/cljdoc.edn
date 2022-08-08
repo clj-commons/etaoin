@@ -3,5 +3,7 @@
   ["Changelog" {:file "CHANGELOG.adoc"}]
   ["User Guide" {:file "doc/01-user-guide.adoc"}]
   ["Developer Guide" {:file "doc/02-developer-guide.adoc"}]
+  ["Contributing" {:file "CONTRIBUTING.md"}]
+  ["Code of Conduct" {:file "CODE_OF_CONDUCT.md"}]
   ["Maintainer Guide" {:file "doc/03-maintainer-guide.adoc"}]]
  :cljdoc/languages ["clj"]}
