@@ -64,7 +64,7 @@ jobs:
       run: bb ci-release commit
 
     - name: Make GitHub Actions aware of target version tag
-      run: echo "::set-output name=tag::v$(bb clojure -T:build built-version)"
+      run: echo "tag=v$(bb clojure -T:build built-version)" >> $GITHUB_OUTPUT
       id: target-version
 
     - name: Create GitHub release (step 4 of 4)
