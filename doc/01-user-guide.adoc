@@ -2410,7 +2410,46 @@ Once you've got a profile path, launch a driver with the `:profile` key as follo
 (def firefox-driver (e/firefox {:profile ff-profile}))
 ----
 
-== Writing Integration Tests For Your Application
+== Writing and Running Integration Tests For Your Application
+
+=== Headless Testing [[headless-testing]]
+Is is not unusual for Continuous Integration services to have no display.
+This seems to be especially true for Linux runners.
+
+When running your tests on Linux with no display, you have 2 choices:
+
+* run the WebDriver in <<headless,headless>> mode
+* use a virtual display
+
+NOTE: Things being what they are, WebDrivers can behave differently when run headless.
+
+The technologies we use for Etaoin's CI testing on GitHub Actions for Linux are:
+
+* Xvfb - acts as an X virtual display
+* fluxbox - a lightweight windows manager (needed by geckodriver/Firefox to support window positioning operations)
+
+You can see how we make use of these tools in the Etaoin link:/script/test.clj[test script], but in a nutshell:
+
+To install:
+[source,shell]
+----
+sudo apt get install -y xvfb fluxbox
+----
+
+TIP: As of this writing Xvfb is pre-installed on the linux runner on GitHub Actions, but fluxbox is not.
+
+Ensure `DISPLAY` env var is set:
+[source,shell]
+----
+export DISPLAY=:99.0
+----
+
+Launch the virtual display and fluxbox:
+[source,shell]
+----
+Xvfb :99 -screen 0 1024x768x24 &
+fluxbox -display :99 &
+----
 
 === Basic Fixture
 

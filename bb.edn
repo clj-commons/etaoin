@@ -51,6 +51,7 @@
                                "docker run -it --rm -v"
                                (str (fs/cwd) ":/etaoin")
                                "-w" "/etaoin"
+                               "--entrypoint" "/bin/bash"
                                "etaoin:latest"
                                *command-line-args*)}
   ci-release     {:doc "release tasks, use --help for args"

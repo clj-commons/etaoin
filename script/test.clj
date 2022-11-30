@@ -63,6 +63,12 @@
               (Thread/sleep 500)
               (recur))))))))
 
+(defn- launch-fluxbox []
+  (if (fs/which "fluxbox")
+    (process/process "fluxbox -display :99" {:out (fs/file "/dev/null")
+                                             :err (fs/file "/dev/null")})
+    (status/die 1 "fluxbox not found")))
+
 (defn- running-in-docker? []
   (fs/exists? "/.dockerenv"))
 
@@ -148,7 +154,8 @@ Notes:
               test-cmd-args (concat cp-args test-runner-args)]
           (when virtual-display?
             (status/line :head "Launching virtual display")
-            (launch-xvfb))
+            (launch-xvfb)
+            (launch-fluxbox))
           (status/line :head "Running %s tests on %s%s"
                        test-id
                        platform
