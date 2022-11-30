@@ -1,4 +1,4 @@
-FROM eclipse-temurin:8
+FROM clojure:temurin-17-tools-deps
 
 RUN apt-get -yqq update && \
     apt-get -yqq upgrade && \
@@ -9,6 +9,7 @@ RUN apt-get -yqq update && \
     apt-get -yqq install git xvfb curl unzip && \
     apt-get -yqq install fonts-ipafont-gothic xfonts-100dpi xfonts-75dpi xfonts-scalable xfonts-cyrillic && \
     apt-get install -y ca-certificates jq libfontconfig libgconf-2-4 && \
+    apt-get install -y fluxbox && \
     rm -rf /var/lib/apt/lists/*
 
 # This dockerfile is not amenable to layer updates because nothing changes
