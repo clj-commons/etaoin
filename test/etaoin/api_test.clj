@@ -52,8 +52,9 @@
 ;; tests failed in safari 13.1.1 https://bugs.webkit.org/show_bug.cgi?id=202589 use STP newest
 (defn fixture-browsers [f]
   (let [url (-> "html/test.html" io/resource str)]
-    (doseq [type drivers]
-      (e/with-driver type (get default-opts type {}) driver
+    (doseq [type drivers
+            :let [opts (get default-opts type {})]]
+      (e/with-driver type opts driver
         (e/go driver url)
         (e/wait-visible driver {:id :document-end})
         (binding [*driver* driver
