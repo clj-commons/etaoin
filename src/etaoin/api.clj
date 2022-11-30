@@ -2453,7 +2453,7 @@
   (#_{:clj-kondo/ignore [:unused-binding]} [driver seconds]
    (wait seconds))
   ([seconds]
-   (Thread/sleep (* seconds 1000))))
+   (Thread/sleep ^long (* seconds 1000))))
 
 (defmacro with-wait
   "Execute `body` waiting `seconds` before each form.
