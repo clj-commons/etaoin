@@ -1,47 +1,11 @@
 (ns test
-  (:require [babashka.fs :as fs]
+  "Prep and launch for bb and jvm tests"
+  (:require [babashka.cli :as cli]
+            [babashka.fs :as fs]
             [babashka.process :as process]
-            [cheshire.core :as json]
             [clojure.string :as string]
-            [doric.core :as doric]
-            [helper.main :as main]
             [helper.shell :as shell]
             [lread.status-line :as status]))
-
-(defn- test-def [os id platform browser]
-  {:os os
-   :cmd (->> ["bb test" id
-              (str "--platform=" platform)
-              (when browser (str "--browser=" browser))
-              (when (= "ubuntu" os) "--launch-virtual-display")]
-             (remove nil?)
-             (string/join " "))
-   :desc (->> [id os browser platform]
-              (remove nil?)
-              (string/join " "))})
-
-(defn- github-actions-matrix []
-  (let [oses ["macos" "ubuntu" "windows"]
-        ide-browsers ["chrome" "firefox"]
-        api-browsers ["chrome" "firefox" "edge" "safari"]
-        platforms ["jvm" "bb"]]
-    (->> (concat
-          (for [os oses
-                platform platforms]
-            (test-def os "unit" platform nil))
-          (for [os oses
-                platform platforms
-                browser ide-browsers]
-            (test-def os "ide" platform browser))
-          (for [os oses
-                platform platforms
-                browser api-browsers
-                :when (not (or (and (= "ubuntu" os) (some #{browser} ["edge" "safari"]))
-                               (and (= "windows" os) (= "safari" browser))))]
-            (test-def os "api" platform browser)))
-         (sort-by :desc)
-         (into [{:os "ubuntu" :cmd "bb lint" :desc "lint"}
-                {:os "macos" :cmd "bb test-doc" :desc "test-doc"}]))))
 
 (defn- launch-xvfb []
   (if (fs/which "Xvfb")
@@ -72,100 +36,121 @@
 (defn- running-in-docker? []
   (fs/exists? "/.dockerenv"))
 
+(defn- str-coll [coll]
+  (string/join ", " coll))
+
 (def valid-browsers ["chrome" "firefox" "edge" "safari"])
-(def valid-platforms ["jvm" "bb"])
+(def valid-suites ["api" "ide" "unit"])
 
-(defn valid-opts [opts]
-  (format "<%s>" (string/join "|" opts)))
+(def cli-spec {:help {:desc "This usage help" :alias :h}
+               :browsers {:ref "<name>"
+                          :desc (str "Browsers to test against: " (str-coll valid-browsers))
+                          :coerce []
+                          :alias :b
+                          :validate {:pred #(every? (set valid-browsers) %)
+                                     :ex-msg (fn [_m]
+                                               (str "--browsers must specify from: " valid-browsers))}}
+               :suites {:ref "<id>"
+                        :desc (str "Suites to run: " (str-coll valid-suites))
+                        :coerce []
+                        :alias :s
+                        :validate {:pred #(every? (set valid-suites) %)
+                                   :ex-msg (fn [_m]
+                                             (str "--suites must specify from: " valid-suites))}}
+               :launch-virtual-display {:desc "Launch virtual display support for browsers (linux)"
+                                        :alias :l}
+               ;; cognitect test runner pass-thru opts
+               :nses {:ref "<symbols>"
+                      :coerce [:symbol]
+                      :alias :n
+                      :desc "Symbol(s) indicating a specific namespace to test."}
+               :patterns {:ref "<regex strings>"
+                          :coerce [:string]
+                          :alias :p
+                          :desc "Regex(es) for namespaces to test."}
+               :vars {:ref "<symbols>"
+                      :coerce [:symbol]
+                      :alias :v
+                      :desc "Symbol(s) indicating fully qualified name of a specific test"}})
 
-(def args-usage (-> "Valid args:
-  (api|ide) [--browser=BROWSER]... [--launch-virtual-display] [--platform=PLATFORM]
-  (unit|all) [--launch-virtual-display] [--platform=PLATFORM]
-  matrix-for-ci [--format=json]
-  --help
+(defn- usage-help[]
+  (status/line :head "Usage help")
+  (status/line :detail "Run tests")
+  (status/line :detail (cli/format-opts {:spec cli-spec :order [:browsers :suites :help]}))
+  (status/line :detail "\nCognitect test-runner args are also supported (if not specifying --suites):")
+  (status/line :detail (cli/format-opts {:spec cli-spec :order [:nses :patterns :vars]}))
 
-Commands:
-  unit           Run unit tests
-  api            Run api tests
-  ide            Run ide tests
-  all            Run all tests using browser defaults
-  matrix-for-ci  Return text matrix for GitHub Actions
+  (status/line :detail "\nNotes
+- ide tests default to (and support) firefox and chrome only (other browsers will be ignored).
+- api tests default browsers based on OS on which they are run .
+- unit tests pay no attention to --browsers, but do rely on firefox and chrome.
+- launching a virtual display is automatic when in docker"))
 
-Options:
-  --browser=BROWSER          {{valid-browsers}} overrides defaults
-  --platform=PLATFORM        {{valid-platforms}} [default: jvm]
-  --launch-virtual-display   Launch a virtual display for browsers
-  --help                     Show this help
+(defn- usage-fail [msg]
+  (status/line :error msg)
+  (usage-help)
+  (System/exit 1))
 
-Notes:
-- ide tests default to firefox and chrome only.
-- api tests default browsers based on OS on which they are run.
-- launching a virtual display is automatic when in docker"
-                    (string/replace "{{valid-browsers}}" (valid-opts valid-browsers))
-                    (string/replace "{{valid-platforms}}" (valid-opts valid-platforms))))
+(defn- parse-opts [args]
+  (let [opts (cli/parse-opts args {:spec cli-spec
+                                   :restrict true
+                                   :error-fn (fn [{:keys [msg]}]
+                                               (usage-fail msg))})]
+    (when-let [extra-gunk (-> (meta opts) :org.babashka/cli)]
+      (usage-fail (str "unrecognized on the command line: " (pr-str extra-gunk))))
+    (when (and (seq (:suites opts))
+               (seq (select-keys opts [:nses :patterns :vars])))
+      (usage-fail "--suites and cognitect test-runner opts are mutually exclusive"))
 
-(defn -main [& args]
-  (when-let [opts (main/doc-arg-opt args-usage args)]
-    (let [browsers (->> (get opts "--browser") (keep identity))
-          platform (get opts "--platform")]
-      (when (or (not-every? (set valid-browsers) browsers)
-                (and platform (not (some #{platform} valid-platforms))))
-        (status/die 1 args-usage))
-      (cond
-        (get opts "matrix-for-ci")
-        (if (= "json" (get opts "--format"))
-          (status/line :detail (-> (github-actions-matrix)
-                                   (json/generate-string #_{:pretty true})))
-          (status/line :detail (->> (github-actions-matrix)
-                                    (doric/table [:os :cmd :desc]))))
+    opts))
 
-        :else
-        (let [virtual-display? (or (get opts "--launch-virtual-display")
-                                   (running-in-docker?))
-              env (cond-> {}
-                    (seq browsers)
-                    (assoc (if (get opts "api")
-                             "ETAOIN_TEST_DRIVERS"
-                             "ETAOIN_IDE_TEST_DRIVERS")
-                           (mapv keyword browsers))
+(defn- opts->args [opts]
+  (->> (select-keys opts [:nses :patterns :vars]) 
+       (reduce (fn [acc [k v]]
+                 (apply conj acc k v))
+               [])))
 
-                    virtual-display?
-                    (assoc "DISPLAY" ":99.0"))
-              shell-opts (if (seq env)
-                           {:extra-env env}
-                           {})
-              test-id (cond
-                        (get opts "api") "api"
-                        (get opts "ide") "ide"
-                        (get opts "unit") "unit"
-                        :else "all")
-              cp-args (case platform
-                        "jvm" ["-M:test"]
-                        "bb" (let [aliases (cond-> ":script:bb-test:test"
-                                             (not= "api" test-id) (str ":bb-spec"))]
-                               ["--classpath"
-                                (with-out-str (shell/clojure "-Spath" (str "-A" aliases)))
-                                "--main" "bb-test-runner"]))
-              test-runner-args (case test-id
-                                 "api" ["--namespace-regex" "etaoin.api.*-test$"]
-                                 "ide" ["--namespace" "etaoin.ide-test"]
-                                 "unit" ["--namespace-regex" ".*unit.*-test$"]
-                                 "all" [])
-              test-cmd-args (concat cp-args test-runner-args)]
-          (when virtual-display?
-            (status/line :head "Launching virtual display")
-            (launch-xvfb)
-            (launch-fluxbox))
-          (status/line :head "Running %s tests on %s%s"
-                       test-id
-                       platform
-                       (if (seq browsers)
-                         (str " against browsers: " (string/join ", " browsers))
-                         ""))
-          (case platform
-            "jvm" (apply shell/clojure shell-opts test-cmd-args)
-            "bb" (apply shell/command shell-opts "bb" test-cmd-args)))))))
+(defn- prep [args]
+  (let [opts (parse-opts args)]
+    (if (:help opts)
+      (usage-help)
+      (let [browsers (:browsers opts)
+            virtual-display? (or (:launch-virtual-display opts)
+                                 (running-in-docker?) )
+            suites (set (:suites opts))
+            env (cond-> {}
+                  (seq browsers)
+                  (assoc "ETAOIN_TEST_DRIVERS" (mapv keyword browsers)
+                         "ETAOIN_IDE_TEST_DRIVERS" (mapv keyword browsers))
+                  virtual-display?
+                  (assoc "DISPLAY" ":99.0"))
+            shell-opts (if (seq env)
+                         {:extra-env env}
+                         {})
+            test-runner-args (cond-> (opts->args opts)
+                               (suites "api") (concat ["--patterns" "etaoin.api.*-test$"])
+                               (suites "ide") (concat ["--nses" "etaoin.ide-test"])
+                               (suites "unit") (concat ["--patterns" ".*unit.*-test$"])
+                               :always vec)]
 
-(main/when-invoked-as-script
- (apply -main *command-line-args*))
+        (when virtual-display?
+          (status/line :head "Launching virtual display")
+          (launch-xvfb)
+          (launch-fluxbox))
 
+        (status/line :head "Running tests")
+        (status/line :detail "suites: %s" (if (seq suites) (str-coll (sort suites)) "<none specified>"))
+        (status/line :detail "browsers: %s" (if (seq browsers) (str-coll (sort browsers)) "<defaults>"))
+        (status/line :detail "runner-args: %s" test-runner-args)
+
+        {:shell-opts shell-opts :test-runner-args test-runner-args}))))
+
+;; Entry points
+
+(defn test-bb [& args]
+  (when-let [{:keys [shell-opts test-runner-args]} (prep args)]
+    (apply shell/command shell-opts "bb -test:bb" test-runner-args)))
+
+(defn test-jvm [& args]
+  (when-let [{:keys [shell-opts test-runner-args]} (prep args)]
+    (apply shell/clojure shell-opts "-M:test" test-runner-args)))

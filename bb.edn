@@ -11,24 +11,48 @@
              [clojure.string :as string]
              [helper.shell :as shell]
              [lread.status-line :as status])
-  :enter (let [{:keys [name]} (current-task)] (status/line :head "TASK %s %s" name (string/join " " *command-line-args*)))
-  :leave (let [{:keys [name]} (current-task)] (status/line :detail "\nTASK %s done." name))
+  :enter (let [{:keys [name]} (current-task)]
+           (when-not (string/starts-with? name "-")
+             (status/line :head "TASK %s %s" name (string/join " " *command-line-args*))))
+  :leave (let [{:keys [name]} (current-task)]
+           (when-not (string/starts-with? name "-")
+             (status/line :detail "\nTASK %s done." name)))
 
   ;; commands
-
-  dev            {:doc "start a Clojure nrepl server/prompt"
+  dev:jvm        {:doc "start a Clojure nrepl server/prompt"
                   :task (shell/command "clj" "-M:test:repl/cider")}
-  bb-dev         {:doc "start a Babashka nrepl server"
-                  :task (let [cp (-> (shell/clojure "-Spath -M:test:bb-spec:bb-test")
-                                     with-out-str)
-                              bbcp (cp/get-classpath)]
-                          (shell/command "bb"
-                                         "--classpath" (str cp fs/path-separator bbcp)
-                                         "--nrepl-server"))}
-  test           {:doc "run all or a subset of tests, use --help for args"
-                  :task test/-main}
+  dev:bb         {:doc "start a Babashka nrepl server"
+                  ;; repeat :test paths from deps.edn
+                  :extra-paths ["test" "env/test/resources"]
+                  :extra-deps  {;; inherit base deps from deps.edn
+                                etaoin/etaoin {:local/root "."}
+                                ;; repeat necessary :test deps from deps.edn
+                                io.github.cognitect-labs/test-runner {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+                  :task (babashka.nrepl.server/start-server!)}
+  test:jvm       {:doc "Runs tests under JVM Clojure [--help]"
+                  :task test/test-jvm}
+
+  -test:bb       {:doc "bb test runner, invoked within script/test.clj"
+                  :requires ([taoensso.timbre :as timbre])
+                  ;; repeat :test paths from deps.edn
+                  :extra-paths ["test" "env/test/resources"]
+                  :extra-deps  {;; inherit base deps from deps.edn
+                                etaoin/etaoin ({:local/root "."})
+                                ;; repeat necessary :test deps from deps.edn
+                                io.github.cognitect-labs/test-runner {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+                  :task (do
+                          ;; timbre default logging level is debug, which generates a lot of http logging noise
+                          (timbre/set-level! :info)
+                          (exec 'cognitect.test-runner.api/test))
+                  :org.babashka/cli {:coerce {:nses [:symbol]
+                                              :patterns [:string]
+                                              :vars [:symbol]}}}
+  test:bb        {:doc "Runs tests under Babashka [--help]"
+                  :task test/test-bb}
   test-doc       {:doc "test code blocks in user guide"
                   :task test-doc/-main}
+  test-matrix    {:doc "Returns a test matrix for CI [--help]"
+                  :task test-matrix/-main}
   drivers        {:doc "[list|kill] any running WebDrivers"
                   :task drivers/-main}
   lint           {:doc "[--rebuild] lint source code"
@@ -49,10 +73,10 @@
   docker-run     {:doc "run etaoin docker image (specify no commmands for interactive)"
                   :task (apply shell/command {:continue true}
                                "docker run -it --rm -v"
-                               (str (fs/cwd) ":/etaoin")
-                               "-w" "/etaoin"
-                               "--entrypoint" "/bin/bash"
-                               "etaoin:latest"
-                               *command-line-args*)}
+                               (cond-> [(str (fs/cwd) ":/etaoin")
+                                        "-w" "/etaoin"]
+                                 (when-not (seq *command-line-args*)) (conj "--entrypoint" "/bin/bash")
+                                 :always (conj "etaoin:latest")
+                                 :always (concat *command-line-args*)))}
   ci-release     {:doc "release tasks, use --help for args"
                   :task ci-release/-main }}}

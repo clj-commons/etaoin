@@ -11,6 +11,7 @@ A release with an intentional breaking changes is marked with:
 * bumped Etaoin dependencies
 * docs:
 ** https://github.com/clj-commons/etaoin/issues/447[#447]: Describe testing without a display in the link:doc/01-user-guide.adoc#headless-testing[user guide], including a new requirement for a windows manager when using a virtual display on Linux
+** https://github.com/clj-commons/etaoin/issues/507[#507]: The current version of babashka, which is the only one we support, no longer requires the a dependency to the babashka spec.alpha fork to use the Etaoin ide feature. Tests and docs updated accordingly.
 
 == v1.0.38 [minor breaking]
 

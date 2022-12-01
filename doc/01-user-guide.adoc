@@ -108,18 +108,6 @@ Add the following under `:deps` to your `bb.edn` file:
    etaoin/etaoin {:mvn/version "{lib-version}"}
 ----
 
-The Etaoin feature to <<selenium-ide, run Selenium IDE files>> employs clojure spec.
-If you are using this feature, you'll need to also enable clojure spec support in Babashka by adding `babashka/spec.alpha` to your `bb.edn` `:deps`:
-
-//:test-doc-blocks/skip
-[source,clojure]
-----
-   org.babashka/spec.alpha {:git/url "https://github.com/babashka/spec.alpha"
-                            :sha "8df0712896f596680da7a32ae44bb000b7e45e68"}
-----
-
-See https://github.com/babashka/spec.alpha[babashka/spec.alpha] for current docs.
-
 :url-webdriver: https://www.w3.org/TR/webdriver/
 :url-tests: https://github.com/{project-src-coords}/blob/master/test/etaoin/api_test.clj
 :url-chromedriver: https://sites.google.com/chromium.org/driver/
