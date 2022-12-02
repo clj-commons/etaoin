@@ -67,9 +67,6 @@ All documentation is written in AsciiDoc.
 
 We host our docs on cljdoc and have support for <<cljdoc-preview,previewing>>
 
-
-
-
 == Babashka Tasks
 
 We use Babashka tasks, to see all available tasks run:
@@ -84,13 +81,13 @@ bb tasks
 For a Clojure REPL
 [source,shell]
 ----
-bb dev
+bb dev:jvm
 ----
 
 For a babashka REPL
 [source,shell]
 ----
-bb bb-dev
+bb dev:bb
 ----
 
 === Checking Tools Versions
@@ -105,17 +102,15 @@ bb tools-versions
 [[running-tests]]
 === Runing tests
 
-The `test` task provides a coarse grained facility to invoke tests.
-It was written to satisfy the use case of running tests in parallel on GitHub Actions.
-
+Use the `test:jvm` and `test:bb` tasks to invoke tests.
 
 [source,shell]
 ----
-bb test --help
+bb test:jvm --help
+bb test:bb --help
 ----
 
-We'll likely add finer grained test selection to satisfy developer needs.
-For now, temporarily tweak `./script/test.clj` if you need to.
+You can choose to invoke a test suite or individual tests.
 
 ==== Testing User Guide Code Blocks
 

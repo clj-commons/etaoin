@@ -4,6 +4,7 @@
         babashka/process {:mvn/version "0.3.11"}
         clj-http/clj-http {:mvn/version "3.12.3"} ;; for jvm use
         org.clj-commons/clj-http-lite {:mvn/version "1.0.13"} ;; for babashka use
+        slingshot/slingshot {:mvn/version "0.12.2"}
         cheshire/cheshire {:mvn/version "5.11.0"}
         org.clojure/tools.cli {:mvn/version "1.0.214"}
         org.clojure/tools.logging {:mvn/version "1.2.4"}}
@@ -12,17 +13,16 @@
   :debug {:extra-paths ["env/dev/resources"]}
   :test {:extra-paths ["test" "env/test/resources"]
          :extra-deps {io.github.cognitect-labs/test-runner {:git/tag "v0.5.1" :git/sha "dfb30dd"}
+                      org.babashka/cli {:mvn/version "0.5.40"}
                       ch.qos.logback/logback-classic {:mvn/version "1.4.5"}
                       ;; for http-client which uses apache http client 4.x which uses commons logging
                       org.slf4j/jcl-over-slf4j {:mvn/version "2.0.5"}}
-         :main-opts ["-m" "cognitect.test-runner"]}
+         :exec-fn cognitect.test-runner.api/test
+         :org.babashka/cli {:coerce {:nses [:symbol]
+                                     :patterns [:string]
+                                     :vars [:symbol]}}
+         :main-opts ["-m" "babashka.cli.exec"]}
   :script {:extra-paths ["script"]}
-  ;; for babashka testing, needed for etaoin.ide
-  :bb-spec {:extra-deps {org.babashka/spec.alpha {:git/url "https://github.com/babashka/spec.alpha"
-                                                  :sha "8df0712896f596680da7a32ae44bb000b7e45e68"}}}
-  ;; for babashka testing, allows us to use cognitect test-runner
-  :bb-test {:extra-deps {org.clojure/tools.namespace {:git/url "https://github.com/babashka/tools.namespace"
-                                                      :git/sha "16b8c53174a5c9d89d6e0ce4128aa30b071aabdf"}}}
 
   ;; test-doc-blocks - gen tests
   :test-doc-blocks {:replace-deps {org.clojure/clojure {:mvn/version "1.11.1"}

@@ -11,12 +11,17 @@
 (def ^:dynamic *base-url*)
 (def ^:dynamic *test-file-path*)
 
+(defn get-default-drivers
+  "Default and supported drivers for ide tests"
+  []
+  [:firefox :chrome])
+
 (defn get-drivers-from-env []
   (when-let [override (System/getenv "ETAOIN_IDE_TEST_DRIVERS")]
-    (edn/read-string override)))
-
-(defn get-default-drivers []
-  [:firefox :chrome])
+    (->> override
+         edn/read-string
+         ;; ignore drivers we can't support for these tests
+         (filter #(some #{%} (get-default-drivers))))))
 
 (def drivers
   (or (get-drivers-from-env)
