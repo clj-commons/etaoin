@@ -1,7 +1,9 @@
 (ns ^:no-doc etaoin.impl.proc
   (:require
    [babashka.fs :as fs]
-   [babashka.process :as p]
+   #?@(:bb [[babashka.process :as p]]
+       :clj [[babashka.process :as p]
+             [babashka.process.pprint]]) ;; to support exception rendering in REPL
    [clojure.string :as str]))
 
 (def windows? (str/starts-with? (System/getProperty "os.name") "Windows"))
