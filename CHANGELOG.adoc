@@ -8,6 +8,7 @@ A release with an intentional breaking changes is marked with:
 == Unreleased
 
 * https://github.com/clj-commons/etaoin/issues/503[#503]: Address Clojure interop issue introduced by new Thread/sleep signature in JDK 19
+* https://github.com/clj-commons/etaoin/issues/513[#513]: Fix rendering of exception when used from REPL
 * bumped Etaoin dependencies
 * docs:
 ** https://github.com/clj-commons/etaoin/issues/447[#447]: Describe testing without a display in the link:doc/01-user-guide.adoc#headless-testing[user guide], including a new requirement for a windows manager when using a virtual display on Linux
