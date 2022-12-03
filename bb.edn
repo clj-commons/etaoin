@@ -75,7 +75,7 @@
                                "docker run -it --rm -v"
                                (cond-> [(str (fs/cwd) ":/etaoin")
                                         "-w" "/etaoin"]
-                                 (when-not (seq *command-line-args*)) (conj "--entrypoint" "/bin/bash")
+                                 (not (seq *command-line-args*)) (conj "--entrypoint" "/bin/bash")
                                  :always (conj "etaoin:latest")
                                  :always (concat *command-line-args*)))}
   ci-release     {:doc "release tasks, use --help for args"
