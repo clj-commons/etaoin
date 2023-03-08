@@ -3,7 +3,7 @@
 = User Guide
 :toclevels: 5
 :toc:
-:lib-version: 1.0.39
+:lib-version: 1.0.40
 :project-src-coords: clj-commons/etaoin
 :project-mvn-coords: etaoin/etaoin
 :url-webdriver: https://www.w3.org/TR/webdriver/
