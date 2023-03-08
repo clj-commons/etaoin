@@ -7,6 +7,8 @@ A release with an intentional breaking changes is marked with:
 
 == Unreleased
 
+* https://github.com/clj-commons/etaoin/issues/524[#524]: fix failure in bb related to `Thread/sleep` interop in JDK19
+
 == v1.0.39
 
 * https://github.com/clj-commons/etaoin/issues/503[#503]: Address Clojure interop issue introduced by new Thread/sleep signature in JDK 19
