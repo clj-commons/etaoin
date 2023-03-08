@@ -65,7 +65,8 @@
                                                (System/exit 1))})]
     (if (:help opts)
       (usage-help)
-      (let [matrix (github-actions-matrix)]
+      (let [matrix (->> (github-actions-matrix)
+                        (filter #(= "test-doc" (:desc %))))]
         (status/line :detail
                      (if (= "json" (:format opts))
                        (json/generate-string matrix)
