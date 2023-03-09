@@ -83,14 +83,6 @@ jobs:
         key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
         restore-keys: cljdeps-
 
-    - name: Install Missing Windows Bits
-      if: ${{ matrix.os == 'windows' }}
-      run: |
-        Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
-        choco install --no-progress --yes imagemagick
-        refreshenv
-        Write-Output "$env:PATH" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
     - name: Setup Java
       uses: actions/setup-java@v3
       with:
