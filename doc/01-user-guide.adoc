@@ -108,6 +108,20 @@ Add the following under `:deps` to your `bb.edn` file:
    etaoin/etaoin {:mvn/version "{lib-version}"}
 ----
 
+[TIP]
+====
+Babashka uses https://github.com/ptaoussanis/timbre[timbre] for logging.
+Timbre's default logging level is debug.
+For a quieter Etaoin experience when using babashka, set the timbre default log level to info:
+
+//:test-doc-blocks/skip
+[source,clojure]
+----
+(require '[taoensso.timbre :as timbre])
+(timbre/set-level! :info)
+----
+====
+
 :url-webdriver: https://www.w3.org/TR/webdriver/
 :url-tests: https://github.com/{project-src-coords}/blob/master/test/etaoin/api_test.clj
 :url-chromedriver: https://sites.google.com/chromium.org/driver/
