@@ -1,6 +1,13 @@
 name: Test
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+    # remove default synchronize type to avoid double triggering,
+    # push trigger is enough
+    types:
+      - opened
+      - reopened
 
 jobs:
   setup:
