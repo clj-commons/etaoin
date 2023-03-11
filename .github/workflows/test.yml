@@ -2,15 +2,23 @@ name: Test
 
 on:
   push:
+    branches:
+      - "**"
+    tags:
+      - "!**" # only the publish flow triggers on tags
   pull_request:
-    # remove default synchronize type to avoid double triggering,
-    # push trigger is enough
+    # default activity types are: synchronized, opened, reopened
+    # remove synchronized to avoid double triggering on PRs commits (push trigger is enough)
     types:
       - opened
       - reopened
 
 jobs:
   setup:
+    # run if:
+    # - not a publish commit (i.e. version bumps to various files)
+    # - or invoked by publish GitHub actions workflow
+    if: ${{ !startsWith(github.event.head_commit.message, 'publish:') || startsWith(github.ref, 'refs/tags/v') }}
     runs-on: ubuntu-latest
 
     outputs:
