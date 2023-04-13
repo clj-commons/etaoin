@@ -29,7 +29,7 @@ jobs:
         java-version: '11'
 
     - name: Install Clojure Tools
-      uses: DeLaGuardo/setup-clojure@10.1
+      uses: DeLaGuardo/setup-clojure@10.3
       with:
         bb: 'latest'
 
@@ -90,7 +90,7 @@ jobs:
         java-version: '11'
 
     - name: Install Clojure Tools
-      uses: DeLaGuardo/setup-clojure@10.1
+      uses: DeLaGuardo/setup-clojure@10.3
       with:
         bb: 'latest'
 
