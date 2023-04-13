@@ -94,9 +94,13 @@ jobs:
       with:
         bb: 'latest'
 
+    # Delete the following step and associated code when GHA fixes the mismatch
+    - name: Workaround GitHub Actions Edge Browser/WebDriver version mismatch on Windows
+      if: ${{ matrix.os == 'windows' }}
+      run: bb -gha-win-edge-workaround
+
     - name: Tools versions
       run: bb tools-versions
 
     - name: Run Tests
-      # To see all commands: bb test matrix-for-ci
       run: ${{ matrix.cmd }}

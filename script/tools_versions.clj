@@ -129,18 +129,21 @@
         (update version-result :version version-post-fn)))
     {:error (format "bin not found: %s" app)}))
 
+(defn versions []
+  (for [{:keys [name] :as t} (map #(merge tool-defaults %) tools)
+               :when (expected-on-this-os t)
+               :let [{:keys [error path version]} (resolve-tool t)]]
+           (if error
+             {:name name :path path :version (format "** ERROR: %s **",error)}
+             {:name name :path path :version version})))
+
 (defn -main
   "Report on tools versions based the the OS the script it is run from.
   Currently informational only, should always return 0 unless, of course,
   something exceptional happens."
   [& args]
   (when (main/doc-arg-opt args)
-    (->> (for [{:keys [name] :as t} (map #(merge tool-defaults %) tools)
-               :when (expected-on-this-os t)
-               :let [{:keys [error path version]} (resolve-tool t)]]
-           (if error
-             {:name name :path path :version (format "** ERROR: %s **",error)}
-             {:name name :path path :version version}))
+    (->> (versions)
          table-multilines->rows
          (doric/table [:name :version :path])
          println)))
