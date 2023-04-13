@@ -1,7 +1,7 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.9.0"} ;; min clojure version
-        babashka/fs {:mvn/version "0.2.12"}
-        babashka/process {:mvn/version "0.3.11"}
+        babashka/fs {:mvn/version "0.3.17"}
+        babashka/process {:mvn/version "0.4.16"}
         clj-http/clj-http {:mvn/version "3.12.3"} ;; for jvm use
         org.clj-commons/clj-http-lite {:mvn/version "1.0.13"} ;; for babashka use
         slingshot/slingshot {:mvn/version "0.12.2"}
@@ -13,10 +13,10 @@
   :debug {:extra-paths ["env/dev/resources"]}
   :test {:extra-paths ["test" "env/test/resources"]
          :extra-deps {io.github.cognitect-labs/test-runner {:git/tag "v0.5.1" :git/sha "dfb30dd"}
-                      org.babashka/cli {:mvn/version "0.5.40"}
-                      ch.qos.logback/logback-classic {:mvn/version "1.4.5"}
+                      org.babashka/cli {:mvn/version "0.6.50"}
+                      ch.qos.logback/logback-classic {:mvn/version "1.4.6"}
                       ;; for http-client which uses apache http client 4.x which uses commons logging
-                      org.slf4j/jcl-over-slf4j {:mvn/version "2.0.5"}}
+                      org.slf4j/jcl-over-slf4j {:mvn/version "2.0.7"}}
          :exec-fn cognitect.test-runner.api/test
          :org.babashka/cli {:coerce {:nses [:symbol]
                                      :patterns [:string]
@@ -39,22 +39,22 @@
                           "-d" "target/test-doc-blocks/test"]}
 
   ;; for consistent linting we use a specific version of clj-kondo through the jvm
-  :clj-kondo {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2022.11.02"}}
+  :clj-kondo {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2023.03.17"}}
               :main-opts ["-m" "clj-kondo.main"]}
 
-  :build {:deps {io.github.clojure/tools.build {:git/tag "v0.8.5" :git/sha "9c738da"}
-                 slipset/deps-deploy {:mvn/version "0.2.0"}}
+  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.9.4"}
+                 slipset/deps-deploy {:mvn/version "0.2.1"}}
           :ns-default build}
 
-  :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "2.2.962"}
+  :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version  "2.3.1043"}
                           org.clojure/clojure {:mvn/version "1.11.1"}
-                          org.slf4j/slf4j-simple {:mvn/version "2.0.5"} ;; to rid ourselves of logger warnings
+                          org.slf4j/slf4j-simple {:mvn/version "2.0.7"} ;; to rid ourselves of logger warnings
                           }
              :main-opts ["-m" "antq.core"]}
 
   :repl/cider
   {:extra-deps {nrepl/nrepl                {:mvn/version "1.0.0"}
-                cider/cider-nrepl          {:mvn/version "0.28.7"}
+                cider/cider-nrepl          {:mvn/version "0.30.0"}
                 refactor-nrepl/refactor-nrepl {:mvn/version "3.6.0"}}
    :jvm-opts ["-XX:-OmitStackTraceInFastThrow"]
    :main-opts  ["-m" "nrepl.cmdline"

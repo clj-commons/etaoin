@@ -7,6 +7,8 @@ A release with an intentional breaking changes is marked with:
 
 == Unreleased
 
+* bump all deps to current versions
+
 == v1.0.40
 
 * https://github.com/clj-commons/etaoin/issues/524[#524]: fix failure in bb related to `Thread/sleep` interop in JDK19

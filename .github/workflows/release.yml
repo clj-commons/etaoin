@@ -18,7 +18,7 @@ jobs:
         fetch-depth: 0
 
     - name: Setup Git User so that we can later commit
-      uses: fregante/setup-git-user@v1
+      uses: fregante/setup-git-user@v2.0.1
 
     - name: Clojure deps cache
       uses: actions/cache@v3
@@ -37,7 +37,7 @@ jobs:
         java-version: '11'
 
     - name: Install Clojure Tools
-      uses: DeLaGuardo/setup-clojure@10.1
+      uses: DeLaGuardo/setup-clojure@10.3
       with:
         bb: 'latest'
 
