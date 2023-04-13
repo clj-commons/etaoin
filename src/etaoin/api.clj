@@ -2956,10 +2956,14 @@
                     :arg     q-text}))))
 
 (defn select
-  "Have `driver` select option with matching `text` for select element found by query `q`.
-  The select element is clicked, then the option.
+  "Convenience function to have `driver` select first option that includes `text` for select element found by query `q`.
 
-  See [[query]] for details on `q`."
+  To appease a quirk of the Safari WebDriver, we click on the select element first, then the option.
+  Other WebDriver implementations do not seem to need, but are not negatively impacted by, the click on the select element.
+
+  See [[query]] for details on `q`.
+
+  See [User Guide](/doc/01-user-guide.adoc#select-dropdown) for other ways to select options from dropdowns."
   [driver q text]
   (let [select-el (query driver q)]
     (click-el driver select-el)
