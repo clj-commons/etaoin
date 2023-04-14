@@ -484,18 +484,18 @@
         ;; Safari Webdriver v16.4 added sameSite, we'll ignore it for now
         (let [cookies (map #(dissoc % :sameSite) cookies)]
           (is (= cookies
-               [{:domain   ".^filecookies^"
-                 :secure   false
-                 :httpOnly false
-                 :value    "test1"
-                 :path     "/"
-                 :name     "cookie1"}
-                {:domain   ".^filecookies^"
-                 :secure   false
-                 :httpOnly false
-                 :value    "test2"
-                 :path     "/"
-                 :name     "cookie2"}]))))
+                 [{:domain   ".^filecookies^"
+                   :secure   false
+                   :httpOnly false
+                   :value    "test1"
+                   :path     "/"
+                   :name     "cookie1"}
+                  {:domain   ".^filecookies^"
+                   :secure   false
+                   :httpOnly false
+                   :value    "test2"
+                   :path     "/"
+                   :name     "cookie2"}]))))
       (e/when-chrome *driver*
         (is (= cookies [])))
       (e/when-firefox *driver*
@@ -560,7 +560,7 @@
                 :value    "test2"})))))
   (testing "deleting a cookie"
     (e/when-not-phantom
-        *driver*
+      *driver*
       (e/delete-cookie *driver* :cookie3)
       (let [cookie (e/get-cookie *driver* :cookie3)]
         (is (nil? cookie)))))
