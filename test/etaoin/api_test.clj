@@ -479,10 +479,11 @@
 
 (deftest test-cookies
   (testing "getting all cookies"
-    (let [cookies    (e/get-cookies *driver*)
-          cookies-ff (map #(dissoc % :sameSite) cookies)]
+    (let [cookies    (e/get-cookies *driver*)]
       (e/when-safari *driver*
-        (is (= cookies
+        ;; Safari Webdriver v16.4 added sameSite, we'll ignore it for now
+        (let [cookies (map #(dissoc % :sameSite) cookies)]
+          (is (= cookies
                [{:domain   ".^filecookies^"
                  :secure   false
                  :httpOnly false
@@ -494,22 +495,24 @@
                  :httpOnly false
                  :value    "test2"
                  :path     "/"
-                 :name     "cookie2"}])))
+                 :name     "cookie2"}]))))
       (e/when-chrome *driver*
         (is (= cookies [])))
       (e/when-firefox *driver*
-        (is (= cookies-ff [{:name     "cookie1",
-                            :value    "test1",
-                            :path     "/",
-                            :domain   "",
-                            :secure   false,
-                            :httpOnly false}
-                           {:name     "cookie2",
-                            :value    "test2",
-                            :path     "/",
-                            :domain   "",
-                            :secure   false,
-                            :httpOnly false}])))
+        ;; Firefox Webdriver added sameSite, we'll ignore it for now
+        (let [cookies (map #(dissoc % :sameSite) cookies)]
+          (is (= cookies [{:name     "cookie1",
+                           :value    "test1",
+                           :path     "/",
+                           :domain   "",
+                           :secure   false,
+                           :httpOnly false}
+                          {:name     "cookie2",
+                           :value    "test2",
+                           :path     "/",
+                           :domain   "",
+                           :secure   false,
+                           :httpOnly false}]))))
       (e/when-phantom *driver*
         (is (= cookies [{:domain   "",
                          :httponly false,
@@ -524,26 +527,29 @@
                          :secure   false,
                          :value    "test1"}])))))
   (testing "getting a cookie"
-    (let [cookie    (e/get-cookie *driver* :cookie2)
-          cookie-ff (dissoc cookie :sameSite)]
+    (let [cookie    (e/get-cookie *driver* :cookie2)]
       (e/when-safari *driver*
-        (is (= cookie
-               {:domain   ".^filecookies^"
-                :secure   false
-                :httpOnly false
-                :value    "test2"
-                :path     "/"
-                :name     "cookie2"})))
+        ;; Safari Webdriver v16.4 added sameSite, we'll ignore it for now
+        (let [cookie (dissoc cookie :sameSite)]
+          (is (= cookie
+                 {:domain   ".^filecookies^"
+                  :secure   false
+                  :httpOnly false
+                  :value    "test2"
+                  :path     "/"
+                  :name     "cookie2"}))))
       (e/when-chrome *driver*
         (is (nil? cookie)))
       (e/when-firefox *driver*
-        (is (= cookie-ff
-               {:name     "cookie2"
-                :value    "test2"
-                :path     "/"
-                :domain   ""
-                :secure   false
-                :httpOnly false})))
+        ;; Firefox Webdriver added sameSite, we'll ignore it for now
+        (let [cookie (dissoc cookie :sameSite)]
+          (is (= cookie
+                 {:name     "cookie2"
+                  :value    "test2"
+                  :path     "/"
+                  :domain   ""
+                  :secure   false
+                  :httpOnly false}))))
       (e/when-phantom *driver*
         (is (= cookie
                {:domain   ""
