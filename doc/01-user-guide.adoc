@@ -922,6 +922,62 @@ Another set of functions do the same but move the mouse pointer to a specified e
 A middle mouse click can open a link in a new background tab.
 The right click sometimes is used to imitate a context menu in web applications.
 
+=== Selecting an option from a dropdown [[select-dropdown]]
+
+An `<option>` from a `<select>` can be selected via the `click` function.
+
+Given the following HTML:
+
+[source,html]
+----
+<select id="dropdown" name="options">
+  <option value="o1">foo one</option>
+  <option value="o2">bar two</option>
+  <option value="o3">bar three</option>
+  <option value="o4">bar four</option>
+</select>
+----
+
+Click on option with value `o4`:
+[source,clojure]
+----
+(e/click driver [{:id :dropdown} {:value "o4"}])
+(e/get-element-value driver :dropdown)
+;; => "o4"
+----
+
+Click on option with text `bar three`:
+[source,clojure]
+----
+(e/click driver [{:id :dropdown} {:fn/text "bar three"}])
+(e/get-element-value driver :dropdown)
+;; => "o3"
+----
+
+TIP: Safari Quirk: You might need to first click on the `select` element, then the option.
+
+[NOTE]
+====
+Etaoin also includes the https://cljdoc.org/d/etaoin/etaoin/CURRENT/api/etaoin.api#select[select] convenience function. It will select the first option from a dropdown that includes the specified text. It also automatically handles the Safari quirk.
+
+Click first matching option with text `bar`:
+[source,clojure]
+----
+(e/select driver :dropdown "bar")
+(e/get-element-value driver :dropdown)
+;; => "o2"
+----
+
+The same operation expressed with `click`:
+[source,clojure]
+----
+(e/click driver :dropdown) ;; needed for Safari quirk only
+(e/click driver [{:id :dropdown} {:fn/has-text "bar"}])
+(e/get-element-value driver :dropdown)
+;; => "o2"
+----
+====
+
 === Keyboard Chords
 
 There is an option to input a series of keys simultaneously.

@@ -8,6 +8,8 @@ A release with an intentional breaking changes is marked with:
 == Unreleased
 
 * bump all deps to current versions
+* docs
+** https://github.com/clj-commons/etaoin/issues/534[#534]: better describe `etaoin.api/select` and its alternatives
 
 == v1.0.40
 
