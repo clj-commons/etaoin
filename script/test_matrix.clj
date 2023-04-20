@@ -38,7 +38,11 @@
                                 (and (= "windows" os) (= "safari" browser))))]
              (test-def os "api" platform browser))
            (for [os oses]
-             {:os os :cmd "bb test-doc" :desc (str "test-doc " os)}))
+             {:os os
+              :cmd (if (= "ubuntu" os)
+                     "bb test-doc --launch-virtual-display"
+                     "bb test-doc")
+              :desc (str "test-doc " os)}))
          (sort-by :desc)
          (into [{:os "ubuntu" :cmd "bb lint" :desc "lint"}]))))
 

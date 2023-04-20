@@ -3033,12 +3033,17 @@ Reproduction:: When you try to start the chromedriver you get an error:
 
 Possible Cause::
 A common cause for Chrome to crash during startup is running Chrome as root user (administrator) on Linux.
-While it is possible to work around this issue by passing --no-sandbox flag when creating your WebDriver session, such a configuration is unsupported and highly discouraged.
-You need to configure your environment to run Chrome as a regular user instead.
+While it is possible to work around this issue by passing --no-sandbox flag when creating your WebDriver session, such a configuration is unsupported and discouraged.
+Ideally you would configure your environment to run Chrome as a regular user instead.
++
+NOTE: We have noticed that the Selenium docker images always invoke chrome with `--no-sandbox`, so the caveat is a little confusing.
+We've naively replicated this in our own dev docker images.
+Maybe `--no-sandbox` is acceptable, or even needed, when running from a docker container?
+If you have intel here, let us know!
 
-Potential Solution:: Run driver with an argument `--no-sandbox`.
+Potential Solution:: Run driver with argument `--no-sandbox`.
 Caution!
-This bypasses OS security model.
+This bypasses the OS security model.
 +
 [source,clojure]
 ----
