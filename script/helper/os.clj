@@ -1,5 +1,6 @@
 (ns helper.os
-  (:require [clojure.string :as string]))
+  (:require [babashka.fs :as fs]
+            [clojure.string :as string]))
 
 (defn get-os []
   (let [os-name (string/lower-case (System/getProperty "os.name"))]
@@ -9,3 +10,6 @@
       #"(nix|nux|aix)" :unix
       #"sunos" :solaris
       :unknown)))
+
+(defn running-in-docker? []
+  (fs/exists? "/.dockerenv"))

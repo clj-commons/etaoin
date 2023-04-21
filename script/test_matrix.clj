@@ -24,22 +24,27 @@
         api-browsers ["chrome" "firefox" "edge" "safari"]
         platforms ["jvm" "bb"]]
     (->> (concat
-          (for [os oses
-                platform platforms]
-            (test-def os "unit" platform nil))
-          (for [os oses
-                platform platforms
-                browser ide-browsers]
-            (test-def os "ide" platform browser))
-          (for [os oses
-                platform platforms
-                browser api-browsers
-                :when (not (or (and (= "ubuntu" os) (some #{browser} ["edge" "safari"]))
-                               (and (= "windows" os) (= "safari" browser))))]
-            (test-def os "api" platform browser)))
+           (for [os oses
+                 platform platforms]
+             (test-def os "unit" platform nil))
+           (for [os oses
+                 platform platforms
+                 browser ide-browsers]
+             (test-def os "ide" platform browser))
+           (for [os oses
+                 platform platforms
+                 browser api-browsers
+                 :when (not (or (and (= "ubuntu" os) (some #{browser} ["edge" "safari"]))
+                                (and (= "windows" os) (= "safari" browser))))]
+             (test-def os "api" platform browser))
+           (for [os oses]
+             {:os os
+              :cmd (if (= "ubuntu" os)
+                     "bb test-doc --launch-virtual-display"
+                     "bb test-doc")
+              :desc (str "test-doc " os)}))
          (sort-by :desc)
-         (into [{:os "ubuntu" :cmd "bb lint" :desc "lint"}
-                {:os "macos" :cmd "bb test-doc" :desc "test-doc"}]))))
+         (into [{:os "ubuntu" :cmd "bb lint" :desc "lint"}]))))
 
 (def valid-formats ["json" "table"])
 (def cli-spec {:help {:desc "This usage help"}

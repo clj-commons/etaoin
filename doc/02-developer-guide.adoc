@@ -160,11 +160,9 @@ And then at the interactive prompt:
 bb test:jvm --suites ide --browsers firefox
 ----
 
-NOTE: `docker-run` plunks you automatically into `/etaoin` which maps to the etaoin project root
+NOTE: `docker-run` copies etaoin project files into `/home/etaoin-user/etaoin` which will be your work dir.
 
-There is nothing magic about the babashka docker tasks.
-They are here for our convenience.
-Feel free to run docker commands directly if that is more your thing.
+The docker image is catered to running Etaoin tests.
 
 === WebDriver Processes
 

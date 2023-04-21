@@ -1,40 +1,11 @@
 (ns test
   "Prep and launch for bb and jvm tests"
   (:require [babashka.cli :as cli]
-            [babashka.fs :as fs]
-            [babashka.process :as process]
             [clojure.string :as string]
+            [helper.os :as os]
             [helper.shell :as shell]
+            [helper.virtual-display :as virtual-display]
             [lread.status-line :as status]))
-
-(defn- launch-xvfb []
-  (if (fs/which "Xvfb")
-    (process/process "Xvfb :99 -screen 0 1024x768x24" {:out (fs/file "/dev/null")
-                                                       :err (fs/file "/dev/null")})
-    (status/die 1 "Xvfb not found"))
-  (let [deadline (+ (System/currentTimeMillis) 10000)]
-    (loop []
-      (let [{:keys [exit]} (shell/command {:out (fs/file "/dev/null")
-                                           :err (fs/file "/dev/null")
-                                           :continue true}
-                                          "xdpyinfo -display :99")]
-        (if (zero? exit)
-          (status/line :detail "Xvfb process looks good.")
-          (if (> (System/currentTimeMillis) deadline)
-            (status/die 1 "Failed to get status from Xvfb process")
-            (do
-              (status/line :detail "Waiting for Xvfb process.")
-              (Thread/sleep 500)
-              (recur))))))))
-
-(defn- launch-fluxbox []
-  (if (fs/which "fluxbox")
-    (process/process "fluxbox -display :99" {:out (fs/file "/dev/null")
-                                             :err (fs/file "/dev/null")})
-    (status/die 1 "fluxbox not found")))
-
-(defn- running-in-docker? []
-  (fs/exists? "/.dockerenv"))
 
 (defn- str-coll [coll]
   (string/join ", " coll))
@@ -76,7 +47,7 @@
 (defn- usage-help[]
   (status/line :head "Usage help")
   (status/line :detail "Run tests")
-  (status/line :detail (cli/format-opts {:spec cli-spec :order [:browsers :suites :help]}))
+  (status/line :detail (cli/format-opts {:spec cli-spec :order [:browsers :suites :launch-virtual-display :help]}))
   (status/line :detail "\nCognitect test-runner args are also supported (if not specifying --suites):")
   (status/line :detail (cli/format-opts {:spec cli-spec :order [:nses :patterns :vars]}))
 
@@ -116,14 +87,14 @@
       (usage-help)
       (let [browsers (:browsers opts)
             virtual-display? (or (:launch-virtual-display opts)
-                                 (running-in-docker?) )
+                                 (os/running-in-docker?) )
             suites (set (:suites opts))
             env (cond-> {}
                   (seq browsers)
                   (assoc "ETAOIN_TEST_DRIVERS" (mapv keyword browsers)
                          "ETAOIN_IDE_TEST_DRIVERS" (mapv keyword browsers))
                   virtual-display?
-                  (assoc "DISPLAY" ":99.0"))
+                  (merge (virtual-display/extra-env)))
             shell-opts (if (seq env)
                          {:extra-env env}
                          {})
@@ -134,9 +105,7 @@
                                :always vec)]
 
         (when virtual-display?
-          (status/line :head "Launching virtual display")
-          (launch-xvfb)
-          (launch-fluxbox))
+          (virtual-display/launch))
 
         (status/line :head "Running tests")
         (status/line :detail "suites: %s" (if (seq suites) (str-coll (sort suites)) "<none specified>"))

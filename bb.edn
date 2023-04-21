@@ -50,7 +50,7 @@
   test:bb        {:doc "Runs tests under Babashka [--help]"
                   :task test/test-bb}
   test-doc       {:doc "test code blocks in user guide"
-                  :task test-doc/-main}
+                  :task test-doc/test-doc}
   test-matrix    {:doc "Returns a test matrix for CI [--help]"
                   :task test-matrix/-main}
   drivers        {:doc "[list|kill] any running WebDrivers"
@@ -72,12 +72,10 @@
                    :task docker-install/-main}
   docker-run     {:doc "run etaoin docker image (specify no commmands for interactive)"
                   :task (apply shell/command {:continue true}
-                               "docker run -it --rm -v"
-                               (cond-> [(str (fs/cwd) ":/etaoin")
-                                        "-w" "/etaoin"]
-                                 (not (seq *command-line-args*)) (conj "--entrypoint" "/bin/bash")
-                                 :always (conj "etaoin:latest")
-                                 :always (concat *command-line-args*)))}
+                               "docker run -it --rm --shm-size=1gb"
+                               (str "-v" (fs/cwd) ":/etaoin")
+                               "etaoin:latest"
+                               *command-line-args*)}
   ci-release     {:doc "release tasks, use --help for args"
                   :task ci-release/-main }
   -gha-win-edge-workaround {:doc "Deal with Edge browser/Edge WebDriver version mismatch on GitHub Actions"

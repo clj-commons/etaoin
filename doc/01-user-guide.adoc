@@ -1002,22 +1002,21 @@ A quick example of entering ordinary characters while holding Shift:
 ----
 
 The main input gets populated with "CAPS IS GREAT".
-Now maybe you'd like to delete the last word.
-Assuming you are using Chrome, this is done by pressing backspace holding Alt.
-Let's do that:
+Let's duplicate the text via select-all, copy, and paste keyboard shortcuts:
 
 [source,clojure]
 ----
-(e/fill-active driver (k/with-alt k/backspace))
+(if (= "Mac OS X" (System/getProperty "os.name"))
+  (e/fill-active driver (k/with-command "a") (k/with-command "c") k/arrow-right " " (k/with-command "v"))
+  (e/fill-active driver (k/with-ctrl "a") (k/with-ctrl "c") k/arrow-right " " (k/with-ctrl "v")))
 (e/get-element-value driver :active)
-;; => "CAPS IS "
+;; => "CAPS IS GREAT CAPS IS GREAT"
 ----
 
-Consider a more complex example which repeats real user behaviour.
-You'd like to delete everything from the input.
-First, you move the cursor to the very beginning of the input field.
-Then move it to the end holding shift so everything gets selected.
-Finally, you press delete to clear the selected text:
+And now let's clear the input by:
+1. moving the cursor to the beginning of the input field with the home key
+2. moving the cursor to the end field while holding shift to select all text
+3. deleting the selected text with the delete key
 
 [source,clojure]
 ----
@@ -1026,12 +1025,10 @@ Finally, you press delete to clear the selected text:
 ;; => ""
 ----
 
-There are also `with-ctrl` and `with-command` functions that act as you would expect.
-
 NOTE: These functions do not apply to the global browser's shortcuts.
 For example, neither "Command + R" nor "Command + T" reload the page or open a new tab.
 
-All the `etaoin.keys/with-*` functions are just wrappers upon the `etaoin.keys/chord` function that might be used for complex cases.
+The `etaoin.keys/with-*` functions are just wrappers for the `etaoin.keys/chord` function that might be used for complex cases.
 
 === File Uploading
 
@@ -2254,6 +2251,7 @@ or
 ;; you can also check if a driver is in headless mode:
 (e/headless? driver)
 ;; => true
+(e/wait 1) ;; seems to appease Firefox on Linux
 (e/quit driver)
 ----
 
@@ -2337,6 +2335,7 @@ Set a custom `User-Agent` header with the `:user-agent` option when creating a d
 ----
 (e/with-firefox {:user-agent "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"}
                 driver
+  (e/wait 1) ;; seems to appease Firefox on Linux
   (e/get-user-agent driver))
 ;; => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"
 ----
@@ -3034,12 +3033,17 @@ Reproduction:: When you try to start the chromedriver you get an error:
 
 Possible Cause::
 A common cause for Chrome to crash during startup is running Chrome as root user (administrator) on Linux.
-While it is possible to work around this issue by passing --no-sandbox flag when creating your WebDriver session, such a configuration is unsupported and highly discouraged.
-You need to configure your environment to run Chrome as a regular user instead.
+While it is possible to work around this issue by passing --no-sandbox flag when creating your WebDriver session, such a configuration is unsupported and discouraged.
+Ideally you would configure your environment to run Chrome as a regular user instead.
++
+NOTE: We have noticed that the Selenium docker images always invoke chrome with `--no-sandbox`, so the caveat is a little confusing.
+We've naively replicated this in our own dev docker images.
+Maybe `--no-sandbox` is acceptable, or even needed, when running from a docker container?
+If you have intel here, let us know!
 
-Potential Solution:: Run driver with an argument `--no-sandbox`.
+Potential Solution:: Run driver with argument `--no-sandbox`.
 Caution!
-This bypasses OS security model.
+This bypasses the OS security model.
 +
 [source,clojure]
 ----

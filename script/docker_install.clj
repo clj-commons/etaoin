@@ -3,6 +3,7 @@
             [babashka.fs :as fs]
             [cheshire.core :as json]
             [clojure.java.io :as io]
+            [clojure.string :as string]
             [helper.main :as main]
             [helper.shell :as shell]
             [lread.status-line :as status]))
@@ -42,6 +43,26 @@
     (shell/command "apt-get -yqq update")
     (shell/command "apt-get -yqq install google-chrome-stable")))
 
+(defn- wrap-chrome
+  "The Selenium chrome docker image wraps the chrome launcher, so I'm going with the flow here.
+  I don't fully understand if --no-sandbox is required for docker images, but if Selenium is doing it,
+  I'm not interested in figuring out if we don't need to as well.
+
+  They also do the umask thing... so mimicing that as well."
+  []
+  (status/line :head "Wrapping chrome launcher")
+  (let [launcher (-> (shell/command {:out :string}
+                                    "readlink -f /usr/bin/google-chrome")
+                     :out
+                     (string/trim))
+        launcher-orig-renamed (str launcher "-base")]
+    (fs/move launcher launcher-orig-renamed)
+    (spit launcher (string/join "\n"
+                                ["#!/bin/bash"
+                                 "umask 002"
+                                 (format "exec -a \"$0\" \"%s\" --no-sandbox \"$@\"" launcher-orig-renamed)]))
+    (shell/command "chmod +x" launcher)))
+
 (defn- install-geckodriver []
   (status/line :head "Installing geckodriver")
   (let [dl-file "/tmp/geckodriver_linux64.tar.gz"
@@ -77,6 +98,7 @@
     (status/die 1 "Expected to be run from DockerFile"))
   (install-chromedriver)
   (install-chrome)
+  (wrap-chrome)
   (install-geckodriver)
   (install-firefox))
 
