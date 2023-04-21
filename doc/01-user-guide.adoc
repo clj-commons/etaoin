@@ -31,13 +31,14 @@ If Etaoin is not your cup of tea, you might also consider:
 
 Clojure based:
 
-* https://github.com/tatut/clj-chrome-devtools[clj-chrome-devtools]
+* https://github.com/pfeodrippe/wally[Wally] - A Clojure Playwright wrapper
+* https://github.com/tatut/clj-chrome-devtools[clj-chrome-devtools] - Clojure API for controlling a Chrome DevTools remote
 
 Other:
 
-* https://www.selenium.dev/[Selenium]
-* https://playwright.dev/[Playwright]
-* https://pptr.dev/[Puppeteer]
+* https://www.selenium.dev/[Selenium] - A browser automation framework and ecosystem
+* https://playwright.dev/[Playwright] - Reliable end-to-end testing for modern web apps
+* https://pptr.dev/[Puppeteer] - A high-level API to control Chrome/Chromium over the DevTools Protocol
 
 [[supported-os-browser]]
 === Supported OSes & Browsers
