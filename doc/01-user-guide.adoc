@@ -256,6 +256,7 @@ endif::[]
 
 ;; search for something interesting
 (e/fill driver {:tag :input :name :search} "Clojure programming language")
+(e/wait driver 1)
 (e/fill driver {:tag :input :name :search} k/enter)
 (e/wait-visible driver {:class :mw-search-results})
 
@@ -322,6 +323,7 @@ A portion of the above rewritten with `doto`:
   (e/go "https://en.wikipedia.org/")
   (e/wait-visible [{:id :simpleSearch} {:tag :input :name :search}])
   (e/fill {:tag :input :name :search} "Clojure programming language")
+  (e/wait 1)
   (e/fill {:tag :input :name :search} k/enter)
   (e/wait-visible {:class :mw-search-results})
   (e/click [{:class :mw-search-results} {:class :mw-search-result-heading} {:tag :a}])
