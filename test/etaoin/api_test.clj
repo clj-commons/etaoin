@@ -9,7 +9,8 @@
    [etaoin.api :as e]
    [etaoin.impl.util :as util]
    [etaoin.test-report :as test-report]
-   [slingshot.slingshot :refer [try+]]))
+   [slingshot.slingshot :refer [try+]])
+  (:import [java.net URLEncoder]))
 
 (defn numeric? [val]
   (or (instance? Double val)
@@ -106,6 +107,25 @@
       (-> e/get-url
           (str/ends-with? "?login=1&password=2&message=3")
           is)))
+  (testing "fill human input with wide characters"
+    (let [enc (fn [s] (URLEncoder/encode s "UTF-8"))
+          login "log👻in"
+          encoded-login (enc login)
+          pass "12🍂3"
+          encoded-pass (enc pass) 
+          text "t🙌ext"
+          encoded-text (enc text)]
+      (doto *driver*
+        (e/fill-human-multi {:simple-input    login
+                             :simple-password pass
+                             :simple-textarea text})
+        (e/click :simple-submit)
+        (e/when-safari (e/wait 3))
+        (-> e/get-url 
+            (str/ends-with? (str "?login=" encoded-login
+                                 "&password=" encoded-pass
+                                 "&message=" encoded-text))
+            is))))
   (testing "fill human multiple inputs"
     (doto *driver*
       (e/fill-human-multi {:simple-input    "login"
