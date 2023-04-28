@@ -855,7 +855,7 @@ which you can choose to override if you wish:
 [source,clojure]
 ----
 (e/refresh driver)
-(e/fill-human driver :uname "soslowsobad"
+(e/fill-human driver :uname "so👻slow🍃sobad"
               {:mistake-prob 0.5
                :pause-max 1})
 
@@ -868,7 +868,7 @@ For multiple inputs, use `fill-human-multi`
 [source,clojure]
 ----
 (e/refresh driver)
-(e/fill-human-multi driver {:uname "login"
+(e/fill-human-multi driver {:uname "login_🪵"
                             :pw "password"
                             :text "some text"}
                            {:mistake-prob 0.1
