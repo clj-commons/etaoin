@@ -855,12 +855,15 @@ which you can choose to override if you wish:
 [source,clojure]
 ----
 (e/refresh driver)
-(e/fill-human driver :uname "so👻slow🍃sobad"
+(e/fill-human driver :uname "soslowsobad"
               {:mistake-prob 0.5
                :pause-max 1})
 
 ;; or just use default options by omitting them
-(e/fill-human driver :uname " typing human defaults")
+(e/fill-human driver :uname " typing human defaults 👻")
+
+(e/get-element-value driver :uname)
+;; => " typing human defaults 👻"
 ----
 
 For multiple inputs, use `fill-human-multi`
