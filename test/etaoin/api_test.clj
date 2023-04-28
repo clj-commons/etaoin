@@ -110,21 +110,18 @@
   (testing "fill human input with wide characters"
     (let [enc (fn [s] (URLEncoder/encode s "UTF-8"))
           login "log👻in"
-          encoded-login (enc login)
           pass "12🍂3"
-          encoded-pass (enc pass) 
-          text "t🙌ext"
-          encoded-text (enc text)]
+          text "t🙌ext"]
       (doto *driver*
         (e/fill-human-multi {:simple-input    login
                              :simple-password pass
                              :simple-textarea text})
         (e/click :simple-submit)
         (e/when-safari (e/wait 3))
-        (-> e/get-url 
-            (str/ends-with? (str "?login=" encoded-login
-                                 "&password=" encoded-pass
-                                 "&message=" encoded-text))
+        (-> e/get-url
+            (str/ends-with? (str "?login="    (enc login)
+                                 "&password=" (enc pass)
+                                 "&message="  (enc text)))
             is))))
   (testing "fill human multiple inputs"
     (doto *driver*
