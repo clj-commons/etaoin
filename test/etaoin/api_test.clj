@@ -106,7 +106,7 @@
       (-> e/get-url
           (str/ends-with? "?login=1&password=2&message=3")
           is)))
-  (testing "fill human multiple imputs"
+  (testing "fill human multiple inputs"
     (doto *driver*
       (e/fill-human-multi {:simple-input    "login"
                          :simple-password "123"
