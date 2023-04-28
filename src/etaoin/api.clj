@@ -2908,13 +2908,17 @@
         wait-key  (fn [] (wait (min (rand) pause-max)))]
     (click-el driver el)
     (wait-key)
-    (doseq [key text]
+    (doseq [codepoint (->> text
+                           .codePoints
+                           .iterator
+                           iterator-seq
+                           (map #(Character/toString %)))]
       (when (< (rand) mistake-prob)
         (fill-el driver el (rand-char))
         (wait-key)
         (fill-el driver el k/backspace)
         (wait-key))
-      (fill-el driver el key)
+      (fill-el driver el codepoint)
       (wait-key))))
 
 (defn fill-human
