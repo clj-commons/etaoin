@@ -109,8 +109,8 @@
   (testing "fill human multiple inputs"
     (doto *driver*
       (e/fill-human-multi {:simple-input    "login"
-                         :simple-password "123"
-                         :simple-textarea "text"})
+                           :simple-password "123"
+                           :simple-textarea "text"})
       (e/click :simple-submit)
       (e/when-safari (e/wait 3))
       (-> e/get-url
@@ -124,6 +124,37 @@
       (-> e/get-url
           (str/ends-with? "?login=1test2+A&password=&message=")
           is))))
+
+(deftest test-unicode-bmp-input
+  (let [data {:simple-input "ĩṋṗṵţ"
+              :simple-password "ǷḁṡṢẅỏṟƉ"
+              :simple-textarea "т️ẹẍṱảṙẸẚ"}]
+    (testing "fill-multi"
+      (e/fill-multi *driver* data)
+      (doseq [f [:simple-input :simple-password :simple-textarea]]
+        (is (= (f data) (e/get-element-value *driver* f)))))
+    (testing "fill-human-multi"
+      (e/refresh *driver*)
+      (e/fill-human-multi *driver* data)
+      (doseq [f [:simple-input :simple-password :simple-textarea]]
+        (is (= (f data) (e/get-element-value *driver* f)))))))
+
+(deftest test-unicode-above-bmp-input
+    ;; as of 2023-04-29 not supported on chrome and edge
+    ;; https://bugs.chromium.org/p/chromedriver/issues/detail?id=2269
+    (when-not (#{:chrome :edge} (e/dispatch-driver *driver*))
+      (let [data {:simple-input "😊🍂input🍃"
+                  :simple-password "🔆password☠️ "
+                  :simple-textarea "🎉🚀textarea👀☀️"}]
+        (testing "fill-multi"
+          (e/fill-multi *driver* data)
+          (doseq [f [:simple-input :simple-password :simple-textarea]]
+            (is (= (f data) (e/get-element-value *driver* f)))))
+        (testing "fill-human-multi"
+          (e/refresh *driver*)
+          (e/fill-human-multi *driver* data)
+          (doseq [f [:simple-input :simple-password :simple-textarea]]
+            (is (= (f data) (e/get-element-value *driver* f))))))))
 
 (deftest test-clear
   (testing "simple clear"

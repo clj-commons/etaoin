@@ -2809,8 +2809,19 @@
 ;; input
 ;;
 
+(defn- codepoints
+  "Clojure returns a seq of chars for a string.
+  This does not handle wide (unicode) characters.
+  Here we return a seq of codepoint strings for string `s`."
+  [s]
+  (->> s
+       .codePoints
+       .iterator
+       iterator-seq
+       (map #(Character/toString %))))
+
 (defn- make-input* [text & more]
-  (mapv str (apply str text more)))
+  (codepoints (apply str text more)))
 
 (defmulti fill-el
   "Have `driver` fill input element `el` with `text` (and optionally `more` text)."
@@ -2908,17 +2919,13 @@
         wait-key  (fn [] (wait (min (rand) pause-max)))]
     (click-el driver el)
     (wait-key)
-    (doseq [codepoint (->> text
-                           .codePoints
-                           .iterator
-                           iterator-seq
-                           (map #(Character/toString %)))]
+    (doseq [c (codepoints text)]
       (when (< (rand) mistake-prob)
         (fill-el driver el (rand-char))
         (wait-key)
         (fill-el driver el k/backspace)
         (wait-key))
-      (fill-el driver el codepoint)
+      (fill-el driver el c)
       (wait-key))))
 
 (defn fill-human
