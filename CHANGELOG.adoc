@@ -7,6 +7,8 @@ A release with an intentional breaking changes is marked with:
 
 == Unreleased
 
+* https://github.com/clj-commons/etaoin/pull/552[#552]: Add support for wide characters to input fill functions
+(https://github.com/tupini07[@tupini07])
 * bump all deps to current versions
 * docs
 ** https://github.com/clj-commons/etaoin/issues/534[#534]: better describe `etaoin.api/select` and its alternatives

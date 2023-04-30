@@ -101,6 +101,7 @@ Can be `alpha`, `beta`, `rc1`, etc.
 * https://github.com/kidd[Raimon Grau]
 * https://github.com/verma[Uday Verma]
 * https://github.com/mjmeintjes[Matt Meintjes]
+* https://github.com/tupini07[Andrea Tupini]
 
 === Current Maintainers
 

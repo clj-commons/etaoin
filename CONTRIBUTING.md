@@ -14,7 +14,7 @@
 - include changes unrelated to the purpose of the PR. This includes changing the project version number, adding lines to the
 `.gitignore` file, or changing the indentation or formatting.
 - open a new PR if changes are requested. Just push to the same branch and the PR will be updated.
-- ever force push on a PR, it makes it too hard to review.
+- never force push on a PR, it makes it too hard to review.
 - overuse vertical whitespace; avoid multiple sequential blank lines.
 
 [1]: https://chris.beams.io/posts/git-commit/#seven-rules

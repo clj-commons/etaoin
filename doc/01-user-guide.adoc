@@ -838,6 +838,27 @@ You can collect elements into a vector and arbitrarily interact with them at any
 
 Some basic interactions are covered under <<querying>>, here we go into other types of interactions and more detail.
 
+=== UNICODE and Emojis
+As of this writing, Chrome and Edge https://bugs.chromium.org/p/chromedriver/issues/detail?id=2269[only support] filling inputs with UNICODE in the https://en.wikipedia.org/wiki/Plane_(Unicode)#Basic_Multilingual_Plane[Basic Multilingual Plane].
+This includes many characters, but not many emojis 😢.
+
+Firefox and Safari seem to support UNICODE more generally 🙂.
+
+[source,clojure]
+----
+(e/with-chrome driver
+  (e/go driver sample-page)
+  (e/fill driver :uname "ⱾⱺⱮⱸ ᢹⓂ Ᵽ")
+  (e/get-element-value driver :uname))
+;; => "ⱾⱺⱮⱸ ᢹⓂ Ᵽ"
+
+(e/with-firefox driver
+  (e/go driver sample-page)
+  (e/fill driver :uname "ⱾⱺⱮⱸ ᢹⓂ Ᵽ plus 👍🔥🙂")
+  (e/get-element-value driver :uname))
+;; => "ⱾⱺⱮⱸ ᢹⓂ Ᵽ plus 👍🔥🙂"
+----
+
 === Emulate how a Real Person Might Type
 
 Real people type slowly and make mistakes.
@@ -861,6 +882,9 @@ which you can choose to override if you wish:
 
 ;; or just use default options by omitting them
 (e/fill-human driver :uname " typing human defaults")
+
+(e/get-element-value driver :uname)
+;; => "soslowsobad typing human defaults"
 ----
 
 For multiple inputs, use `fill-human-multi`
@@ -2132,7 +2156,7 @@ Example: `:log-level :err`
 
 | `:all`
 
-a| `driver-log-level` *WebDriver* minimal log level.
+a| `:driver-log-level` *WebDriver* minimal log level.
 values vary by browser driver vendor:
 
 * chrome `"OFF"` `"SEVERE"` `"WARNING"` `"INFO"` or `"DEBUG"`
