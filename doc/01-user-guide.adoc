@@ -1072,7 +1072,7 @@ An exception will be thrown if the local file is not found.
 ;; bind element selector to variable; you may also specify an id, class, etc
 (def file-input {:tag :input :type :file})
 
-;; upload a file form your system to the first file input
+;; upload a file from your system to the first file input
 (def my-file "env/test/resources/html/drag-n-drop/images/document.png")
 (e/upload-file driver file-input my-file)
 
