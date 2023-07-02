@@ -243,7 +243,8 @@ endif::[]
 [source,clojure]
 ----
 (require '[etaoin.api :as e]
-         '[etaoin.keys :as k])
+         '[etaoin.keys :as k]
+         '[clojure.string :as str])
 
 ;; Start WebDriver for Firefox
 (def driver (e/firefox)) ;; a Firefox window should appear
@@ -266,7 +267,8 @@ endif::[]
 (e/wait-visible driver {:id :firstHeading})
 
 ;; check our new url location
-(e/get-url driver)
+;; (wikipedia can tack on a querystring, for result consistency we'll ignore it)
+(-> (e/get-url driver) (str/split #"\?") first)
 ;; => "https://en.wikipedia.org/wiki/Clojure"
 
 ;; and our new title
