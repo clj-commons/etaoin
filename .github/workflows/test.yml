@@ -63,6 +63,10 @@ jobs:
         sudo sysctl -w net.link.generic.system.hwcksum_tx=0
         sudo sysctl -w net.link.generic.system.hwcksum_rx=0
 
+    - name: Enable safaridriver
+      if: ${{ matrix.os == 'macos' }}
+      run: sudo safaridriver --enable
+
     - name: Install Ubuntu X11 Utils
       if: ${{ matrix.os == 'ubuntu' }}
       run: sudo apt-get -y install x11-utils
