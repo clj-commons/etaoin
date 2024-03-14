@@ -70,7 +70,8 @@
                                                (System/exit 1))})]
     (if (:help opts)
       (usage-help)
-      (let [matrix (github-actions-matrix)]
+      (let [matrix #_(github-actions-matrix)
+            [{:os "macos" :cmd "bb test:jvm --suites api --browsers safari" :desc "api macos safari jvm"}]]
         (status/line :detail
                      (if (= "json" (:format opts))
                        (json/generate-string matrix)
