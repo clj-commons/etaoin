@@ -50,7 +50,7 @@
       (get-drivers-from-prop)
       (get-default-drivers)))
 
-(def ^:dynamic *driver*)
+(def ^:dynamic *driver* nil)
 
 (defn- find-available-port []
   (with-open [sock (ServerSocket. 0)]
