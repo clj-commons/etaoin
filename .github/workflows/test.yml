@@ -44,7 +44,7 @@ jobs:
 
   build:
     needs: setup
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.os }}-13
     strategy:
       fail-fast: false
       matrix:
