@@ -183,6 +183,8 @@
              :path-driver "phantomjs"}
    :safari  {:port 4445
              :path-driver "safaridriver"
+             :log-stdout :inherit
+             :log-stderr :inherit
              :webdriver-failed-launch-retries 4}
    :edge    {:port 17556
              :path-driver "msedgedriver"}})
