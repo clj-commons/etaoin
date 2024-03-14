@@ -47,7 +47,7 @@
       (get-drivers-from-prop)
       (get-default-drivers)))
 
-(def ^:dynamic *driver*)
+(def ^:dynamic *driver* nil)
 
 ;; tests failed in safari 13.1.1 https://bugs.webkit.org/show_bug.cgi?id=202589 use STP newest
 (defn fixture-browsers [f]
