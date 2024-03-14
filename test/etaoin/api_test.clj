@@ -51,16 +51,31 @@
 
 ;; tests failed in safari 13.1.1 https://bugs.webkit.org/show_bug.cgi?id=202589 use STP newest
 (defn fixture-browsers [f]
-  (let [url (-> "html/test.html" io/resource str)]
+  (let [url (-> "html/test.html" io/resource str)
+        safaridriver-logs (fs/file (fs/home) "Library/Logs/com.apple.WebDriver")]
     (doseq [type drivers
             :let [opts (get default-opts type {})]]
+      (if (fs/exists? safaridriver-logs)
+        (do (println "pre: deleting safaridriver logs")
+            (fs/delete-tree safaridriver-logs))
+        (println "pre: no safaridriver logs found:" (str safaridriver-logs)))
+
       (e/with-driver type opts driver
         (e/go driver url)
         (e/wait-visible driver {:id :document-end})
         (binding [*driver* driver
                   test-report/*context* (name type)]
           (testing (name type)
-            (f)))))))
+            (try
+              (f)
+              (finally
+                (if (fs/exists? safaridriver-logs)
+                  (do (println "post: safaridriver logs:")
+                      (doseq [f (fs/list-dir safaridriver-logs)]
+                        (println "-file->" (str f))
+                        (println "-dump->\n" (slurp f))))
+                  (println "post: no safaridriver logs found"))))
+            ))))))
 
 (use-fixtures
   :each

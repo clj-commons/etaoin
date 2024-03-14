@@ -185,6 +185,7 @@
              :path-driver "safaridriver"
              :log-stdout :inherit
              :log-stderr :inherit
+             :args-driver ["--diagnose"]
              :webdriver-failed-launch-retries 4}
    :edge    {:port 17556
              :path-driver "msedgedriver"}})
