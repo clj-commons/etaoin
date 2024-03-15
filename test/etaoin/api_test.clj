@@ -73,9 +73,8 @@
                   (do (println "post: safaridriver logs:")
                       (doseq [f (fs/list-dir safaridriver-logs)]
                         (println "-file->" (str f))
-                        (println "-dump->\n" (slurp f))))
-                  (println "post: no safaridriver logs found"))))
-            ))))))
+                        (println "-dump->\n" (slurp (fs/file f)))))
+                  (println "post: no safaridriver logs found"))))))))))
 
 (use-fixtures
   :each
