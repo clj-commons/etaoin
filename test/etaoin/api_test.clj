@@ -61,6 +61,7 @@
         (println "pre: no safaridriver logs found:" (str safaridriver-logs)))
       (try
         (e/with-driver type opts driver
+          (println ">>> driver created")
           (e/go driver url)
           (println ">>>> went to" url)
           (e/wait-visible driver {:id :document-end})
