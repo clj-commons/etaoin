@@ -67,6 +67,10 @@ jobs:
       if: ${{ matrix.os == 'macos' }}
       run: sudo safaridriver --enable
 
+    - name: Dump Safari preferences
+      if: ${{ matrix.os == 'macos' }}
+      run: defaults read ~/Library/Containers/com.apple.Safari/Data/Library/Preferences/com.apple.Safari
+
     - name: Install Ubuntu X11 Utils
       if: ${{ matrix.os == 'ubuntu' }}
       run: sudo apt-get -y install x11-utils
