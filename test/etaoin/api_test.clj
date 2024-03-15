@@ -51,7 +51,8 @@
 
 ;; tests failed in safari 13.1.1 https://bugs.webkit.org/show_bug.cgi?id=202589 use STP newest
 (defn fixture-browsers [f]
-  (let [url (-> "html/test.html" io/resource str)
+  (let [#_#_url (-> "html/test.html" io/resource str)
+        url "https://google.com"
         safaridriver-logs (fs/file (fs/home) "Library/Logs/com.apple.WebDriver")]
     (doseq [type drivers
             :let [opts (get default-opts type {})]]
