@@ -69,7 +69,7 @@ jobs:
 
     - name: Dump Safari preferences
       if: ${{ matrix.os == 'macos' }}
-      run: sudo defaults read ~/Library/Containers/com.apple.Safari/Data/Library/Preferences/com.apple.Safari
+      run: defaults read com.apple.Safari
 
     - name: Install Ubuntu X11 Utils
       if: ${{ matrix.os == 'ubuntu' }}
