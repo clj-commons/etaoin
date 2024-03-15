@@ -59,22 +59,21 @@
         (do (println "pre: deleting safaridriver logs")
             (fs/delete-tree safaridriver-logs))
         (println "pre: no safaridriver logs found:" (str safaridriver-logs)))
-
-      (e/with-driver type opts driver
-        (e/go driver url)
-        (e/wait-visible driver {:id :document-end})
-        (binding [*driver* driver
-                  test-report/*context* (name type)]
-          (testing (name type)
-            (try
-              (f)
-              (finally
-                (if (fs/exists? safaridriver-logs)
-                  (do (println "post: safaridriver logs:")
-                      (doseq [f (fs/list-dir safaridriver-logs)]
-                        (println "-file->" (str f))
-                        (println "-dump->\n" (slurp (fs/file f)))))
-                  (println "post: no safaridriver logs found"))))))))))
+      (try
+        (e/with-driver type opts driver
+          (e/go driver url)
+          (e/wait-visible driver {:id :document-end})
+          (binding [*driver* driver
+                    test-report/*context* (name type)]
+            (testing (name type)
+              (f))))
+        (finally
+          (if (fs/exists? safaridriver-logs)
+            (do (println "post: safaridriver logs:")
+                (doseq [f (fs/list-dir safaridriver-logs)]
+                  (println "-file->" (str f))
+                  (println "-dump->\n" (slurp (fs/file f)))))
+            (println "post: no safaridriver logs found")))))))
 
 (use-fixtures
   :each
