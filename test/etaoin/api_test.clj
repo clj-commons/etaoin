@@ -62,7 +62,9 @@
       (try
         (e/with-driver type opts driver
           (e/go driver url)
+          (println ">>>> went to" url)
           (e/wait-visible driver {:id :document-end})
+          (println ">>>> waited for :document-end")
           (binding [*driver* driver
                     test-report/*context* (name type)]
             (testing (name type)
