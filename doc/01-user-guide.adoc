@@ -1075,12 +1075,12 @@ An exception will be thrown if the local file is not found.
 (def file-input {:tag :input :type :file})
 
 ;; upload a file from your system to the first file input
-(def my-file "env/test/resources/html/drag-n-drop/images/document.png")
+(def my-file "env/test/resources/static/drag-n-drop/images/document.png")
 (e/upload-file driver file-input my-file)
 
 ;; or pass a native Java File object:
 (require '[clojure.java.io :as io])
-(def my-file (io/file "env/test/resources/html/drag-n-drop/images/document.png"))
+(def my-file (io/file "env/test/resources/static/drag-n-drop/images/document.png"))
 (e/upload-file driver file-input my-file)
 ----
 

@@ -1,6 +1,7 @@
 (ns etaoin.api-test
   (:require
    [babashka.fs :as fs]
+   [babashka.process :as p]
    [clojure.edn :as edn]
    [clojure.java.io :as io]
    [clojure.java.shell :as shell]
@@ -8,8 +9,10 @@
    [clojure.test :refer [deftest is testing use-fixtures]]
    [etaoin.api :as e]
    [etaoin.impl.util :as util]
+   [etaoin.impl.client :as client]
    [etaoin.test-report :as test-report]
-   [slingshot.slingshot :refer [try+]]))
+   [slingshot.slingshot :refer [try+]])
+  (:import [java.net ServerSocket]))
 
 (defn numeric? [val]
   (or (instance? Double val)
@@ -49,9 +52,18 @@
 
 (def ^:dynamic *driver*)
 
+(defn- find-available-port []
+  (with-open [sock (ServerSocket. 0)]
+    (.getLocalPort sock)))
+
+(def ^:dynamic *test-server-port* nil)
+
+(defn test-server-url [path]
+  (format "http://localhost:%d/%s" *test-server-port* path))
+
 ;; tests failed in safari 13.1.1 https://bugs.webkit.org/show_bug.cgi?id=202589 use STP newest
 (defn fixture-browsers [f]
-  (let [url (-> "html/test.html" io/resource str)]
+  (let [url (test-server-url "test.html")]
     (doseq [type drivers
             :let [opts (get default-opts type {})]]
       (e/with-driver type opts driver
@@ -70,9 +82,31 @@
   (println "Testing with browsers:" drivers)
   (f))
 
+(defn test-server [f]
+  (binding [*test-server-port* (find-available-port)]
+    (let [proc (p/process {:out :inherit :err :inherit}
+                          "bb test-server --port" *test-server-port*)]
+      (let [deadline (+ (System/currentTimeMillis) 15000)
+            test-url (test-server-url "test.html") ]
+        (loop []
+          (let [resp (try (client/http-request {:method :get :url test-url})
+                          (catch Throwable _ :not-ready))]
+            (when (= :not-ready resp)
+              (if (< (System/currentTimeMillis) deadline)
+                (do
+                  (println "- waiting for test-server to be ready at" test-url)
+                  (Thread/sleep 1000)
+                  (recur))
+                (throw (ex-info "Timed out waiting for ready test server" {}))))))
+        (println "Test server ready"))
+      (f)
+      (p/destroy proc)
+      @proc)))
+
 (use-fixtures
   :once
-  report-browsers)
+  report-browsers
+  test-server)
 
 (deftest test-visible
   (doto *driver*
@@ -268,7 +302,7 @@
 (deftest test-url
   (doto *driver*
     (-> e/get-url
-        (str/ends-with? "/resources/html/test.html")
+        (str/ends-with? "/test.html")
         is)))
 
 (deftest test-css-props
@@ -409,7 +443,7 @@
 
 (deftest test-drag-n-drop
   (is 1)
-  (let [url   (-> "html/drag-n-drop/index.html" io/resource str)
+  (let [url   (test-server-url "drag-n-drop/index.html")
         doc   {:class :document}
         trash {:xpath "//div[contains(@class, 'trash')]"}]
     (doto *driver*
@@ -510,85 +544,32 @@
 
 (deftest test-cookies
   (testing "getting all cookies"
-    (let [cookies    (e/get-cookies *driver*)]
-      (e/when-safari *driver*
-        ;; Safari Webdriver v16.4 added sameSite, we'll ignore it for now
-        (let [cookies (map #(dissoc % :sameSite) cookies)]
-          (is (= cookies
-                 [{:domain   ".^filecookies^"
-                   :secure   false
-                   :httpOnly false
-                   :value    "test1"
-                   :path     "/"
-                   :name     "cookie1"}
-                  {:domain   ".^filecookies^"
-                   :secure   false
-                   :httpOnly false
-                   :value    "test2"
-                   :path     "/"
-                   :name     "cookie2"}]))))
-      (e/when-chrome *driver*
-        (is (= cookies [])))
-      (e/when-firefox *driver*
-        ;; Firefox Webdriver added sameSite, we'll ignore it for now
-        (let [cookies (map #(dissoc % :sameSite) cookies)]
-          (is (= cookies [{:name     "cookie1",
-                           :value    "test1",
-                           :path     "/",
-                           :domain   "",
-                           :secure   false,
-                           :httpOnly false}
-                          {:name     "cookie2",
-                           :value    "test2",
-                           :path     "/",
-                           :domain   "",
-                           :secure   false,
-                           :httpOnly false}]))))
-      (e/when-phantom *driver*
-        (is (= cookies [{:domain   "",
-                         :httponly false,
-                         :name     "cookie2",
-                         :path     "/",
-                         :secure   false,
-                         :value    "test2"}
-                        {:domain   "",
-                         :httponly false,
-                         :name     "cookie1",
-                         :path     "/",
-                         :secure   false,
-                         :value    "test1"}])))))
+    (let [cookies (e/get-cookies *driver*)
+          sorted-cookies (->> cookies
+                              (map #(dissoc % :sameSite)) ;; varies, maybe we don't care about this one
+                              (sort-by :name) ;; order varies we don't care
+                              )]
+      (is (= sorted-cookies [{:domain "localhost"
+                              :httpOnly false
+                              :name "cookie1"
+                              :path "/"
+                              :secure false
+                              :value "test1"}
+                             {:domain "localhost"
+                              :httpOnly false
+                              :name "cookie2"
+                              :path "/"
+                              :secure false
+                              :value "test2"}]))))
   (testing "getting a cookie"
-    (let [cookie    (e/get-cookie *driver* :cookie2)]
-      (e/when-safari *driver*
-        ;; Safari Webdriver v16.4 added sameSite, we'll ignore it for now
-        (let [cookie (dissoc cookie :sameSite)]
-          (is (= cookie
-                 {:domain   ".^filecookies^"
-                  :secure   false
-                  :httpOnly false
-                  :value    "test2"
-                  :path     "/"
-                  :name     "cookie2"}))))
-      (e/when-chrome *driver*
-        (is (nil? cookie)))
-      (e/when-firefox *driver*
-        ;; Firefox Webdriver added sameSite, we'll ignore it for now
-        (let [cookie (dissoc cookie :sameSite)]
-          (is (= cookie
-                 {:name     "cookie2"
-                  :value    "test2"
-                  :path     "/"
-                  :domain   ""
-                  :secure   false
-                  :httpOnly false}))))
-      (e/when-phantom *driver*
-        (is (= cookie
-               {:domain   ""
-                :httponly false
-                :name     "cookie2"
-                :path     "/"
-                :secure   false
-                :value    "test2"})))))
+    (let [cookie (e/get-cookie *driver* :cookie2)
+          cookie (dissoc cookie :sameSite)]
+      (is (= cookie {:domain "localhost"
+                     :httpOnly false
+                     :name "cookie2"
+                     :path "/"
+                     :secure false
+                     :value "test2"}))))
   (testing "deleting a cookie"
     (e/when-not-phantom
       *driver*
@@ -653,10 +634,7 @@
               :bar [true nil "Hello"]})))))
 
 (deftest test-add-script
-  (let [js-url (-> "js/inject.js" io/resource
-                   fs/file .toURI .toURL ;; little extra dance here for bb on Windows,
-                                         ;; otherwise slash after file: is ommitted and therefore invalid
-                   str)]
+  (let [js-url (test-server-url "js/inject.js")]
     (testing "adding a script"
       (e/add-script *driver* js-url)
       (e/wait 1)
@@ -712,7 +690,7 @@
              ["div" "b" "p" "span"])))))
 
 (deftest test-query-tree
-  (let [url            (-> "html/test2.html" io/resource str)
+  (let [url            (test-server-url "test2.html")
         _              (e/go *driver* url)
         all-div        (e/query-tree *driver* {:tag :div})
         all-li         (e/query-tree *driver* {:tag :li})

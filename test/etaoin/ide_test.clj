@@ -28,7 +28,7 @@
       (get-default-drivers)))
 
 (defn fixture-browser [f]
-  (let [base-url       (-> "html" io/resource str)
+  (let [base-url       (-> "static" io/resource str)
         test-file-path (-> "ide/test.side" io/resource str)]
     (doseq [type drivers]
       (e/with-driver type {:args ["--no-sandbox"]} driver

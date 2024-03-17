@@ -3,7 +3,8 @@
  :deps {doric/doric {:mvn/version "0.9.0"}
         lread/status-line {:git/url "https://github.com/lread/status-line.git"
                            :sha "cf44c15f30ea3867227fa61ceb823e5e942c707f"}
-        dev.nubank/docopt {:mvn/version "0.6.1-fix7"}}
+        dev.nubank/docopt {:mvn/version "0.6.1-fix7"}
+        org.babashka/http-server {:mvn/version "0.1.12"}}
  :tasks
  {;; setup
   :requires ([babashka.classpath :as cp]
@@ -47,6 +48,8 @@
                   :org.babashka/cli {:coerce {:nses [:symbol]
                                               :patterns [:string]
                                               :vars [:symbol]}}}
+  test-server    {:doc "Static server to support tests (automatically lanched by tests that need it)"
+                  :task test-server/-main}
   test:bb        {:doc "Runs tests under Babashka [--help]"
                   :task test/test-bb}
   test-doc       {:doc "test code blocks in user guide"
