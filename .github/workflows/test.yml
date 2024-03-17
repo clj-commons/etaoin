@@ -87,7 +87,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '11'
+        java-version: ${{ matrix.jdk-version }}
 
     - name: Install Clojure Tools
       uses: DeLaGuardo/setup-clojure@12.5

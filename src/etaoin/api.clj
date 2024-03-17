@@ -2818,7 +2818,7 @@
        .codePoints
        .iterator
        iterator-seq
-       (map #(Character/toString %))))
+       (map #(String. (Character/toChars %)))))
 
 (defn- make-input* [text & more]
   (codepoints (apply str text more)))

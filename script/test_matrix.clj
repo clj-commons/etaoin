@@ -6,45 +6,62 @@
             [helper.main :as main]
             [lread.status-line :as status]))
 
-(defn- test-def [os id platform browser]
+(defn- test-def [{:keys [os id platform browser jdk-version]}]
   {:os os
+   :jdk-version jdk-version
    :cmd (->> ["bb" (str "test:" platform)
               "--suites" id
               (when browser (str "--browsers " browser))
               (when (= "ubuntu" os) "--launch-virtual-display")]
              (remove nil?)
              (string/join " "))
-   :desc (->> [id os browser platform]
+   :desc (->> [id os browser (if (= "jvm" platform)
+                               (str "jdk" jdk-version)
+                               platform)]
               (remove nil?)
               (string/join " "))})
+
+(defn- test-doc [{:keys [os jdk-version]}]
+  {:os os
+   :jdk-version jdk-version
+   :cmd (if (= "ubuntu" os)
+          "bb test-doc --launch-virtual-display"
+          "bb test-doc")
+   :desc (str "test-doc " os " jdk" jdk-version)} )
 
 (defn- github-actions-matrix []
   (let [oses ["macos" "ubuntu" "windows"]
         ide-browsers ["chrome" "firefox"]
         api-browsers ["chrome" "firefox" "edge" "safari"]
-        platforms ["jvm" "bb"]]
+        platforms ["jvm" "bb"]
+        jdk-versions ["8" "11" "17" "21"]
+        default-opts {:jdk-version "21"}]
     (->> (concat
            (for [os oses
                  platform platforms]
-             (test-def os "unit" platform nil))
+             (test-def (merge default-opts {:os os :id "unit" :platform platform})))
            (for [os oses
                  platform platforms
                  browser ide-browsers]
-             (test-def os "ide" platform browser))
+             (test-def (merge default-opts {:os os :id "ide" :platform platform :browser browser})))
            (for [os oses
                  platform platforms
                  browser api-browsers
                  :when (not (or (and (= "ubuntu" os) (some #{browser} ["edge" "safari"]))
                                 (and (= "windows" os) (= "safari" browser))))]
-             (test-def os "api" platform browser))
+             (test-def (merge default-opts {:os os :id "api" :platform platform :browser browser})))
+           ;; for jdk coverage we don't need to run across all oses and browsers
+           (for [id ["unit" "ide" "api"]
+                 jdk-version jdk-versions
+                 :when (not= jdk-version (:jdk-version default-opts))]
+             (test-def {:jdk-version jdk-version :os "ubuntu" :id id :platform "jvm" :browser "firefox"}))
            (for [os oses]
-             {:os os
-              :cmd (if (= "ubuntu" os)
-                     "bb test-doc --launch-virtual-display"
-                     "bb test-doc")
-              :desc (str "test-doc " os)}))
-         (sort-by :desc)
-         (into [{:os "ubuntu" :cmd "bb lint" :desc "lint"}]))))
+             (test-doc (merge default-opts {:os os})))
+           (for [jdk-version jdk-versions
+                 :when (not= jdk-version (:jdk-version default-opts))]
+             (test-doc {:jdk-version jdk-version :os "ubuntu"})))
+         (sort-by (juxt #(parse-long (:jdk-version %)) :desc))
+         (into [(merge default-opts {:os "ubuntu" :cmd "bb lint" :desc "lint"})]))))
 
 (def valid-formats ["json" "table"])
 (def cli-spec {:help {:desc "This usage help"}
@@ -74,7 +91,7 @@
         (status/line :detail
                      (if (= "json" (:format opts))
                        (json/generate-string matrix)
-                       (doric/table [:os :cmd :desc] matrix)))))))
+                       (doric/table [:os :jdk-version :cmd :desc] matrix)))))))
 
 (main/when-invoked-as-script
  (apply -main *command-line-args*))
