@@ -7,9 +7,9 @@
    [etaoin.ide.flow :as ide]
    [etaoin.test-report :as test-report]))
 
-(def ^:dynamic *driver*)
-(def ^:dynamic *base-url*)
-(def ^:dynamic *test-file-path*)
+(def ^:dynamic *driver* nil)
+(def ^:dynamic *base-url* nil)
+(def ^:dynamic *test-file-path* nil)
 
 (defn get-default-drivers
   "Default and supported drivers for ide tests"
