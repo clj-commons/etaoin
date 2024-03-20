@@ -2177,7 +2177,7 @@ Example:
 [source,clojure]
 ----
   :log-stdout "target/chromedriver-out.log"
-  :log-stderr "target/chrmoedriver-err.log"
+  :log-stderr "target/chromedriver-err.log"
 ----
 | `/dev/null`, on Windows `NUL`
 
