@@ -2161,7 +2161,7 @@ Example: `:log-level :err`
 a| `:driver-log-level` *WebDriver* minimal log level.
 values vary by browser driver vendor:
 
-* chrome `"OFF"` `"SEVERE"` `"WARNING"` `"INFO"` or `"DEBUG"`
+* chrome & edge `"OFF"` `"SEVERE"` `"WARNING"` `"INFO"` or `"DEBUG"`
 * firefox `"fatal"` `"error"` `"warn"` `"info"` `"config"` `"debug"` or `"trace"`
 * phantomjs `"ERROR"` `"WARN"` `"INFO"` `"DEBUG"`
 
