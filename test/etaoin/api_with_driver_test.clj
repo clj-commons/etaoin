@@ -9,7 +9,8 @@
             [etaoin.api :as e]
             [etaoin.api2 :as e2]
             [etaoin.api-test :as api-test]
-            [etaoin.test-report]))
+            [etaoin.test-report]
+            [etaoin.impl.util :as util]))
 
 (defn testing-driver? [type]
   (some #{type} api-test/drivers))
@@ -241,3 +242,30 @@
                (e2/with-safari [driver]
                  (e/go driver test-page)
                  (e/get-title driver))))))))
+
+(deftest driver-log-test
+  (let [test-page (api-test/test-server-url "test.html")]
+    (when (testing-driver? :chrome)
+      (testing "chrome"
+        (println "testing chrome")
+        (util/with-tmp-file "chromedriver" ".log" path
+          ;; chromedriver logs to stderr
+          (e/with-chrome {:driver-log-level "DEBUG" :log-stderr path} driver
+            (e/go driver test-page)
+            (is (re-find #"\[DEBUG\]:" (slurp path)))))))
+    (when (testing-driver? :edge)
+      (testing "edge"
+        (println "testing edge")
+        (util/with-tmp-file "edgedriver" ".log" path
+          ;; edgedriver logs to stderr
+          (e/with-edge {:driver-log-level "DEBUG" :log-stderr path} driver
+            (e/go driver test-page)
+            (is (re-find #"\[DEBUG\]:" (slurp path)))))))
+   (when (testing-driver? :firefox)
+      (testing "firefox"
+        (println "testing firefox")
+        (util/with-tmp-file "firefoxdriver" ".log" path
+          ;; geckodriver logs to stdout
+          (e/with-firefox {:driver-log-level "debug" :log-stdout path} driver
+            (e/go driver test-page)
+            (is (re-find #"\tDEBUG\t" (slurp path)))))))))
