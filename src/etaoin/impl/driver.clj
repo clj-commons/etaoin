@@ -473,8 +473,8 @@
   (log/infof "The log level setting is not implemented for this driver.")
   driver)
 
-(defmethod set-driver-log-level
-  :chrome
+(defmethods set-driver-log-level
+  [:chrome :edge]
   [driver log-level]
   (set-args driver [(format "--log-level=%s" log-level)]))
 
