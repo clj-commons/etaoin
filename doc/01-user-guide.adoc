@@ -209,13 +209,13 @@ bb tools-versions
 +
 [source,bash]
 ----
-bb test all
+bb test:bb
 ----
 * For a smaller sanity test, you might want to run api tests against browsers you are particularly intested in. Example:
 +
 [source,bash]
 ----
-bb test api --browser chrome
+bb test:bb --suites api --browsers chrome
 ----
 
 During the test run, browser windows will open and close in series.
