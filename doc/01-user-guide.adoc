@@ -54,7 +54,7 @@ Etaoin's test suite covers the following OSes and browsers for both Clojure and 
 | -
 | -
 
-| macOS
+| macOS ^1^
 | yes
 | yes
 | yes
@@ -68,7 +68,8 @@ Etaoin's test suite covers the following OSes and browsers for both Clojure and 
 
 |===
 
-NOTE: We did once test against PhantomJS, but since work has long ago stopped on this project, we have dropped testing
+1. Our GitHub Actions macOS tests run on silicon (aka arm64, aarch64 or M*) hardware
+2. We did once test against PhantomJS, but since work has long ago stopped on this project, we have dropped testing
 
 == Installation
 
@@ -2097,7 +2098,7 @@ a| Random port when lanching local WebDriver process, else varies by vendor:
 a| `:webdriver-url` for *WebDriver* process. When:
 
 * omitted, creates a new local WebDriver process (unless `:host` was specified).
-* specified, attempts to connect to an existing running WebDriver process. 
+* specified, attempts to connect to an existing running WebDriver process.
 
 See <<connecting-existing>>.
 

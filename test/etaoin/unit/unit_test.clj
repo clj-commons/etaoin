@@ -3,6 +3,7 @@
    [babashka.fs :as fs]
    [clojure.spec.alpha :as s]
    [clojure.test :refer [deftest is testing]]
+   [clojure.tools.logging :as log]
    [etaoin.api :as e]
    [etaoin.ide.flow :as ide]
    [etaoin.ide.impl.spec :as spec]
@@ -108,21 +109,35 @@
 
 (deftest test-retry-launch
   (testing "give up after max tries"
-    (let [run-calls (atom 0)]
+    (let [run-calls (atom 0)
+          warnings-logged (atom [])
+          ex (ex-info "firefox badness" {})]
       (with-redefs
         [etaoin.impl.proc/run  (fn [_ _]
                                  (swap! run-calls inc)
                                  {:some :process})
-         e/running? (fn [_] (throw (ex-info "firefox badness" {})))]
+         e/running? (fn [_] (throw ex ))
+         log/log* (fn [_logger level _throwable message]
+                                      (swap! warnings-logged conj [level message]))]
         (is (thrown-with-msg?
               ExceptionInfo
               #"gave up trying to launch :firefox after 8 tries"
               (e/with-firefox {:webdriver-failed-launch-retries 7} driver
                 driver)))
-        (is (= 8 @run-calls)))))
+        (is (= 8 @run-calls) "run calls")
+        (is (= [[:warn "unexpected exception occurred launching :firefox, try 1 (of a max of 8)"]
+                [:warn "unexpected exception occurred launching :firefox, try 2 (of a max of 8)"]
+                [:warn "unexpected exception occurred launching :firefox, try 3 (of a max of 8)"]
+                [:warn "unexpected exception occurred launching :firefox, try 4 (of a max of 8)"]
+                [:warn "unexpected exception occurred launching :firefox, try 5 (of a max of 8)"]
+                [:warn "unexpected exception occurred launching :firefox, try 6 (of a max of 8)"]
+                [:warn "unexpected exception occurred launching :firefox, try 7 (of a max of 8)"]]
+               @warnings-logged) "warnings logged"))))
   (testing "succeed before max tries"
     (let [run-calls (atom 0)
-          succeed-when-calls 3]
+          succeed-when-calls 3
+          warnings-logged (atom [])
+          ex (ex-info "safari badness" {})]
       (with-redefs
         [etaoin.impl.proc/run  (fn [_ _]
                                  (swap! run-calls inc)
@@ -132,8 +147,10 @@
          e/delete-session   identity
          e/running? (fn [_]
                       (if (< @run-calls succeed-when-calls)
-                        (throw (ex-info "safari badness" {}))
+                        (throw ex)
                         true))
+         log/log* (fn [_logger level _throwable message]
+                                      (swap! warnings-logged conj [level message]))
          util/get-free-port (constantly 12345)]
         ;; safari driver has a default of 4 retries
         (e/with-safari driver
@@ -146,7 +163,10 @@
                   :session "session-key"
                   :type :safari,
                   :url "http://127.0.0.1:12345"} driver)))
-        (is (= succeed-when-calls @run-calls))))))
+        (is (= succeed-when-calls @run-calls))
+        (is (= [[:warn "unexpected exception occurred launching :safari, try 1 (of a max of 5)"]
+                [:warn "unexpected exception occurred launching :safari, try 2 (of a max of 5)"]]
+               @warnings-logged) "warnings logged")))))
 
 (deftest test-actions
   (let [keyboard        (-> (e/make-key-input)
