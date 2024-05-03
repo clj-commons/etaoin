@@ -1,6 +1,12 @@
 name: Test
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
 
 jobs:
   setup:
@@ -70,6 +76,30 @@ jobs:
     - name: Install Linux Windows Manager
       if: ${{ matrix.os == 'ubuntu' }}
       run: sudo apt-get -y install fluxbox
+
+    # No longer pre-installed on macOS github action runners
+    - name: Install Image Magick on macOS
+      if: ${{ matrix.os == 'macos' && contains(matrix.needs, 'imagemagick') }}
+      run: brew install imagemagick
+
+    # No longer pre-installed on macOS github action runners
+    - name: Install Microsoft Edge on macOS
+      if: ${{ matrix.os == 'macos' && contains(matrix.needs, 'edge') }}
+      run: |
+        brew install --cask microsoft-edge
+        EDGE_VERSION=$(defaults read /Applications/Microsoft\ Edge.app/Contents/Info CFBundleShortVersionString)
+        DRIVER_URL="https://msedgedriver.azureedge.net/${EDGE_VERSION}/edgedriver_mac64_m1.zip"
+        curl -o msedgedriver.zip $DRIVER_URL
+        mkdir $RUNNER_TEMP/edgedriver
+        unzip msedgedriver.zip -d $RUNNER_TEMP/edgedriver
+        echo "$RUNNER_TEMP/edgedriver" >> $GITHUB_PATH
+
+    # No longer pre-installed on macOS github action runners
+    - name: Install Firefox on macOS
+      if: ${{ matrix.os == 'macos' && contains(matrix.needs, 'firefox') }}
+      run: |
+        brew install --cask firefox
+        brew install geckodriver
 
     - uses: actions/checkout@v4
 

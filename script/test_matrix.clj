@@ -15,6 +15,15 @@
               (when (= "ubuntu" os) "--launch-virtual-display")]
              (remove nil?)
              (string/join " "))
+   :needs (case id
+            "unit"
+            ["chrome" "firefox"]
+
+            "api"
+            (conj ["imagemagick"] browser)
+
+            "ide"
+            [browser])
    :desc (->> [id os browser (if (= "jvm" platform)
                                (str "jdk" jdk-version)
                                platform)]
@@ -27,14 +36,18 @@
    :cmd (if (= "ubuntu" os)
           "bb test-doc --launch-virtual-display"
           "bb test-doc")
+   :needs ["chrome" "firefox"]
    :desc (str "test-doc " os " jdk" jdk-version)} )
 
 (defn- github-actions-matrix []
-  (let [oses ["macos" "ubuntu" "windows"]
+  (let [os-jdks {"ubuntu" ["8" "11" "17" "21"]
+                 ;; macOS on GitHub Actions is now arm-based and does not include jdk8
+                 "macos" ["11" "17" "21"]
+                 "windows" ["8" "11" "17" "21"]}
+        oses (keys os-jdks)
         ide-browsers ["chrome" "firefox"]
         api-browsers ["chrome" "firefox" "edge" "safari"]
         platforms ["jvm" "bb"]
-        jdk-versions ["8" "11" "17" "21"]
         default-opts {:jdk-version "21"}]
     (->> (concat
            (for [os oses
@@ -43,7 +56,8 @@
            (for [os oses
                  platform platforms
                  browser ide-browsers]
-             (test-def (merge default-opts {:os os :id "ide" :platform platform :browser browser})))
+             (test-def (merge default-opts
+                              {:os os :id "ide" :platform platform :browser browser})))
            (for [os oses
                  platform platforms
                  browser api-browsers
@@ -52,12 +66,14 @@
              (test-def (merge default-opts {:os os :id "api" :platform platform :browser browser})))
            ;; for jdk coverage we don't need to run across all oses and browsers
            (for [id ["unit" "ide" "api"]
-                 jdk-version jdk-versions
+                 jdk-version (get os-jdks "ubuntu")
                  :when (not= jdk-version (:jdk-version default-opts))]
-             (test-def {:jdk-version jdk-version :os "ubuntu" :id id :platform "jvm" :browser "firefox"}))
+             (test-def {:jdk-version jdk-version :os "ubuntu" :id id
+                        :platform "jvm"
+                        :browser (when (not= "unit" id) "firefox")}))
            (for [os oses]
              (test-doc (merge default-opts {:os os})))
-           (for [jdk-version jdk-versions
+           (for [jdk-version (get os-jdks "ubuntu")
                  :when (not= jdk-version (:jdk-version default-opts))]
              (test-doc {:jdk-version jdk-version :os "ubuntu"})))
          (sort-by (juxt #(parse-long (:jdk-version %)) :desc))
@@ -91,7 +107,7 @@
         (status/line :detail
                      (if (= "json" (:format opts))
                        (json/generate-string matrix)
-                       (doric/table [:os :jdk-version :cmd :desc] matrix)))))))
+                       (doric/table [:os :jdk-version :cmd :needs :desc] matrix)))))))
 
 (main/when-invoked-as-script
  (apply -main *command-line-args*))
