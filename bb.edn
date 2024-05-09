@@ -58,8 +58,12 @@
                   :task test-matrix/-main}
   drivers        {:doc "[list|kill] any running WebDrivers"
                   :task drivers/-main}
-  lint           {:doc "[--rebuild] lint source code"
+  lint-kondo     {:doc "[--rebuild] lint source code with clj-kondo"
                   :task lint/-main}
+  lint-eastwood  {:doc "Run Eastwood linter on source code"
+                  :task (shell/clojure "-M:eastwood")}
+  lint           {:doc "Run all linters"
+                  :depends [lint-kondo lint-eastwood]}
   cljdoc-preview {:doc "preview what docs will look like on cljdoc, use --help for args"
                   :task cljdoc-preview/-main}
   tools-versions {:doc "report on tools versions"

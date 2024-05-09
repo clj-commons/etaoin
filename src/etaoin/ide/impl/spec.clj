@@ -5,6 +5,7 @@
   (:require
    [clojure.spec.alpha :as s]))
 
+(set! *warn-on-reflection* true)
 
 (def control-flow-commands
   #{:do :times :while :forEach :if :elseIf :else :end :repeatIf})

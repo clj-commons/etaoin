@@ -8,6 +8,8 @@
    [etaoin.impl.util :as util]
    [etaoin.impl.xpath :as xpath]))
 
+(set! *warn-on-reflection* true)
+
 ;; todo duplicates with api.clj
 (def locator-xpath "xpath")
 (def locator-css "css selector")

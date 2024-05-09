@@ -5,6 +5,8 @@
    [clojure.string :as str]
    [etaoin.api :as api]))
 
+(set! *warn-on-reflection* true)
+
 (defn- try-parse-int
   [line]
   (try (Integer/parseInt line)

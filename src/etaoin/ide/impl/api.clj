@@ -12,6 +12,8 @@
    [etaoin.impl.util :refer [defmethods]]
    [etaoin.keys :as k]))
 
+(set! *warn-on-reflection* true)
+
 (defn absolute-path?
   [path]
   (-> path
@@ -158,7 +160,7 @@
     (str base-url "/" target)))
 
 (defn make-assert-msg
-  [command actual expected]
+  ^String [command actual expected]
   (format "\nAssert command:\"%s\"\nExpected: %s\nActual: %s"
           (name command) expected actual))
 
@@ -628,7 +630,7 @@
     (not (str/blank? target))
     (str (format " on '%s'" target))
 
-    "always"
+    :always
     (str (format "Command: %s" (name command)))))
 
 (defn run-command-with-log

@@ -3,6 +3,8 @@
 
   Sourced from [WebDriver spec](https://www.w3.org/TR/webdriver/#keyboard-actions).")
 
+(set! *warn-on-reflection* true)
+
 (def unidentified       \uE000)
 (def cancel             \uE001)
 (def help               \uE002)

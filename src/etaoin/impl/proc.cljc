@@ -6,6 +6,8 @@
              [babashka.process.pprint]]) ;; to support exception rendering in REPL
    [clojure.string :as str]))
 
+(set! *warn-on-reflection* true)
+
 (def windows? (str/starts-with? (System/getProperty "os.name") "Windows"))
 
 (defn- get-null-file ^java.io.File
@@ -61,4 +63,4 @@ For driver installation, check out the Etaoin user guide: %s" binary user-guide-
 (defn alive?
   "Check if `p` has died unexpectedly, use [[result]] to get result."
   [p]
-  (.isAlive (:proc p)))
+  (p/alive? p))

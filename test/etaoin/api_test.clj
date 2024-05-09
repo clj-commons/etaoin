@@ -344,8 +344,7 @@
       (e/refresh)
       (e/wait-visible {:id :document-end})
       (e/click {:id :wait-button})
-      (e/wait-has-text :wait-span "-secret-"))
-    (is true "text found"))
+      (e/wait-has-text :wait-span "-secret-")))
   (testing "wait for text timeout"
     (doto *driver*
       (e/refresh)
@@ -388,8 +387,7 @@
       (e/refresh)
       (e/wait-visible {:id :document-end})
       (e/click {:id :wait-button})
-      (e/wait-has-text-everywhere "-secret-"))
-    (is true "text found"))
+      (e/wait-has-text-everywhere "-secret-")))
   (testing "wait for text timeout"
     (doto *driver*
       (e/refresh)
@@ -425,7 +423,6 @@
                 :times    7}))))))
 
 (deftest test-wait-has-class
-  (is 1)
   (testing "wait for an element has class"
     (doto *driver*
       (e/scroll-query :wait-add-class-trigger)
@@ -437,12 +434,10 @@
                        :message  "No 'new-one' class found."}))))
 
 (deftest test-close-window
-  (is 1)
   (doto *driver*
     (e/close-window)))
 
 (deftest test-drag-n-drop
-  (is 1)
   (let [url   (test-server-url "drag-n-drop/index.html")
         doc   {:class :document}
         trash {:xpath "//div[contains(@class, 'trash')]"}]
@@ -529,9 +524,7 @@
         (e/click {:id :set-active-el})
         (-> (e/get-element-attr :active :id)
             (= "active-el-input")
-            is)))
-    (e/when-safari *driver*
-      (is 1))))
+            is)))))
 
 (deftest test-element-text
   (let [text (e/get-element-text *driver* {:id :element-text})]
@@ -730,7 +723,6 @@
           (e/click *driver* :non-existing-element))
         (is false "should be caught")
         (catch Exception _e
-          (is true "caught")
           (let [files               (file-seq (fs/file dir-tmp))
                 expected-file-count (if (e/supports-logs? *driver*) 3 2)]
             (is (= (-> files rest count)
