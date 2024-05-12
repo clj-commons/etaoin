@@ -94,6 +94,8 @@
   (status/line :detail "Print the test matrix for GitHub Actions\n")
   (status/line :detail (cli/format-opts {:spec cli-spec :order [:format :help]})))
 
+
+
 (defn -main [& args]
   (let [opts (cli/parse-opts args {:spec cli-spec
                                    :restrict true
@@ -103,7 +105,8 @@
                                                (System/exit 1))})]
     (if (:help opts)
       (usage-help)
-      (let [matrix (github-actions-matrix)]
+      (let [matrix [{:os "windows" :jdk-version "21" :cmd "bb test:bb --suites api --browsers chrome" :needs ["imagemagick" "chrome"]  :desc "api windows chrome bb"}]
+            #_(github-actions-matrix)]
         (status/line :detail
                      (if (= "json" (:format opts))
                        (json/generate-string matrix)

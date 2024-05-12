@@ -40,7 +40,7 @@
   [:firefox :chrome :safari])
 
 (def default-opts
-  {:chrome  {:args ["--no-sandbox"]}
+  {:chrome  {:args ["--no-sandbox"] :log-stdout :inherit :log-stderr :inherit}
    :firefox {}
    :safari  {}
    :edge    {:args ["--headless"]}})
@@ -67,8 +67,11 @@
     (doseq [type drivers
             :let [opts (get default-opts type {})]]
       (e/with-driver type opts driver
+        (println "-->go" url)
         (e/go driver url)
+        (println "-->wait-visible")
         (e/wait-visible driver {:id :document-end})
+        (println "-->run test")
         (binding [*driver* driver
                   test-report/*context* (name type)]
           (testing (name type)
