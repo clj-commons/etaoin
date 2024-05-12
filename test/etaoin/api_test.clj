@@ -40,7 +40,7 @@
   [:firefox :chrome :safari])
 
 (def default-opts
-  {:chrome  {:args ["--no-sandbox"] :log-stdout :inherit :log-stderr :inherit}
+  {:chrome  {:args ["--no-sandbox"] :log-stdout :inherit :log-stderr :inherit :driver-log-level "DEBUG"}
    :firefox {}
    :safari  {}
    :edge    {:args ["--headless"]}})
