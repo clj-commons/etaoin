@@ -66,16 +66,21 @@
   (let [url (test-server-url "test.html")]
     (doseq [type drivers
             :let [opts (get default-opts type {})]]
-      (e/with-driver type opts driver
-        (println "-->go" url)
-        (e/go driver url)
-        (println "-->wait-visible")
-        (e/wait-visible driver {:id :document-end})
-        (println "-->run test")
-        (binding [*driver* driver
-                  test-report/*context* (name type)]
-          (testing (name type)
-            (f)))))))
+      (try
+        (e/with-driver type opts driver
+          (println "-->go" url)
+          (e/go driver url)
+          (println "-->wait-visible")
+          (e/wait-visible driver {:id :document-end})
+          (println "-->run test")
+          (binding [*driver* driver
+                    test-report/*context* (name type)]
+            (testing (name type)
+              (f))))
+        (finally
+          (println "->Interesting processes after test complete")
+          (p/shell {:out :inherit} "bb drivers")
+          (p/shell {:out :inherit} "bb ps bb conhost chrome"))))))
 
 (use-fixtures
   :each

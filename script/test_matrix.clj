@@ -105,7 +105,7 @@
                                                (System/exit 1))})]
     (if (:help opts)
       (usage-help)
-      (let [matrix [{:os "windows" :jdk-version "21" :cmd "bb test:bb --suites api --browsers chrome" :needs ["imagemagick" "chrome"]  :desc "api windows chrome bb"}]
+      (let [matrix [{:os "windows" :jdk-version "21" :cmd "bb test:jvm --suites api --browsers chrome" :needs ["imagemagick" "chrome"]  :desc "api windows chrome jdk21"}]
             #_(github-actions-matrix)]
         (status/line :detail
                      (if (= "json" (:format opts))
