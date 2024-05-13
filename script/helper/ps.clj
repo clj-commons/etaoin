@@ -1,5 +1,5 @@
 (ns helper.ps
-  ;; noice! bb is JDK 11 so we have ProcessHandle
+  ;; noice! bb uses a modern JDK so we have ProcessHandle
   (:import (java.lang ProcessHandle)))
 
 (defn all-processes []
@@ -11,6 +11,7 @@
                           (->> info .arguments .get (into [])))
               start-instant (-> info .startInstant .get)]]
     {:pid (.pid p)
+     :is-alive (.isAlive p)
      :start-instant start-instant
      :handle p
      :command command

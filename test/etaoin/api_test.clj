@@ -40,7 +40,7 @@
   [:firefox :chrome :safari])
 
 (def default-opts
-  {:chrome  {:args ["--no-sandbox"] :log-stdout :inherit :log-stderr :inherit :driver-log-level "DEBUG"}
+  {:chrome  {#_#_:args ["--no-sandbox"] :log-stdout :inherit :log-stderr :inherit :driver-log-level "DEBUG"}
    :firefox {}
    :safari  {}
    :edge    {:args ["--headless"]}})
@@ -80,7 +80,7 @@
         (finally
           (println "->Interesting processes after test complete")
           (p/shell {:out :inherit} "bb drivers")
-          (p/shell {:out :inherit} "bb ps bb conhost chrome"))))))
+          (p/shell {:out :inherit} "bb ps chrome"))))))
 
 (use-fixtures
   :each

@@ -65,7 +65,7 @@
                   :task (let [pattern (re-pattern (str/join "|" *command-line-args*))]
                           (->> (ps/all-processes)
                                (filterv (fn [p] (re-find pattern (:command p))))
-                               (doric/table [:pid :start-instant :command :arguments])
+                               (doric/table [:pid :start-instant :is-alive :command :arguments])
                                println))}
   lint           {:doc "[--rebuild] lint source code"
                   :task lint/-main}
