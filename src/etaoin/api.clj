@@ -272,7 +272,6 @@
 
   See also: [[quit]]."
   [driver]
-  (println "--> deleting session" (:session driver))
   (execute {:driver driver
             :method :delete
             :path   [:session (:session driver)]}))
@@ -3640,9 +3639,7 @@
 (defn stop-driver
   "Returns new `driver` after killing its WebDriver process."
   [driver]
-  (println "--> killing driver")
   (proc/kill (:process driver))
-  (println "--> driver killed, result" (proc/result (:process driver)))
   (dissoc driver :process :args :env :capabilities))
 
 (defn quit

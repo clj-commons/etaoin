@@ -105,7 +105,9 @@
                                                (System/exit 1))})]
     (if (:help opts)
       (usage-help)
-      (let [matrix [{:os "windows" :jdk-version "21" :cmd "bb test:jvm --suites api --browsers chrome" :needs ["imagemagick" "chrome"]  :desc "api windows chrome jdk21"}]
+      (let [matrix [{:os "windows" :jdk-version "21" :cmd "bb test:jvm --suites api --browsers chrome" :needs ["imagemagick" "chrome"]  :desc "api windows chrome jdk21"}
+                    {:os "ubuntu" :jdk-version "21" :cmd "bb test:jvm --suites api --browsers chrome --launch-virtual-display" :needs ["imagemagick" "chrome"] :desc "api unbuntu chrome jdk21"}
+                    {:os "macos" :jdk-version "21" :cmd "bb test:jvm --suites api --browsers chrome" :needs ["imagemagick" "chrome"] :desc "api macos chrome jdk21"}]
             #_(github-actions-matrix)]
         (status/line :detail
                      (if (= "json" (:format opts))
