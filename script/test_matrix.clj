@@ -105,10 +105,12 @@
                                                (System/exit 1))})]
     (if (:help opts)
       (usage-help)
-      (let [matrix [{:os "windows" :jdk-version "21" :cmd "bb test:jvm --suites api --browsers chrome" :needs ["imagemagick" "chrome"]  :desc "api windows chrome jdk21"}
-                    {:os "ubuntu" :jdk-version "21" :cmd "bb test:jvm --suites api --browsers chrome --launch-virtual-display" :needs ["imagemagick" "chrome"] :desc "api unbuntu chrome jdk21"}
-                    {:os "macos" :jdk-version "21" :cmd "bb test:jvm --suites api --browsers chrome" :needs ["imagemagick" "chrome"] :desc "api macos chrome jdk21"}]
-            #_(github-actions-matrix)]
+      (let [matrix (github-actions-matrix)
+            ;; temporarily reduce scope for ci hacking
+            matrix (->> matrix
+                        (filter #(= "21" (:jdk-version %)))
+                        (filter #(not (string/starts-with? (:cmd %) "bb test:bb" )))
+                        (filter #(some #{"chrome"} (:needs %))))]
         (status/line :detail
                      (if (= "json" (:format opts))
                        (json/generate-string matrix)
