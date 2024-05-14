@@ -40,7 +40,7 @@
   [:firefox :chrome :safari])
 
 (def default-opts
-  {:chrome  {:args ["--no-sandbox"]}
+  {:chrome  {}
    :firefox {}
    :safari  {}
    :edge    {:args ["--headless"]}})

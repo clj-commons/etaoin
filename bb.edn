@@ -58,6 +58,15 @@
                   :task test-matrix/-main}
   drivers        {:doc "[list|kill] any running WebDrivers"
                   :task drivers/-main}
+  ps             {:doc "List processes with matching names (handy for debugging)"
+                  :requires ([helper.ps :as ps]
+                             [doric.core :as doric]
+                             [clojure.string :as str])
+                  :task (let [pattern (re-pattern (str/join "|" *command-line-args*))]
+                          (->> (ps/all-processes)
+                               (filterv (fn [p] (re-find pattern (:command p))))
+                               (doric/table [:pid :start-instant :is-alive :command :arguments])
+                               println))}
   lint           {:doc "[--rebuild] lint source code"
                   :task lint/-main}
   cljdoc-preview {:doc "preview what docs will look like on cljdoc, use --help for args"

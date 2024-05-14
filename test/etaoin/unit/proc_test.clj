@@ -56,7 +56,7 @@
         process (proc/run ["chromedriver" (format "--port=%d" port)])]
     (try
       (e/wait-running {:port port :host "localhost"})
-      (e/with-chrome {:args ["--no-sandbox"]} driver
+      (e/with-chrome driver
         ;; added to diagnose flakyness on windows on CI
         (println "automatically chosen port->" (:port driver))
         ;; added to diagnose flakyness on windows on CI
@@ -71,7 +71,7 @@
     (try
       (e/wait-running {:port port :host "localhost"})
       ;; should connect, not launch
-      (let [driver (e/chrome {:host "localhost" :port port :args ["--no-sandbox"]})]
+      (let [driver (e/chrome {:host "localhost" :port port})]
         (is (= 1 (get-count-chromedriver-instances)))
         (e/quit driver))
       (finally
@@ -83,7 +83,7 @@
     (try
       (e/wait-running {:port port :host "localhost"})
       (let [;; should connect, not launch
-            driver  (e/chrome {:webdriver-url (format "http://localhost:%d" port) :args ["--no-sandbox"]})]
+            driver  (e/chrome {:webdriver-url (format "http://localhost:%d" port)})]
 
 
         (is (= 1 (get-count-chromedriver-instances)))
@@ -172,8 +172,7 @@
       (with-redefs [client/http-request (fn [_] (throw (ex-info "read timeout" {})))]
         ;; attempt connect, not launch
         (let [ex (try
-                   (e/with-chrome {:webdriver-url (format "http://localhost:%d" port)
-                                   :args ["--no-sandbox"]} _driver
+                   (e/with-chrome {:webdriver-url (format "http://localhost:%d" port)} _driver
                      (is false "should not get here"))
                    (catch Throwable ex
                      {:exception ex}))

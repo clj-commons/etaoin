@@ -2850,7 +2850,7 @@ Here is a `clojure` example:
 
 [source,shell]
 ----
-clojure -M -m etaoin.ide.main -d firefox -p '{:port 8888 :args ["--no-sandbox"]}' -r ide/test.side
+clojure -M -m etaoin.ide.main -d firefox -p '{:port 8888}' -r ide/test.side
 ----
 
 As well as from an uberjar.

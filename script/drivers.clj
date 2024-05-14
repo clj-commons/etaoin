@@ -1,11 +1,10 @@
 (ns drivers
   (:require [babashka.fs :as fs]
             [doric.core :as doric]
+            [helper.ps :as ps]
             [helper.os :as os]
             [helper.main :as main]
-            [lread.status-line :as status])
-  ;; noice! bb is JDK 11 so we have ProcessHandle
-  (:import (java.lang ProcessHandle)))
+            [lread.status-line :as status]))
 
 (def web-drivers
   [{:name "Chrome" :bin "chromedriver"}
@@ -14,19 +13,8 @@
    {:name "Safari" :bin "safaridriver"}
    {:name "PhantomJS" :bin "phantomjs"}])
 
-(defn all-processes []
-  (for [p (-> (ProcessHandle/allProcesses) .iterator iterator-seq)
-        :when (some-> p .info .command .isPresent)
-        :let [info (.info p)
-              command (-> info .command .get)
-              arguments (when (-> info .arguments .isPresent)
-                          (->> info .arguments .get (into [])))]]
-    {:handle p
-     :command command
-     :arguments arguments}))
-
 (defn driver-processes []
-  (->> (all-processes)
+  (->> (ps/all-processes)
        (keep (fn [p]
                (let [pfname (-> p :command fs/file-name)
                      pfname (if (= :win (os/get-os))
@@ -52,6 +40,7 @@
 (defn report[processes]
   (->> processes
        (doric/table (keep identity [{:name :name :title "WebDriver"}
+                                    :pid
                                     :command
                                     ;; arguments are don't seem to populate on Windows
                                     (when (not= :win (os/get-os)) :arguments)]))
