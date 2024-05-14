@@ -134,6 +134,7 @@ bb test-doc
 If you are updating the user guide, it preferable if your code block can be run through test-doc-blocks.
 But if this is impractal, you can also have test-doc-blocks skip a code block.
 
+[[testing-within-docker]]
 ==== Testing within Docker
 
 If you wish, you can build a local docker image for testing on Linux.

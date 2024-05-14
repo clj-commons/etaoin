@@ -2598,7 +2598,7 @@ If for some reason you want to reuse a single driver instance for all tests:
 (def ^:dynamic *driver*)
 
 (defn fixture-browser [f]
-  (e/with-chrome-headless {:args ["--no-sandbox"]} driver
+  (e/with-chrome-headless driver
     (e/disconnect-driver driver)
     (binding [*driver* driver]
       (f))
@@ -2632,7 +2632,7 @@ For faster testing you can use this example:
 .....
 
 (defn fixture-browser [f]
-  (e/with-chrome-headless {:args ["--no-sandbox"]} driver
+  (e/with-chrome-headless driver
     (binding [*driver* driver]
       (f))))
 
@@ -3066,10 +3066,8 @@ A common cause for Chrome to crash during startup is running Chrome as root user
 While it is possible to work around this issue by passing --no-sandbox flag when creating your WebDriver session, such a configuration is unsupported and discouraged.
 Ideally you would configure your environment to run Chrome as a regular user instead.
 +
-NOTE: We have noticed that the Selenium docker images always invoke chrome with `--no-sandbox`, so the caveat is a little confusing.
-We've naively replicated this in our own dev docker images.
-Maybe `--no-sandbox` is acceptable, or even needed, when running from a docker container?
-If you have intel here, let us know!
+NOTE: We noticed that the Selenium docker images always invoke chrome with `--no-sandbox`.
+Our link:02-developer-guide.adoc#testing-within-docker[test docker images] don't run from the root user, so we've not bothered with this.
 
 Potential Solution:: Run driver with argument `--no-sandbox`.
 Caution!
