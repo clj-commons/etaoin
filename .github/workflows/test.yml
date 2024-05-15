@@ -106,6 +106,8 @@ jobs:
         brew install --cask firefox
         brew install geckodriver
 
+    - uses: actions/checkout@v4
+
     - name: Restore Clojure deps from cache
       uses: actions/cache/restore@v4
       with:
