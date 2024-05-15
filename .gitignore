@@ -17,6 +17,7 @@ TAGS
 *.iml
 build.xml
 /.idea
+/.eastwood
 
 # ignore cache under .clj-kondo and .lsp
 .cache
