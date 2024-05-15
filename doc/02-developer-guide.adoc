@@ -90,6 +90,15 @@ For a babashka REPL
 bb dev:bb
 ----
 
+By default you can only connect to the REPL from localhost.
+If you need to connect to a REPL running on a different host, launch your REPL with `--host`.
+For example, to allow anyone to connect to your REPL:
+
+[source,shell]
+----
+bb dev:jvm --host 0.0.0.0
+----
+
 === Checking Tools Versions
 
 Used by GitHub Actions, but also an interesting way to check your prerequisites:
