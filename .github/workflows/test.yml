@@ -60,6 +60,10 @@ jobs:
     name: ${{ matrix.desc }}
 
     steps:
+    - name: Don't convert line endings on checkout (Windows)
+      if: matrix.os == 'windows'
+      run: git config --global core.autocrlf false
+
     - name: Tune Windows network
       if: ${{ matrix.os == 'windows' }}
       run: Disable-NetAdapterChecksumOffload -Name * -TcpIPv4 -UdpIPv4 -TcpIPv6 -UdpIPv6
