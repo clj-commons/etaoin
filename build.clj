@@ -1,8 +1,7 @@
 (ns build
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [clojure.tools.build.api :as b]
-            [deps-deploy.deps-deploy :as dd]))
+            [clojure.tools.build.api :as b]))
 
 (defn version-string []
   (let [{:keys [major minor release qualifier]} (-> "version.edn"
@@ -69,8 +68,24 @@
                 :jar-file jar-file})))
 
 (defn deploy [opts]
-  (dd/deploy
+  ((requiring-resolve 'deps-deploy.deps-deploy/deploy)
    {:installer :remote
     :artifact jar-file
     :pom-file (b/pom-path {:lib lib :class-dir class-dir})})
   opts)
+
+(defn download-deps
+  "Download all deps for all aliases"
+  [_]
+  (let [aliases (->> "deps.edn"
+                     slurp
+                     edn/read-string
+                     :aliases
+                     keys
+                     sort)]
+    ;; one at a time because aliases with :replace-deps will... well... you know.
+    (println "Bring down default deps")
+    (b/create-basis {})
+    (doseq [a (sort aliases)]
+      (println "Bring down deps for alias" a)
+      (b/create-basis {:aliases [a]}))))

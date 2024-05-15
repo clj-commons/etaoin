@@ -27,6 +27,7 @@ jobs:
           ~/.m2/repository
           ~/.deps.clj
           ~/.gitlibs
+        enableCrossOsArchive: true
         key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
         restore-keys: cljdeps-
 

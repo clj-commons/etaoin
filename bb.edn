@@ -89,7 +89,7 @@
   tools-versions {:doc "report on tools versions"
                   :task tools-versions/-main}
   download-deps  {:doc "download all deps (useful for CI prep)"
-                  :task download-deps/-main}
+                  :task (clojure "-T:build download-deps")}
   outdated       {:doc "report on outdated dependencies"
                   :task (shell/clojure {:continue true} "-M:outdated")}
 
