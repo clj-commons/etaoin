@@ -96,7 +96,7 @@
 (deftest test-chrome-profile
   (fs/with-temp-dir [chrome-dir {:prefix "chrome-dir"}]
     (let [profile-path (str (fs/file chrome-dir "chrome-profile"))]
-      (e/with-chrome {:profile profile-path :args ["--no-sandbox"]} driver
+      (e/with-chrome {:profile profile-path} driver
         (e/go driver "chrome://version")
         (is (= profile-path
                (e/get-element-text driver :profile_path)))))))

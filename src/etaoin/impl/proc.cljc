@@ -51,7 +51,7 @@ For driver installation, check out the Etaoin user guide: %s" binary user-guide-
 (defn kill
   "Ask `p` to die. Use [[result]] to get exit code if you need it."
   [p]
-  (p/destroy p)
+  (p/destroy-tree p)
   @p)
 
 (defn result

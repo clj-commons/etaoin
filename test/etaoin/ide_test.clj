@@ -31,7 +31,7 @@
   (let [base-url       (-> "static" io/resource str)
         test-file-path (-> "ide/test.side" io/resource str)]
     (doseq [type drivers]
-      (e/with-driver type {:args ["--no-sandbox"]} driver
+      (e/with-driver type driver
         (e/go driver base-url)
         (binding [*driver*         driver
                   *base-url*       base-url

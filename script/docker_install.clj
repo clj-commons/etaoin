@@ -45,10 +45,10 @@
 
 (defn- wrap-chrome
   "The Selenium chrome docker image wraps the chrome launcher, so I'm going with the flow here.
-  I don't fully understand if --no-sandbox is required for docker images, but if Selenium is doing it,
-  I'm not interested in figuring out if we don't need to as well.
+  I think the --no-sandbox option is required when running as a root user which is often the case
+  for docker images.
 
-  They also do the umask thing... so mimicing that as well."
+  Selenium also do the umask thing... so mimicing that as well."
   []
   (status/line :head "Wrapping chrome launcher")
   (let [launcher (-> (shell/command {:out :string}

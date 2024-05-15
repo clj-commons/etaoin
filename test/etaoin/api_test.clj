@@ -10,6 +10,7 @@
    [etaoin.api :as e]
    [etaoin.impl.util :as util]
    [etaoin.impl.client :as client]
+   [etaoin.keys :as k]
    [etaoin.test-report :as test-report]
    [slingshot.slingshot :refer [try+]])
   (:import [java.net ServerSocket]))
@@ -40,7 +41,7 @@
   [:firefox :chrome :safari])
 
 (def default-opts
-  {:chrome  {:args ["--no-sandbox"]}
+  {:chrome  {}
    :firefox {}
    :safari  {}
    :edge    {:args ["--headless"]}})
@@ -484,24 +485,35 @@
 
 (deftest test-switch-window
   (let [init-handle   (e/get-window-handle *driver*)
-        init-url      (e/get-url *driver*)
-        _             (e/click *driver* :switch-window)
-        new-handles   (e/get-window-handles *driver*)
-        new-handle    (first (filter #(not= % init-handle) new-handles))
-        _             (e/switch-window *driver* new-handle)
-        target-handle (e/get-window-handle *driver*)
-        target-url    (e/get-url *driver*)]
-    (is (not= init-handle target-handle))
-    (is (= 2 (count new-handles)))
-    (is (= new-handle target-handle))
-    (is (not= init-url target-url))))
+        init-url      (e/get-url *driver*)]
+    ;; press enter on link instead of clicking (safaridriver is not great with the click)
+    (e/fill *driver* :switch-window k/return)
+    (is (= 2 (count (e/get-window-handles *driver*))) "2 windows now exist")
+    (let [new-handles   (e/get-window-handles *driver*)
+          new-handle    (first (filter #(not= % init-handle) new-handles))
+          _             (e/switch-window *driver* new-handle)
+          target-handle (e/get-window-handle *driver*)
+          target-url    (e/get-url *driver*)]
+      (is (not= init-handle target-handle))
+      (is (= new-handle target-handle))
+      (is (not= init-url target-url)))))
 
 (deftest test-switch-window-next
-  (let [_             (repeat 3 #(e/click *driver* :switch-window))
-        init-handle   (e/get-window-handle *driver*)
-        _             (repeat 4 #(e/switch-window-next *driver*))
-        target-handle (e/get-window-handle *driver*)]
-    (is (= init-handle target-handle))))
+  (let [init-handle (e/get-window-handle *driver*)]
+    (doseq [_ (range 3)]
+      ;; press enter on link instead of clicking (safaridriver is not great with click)
+      (e/fill *driver* :switch-window k/return)
+      ;; compensate: safari navigates to target window, others stay at source
+      (e/when-safari *driver*
+        (e/wait 3) ;; safari seems to need a breather
+        (e/switch-window *driver* init-handle)))
+    (is (= 4 (count (e/get-window-handles *driver*))) "4 windows now exist")
+    (is (= init-handle (e/get-window-handle *driver*)) "on first window")
+    (doseq [_ (range 3)]
+      (e/switch-window-next *driver*)
+      (is (not= init-handle (e/get-window-handle *driver*)) "navigating new windows"))
+    (e/switch-window-next *driver*)
+    (is (= init-handle (e/get-window-handle *driver*)) "wrapped around to original window")))
 
 ;; TODO: need refactoring not working for headless & firefox
 #_
@@ -773,3 +785,22 @@
         (e/perform-actions *driver* keyboard mouse)
         (e/wait 1)
         (is (str/ends-with? (e/get-url *driver*) "?login=1&password=2&message=3"))))))
+
+(comment
+  ;; start test server
+  (def test-server (p/process {:out :inherit :err :inherit} "bb test-server --port" 9993))
+  (def url (format "http://localhost:%d/%s" 9993 "test.html"))
+
+  ;; start your favourite webdriver
+  (def driver (e/safari))
+  (def driver (e/firefox))
+
+  ;; mimic test fixture
+  (e/go driver url)
+  (e/wait-visible driver {:id :document-end})
+
+  ;; cleanup
+  (e/quit driver)
+  (p/destroy test-server)
+
+  :eoc)
