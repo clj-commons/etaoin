@@ -7,7 +7,8 @@
         slingshot/slingshot {:mvn/version "0.12.2"}
         cheshire/cheshire {:mvn/version "5.12.0"}
         org.clojure/tools.cli {:mvn/version "1.1.230"}
-        org.clojure/tools.logging {:mvn/version "1.3.0"}}
+        org.clojure/tools.logging {:mvn/version "1.3.0"}
+        lambdaisland/uri {:mvn/version "1.19.155"}}
  :aliases
  {:1.11 {:replace-deps {org.clojure/clojure {:mvn/version "1.11.2"}}}
   :1.12 {:replace-deps {org.clojure/clojure {:mvn/version "1.12.0-alpha9"}}}
@@ -46,6 +47,13 @@
   ;; for consistent linting we use a specific version of clj-kondo through the jvm
   :clj-kondo {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2024.03.13"}}
               :main-opts ["-m" "clj-kondo.main"]}
+
+  :eastwood {:extra-deps {jonase/eastwood {:mvn/version "1.4.2"}}
+             :extra-paths ["test"]
+             :main-opts ["-m" "eastwood.lint" {:source-paths ["src"]
+                                               :test-paths ["test"]
+                                               :add-linters [:performance]
+                                               :exclude-linters [:local-shadows-var]}]}
 
   :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.0"}
                  slipset/deps-deploy {:mvn/version "0.2.2"}}

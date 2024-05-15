@@ -2,6 +2,8 @@
   "A special module to work with XPath language."
   (:require [clojure.string :as string]))
 
+(set! *warn-on-reflection* true)
+
 (def Q \")
 
 (defn node-by-text

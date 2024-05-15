@@ -39,6 +39,8 @@
    [clojure.tools.logging :as log]
    [etaoin.impl.util :refer [deep-merge defmethods]]))
 
+(set! *warn-on-reflection* true)
+
 (defn dispatch-driver
   [driver & _]
   (:type driver))

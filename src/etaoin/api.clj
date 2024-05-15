@@ -160,6 +160,8 @@
    java.text.SimpleDateFormat
    (java.util Base64 Date)))
 
+(set! *warn-on-reflection* true)
+
 ;;
 ;; WebDriver defaults
 ;;
@@ -2813,7 +2815,7 @@
   "Clojure returns a seq of chars for a string.
   This does not handle wide (unicode) characters.
   Here we return a seq of codepoint strings for string `s`."
-  [s]
+  [^String s]
   (->> s
        .codePoints
        .iterator
@@ -3166,7 +3168,7 @@
 
 (defn- b64-decode [s]
   (-> (Base64/getDecoder)
-      (.decode s)))
+      (.decode ^String s)))
 
 (defmulti ^:private b64-to-file
   "Dumps a Base64-encoded string into a file.

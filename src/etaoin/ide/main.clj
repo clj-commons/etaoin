@@ -18,6 +18,8 @@
    [etaoin.ide.flow :as flow]
    [etaoin.impl.util :as util]))
 
+(set! *warn-on-reflection* true)
+
 (def ^:private browsers-set
   #{:chrome :safari :firefox :edge :phantom})
 

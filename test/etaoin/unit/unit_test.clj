@@ -98,8 +98,8 @@
     (let [profile-path (str (fs/file chrome-dir "chrome-profile"))]
       (e/with-chrome {:profile profile-path} driver
         (e/go driver "chrome://version")
-        (is profile-path
-            (e/get-element-text driver :profile_path))))))
+        (is (= profile-path
+               (e/get-element-text driver :profile_path)))))))
 
 (deftest test-fail-run-driver
   (is (thrown-with-msg?

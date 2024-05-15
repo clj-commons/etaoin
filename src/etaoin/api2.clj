@@ -3,6 +3,8 @@
   (:require
    [etaoin.api :as e]))
 
+(set! *warn-on-reflection* true)
+
 (defmacro with-firefox
   "Executes `body` with a Firefox driver session bound to `bind`.
 

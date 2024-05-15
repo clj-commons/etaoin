@@ -9,6 +9,8 @@
       :clj [clj-http.client :as client])
    [slingshot.slingshot :refer [throw+]]))
 
+(set! *warn-on-reflection* true)
+
 ;;
 ;; defaults
 ;;

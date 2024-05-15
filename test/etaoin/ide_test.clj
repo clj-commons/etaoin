@@ -2,7 +2,7 @@
   (:require
    [clojure.edn :as edn]
    [clojure.java.io :as io]
-   [clojure.test :refer [deftest is testing use-fixtures]]
+   [clojure.test :refer [deftest testing use-fixtures]]
    [etaoin.api :as e]
    [etaoin.ide.flow :as ide]
    [etaoin.test-report :as test-report]))
@@ -54,35 +54,28 @@
 
 (deftest test-asserts
   (ide/run-ide-script *driver* *test-file-path*
-                      {:base-url *base-url* :test-name "test-asserts"})
-  (is 1))
+                      {:base-url *base-url* :test-name "test-asserts"}))
 
 (deftest test-click-type-select
   (ide/run-ide-script *driver* *test-file-path*
-                      {:base-url *base-url* :test-name "test-click-type-select"})
-  (is 1))
+                      {:base-url *base-url* :test-name "test-click-type-select"}))
 
 (deftest test-drag-n-drop
   (ide/run-ide-script *driver* *test-file-path*
-                      {:base-url *base-url* :test-name "test-drag-n-drop"})
-  (is 1))
+                      {:base-url *base-url* :test-name "test-drag-n-drop"}))
 
 (deftest test-select-window
   (ide/run-ide-script *driver* *test-file-path*
-                      {:base-url *base-url* :test-name "test-select-window"})
-  (is 1))
+                      {:base-url *base-url* :test-name "test-select-window"}))
 
 (deftest test-send-keys
   (ide/run-ide-script *driver* *test-file-path*
-                      {:base-url *base-url* :test-name "test-send-keys"})
-  (is 1))
+                      {:base-url *base-url* :test-name "test-send-keys"}))
 
 (deftest test-control-flow
   (ide/run-ide-script *driver* *test-file-path*
-                      {:base-url *base-url* :test-name "test-control-flow"})
-  (is 1))
+                      {:base-url *base-url* :test-name "test-control-flow"}))
 
 (deftest test-wait-for
   (ide/run-ide-script *driver* *test-file-path*
-                      {:base-url *base-url* :test-name "test-wait-for"})
-  (is 1))
+                      {:base-url *base-url* :test-name "test-wait-for"}))

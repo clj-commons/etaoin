@@ -8,6 +8,8 @@
    [etaoin.ide.impl.api :refer [run-command-with-log str->var]]
    [etaoin.ide.impl.spec :as spec]))
 
+(set! *warn-on-reflection* true)
+
 (declare execute-commands)
 
 (defn- execute-branch
