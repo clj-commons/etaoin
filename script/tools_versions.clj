@@ -18,12 +18,12 @@
    {:oses [:mac :win] :name "Image Magick"      :type :bin         :app "magick" :version-post-fn first-line}
    {:oses [:unix]     :name "Image Magick"      :type :bin         :app "identify" :version-post-fn first-line}
 
-   {:oses [:unix]     :name "Chrome"            :type :bin         :app "google-chrome"} ;; only handling nix for now
+   {:oses [:unix]     :name "Chrome"            :type :bin         :app ["chrome" "google-chrome"]}
    {:oses [:mac]      :name "Chrome"            :type :mac-app     :app "Google Chrome"}
    {:oses [:win]      :name "Chrome"            :type :win-package :app "Google Chrome"}
    {:oses :all        :name "Chrome Webdriver"  :type :bin         :app "chromedriver"}
 
-   {:oses [:unix]     :name "Firefox"           :type :bin         :app "firefox"} ;; only handling nix for now
+   {:oses [:unix]     :name "Firefox"           :type :bin         :app "firefox"}
    {:oses [:mac]      :name "Firefox"           :type :mac-app     :app "Firefox"}
    {:oses [:win]      :name "Firefox"           :type :win-package :app #"Mozilla Firefox .*"}
    {:oses :all        :name "Firefox Webdriver" :type :bin         :app "geckodriver" :version-post-fn first-line}
@@ -118,16 +118,23 @@
 
 (defmethod resolve-tool :bin
   [{:keys [app shell-opts args version-post-fn]}]
-  (if-let [found-bin (some-> (fs/which app {:win-exts ["com" "exe" "bat" "cmd" "ps1"]})
-                             str)]
-    ;; call with app rather than found-bin to avoid Windows headaches
-    (let [version-result (->> (shell/command shell-opts app args)
-                              (version-cmd-result shell-opts))
-          version-result (assoc version-result :path found-bin)]
-      (if (:error version-result)
-        version-result
-        (update version-result :version version-post-fn)))
-    {:error (format "bin not found: %s" app)}))
+  (let [apps (if (vector? app)
+               app
+               [app])]
+    (if-let [[app found-bin] (reduce (fn [_acc app]
+                                       (when-let [found-bin (some-> (fs/which app {:win-exts ["com" "exe" "bat" "cmd" "ps1"]})
+                                                                    str)]
+                                         (reduced [app found-bin])))
+                                     nil
+                                     apps)]
+      ;; call with app rather than found-bin to avoid Windows headaches
+      (let [version-result (->> (shell/command shell-opts app args)
+                                (version-cmd-result shell-opts))
+            version-result (assoc version-result :path found-bin)]
+        (if (:error version-result)
+          version-result
+          (update version-result :version version-post-fn)))
+      {:error (format "bin not found: %s" app)})))
 
 (defn versions []
   (for [{:keys [name] :as t} (map #(merge tool-defaults %) tools)

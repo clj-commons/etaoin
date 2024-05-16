@@ -1,72 +1,76 @@
 (ns docker-install
-  (:require [babashka.curl :as curl]
+  (:require [babashka.http-client :as http]
             [babashka.fs :as fs]
+            [babashka.process :as p]
             [cheshire.core :as json]
             [clojure.java.io :as io]
-            [clojure.string :as string]
             [helper.main :as main]
             [helper.shell :as shell]
             [lread.status-line :as status]))
 
-(defn- chromedriver-version []
-  (-> (curl/get "chromedriver.storage.googleapis.com/LATEST_RELEASE")
-      :body))
+(defn- chrome-for-testing-catalog []
+  (let [stable-releases (-> (http/get "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json")
+                            :body
+                            (json/parse-string true)
+                            :channels
+                            :Stable)
+        version (:version stable-releases)]
+    (->> (for [asset [:chrome :chromedriver]]
+           (->> stable-releases
+                :downloads
+                asset
+                (keep #(when (= "linux64" (:platform %))
+                         {:id (name asset) :version version :url (:url %)}))))
+         (mapcat identity)
+         (group-by :id)
+         (reduce-kv (fn [m k v] (assoc m (keyword k) (first v)))
+                    {}))))
+
+(defn- report-download-progress [file-size total-bytes-read]
+  (if file-size
+    (status/line :detail (str "Downloaded: %" (count (str file-size)) "s of %s %.2f%%")
+                 total-bytes-read file-size
+                 (double (/ (* total-bytes-read 100) file-size)))
+    (status/line :detail  "Downloaded: %s of ?" total-bytes-read)))
 
 (defn- download [url to-file]
-  (io/copy
-    (-> url (curl/get {:as :bytes}) :body)
-    (io/file to-file)))
+  (with-open [out (io/output-stream to-file)]
+    (let [response (http/get url {:as :stream})
+          file-size (some-> response :headers (get "content-length") parse-long)
+          file-size (and file-size (pos? file-size) file-size)
+          input-stream (:body response)
+          buffer (byte-array 8192)]
+      (loop [total-bytes-read 0
+             last-report-time (System/currentTimeMillis)]
+        (let [bytes-read (.read input-stream buffer)]
+          (if (pos? bytes-read)
+            (do
+              (.write out buffer 0 bytes-read)
+              (let [total-bytes-read (+ total-bytes-read bytes-read)
+                    report-time (when (> (System/currentTimeMillis) (+ last-report-time 1000))
+                                  (System/currentTimeMillis))]
+                (when report-time
+                  (report-download-progress file-size total-bytes-read))
+                (recur total-bytes-read (or report-time last-report-time))))
+            (report-download-progress file-size total-bytes-read)))))))
 
-(defn- install-chromedriver []
-  (status/line :head "Installing chromedriver")
-  (let [version (chromedriver-version)
-        dl-file "/tmp/chromedriver_linux64.zip"
-        dl-url (format "http://chromedriver.storage.googleapis.com/%s/chromedriver_linux64.zip"
-                       version)
-        install-dir (str "/opt/chromedriver-" version)]
+(defn- install-chrome-asset
+  "`id` is also name of executable"
+  [{:keys [id version url]}]
+  (status/line :head "Installing %s %s" id version)
+  (let [dl-file (str "/tmp/%s.zip")
+        install-dir (str "/opt/" id "-" version)]
     (fs/create-dirs install-dir)
-    (status/line :head "chromedriver: downloading: %s" dl-url)
-    (download dl-url dl-file)
-    (status/line :head "chromedriver: installing")
-    (fs/unzip dl-file install-dir)
-    (shell/command "chmod +x" (str install-dir "/chromedriver"))
-    (fs/create-sym-link "/usr/local/bin/chromedriver" (str install-dir "/chromedriver"))))
-
-(defn- install-chrome []
-  (status/line :head "Installing chrome")
-  (let [key-file "/tmp/linux_signing_key.pub"]
-    (download "https://dl-ssl.google.com/linux/linux_signing_key.pub" key-file)
-    (shell/command "apt-key add" key-file)
-    (spit "/etc/apt/sources.list.d/google-chrome.list"
-          "deb http://dl.google.com/linux/chrome/deb/ stable main\n"
-          :append true)
-    (shell/command "apt-get -yqq update")
-    (shell/command "apt-get -yqq install google-chrome-stable")))
-
-(defn- wrap-chrome
-  "The Selenium chrome docker image wraps the chrome launcher, so I'm going with the flow here.
-  I think the --no-sandbox option is required when running as a root user which is often the case
-  for docker images.
-
-  Selenium also do the umask thing... so mimicing that as well."
-  []
-  (status/line :head "Wrapping chrome launcher")
-  (let [launcher (-> (shell/command {:out :string}
-                                    "readlink -f /usr/bin/google-chrome")
-                     :out
-                     (string/trim))
-        launcher-orig-renamed (str launcher "-base")]
-    (fs/move launcher launcher-orig-renamed)
-    (spit launcher (string/join "\n"
-                                ["#!/bin/bash"
-                                 "umask 002"
-                                 (format "exec -a \"$0\" \"%s\" --no-sandbox \"$@\"" launcher-orig-renamed)]))
-    (shell/command "chmod +x" launcher)))
+    (status/line :head "%s: downloading: %s" id url)
+    (download url dl-file)
+    (status/line :head "%s: installing" id)
+    (p/shell "unzip" dl-file "-d" install-dir)
+    (fs/create-sym-link (str "/usr/local/bin/" id) (str install-dir "/" id "-linux64/" id)))  )
 
 (defn- install-geckodriver []
   (status/line :head "Installing geckodriver")
   (let [dl-file "/tmp/geckodriver_linux64.tar.gz"
-        dl-url (-> (curl/get "https://api.github.com/repos/mozilla/geckodriver/releases/latest")
+        dl-url (-> (http/get "https://api.github.com/repos/mozilla/geckodriver/releases/latest")
                    :body
                    (json/parse-string true)
                    :assets
@@ -85,22 +89,20 @@
     (fs/create-sym-link "/usr/local/bin/firefox" "/usr/local/firefox/firefox")))
 
 (defn- docker-build? []
-  (let [cgroup-file "/proc/1/cgroup"]
-    (when (fs/exists? cgroup-file)
-      (let [cgroup (slurp (java.io.FileReader. cgroup-file))]
-        ;; example cgroup:
-        ;; 0::/docker/buildkit/n4eu0udvbz9vfzjy71jkvgkwh
-        (re-find #"::/docker/buildkit/" cgroup)))))
+  ;; Stackoverflow was rife with examples on how to determine we are running from a docker build,
+  ;; but none them worked for me anymore.
+  ;; Go simple, see Dockerfile where we create this file as a signal
+  (fs/exists? "/tmp/in_a_docker_build_for_etaoin"))
 
 (defn -main [& _args]
   (status/line :head "Are we ok to run?")
   (when (not (docker-build?))
-    (status/die 1 "Expected to be run from DockerFile"))
-  (install-chromedriver)
-  (install-chrome)
-  (wrap-chrome)
-  (install-geckodriver)
-  (install-firefox))
+    (status/die 1 "Expected to be run from DockerFile build"))
+  (let [chrome-catalog (chrome-for-testing-catalog)]
+    (install-chrome-asset (:chrome chrome-catalog))
+    (install-chrome-asset (:chromedriver chrome-catalog)))
+    (install-geckodriver)
+    (install-firefox))
 
 (main/when-invoked-as-script
  (apply -main *command-line-args*))
