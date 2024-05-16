@@ -25,6 +25,7 @@ jobs:
           ~/.m2/repository
           ~/.deps.clj
           ~/.gitlibs
+        enableCrossOsArchive: true
         key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
         restore-keys: cljdeps-
 
@@ -59,6 +60,10 @@ jobs:
     name: ${{ matrix.desc }}
 
     steps:
+    - name: Don't convert line endings on checkout (Windows)
+      if: matrix.os == 'windows'
+      run: git config --global core.autocrlf false
+
     - name: Tune Windows network
       if: ${{ matrix.os == 'windows' }}
       run: Disable-NetAdapterChecksumOffload -Name * -TcpIPv4 -UdpIPv4 -TcpIPv6 -UdpIPv6
@@ -103,15 +108,27 @@ jobs:
 
     - uses: actions/checkout@v4
 
-    - name: Clojure deps cache
-      uses: actions/cache@v4
+    - name: Restore Clojure deps from cache
+      uses: actions/cache/restore@v4
       with:
         path: |
           ~/.m2/repository
           ~/.deps.clj
           ~/.gitlibs
+        enableCrossOsArchive: true
         key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
         restore-keys: cljdeps-
+
+    - name: Cache fixup for Windows
+      # cache is restored using relative paths from Linux, this is not appropriate for Windows
+      # this is admitedly fragile/hackey, will revisit if it cracks
+      if: ${{ matrix.os == 'windows' }}
+      run: |
+        mv ../../../.m2 ${USERPROFILE}
+        mv ../../../.deps.clj ${USERPROFILE}
+        mv ../../../.gitlibs ${USERPROFILE}
+      shell: bash
+
 
     - name: Setup Java
       uses: actions/setup-java@v4

@@ -55,9 +55,12 @@
                                                :add-linters [:performance]
                                                :exclude-linters [:local-shadows-var]}]}
 
-  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.0"}
-                 slipset/deps-deploy {:mvn/version "0.2.2"}}
+  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.0"}}
           :ns-default build}
+
+  ;; keep deploy deps separate from build deps to avoid download-deps issues
+  ;; caused by, I think, conflicting maven deps
+  :deploy {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.2"}}}
 
   :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version  "2.8.1185"}
                           org.clojure/clojure {:mvn/version "1.11.1"}

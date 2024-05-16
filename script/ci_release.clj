@@ -126,7 +126,7 @@
   []
   (status/line :head "Deploying jar to clojars")
   (assert-on-ci "deploy a jar")
-  (shell/clojure "-T:build deploy")
+  (shell/clojure "-T:build:deploy deploy")
   nil)
 
 (defn- commit-changes! [version]
