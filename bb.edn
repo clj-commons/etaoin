@@ -98,10 +98,11 @@
   -docker-install {:doc "helper to setup docker image"
                    :task docker-install/-main}
   docker-run     {:doc "run etaoin docker image (specify no commmands for interactive)"
-                  :task (apply shell/command {:continue true}
-                               "docker run -it --rm --shm-size=1gb"
-                               (str "-v" (fs/cwd) ":/etaoin")
-                               "etaoin:latest"
-                               *command-line-args*)}
+                  :task (let [{:keys [exit]} (apply shell/command {:continue true}
+                                                    "docker run -it --rm --shm-size=1gb"
+                                                    (str "-v" (fs/cwd) ":/etaoin")
+                                                    "etaoin:latest"
+                                                    *command-line-args*)]
+                          (System/exit exit))}
   ci-release     {:doc "release tasks, use --help for args"
                   :task ci-release/-main}}}
