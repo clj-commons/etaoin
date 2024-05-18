@@ -33,3 +33,4 @@ build.xml
 /fiddle.clj
 /fiddle/
 /.cljdoc-preview
+/.vscode
