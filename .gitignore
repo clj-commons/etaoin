@@ -32,3 +32,4 @@ build.xml
 # ignore lee's fiddling
 /fiddle.clj
 /fiddle/
+/.cljdoc-preview
