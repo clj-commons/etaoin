@@ -35,9 +35,20 @@
     (b/write-pom {:class-dir class-dir
                   :lib lib
                   :version version
-                  :scm {:tag (format "v%s" version)}
                   :basis basis
-                  :src-dirs ["src"]})
+                  :src-dirs ["src"]
+                  :scm {:url "https://github.com/clj-commons/etaoin"
+                        :connection "scm:git:git://github.com/clj-commons/etaoin.git"
+                        :developerConnection "scm:git:ssh://git@github.com/clj-commons/etaoin.git"
+                        :tag (format "v%s" version)}
+                  :pom-data [[:description "Pure Clojure Webdriver protocol implementation"]
+                             [:url "https://github.com/clj-commons/etaoin"]
+                             [:licenses
+                              [:license
+                               [:name "Eclipse Public License"]
+                               [:url "http://www.eclipse.org/legal/epl-v10.html"]]]
+                             [:properties
+                              [:project.build.sourceEncoding "UTF-8"]]]})
     (b/copy-dir {:src-dirs ["src" "resources"]
                  :target-dir class-dir})
     (b/jar {:class-dir class-dir
