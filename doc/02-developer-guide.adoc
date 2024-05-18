@@ -56,7 +56,6 @@ Babashka supports everything that Etaoin needs, but when making changes, be awar
 3. Replace use of `ImageIO` in tests with a callout to ImageMagick instead.
 4. Replace some JDK file related class references with `babashka/fs` abstractions
 5. Use `http-client-lite` in place of `http-client` when running under Babashka
-6. Run existing tests with cognitect test runner by including `babashka/tools.namespace`
 
 Nothing earth shattering there, but gives you and idea.
 

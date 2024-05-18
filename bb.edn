@@ -1,5 +1,5 @@
 {:min-bb-version "0.8.2"
- :paths ["script"]
+ :paths ["script" "build"]
  :deps {doric/doric {:mvn/version "0.9.0"}
         lread/status-line {:git/url "https://github.com/lread/status-line.git"
                            :sha "cf44c15f30ea3867227fa61ceb823e5e942c707f"}
@@ -55,7 +55,7 @@
                   :task (do
                           ;; timbre default logging level is debug, which generates a lot of http logging noise
                           (timbre/set-level! :info)
-                          (exec 'cognitect.test-runner.api/test))
+                          (exec 'build-shared/test))
                   :org.babashka/cli {:coerce {:nses [:symbol]
                                               :patterns [:string]
                                               :vars [:symbol]}}}
