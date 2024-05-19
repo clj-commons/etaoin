@@ -48,7 +48,7 @@
               ;; add logging for typically flaky CI scenario
               (and (ci?) (fs/windows?)) (merge {:log-stdout :inherit
                                                 :log-stderr :inherit
-                                                :driver-log-level "trace"}))
+                                                :driver-log-level "info"}))
    :safari (cond-> {}
              ;; add logging for kind flaky CI scenario (maybe we'll answer why we need
              ;; to retry launching safaridriver automatically)
