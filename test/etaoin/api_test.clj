@@ -499,6 +499,8 @@
         init-url      (e/get-url *driver*)]
     ;; press enter on link instead of clicking (safaridriver is not great with the click)
     (e/fill *driver* :switch-window k/return)
+    (e/when-safari *driver*
+      (e/wait 3)) ;;safari seems to need a breather
     (is (= 2 (count (e/get-window-handles *driver*))) "2 windows now exist")
     (let [new-handles   (e/get-window-handles *driver*)
           new-handle    (first (filter #(not= % init-handle) new-handles))
