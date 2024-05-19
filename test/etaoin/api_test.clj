@@ -40,10 +40,21 @@
 (defn get-default-drivers []
   [:firefox :chrome :safari])
 
+(defn ci? [] (System/getenv "CI"))
+
 (def default-opts
   {:chrome  {}
-   :firefox {}
-   :safari  {}
+   :firefox (cond-> {}
+              ;; add logging for typically flaky CI scenario
+              (and (ci?) (fs/windows?)) (merge {:log-stdout :inherit
+                                                :log-stderr :inherit
+                                                :driver-log-level "trace"}))
+   :safari (cond-> {}
+             ;; add logging for kind flaky CI scenario (maybe we'll answer why we need
+             ;; to retry launching safaridriver automatically)
+             ;; safaridriver only logs details to a somewhat obscure file, will follow up
+             ;; with some technique to discover/dump this file
+             (ci?) (merge {:log-stdout :inherit :log-stderr :inherit}))
    :edge    {:args ["--headless"]}})
 
 (def drivers
