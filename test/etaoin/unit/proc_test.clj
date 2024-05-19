@@ -1,7 +1,6 @@
 (ns etaoin.unit.proc-test
   (:require
    [clojure.java.shell :as shell]
-   [clojure.pprint :as pprint]
    [clojure.string :as str]
    [clojure.test :refer [deftest is]]
    [etaoin.api :as e]
@@ -15,13 +14,6 @@
     (let [instance-report (-> (shell/sh "powershell" "-command" (format "(Get-Process %s -ErrorAction SilentlyContinue).Path" drivername))
                               :out
                               str/split-lines)]
-      ;; more flakiness diagnosis
-      (println "windows" drivername "instance report:" instance-report)
-      (println "windows full list of running processes:")
-      ;; use Get-CimInstance, because Get-Process, does not have commandline available
-      (pprint/pprint (-> (shell/sh "powershell" "-command" "Get-CimInstance Win32_Process | select name, commandline")
-                         :out
-                         str/split-lines))
       (->> instance-report
            (remove #(str/includes? % "\\scoop\\shims\\")) ;; for the scoop users, exclude the shim process
            (filter #(str/includes? % drivername))
