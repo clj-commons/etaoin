@@ -40,10 +40,21 @@
 (defn get-default-drivers []
   [:firefox :chrome :safari])
 
+(defn ci? [] (System/getenv "CI"))
+
 (def default-opts
   {:chrome  {}
-   :firefox {}
-   :safari  {}
+   :firefox (cond-> {}
+              ;; add logging for typically flaky CI scenario
+              (and (ci?) (fs/windows?)) (merge {:log-stdout :inherit
+                                                :log-stderr :inherit
+                                                :driver-log-level "info"}))
+   :safari (cond-> {}
+             ;; add logging for kind flaky CI scenario (maybe we'll answer why we need
+             ;; to retry launching safaridriver automatically)
+             ;; safaridriver only logs details to a somewhat obscure file, will follow up
+             ;; with some technique to discover/dump this file
+             (ci?) (merge {:log-stdout :inherit :log-stderr :inherit}))
    :edge    {:args ["--headless"]}})
 
 (def drivers
@@ -488,6 +499,8 @@
         init-url      (e/get-url *driver*)]
     ;; press enter on link instead of clicking (safaridriver is not great with the click)
     (e/fill *driver* :switch-window k/return)
+    (e/when-safari *driver*
+      (e/wait 3)) ;;safari seems to need a breather
     (is (= 2 (count (e/get-window-handles *driver*))) "2 windows now exist")
     (let [new-handles   (e/get-window-handles *driver*)
           new-handle    (first (filter #(not= % init-handle) new-handles))
