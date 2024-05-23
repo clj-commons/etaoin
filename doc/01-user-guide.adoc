@@ -2057,93 +2057,117 @@ The available `with-postmortem` options are:
 
 == Driver Options [[driver-options]]
 
-When creating a driver instance, a map of additional parameters can optionally be passed to tweak the WebDriver and web browser behaviour.
+When creating a *WebDriver* instance, you can optionally include an options map to tweak the *WebDriver* and *web browser* behaviour.
 
-Here, for example, we set an explicit path to the chrome WebDriver binary:
+Here, for example, we set an explicit path to the chrome *WebDriver* binary:
 
 //:test-doc-blocks/skip
 [source,clojure]
 ----
 (def driver (e/chrome {:path-driver "/Users/ivan/downloads/chromedriver"}))
 ----
+[id=opt-host,refext=`:host`]
+=== `:host` for WebDriver
+_Default:_ <not set>
 
-[cols="70,30"]
-|===
-| Option | Defaults
+_Example:_ `:host "192.68.1.12"`
 
-a|`:host` for *WebDriver* process. When:
+When:
 
-* omitted, creates a new local WebDriver process (unless `:webdriver-url` was specified).
-* specified, attempts to connect to an existing running WebDriver process.
-See <<connecting-existing>>.
+* Specified, Etaoin attempts to connect to an existing running WebDriver process.
+* Omitted, Etaoin creates a new local WebDriver process (unless <<opt-webdriver-url>> is specified).
 
-Alternative: see `:webdriver-url` below.
+See also <<opt-port>>, <<connecting-existing>>.
 
-Example: `:host "192.68.1.12"`
-| <not set>
+Alternative: see <<opt-webdriver-url>>.
 
-|`:port` for *WebDriver* process.
-If `:port` is found to  already in use when creating a new local WebDriver process (see `:host`), a random port will be automatically selected. +
-See also <<connecting-existing>>.
+[id=opt-port,reftext=`:port`]
+=== `:port` for WebDriver
 
-Example: `:port 9997`
-a| Random port when lanching local WebDriver process, else varies by vendor:
+_Default:_ Etaoin selects a random unused port when lanching a local WebDriver process.
+When connecting to a remote WebDriver process, varies by vendor:
 
 * chrome `9515`
 * firefox `4444`
 * safari `4445`
 * edge `17556`
-* phantom `8910`
 
-a| `:webdriver-url` for *WebDriver* process. When:
+_Example:_ `:port 9997`
 
-* omitted, creates a new local WebDriver process (unless `:host` was specified).
-* specified, attempts to connect to an existing running WebDriver process.
+See also <<opt-host>>, <<connecting-existing>>.
+
+[id=opt-webdriver-url,reftext=`webdriver-url`]
+=== `:webdriver-url`
+_Default:_ <not set>
+
+_Example:_ `:web-driver-url "https://chrome.browserless.io/webdriver"`
+
+When:
+
+* Specified, Etaoin attempts to connect to an pre-existing running *WebDriver* process.
+* Omitted, creates a new local *WebDriver* process (unless <<opt-host>> is specified).
 
 See <<connecting-existing>>.
 
-Alternative: see `:host` above.
+Alternative: see <<host,`:host`>> above.
 
-Example: `"https://chrome.browserless.io/webdriver"`
-
-| <not set>
-
-| `:path-driver` to *WebDriver* binary. +
-Typically used if your WebDriver is not on the PATH.
-
-Example:
-`:path-driver "/Users/ivan/Downloads/geckodriver"`
-a| As you would expect, varies by vendor:
+[id=opt-path-driver,reftext=`:path-driver`]
+=== `:path-driver` to WebDriver binary
+_Default:_ Varies by browser vendor:
 
 * chrome `"chromedriver"`
 * firefox `"geckodriver"`
 * safari `"safaridriver"`
 * edge `"msedgedriver"`
-* phantom `"phantomjs"`
 
-| `:args-driver` specifies extra command line arguments to *WebDriver*.
+_Example:_ `:path-driver "/Users/ivan/Downloads/geckodriver"`
 
-Example: `:args-driver ["-b" "/path/to/firefox/binary"]`
-| <not set>
+Typically used if your *WebDriver* binary is not on your `PATH`.
 
-| `:webdriver-failed-launch-retries`
+[id=opt-args-driver,reftext=`:args-driver`]
+=== `:args-driver` for WebDriver binary
+_Default:_ <not set>
 
-Introduced to compensate for mysterious but recoverable failed launches of safari driver.
-a| - safari `4` (for a total of 5 tries)
-- all other drivers `0`
+_Example:_ `:args-driver ["--binary" "/path/to/firefox/binary"]` +
+(geckodriver specific, you'd probably use <<opt-path-browser>> instead)
 
-| `:path-browser` to *web browser* binary. +
-Typically used if your browser is not on the PATH.
+Specifies extra command line arguments to the *WebDriver* binary.
 
-Example: `:path-browser "/Users/ivan/Downloads/firefox/firefox"`
-| By default, the WebDriver process automatically finds the web browser.
+[id=opt-webdriver-failed-launch-retries,reftext=`:webdriver-failed-launch-retries`]
+=== `:webdriver-failed-launch-retries`
+_Default:_
 
-| `:args` specifies extra command line arguments to *web browser*, see your web browser docs for what is available.
+* `:safari` driver `4`
+* all other drivers `0`
 
-Example: `:args ["--incognito" "--app" "http://example.com"]`
-| <not set>
+_Example:_ `:webdriver-failed-launch-retries 3`
 
-a| `:log-level` *web browser* minimal console log level.
+Introduced to compensate for mysterious but recoverable failed launches of safaridriver.
+
+[id=opt-path-browser,refext=`:path-browser`]
+=== `:path-browser` to web browser binary
+
+_Default:_ <not set>, The *WebDriver* implementation will make an attempt to find the *web browser* binary.
+
+_Example:_ `:path-browser "/Users/ivan/Downloads/firefox/firefox`
+
+Typically used if your *web browser* binary is not on your `PATH`.
+
+[id=opt-args,refext=`:args`]
+=== `:args` for web browser binary
+_Default:_ <not set>
+
+_Example:_ `:args ["--incognito" "--app" "http://example.com"]`
+
+Specifies extra command line arguments for the *web browser* binary, see vendor docs for what is available.
+
+[id=opt-log-level,reftext=`:log-level`]
+=== `:log-level` for the web browser console
+_Default:_ `:all`
+
+_Example:_ `:log-level :err`
+
+*Web browser* minimal console log level.
 Only messages with this level and above will be collected.
 From least to most verbose:
 
@@ -2155,97 +2179,131 @@ From least to most verbose:
 
 See <<console-logs>>
 
-Example: `:log-level :err`
+[id=opt-driver-log-level,reftext=`:driver-log-level`]
+=== `:driver-log-level`
 
-| `:all`
+_Default:_ <not set>
 
-a| `:driver-log-level` *WebDriver* minimal log level.
+_Example:_ `:driver-log-level "INFO"`
+
+*WebDriver* minimal log level.
 values vary by browser driver vendor:
 
 * chrome & edge `"OFF"` `"SEVERE"` `"WARNING"` `"INFO"` or `"DEBUG"`
 * firefox `"fatal"` `"error"` `"warn"` `"info"` `"config"` `"debug"` or `"trace"`
-* phantomjs `"ERROR"` `"WARN"` `"INFO"` `"DEBUG"`
 
-Example: `:driver-log-level "INFO"`
+[id=opt-log-stdout,reftext=`:log-stdout`]
+[id=opt-log-stderr,reftext=`:log-sterr`]
+=== `:log-stdout` & `:log-stderr` for WebDriver output
 
-a| * phantomjs `"INFO"`
+_Default:_ no logging: `/dev/null`, on Windows `NUL`
 
-a| `:log-stdout` and `:log-stderr` *WebDriver* stdout and stderr log files
-
-Specify `:inherit` to have WebDriver process output destination inherit from calling process (for example, the console).
-
-Example:
+_Example:_
 [source,clojure]
 ----
   :log-stdout "target/chromedriver-out.log"
   :log-stderr "target/chromedriver-err.log"
 ----
-| `/dev/null`, on Windows `NUL`
 
-| `:profile` path to custom *web browser* profile, see <<browser-profile>>
+Specify `:inherit` to have WebDriver process output destination inherit from its calling process (for example, the console or some existing redirection to a file).
 
-Example: +
+[id=opt-profile,reftext=`:profile`]
+=== `:profile` path to web browser profile
+
+_Default:_ <not set>
+
+_Example:_
 `:profile "/Users/ivan/Library/Application Support/Firefox/Profiles/iy4iitbg.Test"`
 
-| <not set>
+Path to custom *web browser* profile, see <<browser-profile>>.
 
-| `:env` map of environment variables for *WebDriver* process.
+[id=opt-env,reftext=`:env`]
+=== `:env` variables for WebDriver process
+_Default:_ <not set>
 
-Example: `:env {:MOZ_CRASHREPORTER_URL "http://test.com"}`
-| <not set>
+_Example:_ `:env {:MOZ_CRASHREPORTER_URL "http://test.com"}`
 
-| `:size` initial *web browser* window width and height in pixels
+Map of extra environment variables to use when launching the *Webdriver* process.
 
-Example: `size: [640 480]`
-| [1024 680]
+[id=opt-size,reftext=`:size`]
+=== `:size` of intial web browser window
+_Default:_ `[1024 680]`
 
-| `:url` default URL to open in *web browser*.+
-Only works in Firefox at this time.
+_Example:_ `size: [640 480]`
 
-Example: `:url "https://clojure.org"`
-| <not set>
+Initial *web browser* window width and height in pixels.
 
-| `:user-agent` overrides the *web browser* `User-Agent`.
-Useful for headless mode.
-See <<user-agent>>.
+[id=opt-url,reftext=`:url`]
+=== `:url` to open in web browser
 
-Example: `:user-agent "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"`
-| Default is governed by WebDriver vendor.
+_Default:_ <not set>
 
-| `:download-dir` directory for *web browser* downloads files.
-See <<download-dir>>
+_Example:_ `:url "https://clojure.org"`
 
-Example: `:download-dir "target/chrome-downloads"`
-| Default is governed by browser vendor.
+Only works with Firefox at this time.
 
-| `:headless` run the *web browser* without a UI.
+[id=opt-user-agent,reftext=`:user-agent`]
+=== `:user-agent` for web browser
+_Default:_ <not set>, Governed by WebDriver/web browser vendor
+
+_Example:_ `:user-agent "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)"`
+
+Overrides the web browser returned `User-Agent` header.
+
+[id=opt-download-dir,reftext=`:download-dir`]
+=== `:download-dir` for web browser
+_Default:_ <not set>, Governed by web browser vendor
+
+_Example:_ `:download-dir "target/chrome-downloads"`
+
+The directory where the *web browser* downloads files.
+
+[id=opt-headless,reftext=`:headless`]
+=== `:headless` web browser
+
+_Default:_ Normally `false`, but automatically `true` for driver creation functions like `chrome-headless`, `with-chrome-headless`, etc.
+
+_Example:_ `:headless true`
+
+Run the web browser without a user interface.
 See <<headless>>.
 
-Example `:headless true`
-| Normally `false`, but automatically set for driver creation functions like `chrome-headless`, `with-chrome-headless` etc.
+[id=opt-prefs,reftext=`:prefs`]
+=== `:prefs` for web browser
 
-| `:prefs` map of *web browser* specific preferences.
+_Default:_ <not set>
 
-Example: see one usage in <<download-dir>>.
-| <not set>
+_Example:_ see one usage in <<download-dir>>.
 
-| `:proxy` to set *web browser* proxy.
+Map of *web browser* specific preferences.
 
-Example: see <<http-proxy>>.
-| <not set>
+[id=opt-proxy,reftext=`:proxy`]
+=== `:proxy` for web browser
 
-| `:load-strategy` controls how long the *WebDriver* should wait before interacting with a page.
+_Default:_ <not set>
+
+_Example:_ See <<http-proxy>>
+
+[id=opt-load-strategy,reftext=`:load-strategy`]
+=== `:load-strategy`
+
+_Default:_ `:normal`
+
+_Example:_ `:load-strategy :none`
+
+Controls how long the *WebDriver* should wait before interacting with a page.
 See <<load-strategy>>.
 
-Example: `:load-strategy :none`
-| `:normal`
+[id=opt-capabilities,reftext=`:capabilities`]
+=== `:capabilities`
 
-| `:capabilities` *WebDriver*-specific options.
-Read vendor docs for WebDriver before setting anything here.
-You'll find an example usage under <<http-proxy>>.
-| <none>
+_Default:_ <not set>
 
-|===
+_Example:_ See <<http-proxy>> for an example usage.
+
+A *WebDriver*'s capabilities can be vendor specific and define preferred options.
+Read WebDriver vendor docs before setting anything here.
+While reading docs, note that Etaoin passes along `:capabilities` as `desiredCapabilties`.
 
 === Using Headless Drivers [[headless]]
 
