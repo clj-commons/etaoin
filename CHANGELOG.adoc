@@ -10,6 +10,8 @@ A release with an intentional breaking changes is marked with:
 * https://github.com/clj-commons/etaoin/pull/552[#552]: Add support for wide characters to input fill functions
 (https://github.com/tupini07[@tupini07])
 * https://github.com/clj-commons/etaoin/issues/566[#566]: Recognize `:driver-log-level` for Edge
+* https://github.com/clj-commons/etaoin/issues/563[#563]: Support `"debug"` `:driver-log-level` for Safari
+* https://github.com/clj-commons/etaoin/issues/517[#517]: Properly cleanup after failed webdriver launch
 * bump all deps to current versions
 * tests
 ** https://github.com/clj-commons/etaoin/issues/572[#572]: stop using chrome `--no-sandbox` option, it has become problematic on Windows (and we did not need it anyway)

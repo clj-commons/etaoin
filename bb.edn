@@ -22,13 +22,12 @@
                                       :default "localhost"}}
                               :restrict true}]
                 (cli/parse-opts args cli-spec))))
-  :enter (let [{:keys [name]} (current-task)]
-           (when-not (string/starts-with? name "-")
-             (status/line :head "TASK %s %s" name (string/join " " *command-line-args*))))
-  :leave (let [{:keys [name]} (current-task)]
-           (when-not (string/starts-with? name "-")
+  :enter (let [{:keys [name task-decoration] :as f} (current-task)]
+           (when-not (= :none task-decoration)
+             (status/line :head "TASK %s" name)))
+  :leave (let [{:keys [name task-decoration] :as f} (current-task)]
+           (when-not (= :none task-decoration)
              (status/line :detail "\nTASK %s done." name)))
-
   ;; commands
   dev:jvm        {:doc "start a Clojure nrepl server/prompt"
                   :task (let [opts (parse-repl-args *command-line-args*)
@@ -47,6 +46,7 @@
   test:jvm       {:doc "Runs tests under JVM Clojure [--help]"
                   :task test/test-jvm}
   -test:bb       {:doc "bb test runner, invoked within script/test.clj"
+                  :task-decoration :none
                   :requires ([taoensso.timbre :as timbre])
                   ;; repeat :test paths from deps.edn
                   :extra-paths ["test" "env/test/resources"]
@@ -98,6 +98,7 @@
   docker-build   {:doc "build etaoin docker image"
                   :task (shell/command "docker build --no-cache -t etaoin:latest .")}
   -docker-install {:doc "helper to setup docker image"
+                   :task-decoration :none
                    :task docker-install/-main}
   docker-run     {:doc "run etaoin docker image (specify no commmands for interactive)"
                   :task (let [{:keys [exit]} (apply shell/command {:continue true}
@@ -106,5 +107,8 @@
                                                     "etaoin:latest"
                                                     *command-line-args*)]
                           (System/exit exit))}
+  fake-driver {:doc "Fake driver to support testing"
+               :task-decoration :none
+               :task fake-driver/-main}
   ci-release     {:doc "release tasks, use --help for args"
                   :task ci-release/-main}}}

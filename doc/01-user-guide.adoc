@@ -2196,6 +2196,11 @@ values vary by browser driver vendor:
 
 * chrome & edge `"OFF"` `"SEVERE"` `"WARNING"` `"INFO"` or `"DEBUG"`
 * firefox `"fatal"` `"error"` `"warn"` `"info"` `"config"` `"debug"` or `"trace"`
+* safari `"debug"` - safaridriver
+** has only one detailed log level which we enable via its `--diagnose` option and abstract via `"debug"`
+** only logs to a log file which Etaion automatically discovers and populates as <<opt-driver-log-file>> in the `driver` map
+** see <<opt-post-stop-fns>> for one way to dump this log file
+* phantomjs "ERROR"` `"WARN"` `"INFO"` `"DEBUG"`
 
 [id=opt-log-stdout,reftext=`:log-stdout`]
 [id=opt-log-stderr,reftext=`:log-sterr`]
@@ -2211,6 +2216,36 @@ _Example:_
 ----
 
 Specify `:inherit` to have WebDriver process output destination inherit from its calling process (for example, the console or some existing redirection to a file).
+
+[id=opt-driver-log-file,reftext=`:driver-log-file`]
+=== `:driver-log-file` for discovered WebDriver log file
+
+_Default:_ `<not set>` Etaoin will set this value for you
+
+_Example:_ `<n/a>` Not set by user
+
+Only populated for safaridriver when <<opt-driver-log-level>> set to `"debug"`.
+
+[id=opt-post-stop-fns,reftext=`:post-stop-fns`]
+=== `:post-stop-fns` to hook in behaviour at driver stop
+
+_Default:_ `<not set>`
+
+_Example:_
+One usage is to dump safaridriver <<opt-driver-log-file>>.
+
+//:test-doc-blocks/skip
+[source,clojure]
+----
+:post-stop-fns [(fn dump-discovered-log [driver]
+                  (if-let [log (:driver-log-file driver)]
+                    (do
+                      (println "-[start]-safaridriver log file" log)
+                      (with-open [in (io/input-stream log)]
+                        (io/copy in *out*))
+                      (println "-[end]-safaridriver log file" log))
+                    (println "-no safaridriver log file discovered-")))]
+----
 
 [id=opt-profile,reftext=`:profile`]
 === `:profile` path to web browser profile
