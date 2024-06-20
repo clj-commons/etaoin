@@ -77,7 +77,8 @@
                  :when (not= jdk-version (:jdk-version default-opts))]
              (test-doc {:jdk-version jdk-version :os "ubuntu"})))
          (sort-by (juxt #(parse-long (:jdk-version %)) :desc))
-         (into [(merge default-opts {:os "ubuntu" :cmd "bb lint" :desc "lint"})]))))
+         (into [(merge default-opts {:os "ubuntu" :cmd "bb lint" :desc "lint"})])
+         (mapv #(assoc % :id (string/replace (:desc %) " " "-"))))))
 
 (def valid-formats ["json" "table"])
 (def cli-spec {:help {:desc "This usage help"}
@@ -107,7 +108,7 @@
         (status/line :detail
                      (if (= "json" (:format opts))
                        (json/generate-string matrix)
-                       (doric/table [:os :jdk-version :cmd :needs :desc] matrix)))))))
+                       (doric/table [:os :jdk-version :cmd :needs :desc :id] matrix)))))))
 
 (main/when-invoked-as-script
  (apply -main *command-line-args*))

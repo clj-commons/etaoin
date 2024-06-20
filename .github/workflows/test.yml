@@ -151,6 +151,6 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: test-debug-screenshots
+        name: ${{ matrix.id }}-debug-screenshots
         path: target/debug-screenshots/*
         if-no-files-found: ignore
