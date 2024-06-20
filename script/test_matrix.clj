@@ -76,7 +76,7 @@
            (for [jdk-version (get os-jdks "ubuntu")
                  :when (not= jdk-version (:jdk-version default-opts))]
              (test-doc {:jdk-version jdk-version :os "ubuntu"})))
-         (sort-by (juxt #(parse-long (:jdk-version %)) :desc))
+         (sort-by :desc)
          (into [(merge default-opts {:os "ubuntu" :cmd "bb lint" :desc "lint"})])
          (mapv #(assoc % :id (string/replace (:desc %) " " "-"))))))
 
