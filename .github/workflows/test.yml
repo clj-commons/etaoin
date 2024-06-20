@@ -146,3 +146,10 @@ jobs:
 
     - name: Run Tests
       run: ${{ matrix.cmd }}
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-debug-screenshots
+        path: target/debug-screenshots
+        if-no-files-found: ignore

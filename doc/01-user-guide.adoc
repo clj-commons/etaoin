@@ -255,7 +255,11 @@ endif::[]
 ;; navigate to wikipedia
 (e/go driver "https://en.wikipedia.org/")
 ;; wait for the search input to load
-(e/wait-visible driver [{:tag :input :name :search}])
+(try
+  (e/wait-visible driver [{:tag :input :name :search}])
+  (catch Throwable e
+    (e/screenshot driver "target/debug-screenshots/wikipedia-wait-failure.png")
+    (throw e)))
 
 ;; search for something interesting
 (e/fill driver {:tag :input :name :search} "Clojure programming language")
