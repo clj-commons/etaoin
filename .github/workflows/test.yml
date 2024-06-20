@@ -147,9 +147,10 @@ jobs:
     - name: Run Tests
       run: ${{ matrix.cmd }}
 
-    - name: Upload artifact
+    - name: Upload test debug output
+      if: always()
       uses: actions/upload-artifact@v4
       with:
         name: test-debug-screenshots
-        path: target/debug-screenshots
+        path: target/debug-screenshots/*
         if-no-files-found: ignore
