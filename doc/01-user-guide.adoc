@@ -259,11 +259,7 @@ endif::[]
 (e/set-window-size driver {:width 1280 :height 800})
 
 ;; wait for the search input to load
-(try
-  (e/wait-visible driver [{:tag :input :name :search}])
-  (catch Throwable e
-    (e/screenshot driver "target/debug-screenshots/wikipedia-wait-failure.png")
-    (throw e)))
+(e/wait-visible driver [{:tag :input :name :search}])
 
 ;; search for something interesting
 (e/fill driver {:tag :input :name :search} "Clojure programming language")
