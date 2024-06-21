@@ -254,8 +254,12 @@ endif::[]
 
 ;; navigate to wikipedia
 (e/go driver "https://en.wikipedia.org/")
+
+;; make sure we aren't using large screen layout
+(e/set-window-size driver {:width 1280 :height 800})
+
 ;; wait for the search input to load
-(e/wait-visible driver [{:id :simpleSearch} {:tag :input :name :search}])
+(e/wait-visible driver [{:tag :input :name :search}])
 
 ;; search for something interesting
 (e/fill driver {:tag :input :name :search} "Clojure programming language")
@@ -325,7 +329,8 @@ A portion of the above rewritten with `doto`:
 
 (doto driver
   (e/go "https://en.wikipedia.org/")
-  (e/wait-visible [{:id :simpleSearch} {:tag :input :name :search}])
+  (e/set-window-size {:width 1280 :height 800})
+  (e/wait-visible [{:tag :input :name :search}])
   (e/fill {:tag :input :name :search} "Clojure programming language")
   (e/wait 1)
   (e/fill {:tag :input :name :search} k/enter)
