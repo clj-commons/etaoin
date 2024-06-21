@@ -3,9 +3,9 @@
             [cheshire.core :as json]
             [clojure.string :as string]
             [doric.core :as doric]
-            [helper.natural-sort :as natural-sort]
             [helper.main :as main]
-            [lread.status-line :as status]))
+            [lread.status-line :as status]
+            [wevre.natural-compare :as natural-compare]))
 
 (defn- test-def [{:keys [os id platform browser jdk-version]}]
   {:os os
@@ -77,7 +77,7 @@
            (for [jdk-version (get os-jdks "ubuntu")
                  :when (not= jdk-version (:jdk-version default-opts))]
              (test-doc {:jdk-version jdk-version :os "ubuntu"})))
-         (natural-sort/sort-by :desc)
+         (sort-by :desc natural-compare/natural-compare)
          (into [(merge default-opts {:os "ubuntu" :cmd "bb lint" :desc "lint"})])
          (mapv #(assoc % :id (string/replace (:desc %) " " "-"))))))
 
