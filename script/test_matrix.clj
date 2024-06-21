@@ -3,6 +3,7 @@
             [cheshire.core :as json]
             [clojure.string :as string]
             [doric.core :as doric]
+            [helper.natural-sort :as natural-sort]
             [helper.main :as main]
             [lread.status-line :as status]))
 
@@ -76,7 +77,7 @@
            (for [jdk-version (get os-jdks "ubuntu")
                  :when (not= jdk-version (:jdk-version default-opts))]
              (test-doc {:jdk-version jdk-version :os "ubuntu"})))
-         (sort-by :desc)
+         (natural-sort/sort-by :desc)
          (into [(merge default-opts {:os "ubuntu" :cmd "bb lint" :desc "lint"})])
          (mapv #(assoc % :id (string/replace (:desc %) " " "-"))))))
 
