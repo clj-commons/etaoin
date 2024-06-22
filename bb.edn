@@ -1,6 +1,7 @@
 {:min-bb-version "0.8.2"
  :paths ["script" "build"]
  :deps {doric/doric {:mvn/version "0.9.0"}
+        org.clj-commons/pretty {:mvn/version "3.0.0"}
         lread/status-line {:git/url "https://github.com/lread/status-line.git"
                            :sha "cf44c15f30ea3867227fa61ceb823e5e942c707f"}
         dev.nubank/docopt {:mvn/version "0.6.1-fix7"}
