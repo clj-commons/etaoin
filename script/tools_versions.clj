@@ -145,25 +145,27 @@
   something exceptional happens."
   [& args]
   (when (main/doc-arg-opt args)
-    (println (ansi/compose "\n"
-                           [:green (System/getProperty "os.name")] "\n"
-                           "  version: " (System/getProperty "os.version") "\n"
-                           "  arch: " (System/getProperty "os.arch")))
-    (let [tools (versions)]
-      (doseq [{:keys [error name short-version path version]} tools]
-        (if error
-          (println (ansi/compose [:red name " - Error"] "\n"
-                                 [:red (-> error string/trim (string/replace #"(?m)^" "  "))]))
-          (println (ansi/compose [:green name " " short-version] " - " path "\n"
-                                 (-> version string/trim (string/replace #"(?m)^" "  "))))))
-      ;; chrome/chromedriver and edge/edgedriver versions should match
-      (let [warnings (filter some?
-                             [(version-mismatch tools "Chrome" "Chrome Webdriver")
-                              (version-mismatch tools "Edge" "Edge Webdriver")])]
-        (when (seq warnings)
-          (println (ansi/compose "\n" [:red "Warnings"]))
-          (doseq [w warnings]
-            (println "-" w)))))))
+    ;; force colors on CI where is seems to be disabled by default
+    (binding [ansi/*color-enabled* (if (System/getenv "CI") true ansi/*color-enabled*)]
+      (println (ansi/compose "\n"
+                             [:green (System/getProperty "os.name")] "\n"
+                             "  version: " (System/getProperty "os.version") "\n"
+                             "  arch: " (System/getProperty "os.arch")))
+      (let [tools (versions)]
+        (doseq [{:keys [error name short-version path version]} tools]
+          (if error
+            (println (ansi/compose [:red name " - Error"] "\n"
+                                   [:red (-> error string/trim (string/replace #"(?m)^" "  "))]))
+            (println (ansi/compose [:green name " " short-version] " - " path "\n"
+                                   (-> version string/trim (string/replace #"(?m)^" "  "))))))
+        ;; chrome/chromedriver and edge/edgedriver versions should match
+        (let [warnings (filter some?
+                               [(version-mismatch tools "Chrome" "Chrome Webdriver")
+                                (version-mismatch tools "Edge" "Edge Webdriver")])]
+          (when (seq warnings)
+            (println (ansi/compose "\n" [:red "Warnings"]))
+            (doseq [w warnings]
+              (println "-" w))))))))
 
 (main/when-invoked-as-script
  (apply -main *command-line-args*))
