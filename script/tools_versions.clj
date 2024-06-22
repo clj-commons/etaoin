@@ -1,7 +1,7 @@
 (ns tools-versions
   (:require [babashka.fs :as fs]
             [clojure.string :as string]
-            [doric.core :as doric]
+            [clj-commons.ansi :as ansi]
             [cheshire.core :as json]
             [helper.main :as main]
             [helper.os :as os]
@@ -44,33 +44,12 @@
       (some #{(os/get-os)} oses)))
 
 (defn- version-cmd-result [shell-opts {:keys [out err exit]}]
-  (if (not (zero? exit))
-    {:error (format "exit code %d" exit)}
-    {:version (cond-> ""
-                (= :string (:out shell-opts)) (str out)
-                (= :string (:err shell-opts)) (str err))}))
-
-(defn- table-multilines->rows
-  "Convert a seq of maps from [{:a \"one\n\two\" :b \"a\nb\nc\"}]
-  to: [{:a \"one\" :b \"a\"}
-       {:a \"two\" :b \"b\"}
-       {:a \"\"    :b \"c\"}]
-  in preparation for printing with doric."
-  [results]
-  (reduce (fn [acc n]
-            (let [n (reduce-kv (fn [m k v]
-                                 (assoc m k (when v (string/split-lines v))))
-                               {}
-                               n)
-                  max-lines (apply max (map #(count (val %)) n))]
-              (concat acc
-                      (for [ln (range max-lines)]
-                        (reduce-kv (fn [m k _v]
-                                     (assoc m k (get (k n) ln "")))
-                                   {}
-                                   n)))))
-          []
-          results))
+  (let [output (cond-> ""
+                 (= :string (:out shell-opts)) (str out)
+                 (= :string (:err shell-opts)) (str err))]
+    (if (not (zero? exit))
+      {:error (format "Exit code: %d\n%s" exit output)}
+      {:version output})))
 
 (defn- windows-software-list*
   "One way to get a list of installed software on Windows.
@@ -136,13 +115,29 @@
           (update version-result :version version-post-fn)))
       {:error (format "bin not found: %s" app)})))
 
+(defn short-version [long-version]
+  (re-find #"\d+[+.a-zA-Z0-9]+" long-version))
+
 (defn versions []
   (for [{:keys [name] :as t} (map #(merge tool-defaults %) tools)
                :when (expected-on-this-os t)
-               :let [{:keys [error path version]} (resolve-tool t)]]
-           (if error
-             {:name name :path path :version (format "** ERROR: %s **",error)}
-             {:name name :path path :version version})))
+               :let [{:keys [version] :as r} (resolve-tool t)]]
+    (cond-> (assoc r :name name)
+      version (assoc :short-version (short-version version)))))
+
+(defn tool-version [tools tool-name]
+  (some->> tools
+           (filter #(= tool-name (:name %)))
+           first
+           :short-version))
+
+(defn version-mismatch [tools tool1-name tool2-name]
+  (let [tool1-version (tool-version tools tool1-name)
+        tool2-version (tool-version tools tool2-name)]
+    (when (not= tool1-version tool2-version)
+      (format "Version mismatch: %s %s != %s %s"
+              tool1-name (or tool1-version "<not found>")
+              tool2-name (or tool2-version "<not found>")))))
 
 (defn -main
   "Report on tools versions based the the OS the script it is run from.
@@ -150,10 +145,27 @@
   something exceptional happens."
   [& args]
   (when (main/doc-arg-opt args)
-    (->> (versions)
-         table-multilines->rows
-         (doric/table [:name :version :path])
-         println)))
+    ;; force colors on CI where is seems to be disabled by default
+    (binding [ansi/*color-enabled* (if (System/getenv "CI") true ansi/*color-enabled*)]
+      (println (ansi/compose "\n"
+                             [:green (System/getProperty "os.name")] "\n"
+                             "  version: " (System/getProperty "os.version") "\n"
+                             "  arch: " (System/getProperty "os.arch")))
+      (let [tools (versions)]
+        (doseq [{:keys [error name short-version path version]} tools]
+          (if error
+            (println (ansi/compose [:red name " - Error"] "\n"
+                                   [:red (-> error string/trim (string/replace #"(?m)^" "  "))]))
+            (println (ansi/compose [:green name " " short-version] " - " path "\n"
+                                   (-> version string/trim (string/replace #"(?m)^" "  "))))))
+        ;; chrome/chromedriver and edge/edgedriver versions should match
+        (let [warnings (filter some?
+                               [(version-mismatch tools "Chrome" "Chrome Webdriver")
+                                (version-mismatch tools "Edge" "Edge Webdriver")])]
+          (when (seq warnings)
+            (println (ansi/compose "\n" [:red "Warnings"]))
+            (doseq [w warnings]
+              (println "-" w))))))))
 
 (main/when-invoked-as-script
  (apply -main *command-line-args*))
