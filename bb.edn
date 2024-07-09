@@ -6,7 +6,7 @@
                            :sha "cf44c15f30ea3867227fa61ceb823e5e942c707f"}
         dev.nubank/docopt {:mvn/version "0.6.1-fix7"}
         org.babashka/http-server {:mvn/version "0.1.12"}
-        wevre/natural-compare {:mvn/version "0.0.8"}}
+        wevre/natural-compare {:mvn/version "0.0.10"}}
  :tasks
  {;; setup
   :requires ([babashka.classpath :as cp]
