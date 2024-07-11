@@ -569,39 +569,28 @@ Useful when you need to select a third row from a table, for example.
 * Any non-special key represents an attribute and its value.
 * `:fn/` is a prefix followed by a supported query function.
 
-There are several query functions of the form `:fn/*`. Each query
-function takes a parameter which is the value associated with the
-query function keyword in the map.
+There are several query functions of the form `:fn/*`.
+Each query function takes a parameter which is the value associated with the query function keyword in the map.
 
-* `:fn/text`: Takes a string parameter. Matches if the
-  element has the exact text specified.
-* `:fn/has-text`: Takes a string parameter. Matches if the
-  element includes the specified text.
-* `:fn/has-string`: Takes a string parameter. Matches if the element
-  string contains the specified string. The difference between
-  `:fn/has-text` and `:fn/has-string` is the difference between the
-  XPath `text()` and `string()` functions (`text()` is the text within
-  a given element and `string()` is the text of all descendant
-  elements concatenated together in document order). Generally, if
-  you're targeting an element at the top of the hierarchy, you
-  probably want `:fn/has-string`, and if you're targeting a single
-  element at the bottom of the hierarchy, you probably want to use
-  `:fn/has-text`.
-* `:fn/has-class`: Takes a string parameter. Matches if the element's
-  `class` attribute includes the string. Unlike using a `:class` key
-  in the map, `:fn/has-class` can match single classes, whereas
-  `:class` is an exact match of the whole class string.
-* `:fn/has-classes`: Takes a vector of strings parameter. Matches if
-  the element's `class` attribute includes _all_ of the specified
-  class strings.
-* `:fn/link`: Takes a string parameter. Matches if the element's
-  `href` attribute contains the specified string.
-* `:fn/enabled`: Takes a boolean (`true` or `false`) parameter. If the
-  parameter is `true`, matches if the element is enabled. If the
-  parameter is `false`, matches if the element is disabled.
-* `:fn/disabled`: Takes a boolean (`true` or `false`) parameter. If
-  the parameter is `true`, matches if the element is disabled. If the
-  parameter is `true`, matches if the element is enabled.
+* `:fn/text`: Takes a string parameter. Matches if the element has the exact text specified.
+* `:fn/has-text`: Takes a string parameter.
+  Matches if the element includes the specified text.
+* `:fn/has-string`: Takes a string parameter.
+  Matches if the element string contains the specified string.
+  The difference between `:fn/has-text` and `:fn/has-string` is the difference between the XPath `text()` and `string()` functions (`text()` is the text within a given element and `string()` is the text of all descendant elements concatenated together in document order).
+  Generally, if you're targeting an element at the top of the hierarchy, you probably want `:fn/has-string`, and if you're targeting a single element at the bottom of the hierarchy, you probably want to use `:fn/has-text`.
+* `:fn/has-class`: Takes a string parameter.
+  Matches if the element's `class` attribute includes the string. Unlike using a `:class` key in the map, `:fn/has-class` can match single classes, whereas `:class` is an exact match of the whole class string.
+* `:fn/has-classes`: Takes a vector of strings parameter.
+  Matches if the element's `class` attribute includes _all_ of the specified class strings.
+* `:fn/link`: Takes a string parameter.
+  Matches if the element's `href` attribute contains the specified string.
+* `:fn/enabled`: Takes a boolean (`true` or `false`) parameter.
+  If the parameter is `true`, matches if the element is enabled.
+  If the parameter is `false`, matches if the element is disabled.
+* `:fn/disabled`: Takes a boolean (`true` or `false`) parameter.
+  If the parameter is `true`, matches if the element is disabled.
+  If the parameter is `true`, matches if the element is enabled.
 
 Here are some examples of the map syntax:
 
