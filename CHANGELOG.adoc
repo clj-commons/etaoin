@@ -11,6 +11,7 @@ A release with an intentional breaking changes is marked with:
 (https://github.com/tupini07[@tupini07])
 * https://github.com/clj-commons/etaoin/issues/566[#566]: Recognize `:driver-log-level` for Edge
 * bump all deps to current versions
+* https://github.com/clj-commons/etaoin/issues/602[#602]: Document all :fn/* query pseudo-functions in a definitive list
 * tests
 ** https://github.com/clj-commons/etaoin/issues/572[#572]: stop using chrome `--no-sandbox` option, it has become problematic on Windows (and we did not need it anyway)
 * docs
