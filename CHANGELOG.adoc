@@ -16,6 +16,7 @@ A release with an intentional breaking changes is marked with:
 * docs
 ** https://github.com/clj-commons/etaoin/issues/534[#534]: better describe `etaoin.api/select` and its alternatives
 ** https://github.com/clj-commons/etaoin/issues/536[#536]: user guide examples are now all os agnostic and CI tested via test-doc-blocks on all supported OSes
+* https://github.com/clj-commons/etaoin/issues/602[#602]: Document all :fn/* query pseudo-functions in a definitive list
 
 == v1.0.40
 
