@@ -1611,6 +1611,112 @@
   [driver q]
   (get-element-property driver q :value))
 
+(defn get-element-shadow-root-el
+  "Returns the shadow root for the specified element or `nil` if the
+  element does not have a shadow root."
+  [driver el]
+  (-> (get-element-property-el driver el "shadowRoot")
+      first
+      second))
+
+(defn get-element-shadow-root
+  "Returns the shadow root for the first element matching the query, or
+  `nil` if the element does not have a shadow root."
+  [driver q]
+  (get-element-shadow-root-el driver (query driver q)))
+
+;;; 
+;;; Shadow root queries
+;;; 
+
+(defmulti ^:private find-element-from-shadow-root* dispatch-driver)
+
+(defmethods find-element-from-shadow-root*
+  [:firefox :safari]
+  [driver shadow-root-el locator term]
+  {:pre [(some? shadow-root-el)]}
+  (-> (execute {:driver driver
+                :method :post
+                :path   [:session (:session driver) :shadow shadow-root-el :element]
+                :data   {:using locator :value term}})
+      :value
+      first
+      second))
+
+(defmethod find-element-from-shadow-root* :default
+  [driver shadow-root-el locator term]
+  {:pre [(some? shadow-root-el)]}
+  (-> (execute {:driver driver
+                :method :post
+                :path   [:session (:session driver) :shadow shadow-root-el :element]
+                :data   {:using locator :value term}})
+      :value
+      :ELEMENT))
+
+(defmulti ^:private find-elements-from-shadow-root* dispatch-driver)
+
+(defmethod find-elements-from-shadow-root* :default
+  [driver shadow-root-el locator term]
+  {:pre [(some? shadow-root-el)]}
+  (->> (execute {:driver driver
+                 :method :post
+                 :path   [:session (:session driver) :shadow shadow-root-el :elements]
+                 :data   {:using locator :value term}})
+       :value
+       (mapv (comp second first))))
+
+(defn query-shadow-root-el
+  "Queries the shadow DOM rooted at `shadow-root-el`, looking for the
+  first element specified by `shadow-q`.
+
+  The `shadow-q` parameter is similar to the `q` parameter of
+  the [[query]] function, but some drivers may limit it to specific
+  formats (e.g., CSS). See [this page](https://wpt.fyi/results/webdriver/tests/classic/find_element_from_shadow_root/find.py?label=experimental&label=master&aligned) on the Web Platform 
+  Tests website for more information on specific browser support."
+  [driver shadow-root-el shadow-q]
+  (let [[loc term] (query/expand driver shadow-q)]
+    (find-element-from-shadow-root* driver shadow-root-el loc term)))
+
+(defn query-all-shadow-root-el
+  "Queries the shadow DOM rooted at `shadow-root-el`, looking for all
+  elements specified by `shadow-q`.
+
+  The `shadow-q` parameter is similar to the `q` parameter of
+  the [[query]] function, but some drivers may limit it to specific
+  formats (e.g., CSS). See [this page](https://wpt.fyi/results/webdriver/tests/classic/find_element_from_shadow_root/find.py?label=experimental&label=master&aligned) on the Web Platform 
+  Tests website for more information on specific browser support."
+  [driver shadow-root-el shadow-q]
+  (let [[loc term] (query/expand driver shadow-q)]
+    (find-elements-from-shadow-root* driver shadow-root-el loc term)))
+
+(defn query-shadow-root
+  "First, conducts a standard search (as if by `query`) for an element
+  with a shadow root. Then, from that shadow root element, conducts a
+  search of the shadow DOM for the first element matching `shadow-q`.
+
+  For details on `q`, see [[query]].
+
+  The `shadow-q` parameter is similar to the `q` parameter of
+  the [[query]] function, but some drivers may limit it to specific
+  formats (e.g., CSS). See [this page](https://wpt.fyi/results/webdriver/tests/classic/find_element_from_shadow_root/find.py?label=experimental&label=master&aligned) on the Web Platform 
+  Tests website for more information on specific browser support."
+  [driver q shadow-q]
+  (query-shadow-root-el driver (get-element-shadow-root driver q) shadow-q))
+
+(defn query-all-shadow-root
+  "First, conducts a standard search (as if by `query`) for an element
+  with a shadow root. Then, from that shadow root element, conducts a
+  search of the shadow DOM for all elements matching `shadow-q`.
+
+  For details on `q`, see [[query]].
+
+  The `shadow-q` parameter is similar to the `q` parameter of
+  the [[query]] function, but some drivers may limit it to specific
+  formats (e.g., CSS). See [this page](https://wpt.fyi/results/webdriver/tests/classic/find_element_from_shadow_root/find.py?label=experimental&label=master&aligned) on the Web Platform 
+  Tests website for more information on specific browser support."
+  [driver q shadow-q]
+  (query-all-shadow-root-el driver (get-element-shadow-root driver q) shadow-q))
+
 ;;
 ;; cookies
 ;;
@@ -2430,6 +2536,17 @@
 (def ^{:doc "Opposite of [[has-alert?]]."
        :arglists '([driver])}
   has-no-alert? (complement has-alert?))
+
+(defn has-shadow-root-el?
+  "Returns `true` if the specified element has a shadow root or `false` otherwise."
+  [driver el]
+  (boolean (get-element-shadow-root-el driver el)))
+
+(defn has-shadow-root?
+  "Returns `true` if the first element matching the query has a shadow
+  root or `false` otherwise."
+  [driver q]
+  (boolean (get-element-shadow-root driver q)))
 
 ;;
 ;; wait functions

@@ -238,6 +238,15 @@
             </p>
         </div>
 
+        <h3>Shadow DOM</h3>
+        <span id="not-in-shadow">I'm not in the shadow DOM</span>
+        <div id="shadow-root-host">
+            <template shadowrootmode="open">
+                <span id="in-shadow">I'm in the shadow DOM</span>
+                <span id="also-in-shadow">I'm also in the shadow DOM</span>
+            </template>
+        </div>
+
         <h3 id="document-end">Document end</h3>
 
     </body>
