@@ -858,6 +858,7 @@ The "shadow root" is the top of the shadow DOM tree rooted at the shadow root ho
 
 The following examples use this HTML fragment that has a bit of shadow DOM in it.
 
+//:test-doc-blocks/skip
 [source,html]
 ----
 <span id="not-in-shadow">I'm not in the shadow DOM</span>
@@ -874,6 +875,8 @@ The `div` with the `id` of `shadow-root-host` is, as the ID suggests, the shadow
 
 Given this HTML, you can run a standard `query` to find the shadow root host and then use `get-element-property-el` to return to the `"shadowRoot"` property.
 
+// This has unique element ID's that are specific to the execution run, so skip tests.
+//:test-doc-blocks/skip
 [source,clojure]
 ----
 (e/query driver {:id "shadow-root-host"})
@@ -895,6 +898,8 @@ The element-id of the shadow root is the string value of the first map key.
 You can get the shadow root element ID more directly using Etaoin's `get-element-shadow-root` API.
 The query parameter looks for an element in the standard DOM and returns its shadow root property.
 
+// This has unique element ID's that are specific to the execution run, so skip tests.
+//:test-doc-blocks/skip
 [source,clojure]
 ----
 (e/get-element-shadow-root driver {:id "shadow-root-host"})
@@ -903,6 +908,8 @@ The query parameter looks for an element in the standard DOM and returns its sha
 
 If you already have the shadow root host element, you can return its corresponding shadow root element ID using `get-element-shadow-root-el`.
 
+// This has unique element ID's that are specific to the execution run, so skip tests.
+//:test-doc-blocks/skip
 [source,clojure]
 ----
 (def host (e/query driver {:id "shadow-root-host"}))
@@ -913,6 +920,7 @@ If you already have the shadow root host element, you can return its correspondi
 
 You can test whether an element is a shadow root host using `has-shadow-root?` and `has-shadow-root-el?`.
 
+//:test-doc-blocks/skip
 [source,clojure]
 ----
 (e/has-shadow-root? driver {:id "shadow-root-host"})
@@ -930,6 +938,8 @@ If the host is identified, the `shadow-q` parameter is a query that is executed 
 
 The `query-shadow-root-el` and `query-all-shadow-root-el` allow you to specify the shadow root host element directly, rather than querying for it.
 
+// This has unique element ID's that are specific to the execution run, so skip tests.
+//:test-doc-blocks/skip
 [source,clojure]
 ----
 (e/query-shadow-root driver {:id "shadow-root-host"} {:css "#in-shadow"})
