@@ -140,6 +140,15 @@
     </div>
   </div>
 
+  <h2>Shadow DOM Example</h2>
+  <span id="not-in-shadow">I'm not in the shadow DOM</span>
+  <div id="shadow-root-host">
+      <template shadowrootmode="open">
+          <span id="in-shadow">I'm in the shadow DOM</span>
+          <span id="also-in-shadow">I'm also in the shadow DOM</span>
+      </template>
+  </div>
+
   <h2>Frames</h2>
   <p id="in-main-page">In main page paragraph</p>
   <iframe id="frame1" src="user-guide-sample-frame1.html"></iframe>
