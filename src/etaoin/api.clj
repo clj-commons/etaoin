@@ -1671,8 +1671,7 @@
 
   The `shadow-q` parameter is similar to the `q` parameter of
   the [[query]] function, but some drivers may limit it to specific
-  formats (e.g., CSS). See [this page](https://wpt.fyi/results/webdriver/tests/classic/find_element_from_shadow_root/find.py?label=experimental&label=master&aligned) on the Web Platform 
-  Tests website for more information on specific browser support."
+  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations] for more information."
   [driver shadow-root-el shadow-q]
   (let [[loc term] (query/expand driver shadow-q)]
     (find-element-from-shadow-root* driver shadow-root-el loc term)))
@@ -1683,8 +1682,7 @@
 
   The `shadow-q` parameter is similar to the `q` parameter of
   the [[query]] function, but some drivers may limit it to specific
-  formats (e.g., CSS). See [this page](https://wpt.fyi/results/webdriver/tests/classic/find_element_from_shadow_root/find.py?label=experimental&label=master&aligned) on the Web Platform 
-  Tests website for more information on specific browser support."
+  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations] for more information."
   [driver shadow-root-el shadow-q]
   (let [[loc term] (query/expand driver shadow-q)]
     (find-elements-from-shadow-root* driver shadow-root-el loc term)))
@@ -1698,8 +1696,7 @@
 
   The `shadow-q` parameter is similar to the `q` parameter of
   the [[query]] function, but some drivers may limit it to specific
-  formats (e.g., CSS). See [this page](https://wpt.fyi/results/webdriver/tests/classic/find_element_from_shadow_root/find.py?label=experimental&label=master&aligned) on the Web Platform 
-  Tests website for more information on specific browser support."
+  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations] for more information."
   [driver q shadow-q]
   (query-shadow-root-el driver (get-element-shadow-root driver q) shadow-q))
 
@@ -1712,8 +1709,7 @@
 
   The `shadow-q` parameter is similar to the `q` parameter of
   the [[query]] function, but some drivers may limit it to specific
-  formats (e.g., CSS). See [this page](https://wpt.fyi/results/webdriver/tests/classic/find_element_from_shadow_root/find.py?label=experimental&label=master&aligned) on the Web Platform 
-  Tests website for more information on specific browser support."
+  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations] for more information."
   [driver q shadow-q]
   (query-all-shadow-root-el driver (get-element-shadow-root driver q) shadow-q))
 

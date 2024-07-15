@@ -845,6 +845,7 @@ The following query will find a vector of `div` tags, then return a set of all `
 ;; => ("a1" "a2" "a3" "a4" "a5" "a6" "a7" "a8" "a9")
 ----
 
+[#shadow-dom]
 === Querying the Shadow DOM
 
 The shadow DOM provides a way to attach another DOM tree to a specified element in the normal DOM and have the internals of that tree hidden from JavaScript and CSS on the same page.
@@ -961,6 +962,7 @@ The `query-shadow-root-el` and `query-all-shadow-root-el` allow you to specify t
 ;; => ("I'm in the shadow DOM" "I'm also in the shadow DOM")
 ----
 
+[#shadow-root-browser-limitations]
 [NOTE]
 ====
 In the previous shadow root queries, you should note that we used CSS selectors for the `shadow-q` argument in each case.
