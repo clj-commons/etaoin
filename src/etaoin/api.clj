@@ -25,6 +25,8 @@
 
   **Querying/Selecting DOM Elements**
   - [[query]] [[query-all]] [[query-tree]]
+  - [[query-shadow-root]] [[query-shadow-root-el]] [[query-all-shadow-root]] [[query-all-shadow-root-el]]
+  - [[has-shadow-root?]] [[has-shadow-root-el?]]
   - [[exists?]] [[absent?]]
   - [[displayed?]] [[displayed-el?]] [[enabled?]] [[enabled-el?]] [[disabled?]] [[invisible?]] [[visible?]]
   - [[child]] [[children]]
@@ -33,6 +35,7 @@
   - [[get-element-property]] [[get-element-property-el]] [[get-element-properties]]
   - [[has-class?]] [[has-class-el?]] [[has-no-class?]]
   - [[get-element-css]] [[get-element-css-el]] [[get-element-csss]]
+  - [[get-element-shadow-root]] [[get-element-shadow-root-el]]
   - [[get-element-text]] [[get-element-text-el]] [[has-text?]]
   - [[get-element-inner-html]] [[get-element-inner-html-el]]
   - [[get-element-value]] [[get-element-value-el]]
