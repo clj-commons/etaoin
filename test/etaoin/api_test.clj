@@ -799,6 +799,45 @@
         (e/wait 1)
         (is (str/ends-with? (e/get-url *driver*) "?login=1&password=2&message=3"))))))
 
+(deftest test-shadow-dom
+  (testing "basic functional sanity"
+    ;; Validate that the test DOM is as we would expect
+    (is (e/has-text? *driver* {:id "not-in-shadow"} "I'm not in the shadow DOM"))
+    (is (not (e/has-text? *driver* {:id "in-shadow"} "I'm in the shadow DOM"))))
+  (testing "getting the shadow root for an element"
+    (is (some? (e/get-element-shadow-root *driver* {:id "shadow-root-host"})))
+    (is (some? (e/get-element-shadow-root-el *driver*
+                                             (e/query *driver* {:id "shadow-root-host"})))))
+  (testing "whether an element has a shadow root"
+    (is (e/has-shadow-root? *driver* {:id "shadow-root-host"}))
+    (is (e/has-shadow-root-el? *driver* (e/query *driver* {:id "shadow-root-host"}))))
+  (let [shadow-root (e/get-element-shadow-root *driver* {:id "shadow-root-host"})]
+    (testing "querying the shadow root element for a single element"
+      (is (= "I'm in the shadow DOM"
+             (->> (e/query-shadow-root-el *driver*
+                                          shadow-root
+                                          {:css "#in-shadow"})
+                  (e/get-element-text-el *driver*))))
+      (is (= "I'm also in the shadow DOM"
+             (->> (e/query-shadow-root-el *driver*
+                                          shadow-root
+                                          {:css "#also-in-shadow"})
+                  (e/get-element-text-el *driver*)))))
+    (testing "querying the shadow root element for multiple elements"
+      (is (= ["I'm in the shadow DOM" "I'm also in the shadow DOM"]
+             (->> (e/query-all-shadow-root-el *driver*
+                                              shadow-root
+                                              {:css "span"})
+                  (mapv #(e/get-element-text-el *driver* %)))))))
+  (testing "querying the shadow root element"
+    (is (= "I'm in the shadow DOM"
+           (->> (e/query-shadow-root *driver* {:id "shadow-root-host"} {:css "#in-shadow"})
+                (e/get-element-text-el *driver*)))))
+  (testing "querying the shadow root element for multiple elements"
+    (is (= ["I'm in the shadow DOM" "I'm also in the shadow DOM"]
+           (->> (e/query-all-shadow-root *driver* {:id "shadow-root-host"} {:css "span"})
+                (mapv #(e/get-element-text-el *driver* %)))))))
+
 (comment
   ;; start test server
   (def test-server (p/process {:out :inherit :err :inherit} "bb test-server --port" 9993))
