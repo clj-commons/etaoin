@@ -1621,7 +1621,9 @@
 
 (defn get-element-shadow-root
   "Returns the shadow root for the first element matching the query, or
-  `nil` if the element does not have a shadow root."
+  `nil` if the element does not have a shadow root.
+
+  See [[query]] for more details on `q`."
   [driver q]
   (get-element-shadow-root-el driver (query driver q)))
 
@@ -1671,7 +1673,7 @@
 
   The `shadow-q` parameter is similar to the `q` parameter of
   the [[query]] function, but some drivers may limit it to specific
-  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations] for more information."
+  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations) for more information."
   [driver shadow-root-el shadow-q]
   (let [[loc term] (query/expand driver shadow-q)]
     (find-element-from-shadow-root* driver shadow-root-el loc term)))
@@ -1682,13 +1684,13 @@
 
   The `shadow-q` parameter is similar to the `q` parameter of
   the [[query]] function, but some drivers may limit it to specific
-  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations] for more information."
+  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations) for more information."
   [driver shadow-root-el shadow-q]
   (let [[loc term] (query/expand driver shadow-q)]
     (find-elements-from-shadow-root* driver shadow-root-el loc term)))
 
 (defn query-shadow-root
-  "First, conducts a standard search (as if by `query`) for an element
+  "First, conducts a standard search (as if by [[query]]) for an element
   with a shadow root. Then, from that shadow root element, conducts a
   search of the shadow DOM for the first element matching `shadow-q`.
 
@@ -1696,12 +1698,12 @@
 
   The `shadow-q` parameter is similar to the `q` parameter of
   the [[query]] function, but some drivers may limit it to specific
-  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations] for more information."
+  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations) for more information."
   [driver q shadow-q]
   (query-shadow-root-el driver (get-element-shadow-root driver q) shadow-q))
 
 (defn query-all-shadow-root
-  "First, conducts a standard search (as if by `query`) for an element
+  "First, conducts a standard search (as if by [[query]]) for an element
   with a shadow root. Then, from that shadow root element, conducts a
   search of the shadow DOM for all elements matching `shadow-q`.
 
@@ -1709,7 +1711,7 @@
 
   The `shadow-q` parameter is similar to the `q` parameter of
   the [[query]] function, but some drivers may limit it to specific
-  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations] for more information."
+  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations) for more information."
   [driver q shadow-q]
   (query-all-shadow-root-el driver (get-element-shadow-root driver q) shadow-q))
 
