@@ -941,7 +941,7 @@ The `query-shadow-root-el` and `query-all-shadow-root-el` allow you to specify t
 ;; => "I'm in the shadow DOM"
 
 (->> (e/query-all-shadow-root driver {:id "shadow-root-host"} {:css "span"})
-           (map #(e/get-element-text-el driver %)))
+     (map #(e/get-element-text-el driver %)))
 ;; => ("I'm in the shadow DOM" "I'm also in the shadow DOM")
 
 (def shadow-root (e/get-element-shadow-root-el driver host))
@@ -949,7 +949,7 @@ The `query-shadow-root-el` and `query-all-shadow-root-el` allow you to specify t
 ;; => "I'm in the shadow DOM"
  
 (->> (e/query-all-shadow-root-el driver shadow-root {:css "span"})
-           (map #(e/get-element-text-el driver %)))
+     (map #(e/get-element-text-el driver %)))
 ;; > ("I'm in the shadow DOM" "I'm also in the shadow DOM")
 ----
 
