@@ -564,14 +564,14 @@ The rules are:
 
 * A `:tag` key represents a tag's name.
 Defaults to `*`.
-* An `:index` key expands into the trailing XPath `[x]` clause.
-Useful when you need to select a third row from a table, for example.
 * Any non-special key represents an attribute and its value.
 * `:fn/` is a prefix followed by a supported query function.
 
 There are several query functions of the form `:fn/*`.
 Each query function takes a parameter which is the value associated with the query function keyword in the map.
 
+* `:fn/index`: Takes an positive integer parameter.
+  This expands into a trailing XPath `[x]` clause and is useful when you need to select a specific row in a table, for example.
 * `:fn/text`: Takes a string parameter. Matches if the element has the exact text specified.
 * `:fn/has-text`: Takes a string parameter.
   Matches if the element includes the specified text.
@@ -608,7 +608,7 @@ Here are some examples of the map syntax:
 +
 [source,clojure]
 ----
-(= (e/query driver {:tag :div :index 1})
+(= (e/query driver {:tag :div :fn/index 1})
    ;; equivalent via xpath:
    (e/query driver ".//div[1]"))
 ;; => true
@@ -645,7 +645,7 @@ Here are some examples of the map syntax:
 +
 [source,clojure]
 ----
-(e/get-element-text driver {:fn/has-text "blarg" :index 3})
+(e/get-element-text driver {:fn/has-text "blarg" :fn/index 3})
 ;; => "blarg in a p"
 
 ;; equivalent in xpath:
@@ -765,11 +765,11 @@ Maybe you want to click on the second link within:
 </ul>
 ----
 
-You can use the `:index` like so:
+You can use the `:fn/index` like so:
 
 [source,clojure]
 ----
-(e/click driver [{:tag :li :class :search-result :index 2} {:tag :a}])
+(e/click driver [{:tag :li :class :search-result :fn/index 2} {:tag :a}])
 ;; check click tracker from our sample page:
 (e/get-element-text driver :clicked)
 ;; => "b"
@@ -1252,7 +1252,7 @@ The most important one, `scroll-query` jumps the the first element found with th
 ----
 (e/go driver sample-page)
 ;; scroll to the 5th h2 heading
-(e/scroll-query driver {:tag :h2} {:index 5})
+(e/scroll-query driver {:tag :h2} {:fn/index 5})
 
 ;; and back up to first h1
 (e/scroll-query driver {:tag :h1})

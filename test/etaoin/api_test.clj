@@ -698,6 +698,13 @@
       (is (= (count elements) 2))
       (is (= texts ["1" "2"])))))
 
+(deftest test-fn-index
+  (testing ":fn/index"
+    (let [items (for [index (range 1 6)]
+                  (->> (e/query *driver* {:class :indexed :fn/index index})
+                       (e/get-element-text-el *driver*)))]
+      (is (= items ["One" "Two" "Three" "Four" "Five"])))))
+
 (deftest test-multiple-elements
   (testing "tag names"
     (let [q         {:xpath ".//div[@id='operate-multiple-elements']//*"}
