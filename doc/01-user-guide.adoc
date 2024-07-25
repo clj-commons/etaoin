@@ -927,28 +927,28 @@ You can test whether an element is a shadow root host using `has-shadow-root?` a
 ;; => false
 ----
 
-Now that you know how to retrieve the shadow root, you can query elements in the shadow DOM using `query-shadow-root`, `query-all-shadow-root`, `query-shadow-root-el`, and `query-all-shadow-root-el`.
+Now that you know how to retrieve the shadow root, you can query elements in the shadow DOM using `query-from-shadow-root`, `query-all-from-shadow-root`, `query-from-shadow-root-el`, and `query-all-from-shadow-root-el`.
 
-For `query-shadow-root` and `query-all-shadow-root`, the `q` parameter specifies a query of the _normal_ DOM to find the shadow root host.
+For `query-from-shadow-root` and `query-all-from-shadow-root`, the `q` parameter specifies a query of the _normal_ DOM to find the shadow root host.
 If the host is identified, the `shadow-q` parameter is a query that is executed within the shadow DOM rooted at the shadow root host.
 
-The `query-shadow-root-el` and `query-all-shadow-root-el` allow you to specify the shadow root host element directly, rather than querying for it.
+The `query-from-shadow-root-el` and `query-all-from-shadow-root-el` allow you to specify the shadow root host element directly, rather than querying for it.
 
 [source,clojure]
 ----
-(def in-shadow (e/query-shadow-root driver {:id "shadow-root-host"} {:css "#in-shadow"}))
+(def in-shadow (e/query-from-shadow-root driver {:id "shadow-root-host"} {:css "#in-shadow"}))
 (e/get-element-text-el driver in-shadow)
 ;; => "I'm in the shadow DOM"
 
-(->> (e/query-all-shadow-root driver {:id "shadow-root-host"} {:css "span"})
+(->> (e/query-all-from-shadow-root driver {:id "shadow-root-host"} {:css "span"})
      (map #(e/get-element-text-el driver %)))
 ;; => ("I'm in the shadow DOM" "I'm also in the shadow DOM")
 
 (def shadow-root (e/get-element-shadow-root-el driver host))
-(e/get-element-text-el driver (e/query-shadow-root-el driver shadow-root {:css "#in-shadow"}))
+(e/get-element-text-el driver (e/query-from-shadow-root-el driver shadow-root {:css "#in-shadow"}))
 ;; => "I'm in the shadow DOM"
  
-(->> (e/query-all-shadow-root-el driver shadow-root {:css "span"})
+(->> (e/query-all-from-shadow-root-el driver shadow-root {:css "span"})
      (map #(e/get-element-text-el driver %)))
 ;; > ("I'm in the shadow DOM" "I'm also in the shadow DOM")
 ----

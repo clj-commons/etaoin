@@ -821,28 +821,28 @@
   (let [shadow-root (e/get-element-shadow-root *driver* {:id "shadow-root-host"})]
     (testing "querying the shadow root element for a single element"
       (is (= "I'm in the shadow DOM"
-             (->> (e/query-shadow-root-el *driver*
-                                          shadow-root
-                                          {:css "#in-shadow"})
+             (->> (e/query-from-shadow-root-el *driver*
+                                               shadow-root
+                                               {:css "#in-shadow"})
                   (e/get-element-text-el *driver*))))
       (is (= "I'm also in the shadow DOM"
-             (->> (e/query-shadow-root-el *driver*
-                                          shadow-root
-                                          {:css "#also-in-shadow"})
+             (->> (e/query-from-shadow-root-el *driver*
+                                               shadow-root
+                                               {:css "#also-in-shadow"})
                   (e/get-element-text-el *driver*)))))
     (testing "querying the shadow root element for multiple elements"
       (is (= ["I'm in the shadow DOM" "I'm also in the shadow DOM"]
-             (->> (e/query-all-shadow-root-el *driver*
-                                              shadow-root
-                                              {:css "span"})
+             (->> (e/query-all-from-shadow-root-el *driver*
+                                                   shadow-root
+                                                   {:css "span"})
                   (mapv #(e/get-element-text-el *driver* %)))))))
   (testing "querying the shadow root element"
     (is (= "I'm in the shadow DOM"
-           (->> (e/query-shadow-root *driver* {:id "shadow-root-host"} {:css "#in-shadow"})
+           (->> (e/query-from-shadow-root *driver* {:id "shadow-root-host"} {:css "#in-shadow"})
                 (e/get-element-text-el *driver*)))))
   (testing "querying the shadow root element for multiple elements"
     (is (= ["I'm in the shadow DOM" "I'm also in the shadow DOM"]
-           (->> (e/query-all-shadow-root *driver* {:id "shadow-root-host"} {:css "span"})
+           (->> (e/query-all-from-shadow-root *driver* {:id "shadow-root-host"} {:css "span"})
                 (mapv #(e/get-element-text-el *driver* %)))))))
 
 (comment
