@@ -192,6 +192,9 @@
    :edge    {:port 17556
              :path-driver "msedgedriver"}})
 
+;; Various Web Driver identifiers used as object type tags
+(def ^:private shadow-root-identifier :shadow-6066-11e4-a52e-4f735466cecf)
+
 ;;
 ;; utils
 ;;
@@ -206,6 +209,20 @@
   [driver feature]
   (when (get-method feature (:type driver))
     true))
+
+(defn- unwrap-webdriver-object
+  "Unwraps an object tagged with `identifier` from a Web Driver JSON object,
+  `web-driver-obj`. If `web-driver-obj` is not tagged with
+  `identifier` (i.e., the specified identifer is not present), throw
+  an exception."
+  [web-driver-obj identifier]
+  (let [obj (get web-driver-obj identifier ::not-found)]
+    (if (= obj ::not-found)
+      (throw (ex-info (str "Could not find object tagged with " identifier
+                           " in " (str web-driver-obj))
+                      {:web-driver-obj web-driver-obj
+                       :identifier identifier}))
+      obj)))
 
 ;;
 ;; api
@@ -1614,13 +1631,26 @@
   [driver q]
   (get-element-property driver q :value))
 
+(defmulti ^:private get-element-shadow-root* dispatch-driver)
+
+(defmethod get-element-shadow-root*
+  :default
+  [driver el]
+  ;; Note that this throws with a 404 HTTP error code if the specified
+  ;; element does not have a shadow root
+  (-> (execute {:driver driver
+                :method :get
+                :path [:session (:session driver) :element el :shadow]})
+      :value
+      (unwrap-webdriver-object shadow-root-identifier)))
+
 (defn get-element-shadow-root-el
   "Returns the shadow root for the specified element or `nil` if the
   element does not have a shadow root."
   [driver el]
-  (-> (get-element-property-el driver el "shadowRoot")
-      first
-      second))
+  (try+
+    (get-element-shadow-root* driver el)
+    (catch [:status 404] _ nil)))
 
 (defn get-element-shadow-root
   "Returns the shadow root for the first element matching the query, or
