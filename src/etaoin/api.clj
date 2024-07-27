@@ -194,6 +194,7 @@
 
 ;; Various Web Driver identifiers used as object type tags
 (def ^:private shadow-root-identifier :shadow-6066-11e4-a52e-4f735466cecf)
+(def ^:private web-element-identifier :element-6066-11e4-a52e-4f735466cecf)
 
 ;;
 ;; utils
@@ -1675,8 +1676,7 @@
                 :path   [:session (:session driver) :shadow shadow-root-el :element]
                 :data   {:using locator :value term}})
       :value
-      first
-      second))
+      (unwrap-webdriver-object web-element-identifier)))
 
 (defmethod find-element-from-shadow-root* :default
   [driver shadow-root-el locator term]
@@ -1686,9 +1686,20 @@
                 :path   [:session (:session driver) :shadow shadow-root-el :element]
                 :data   {:using locator :value term}})
       :value
-      :ELEMENT))
+      (unwrap-webdriver-object :ELEMENT)))
 
 (defmulti ^:private find-elements-from-shadow-root* dispatch-driver)
+
+(defmethods find-elements-from-shadow-root*
+  [:firefox :safari]
+  [driver shadow-root-el locator term]
+  {:pre [(some? shadow-root-el)]}
+  (->> (execute {:driver driver
+                 :method :post
+                 :path   [:session (:session driver) :shadow shadow-root-el :elements]
+                 :data   {:using locator :value term}})
+       :value
+       (mapv #(unwrap-webdriver-object % web-element-identifier))))
 
 (defmethod find-elements-from-shadow-root* :default
   [driver shadow-root-el locator term]
@@ -1698,7 +1709,7 @@
                  :path   [:session (:session driver) :shadow shadow-root-el :elements]
                  :data   {:using locator :value term}})
        :value
-       (mapv (comp second first))))
+       (mapv #(unwrap-webdriver-object % :ELEMENT))))
 
 (defn query-from-shadow-root-el
   "Queries the shadow DOM rooted at `shadow-root-el`, looking for the
