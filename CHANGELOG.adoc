@@ -12,12 +12,18 @@ A release with an intentional breaking changes is marked with:
 * https://github.com/clj-commons/etaoin/issues/566[#566]: Recognize `:driver-log-level` for Edge
 * https://github.com/clj-commons/etaoin/issues/563[#563]: Support `"debug"` `:driver-log-level` for Safari
 * https://github.com/clj-commons/etaoin/issues/517[#517]: Properly cleanup after failed webdriver launch
+* https://github.com/clj-commons/etaoin/issues/604[#604]: Add support for shadow DOM
+(https://github.com/dgr[@dgr])
+* https://github.com/clj-commons/etaoin/issues/603[#603]: Add :fn/index as alias for :index in map syntax
+(https://github.com/dgr[@dgr])
 * bump all deps to current versions
 * tests
 ** https://github.com/clj-commons/etaoin/issues/572[#572]: stop using chrome `--no-sandbox` option, it has become problematic on Windows (and we did not need it anyway)
 * docs
 ** https://github.com/clj-commons/etaoin/issues/534[#534]: better describe `etaoin.api/select` and its alternatives
 ** https://github.com/clj-commons/etaoin/issues/536[#536]: user guide examples are now all os agnostic and CI tested via test-doc-blocks on all supported OSes
+** https://github.com/clj-commons/etaoin/issues/602[#602]: Document all `:fn/*` query pseudo-functions in a definitive list
+(https://github.com/dgr[@dgr])
 
 == v1.0.40
 

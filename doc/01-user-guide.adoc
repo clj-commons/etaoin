@@ -564,12 +564,35 @@ The rules are:
 
 * A `:tag` key represents a tag's name.
 Defaults to `*`.
-* An `:index` key expands into the trailing XPath `[x]` clause.
-Useful when you need to select a third row from a table, for example.
 * Any non-special key represents an attribute and its value.
 * `:fn/` is a prefix followed by a supported query function.
 
-Examples:
+There are several query functions of the form `:fn/*`.
+Each query function takes a parameter which is the value associated with the query function keyword in the map.
+
+* `:fn/index`: Takes an positive integer parameter.
+  This expands into a trailing XPath `[x]` clause and is useful when you need to select a specific row in a table, for example.
+* `:fn/text`: Takes a string parameter. Matches if the element has the exact text specified.
+* `:fn/has-text`: Takes a string parameter.
+  Matches if the element includes the specified text.
+* `:fn/has-string`: Takes a string parameter.
+  Matches if the element string contains the specified string.
+  The difference between `:fn/has-text` and `:fn/has-string` is the difference between the XPath `text()` and `string()` functions (`text()` is the text within a given element and `string()` is the text of all descendant elements concatenated together in document order).
+  Generally, if you're targeting an element at the top of the hierarchy, you probably want `:fn/has-string`, and if you're targeting a single element at the bottom of the hierarchy, you probably want to use `:fn/has-text`.
+* `:fn/has-class`: Takes a string parameter.
+  Matches if the element's `class` attribute includes the string. Unlike using a `:class` key in the map, `:fn/has-class` can match single classes, whereas `:class` is an exact match of the whole class string.
+* `:fn/has-classes`: Takes a vector of strings parameter.
+  Matches if the element's `class` attribute includes _all_ of the specified class strings.
+* `:fn/link`: Takes a string parameter.
+  Matches if the element's `href` attribute contains the specified string.
+* `:fn/enabled`: Takes a boolean (`true` or `false`) parameter.
+  If the parameter is `true`, matches if the element is enabled.
+  If the parameter is `false`, matches if the element is disabled.
+* `:fn/disabled`: Takes a boolean (`true` or `false`) parameter.
+  If the parameter is `true`, matches if the element is disabled.
+  If the parameter is `true`, matches if the element is enabled.
+
+Here are some examples of the map syntax:
 
 * find the first `div` tag
 +
@@ -585,7 +608,7 @@ Examples:
 +
 [source,clojure]
 ----
-(= (e/query driver {:tag :div :index 1})
+(= (e/query driver {:tag :div :fn/index 1})
    ;; equivalent via xpath:
    (e/query driver ".//div[1]"))
 ;; => true
@@ -622,7 +645,7 @@ Examples:
 +
 [source,clojure]
 ----
-(e/get-element-text driver {:fn/has-text "blarg" :index 3})
+(e/get-element-text driver {:fn/has-text "blarg" :fn/index 3})
 ;; => "blarg in a p"
 
 ;; equivalent in xpath:
@@ -742,11 +765,11 @@ Maybe you want to click on the second link within:
 </ul>
 ----
 
-You can use the `:index` like so:
+You can use the `:fn/index` like so:
 
 [source,clojure]
 ----
-(e/click driver [{:tag :li :class :search-result :index 2} {:tag :a}])
+(e/click driver [{:tag :li :class :search-result :fn/index 2} {:tag :a}])
 ;; check click tracker from our sample page:
 (e/get-element-text driver :clicked)
 ;; => "b"
@@ -821,6 +844,125 @@ The following query will find a vector of `div` tags, then return a set of all `
      sort)
 ;; => ("a1" "a2" "a3" "a4" "a5" "a6" "a7" "a8" "a9")
 ----
+
+[#shadow-dom]
+=== Querying the Shadow DOM
+
+The shadow DOM provides a way to attach another DOM tree to a specified element in the normal DOM and have the internals of that tree hidden from JavaScript and CSS on the same page.
+When the browser renders the DOM, the elements from the shadow DOM appear at the location where the tree is rooted in the normal DOM.
+This provides a level of encapsulation, allowing "components" in the shadow DOM to be styled differently than the rest of the page and preventing conflicts between the normal page CSS and the component CSS.
+The shadow DOM is also hidden from normal Web Driver queries (`query`) and thus requires a separate set of API calls to query it. For more details about the shadow DOM, see this article at https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM#shadow_dom_and_custom_elements[Mozilla Developer Network (MDN)].
+
+There are a few terms that are important to understand when dealing with the Shadow DOM.
+The "shadow root host" is the element in the standard DOM to which a shadow root is attached as a property.
+The "shadow root" is the top of the shadow DOM tree rooted at the shadow root host.
+
+The following examples use this HTML fragment in the User Guide sample HTML that has a bit of shadow DOM in it.
+
+[source,html]
+----
+<span id="not-in-shadow">I'm not in the shadow DOM</span>
+<div id="shadow-root-host">
+    <template shadowrootmode="open">
+        <span id="in-shadow">I'm in the shadow DOM</span>
+        <span id="also-in-shadow">I'm also in the shadow DOM</span>
+    </template>
+</div>
+----
+
+Everthing in the `template` element is part of the shadow DOM.
+The `div` with the `id` of `shadow-root-host` is, as the ID suggests, the shadow root host element.
+
+Given this HTML, you can run a standard `query` to find the shadow root host and then use `get-element-property-el` to return to the `"shadowRoot"` property.
+Note that the element IDs returned in the following examples will be unique to the specific Etaoin driver and driver session and you will not see the same IDs.
+
+[source,clojure]
+----
+(e/query driver {:id "shadow-root-host"})
+;; an element ID similar to (but not the same as)
+;; "78344155-7a53-46fb-a46e-e864210e501d"
+
+(e/get-element-property-el driver (e/query driver {:id "shadow-root-host"}) "shadowRoot")
+;; something similar to
+;; {:shadow-6066-11e4-a52e-4f735466cecf "ac5ab914-7f93-427f-a0bf-f7e91098fd37"}
+
+(e/get-element-property driver {:id "shadow-root-host"} "shadowRoot")
+;; something similar to
+;; {:shadow-6066-11e4-a52e-4f735466cecf "ac5ab914-7f93-427f-a0bf-f7e91098fd37"}
+----
+
+If you go this route, you're going to have to pick apart the return
+values.
+The element-id of the shadow root is the string value of the first map key.
+
+You can get the shadow root element ID more directly using Etaoin's `get-element-shadow-root` API.
+The query parameter looks for a matching element in the standard DOM and returns its shadow root property.
+
+[source,clojure]
+----
+(e/get-element-shadow-root driver {:id "shadow-root-host"})
+;; something similar to
+;; "ac5ab914-7f93-427f-a0bf-f7e91098fd37"
+----
+
+If you already have the shadow root host element, you can return its corresponding shadow root element ID using `get-element-shadow-root-el`.
+
+[source,clojure]
+----
+(def host (e/query driver {:id "shadow-root-host"}))
+(e/get-element-shadow-root-el driver host)
+;; something similar to
+;; "ac5ab914-7f93-427f-a0bf-f7e91098fd37"
+----
+
+You can test whether an element is a shadow root host using `has-shadow-root?` and `has-shadow-root-el?`.
+
+[source,clojure]
+----
+(e/has-shadow-root? driver {:id "shadow-root-host"})
+;; => true
+(e/has-shadow-root-el? driver host)
+;; => true
+(e/has-shadow-root? driver {:id "not-in-shadow"})
+;; => false
+----
+
+Now that you know how to retrieve the shadow root, you can query elements in the shadow DOM using `query-shadow-root`, `query-all-shadow-root`, `query-shadow-root-el`, and `query-all-shadow-root-el`.
+
+For `query-shadow-root` and `query-all-shadow-root`, the `q` parameter specifies a query of the _normal_ DOM to find the shadow root host.
+If the host is identified, the `shadow-q` parameter is a query that is executed within the shadow DOM rooted at the shadow root host.
+
+The `query-shadow-root-el` and `query-all-shadow-root-el` allow you to specify the shadow root host element directly, rather than querying for it.
+
+[source,clojure]
+----
+(def in-shadow (e/query-shadow-root driver {:id "shadow-root-host"} {:css "#in-shadow"}))
+(e/get-element-text-el driver in-shadow)
+;; => "I'm in the shadow DOM"
+
+(->> (e/query-all-shadow-root driver {:id "shadow-root-host"} {:css "span"})
+     (map #(e/get-element-text-el driver %)))
+;; => ("I'm in the shadow DOM" "I'm also in the shadow DOM")
+
+(def shadow-root (e/get-element-shadow-root-el driver host))
+(e/get-element-text-el driver (e/query-shadow-root-el driver shadow-root {:css "#in-shadow"}))
+;; => "I'm in the shadow DOM"
+ 
+(->> (e/query-all-shadow-root-el driver shadow-root {:css "span"})
+     (map #(e/get-element-text-el driver %)))
+;; > ("I'm in the shadow DOM" "I'm also in the shadow DOM")
+----
+
+[#shadow-root-browser-limitations]
+[NOTE]
+====
+In the previous shadow root queries, you should note that we used CSS selectors for the `shadow-q` argument in each case.
+This was done because current browsers do not support XPath, which is what the Etaoin map syntax is typically translated into under the hood.
+While it is expected that browsers will support XPath queries of the shadow DOM in the future, it is unclear when this support might appear.
+For now, use CSS.
+
+For more information, see the https://wpt.fyi/results/webdriver/tests/classic/find_element_from_shadow_root/find.py?label=experimental&label=master&aligned[Web Platforms Test Dashobard].
+====
 
 === Interacting with Queried Elements
 
@@ -1110,7 +1252,7 @@ The most important one, `scroll-query` jumps the the first element found with th
 ----
 (e/go driver sample-page)
 ;; scroll to the 5th h2 heading
-(e/scroll-query driver {:tag :h2} {:index 5})
+(e/scroll-query driver {:tag :h2} {:fn/index 5})
 
 ;; and back up to first h1
 (e/scroll-query driver {:tag :h1})

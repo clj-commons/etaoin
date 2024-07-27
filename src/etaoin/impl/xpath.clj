@@ -81,7 +81,7 @@
   [[_ bool]]
   (node-boolean "@enabled" bool))
 
-(defmethod clause :index
+(defmethod clause :fn/index
   [[_ idx]]
   (if idx
     (node-index idx)
@@ -99,7 +99,7 @@
   [q]
   (let [[tag q]   (pop-map q :tag)
         tag       (or tag :*)
-        idx-key   :index
-        [index q] (pop-map q idx-key)
-        nodes     (concat (into [] q) {idx-key index})]
+        [fn-index q] (pop-map q :fn/index)
+        [index q] (pop-map q :index)
+        nodes     (concat (into [] q) {:fn/index (or fn-index index)})]
     (node-join (concat [".//" (to-str tag)] (map clause nodes)))))

@@ -208,6 +208,16 @@
             </div>
         </div>
 
+        <h3>Find elements with index</h3>
+
+        <ol id="indexed-elements">
+            <li class="indexed">One</li>
+            <li class="indexed">Two</li>
+            <li class="indexed">Three</li>
+            <li class="indexed">Four</li>
+            <li class="indexed">Five</li>
+        </ol>
+
         <h3>Operate on multiple elements</h3>
         <div id="operate-multiple-elements">
             <div>
@@ -236,6 +246,15 @@
                     I've come from the darkness of the pit!
                 </span>
             </p>
+        </div>
+
+        <h3>Shadow DOM</h3>
+        <span id="not-in-shadow">I'm not in the shadow DOM</span>
+        <div id="shadow-root-host">
+            <template shadowrootmode="open">
+                <span id="in-shadow">I'm in the shadow DOM</span>
+                <span id="also-in-shadow">I'm also in the shadow DOM</span>
+            </template>
         </div>
 
         <h3 id="document-end">Document end</h3>
