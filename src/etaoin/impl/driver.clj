@@ -486,10 +486,17 @@
   (set-args driver ["--log" log-level]))
 
 (defmethod set-driver-log-level
+  :safari
+  [driver log-level]
+  (when-not (= "debug" (string/lower-case log-level))
+    (throw (ex-info "Safari Driver only supports debug level logging" {})))
+  (-> (set-args driver ["--diagnose"])
+      (update :post-run-actions (fnil conj []) :discover-safari-webdriver-log)))
+
+(defmethod set-driver-log-level
   :phantom
   [driver log-level]
   (set-args driver [(format "--webdriver-loglevel=%s" log-level)]))
-
 
 ;;
 ;; User-Agent

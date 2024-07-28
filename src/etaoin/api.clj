@@ -147,6 +147,7 @@
   "
   (:require
    [babashka.fs :as fs]
+   [babashka.process :as p]
    [cheshire.core :as json]
    [clojure.java.io :as io]
    [clojure.string :as str]
@@ -2593,7 +2594,7 @@
 
 (defn wait-predicate
   "Wakes up every `:interval` seconds to call `pred`.
-  Keeps this up until either `pred` returns true or `:timeout` has elapsed.
+  Keeps this up until either `pred` returns truthy or `:timeout` has elapsed.
   When `:timeout` has elapsed a slingshot exception is throws with `:message`.
 
   Arguments:
@@ -2619,13 +2620,15 @@
                 :interval  interval
                 :times     times
                 :predicate pred}))
-     (when-not (with-http-error
-                 (pred))
-       (wait interval)
-       (recur pred (assoc
-                     opts
-                     :time-rest (- time-rest interval)
-                     :times (inc times)))))))
+     (let [res (with-http-error
+                 (pred))]
+       (or res
+           (do
+             (wait interval)
+             (recur pred (assoc
+                           opts
+                           :time-rest (- time-rest interval)
+                           :times (inc times)))))))))
 
 (defn wait-exists
   "Waits until `driver` finds element [[exists?]] via `q`.
@@ -3558,6 +3561,54 @@
       http (assoc :http http)
       ssl  (assoc :ssl ssl))))
 
+(defn- discover-safari-webdriver-log-pid [port]
+  ;; The safaridriver docs mislead, the pid in the filename is not the pid of safaridriver,
+  ;; it is of com.apple.WebDriver.HTTPService get the pid of whatever is listening to
+  ;; specified safaridriver port, this is macOS specific, but so is safari
+  (let [{:keys [exit out]} (p/shell {:out :string} "lsof -ti" (str ":" port))]
+    (when (zero? exit)
+      (str/trim out))))
+
+(defn- discover-safari-webdriver-log [{:keys [port created-epoch-ms] :as driver}]
+  (let [pid (wait-predicate #(discover-safari-webdriver-log-pid port)
+                            {:timeout 0
+                             :interval 0.2
+                             :message (format "Cannot discover safaridriver log file pid for port %s" port)})]
+    ;; force some output so that log file is created
+    (get-status driver)
+    (let [dir (fs/file (fs/home) "Library/Logs/com.apple.WebDriver")
+          glob (format "safaridriver.%s.*.txt" pid)
+          log-files (->> (fs/glob dir glob)
+                         ;; use last modified instead of fs/creation-time it is more reliable
+                         ;; creation-time was returning time in second resolution, not millisecond resolution
+                         (filter #(>= (-> % fs/last-modified-time fs/file-time->millis)
+                                      created-epoch-ms))
+                         (sort-by #(fs/last-modified-time %))
+                         (mapv str))]
+      (cond
+        (zero? (count log-files))
+        (log/warnf "Safaridriver log file not found for pid %s." pid)
+
+        (not= 1 (count log-files))
+        (let [candidates (->> log-files
+                              (mapv #(format " %s %s"
+                                             (-> % fs/last-modified-time fs/file-time->instant)
+                                             %)))]
+          (log/warnf "Found multiple matching safaridriver log file candidates, assuming latest from:\n%s"
+                     (str/join "\n" candidates))))
+      (if-let [log-file (last log-files)]
+        (do (log/infof "Safaridriver log file discovered %s" log-file)
+            (assoc driver :driver-log-file log-file))
+        driver))))
+
+(defn stop-driver
+  "Returns new `driver` after killing its WebDriver process."
+  [driver]
+  (proc/kill (:process driver))
+  (doseq [f (:post-stop-fns driver)]
+    (f driver))
+  (dissoc driver :process :args :env :capabilities :pre-stop-fns))
+
 (defn- -run-driver*
   [driver & [{:keys [dev
                      env
@@ -3568,7 +3619,8 @@
                      path-driver
                      download-dir
                      path-browser
-                     driver-log-level]}]]
+                     driver-log-level
+                     post-stop-fns]}]]
   (let [{:keys [port host]} driver
 
         _ (when (util/connectable? host port)
@@ -3590,7 +3642,16 @@
         process   (proc/run proc-args {:log-stdout log-stdout
                                        :log-stderr log-stderr
                                        :env        env})]
-    (util/assoc-some driver :env env :process process)))
+    (util/assoc-some driver
+                     :env env
+                     :process process
+                     :post-stop-fns post-stop-fns
+                     :created-epoch-ms (System/currentTimeMillis))))
+
+(defn- driver-action [driver action]
+  (case action
+    :discover-safari-webdriver-log (discover-safari-webdriver-log driver)
+    (throw (ex-info (str "Internal error: unrecognized action " action) {}))))
 
 (defn- -run-driver
   "Runs a driver process locally.
@@ -3646,11 +3707,14 @@
                 res (try
                       (wait-running driver)
                       (catch Exception e
+                        (stop-driver driver)
                         {:exception e}))]
             (if (not (:exception res))
-              driver
+              (reduce (fn [driver action]
+                        (driver-action driver action))
+                      driver
+                      (:post-run-actions driver))
               (recur (inc try-num) (:exception res)))))))))
-
 
 (defn- -connect-driver
   "Connects to a running Webdriver server.
@@ -3755,12 +3819,6 @@
            (throw e))))
 
   (dissoc driver :session))
-
-(defn stop-driver
-  "Returns new `driver` after killing its WebDriver process."
-  [driver]
-  (proc/kill (:process driver))
-  (dissoc driver :process :args :env :capabilities))
 
 (defn quit
   "Have `driver` close the current session, then, if Etaoin launched it, kill the WebDriver process."

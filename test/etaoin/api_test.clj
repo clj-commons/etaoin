@@ -50,11 +50,19 @@
                                                 :log-stderr :inherit
                                                 :driver-log-level "info"}))
    :safari (cond-> {}
-             ;; add logging for kind flaky CI scenario (maybe we'll answer why we need
+             ;; add logging for kind of flaky CI scenario (maybe we'll answer why we need
              ;; to retry launching safaridriver automatically)
-             ;; safaridriver only logs details to a somewhat obscure file, will follow up
-             ;; with some technique to discover/dump this file
-             (ci?) (merge {:log-stdout :inherit :log-stderr :inherit}))
+             (ci?) (merge {:log-stdout :inherit
+                           :log-stderr :inherit
+                           :driver-log-level "debug"
+                           :post-stop-fns [(fn dump-discovered-log [driver]
+                                             (if-let [log (:driver-log-file driver)]
+                                               (do
+                                                 (println "-[start]-safaridriver log file" log)
+                                                 (with-open [in (io/input-stream log)]
+                                                   (io/copy in *out*))
+                                                 (println "-[end]-safaridriver log file" log))
+                                               (println "-no safaridriver log file discovered-")))]}))
    :edge    {:args ["--headless"]}})
 
 (def drivers

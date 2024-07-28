@@ -10,6 +10,8 @@ A release with an intentional breaking changes is marked with:
 * https://github.com/clj-commons/etaoin/pull/552[#552]: Add support for wide characters to input fill functions
 (https://github.com/tupini07[@tupini07])
 * https://github.com/clj-commons/etaoin/issues/566[#566]: Recognize `:driver-log-level` for Edge
+* https://github.com/clj-commons/etaoin/issues/563[#563]: Support `"debug"` `:driver-log-level` for Safari
+* https://github.com/clj-commons/etaoin/issues/517[#517]: Properly cleanup after failed webdriver launch
 * https://github.com/clj-commons/etaoin/issues/604[#604]: Add support for shadow DOM
 (https://github.com/dgr[@dgr])
 * https://github.com/clj-commons/etaoin/issues/603[#603]: Add :fn/index as alias for :index in map syntax
