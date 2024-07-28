@@ -1,4 +1,10 @@
+// NOTE: publish workflow automatically updates "Unreleased" header in this file
 = Changelog
+:issue: https://github.com/clj-commons/etaoin/issues/
+:pr: https://github.com/clj-commons/etaoin/pull/
+:person: https://github.com/
+:lread: {person}lread[@lread]
+:ivan: {person}igrishaev[@igrishaev]
 
 A release with an intentional breaking changes is marked with:
 
@@ -7,53 +13,67 @@ A release with an intentional breaking changes is marked with:
 
 == Unreleased
 
-* https://github.com/clj-commons/etaoin/pull/552[#552]: Add support for wide characters to input fill functions
-(https://github.com/tupini07[@tupini07])
-* https://github.com/clj-commons/etaoin/issues/566[#566]: Recognize `:driver-log-level` for Edge
-* https://github.com/clj-commons/etaoin/issues/563[#563]: Support `"debug"` `:driver-log-level` for Safari
-* https://github.com/clj-commons/etaoin/issues/517[#517]: Properly cleanup after failed webdriver launch
-* https://github.com/clj-commons/etaoin/issues/604[#604]: Add support for shadow DOM
-(https://github.com/dgr[@dgr])
-* https://github.com/clj-commons/etaoin/issues/603[#603]: Add :fn/index as alias for :index in map syntax
-(https://github.com/dgr[@dgr])
+* {pr}552[#552]: Add support for wide characters to input fill functions
+({person}tupini07[@tupini07])
+* {issue}566[#566]: Recognize `:driver-log-level` for Edge
+({lread})
+* {issue}563[#563]: Support `"debug"` `:driver-log-level` for Safari
+({lread})
+* {issue}517[#517]: Properly cleanup after failed webdriver launch
+({lread})
+* {issue}604[#604]: Add support for shadow DOM
+({person}dgr[@dgr])
+* {issue}603[#603]: Add :fn/index as alias for :index in map syntax
+({person}dgr[@dgr])
 * bump all deps to current versions
+({lread})
 * tests
-** https://github.com/clj-commons/etaoin/issues/572[#572]: stop using chrome `--no-sandbox` option, it has become problematic on Windows (and we did not need it anyway)
+** {issue}572[#572]: stop using chrome `--no-sandbox` option, it has become problematic on Windows (and we did not need it anyway)
+({lread})
 * docs
-** https://github.com/clj-commons/etaoin/issues/534[#534]: better describe `etaoin.api/select` and its alternatives
-** https://github.com/clj-commons/etaoin/issues/536[#536]: user guide examples are now all os agnostic and CI tested via test-doc-blocks on all supported OSes
-** https://github.com/clj-commons/etaoin/issues/602[#602]: Document all `:fn/*` query pseudo-functions in a definitive list
-(https://github.com/dgr[@dgr])
+** {issue}534[#534]: better describe `etaoin.api/select` and its alternatives
+({lread})
+** {issue}536[#536]: user guide examples are now all os agnostic and CI tested via test-doc-blocks on all supported OSes
+({lread})
+** {issue}602[#602]: Document all `:fn/*` query pseudo-functions in a definitive list
+({person}dgr[@dgr])
 
-== v1.0.40
+== v1.0.40 - 2023-03-08 [[v1.0.40]]
 
-* https://github.com/clj-commons/etaoin/issues/524[#524]: fix failure in bb related to `Thread/sleep` interop in JDK19
+* {issue}524[#524]: fix failure in bb related to `Thread/sleep` interop in JDK19
+({person}borkdude[@borkdude])
 
 https://github.com/clj-commons/etaoin/compare/v1.0.39\...v1.0.40[Full commit log]
 
-== v1.0.39
+== v1.0.39 - 2022-12-03 [[v1.0.39]]
 
-* https://github.com/clj-commons/etaoin/issues/503[#503]: Address Clojure interop issue introduced by new Thread/sleep signature in JDK 19
-* https://github.com/clj-commons/etaoin/issues/513[#513]: Fix rendering of exception when used from REPL
+* {issue}503[#503]: Address Clojure interop issue introduced by new Thread/sleep signature in JDK 19
+({lread})
+* {issue}513[#513]: Fix rendering of exception when used from REPL
+({lread})
 * bumped Etaoin dependencies
+({lread})
 * docs:
-** https://github.com/clj-commons/etaoin/issues/447[#447]: Describe testing without a display in the link:doc/01-user-guide.adoc#headless-testing[user guide], including a new requirement for a windows manager when using a virtual display on Linux
-** https://github.com/clj-commons/etaoin/issues/507[#507]: The current version of babashka, which is the only one we support, no longer requires the a dependency to the babashka spec.alpha fork to use the Etaoin ide feature. Tests and docs updated accordingly.
+** {issue}447[#447]: Describe testing without a display in the link:doc/01-user-guide.adoc#headless-testing[user guide], including a new requirement for a windows manager when using a virtual display on Linux
+({lread})
+** {issue}507[#507]: The current version of babashka, which is the only one we support, no longer requires the a dependency to the babashka spec.alpha fork to use the Etaoin ide feature. Tests and docs updated accordingly.
+({lread})
 
 https://github.com/clj-commons/etaoin/compare/v1.0.38\...v1.0.39[Full commit log]
 
-== v1.0.38 [minor breaking]
+== v1.0.38 [minor breaking] - 2022-08-04 [[v1.0.38]]
 
 Minor Breaking Changes
 
-* https://github.com/clj-commons/etaoin/issues/412[#412]: Rename `etaoin.keys/num-.` to `etaoin.keys/num-dot`. +
+* {issue}412[#412]: Rename `etaoin.keys/num-.` to `etaoin.keys/num-dot`.
+({lread}) +
 The symbol `num-.` is technically an invalid Clojure symbol and can confuse tooling. +
 A grep.app for `num-.` found Etaoin itself as the only user of this var.
 If your code uses `etaoin.keys/num-.`, you'll need to rename it to `etaoin.keys/num-dot`.
-
-* https://github.com/clj-commons/etaoin/issues/471[#471]: `etaoin.api/defaults` keyword `:path` renamed to `:path-driver` to match keyword used in driver options.
-
-* https://github.com/clj-commons/etaoin/issues/430[#430]: Declare the public API.
+* {issue}471[#471]: `etaoin.api/defaults` keyword `:path` renamed to `:path-driver` to match keyword used in driver options.
+({lread})
+* {issue}430[#430]: Declare the public API.
+({lread}) +
 We made what we think is a good guess at what the public Etaoin API is.
 The following namespaces are now considered internal and subject to change:
 +
@@ -129,81 +149,117 @@ If we got this wrong your code will fail, you will tell us, and we can discuss.
 
 Other Changes
 
-* https://github.com/clj-commons/etaoin/issues/380[#380]: Etaoin is now Babashka compatible!
-* https://github.com/clj-commons/etaoin/issues/413[#413]: Etaoin now exports a clj-kondo config to help with the linting of its many handy macros
-* https://github.com/clj-commons/etaoin/pull/357[#357]: Add support for connecting to a remote WebDriver via `:webdriver-url` (thanks https://github.com/verma[@verma] for the PR and https://github.com/mjmeintjes[@mjmeintjes] for the example usage!)
-* https://github.com/clj-commons/etaoin/issues/355[#355]: Add support for W3C WebDriver print to PDF feature
-* https://github.com/clj-commons/etaoin/issues/466[#466]: WebDriver process output can now also be directed to console
-* https://github.com/clj-commons/etaoin/issues/468[#468]: Failed WebDriver process launch can now be automatically retried
-* https://github.com/clj-commons/etaoin/issues/453[#453]: The `etaoin.api/with-<browser>` macros no longer require `opts` to be specified.
+* {issue}380[#380]: Etaoin is now Babashka compatible!
+({lread})
+* {issue}413[#413]: Etaoin now exports a clj-kondo config to help with the linting of its many handy macros
+({lread})
+* {pr}357[#357]: Add support for connecting to a remote WebDriver via `:webdriver-url` (thanks {person}verma[@verma] for the PR and {person}mjmeintjes[@mjmeintjes] for the example usage!)
+* {issue}355[#355]: Add support for W3C WebDriver print to PDF feature
+({lread})
+* {issue}466[#466]: WebDriver process output can now also be directed to console
+({lread})
+* {issue}468[#468]: Failed WebDriver process launch can now be automatically retried
+({lread})
+* {issue}453[#453]: The `etaoin.api/with-<browser>` macros no longer require `opts` to be specified.
 This makes the advantage of newer `etaoin.api2/with-<browser>` macros maybe less obvious.
 That said, for Etaoin users who have adopted and prefer the api2 versions, they are still there, but no longer documented in the user guide.
-* https://github.com/clj-commons/etaoin/issues/383[#383]: Drop testing for Safari on Windows, Apple no longer releases Safari for Windows
-* https://github.com/clj-commons/etaoin/issues/388[#388]: Drop testing for PhantomJS, development has long ago stopped for PhantomJS
-* https://github.com/clj-commons/etaoin/issues/387[#387]: No longer testing multiple key modifiers for a single webdriver send keys request
-* https://github.com/clj-commons/etaoin/issues/384[#384]: Look for `safaridriver` on PATH by default
-* https://github.com/clj-commons/etaoin/issues/402[#402]: Only send body for webdriver `POST` requests to appease `safaridriver`
-* https://github.com/clj-commons/etaoin/issues/403[#403]: The `select` fn now clicks on the `select` element before clicking the `option` element to appease `safaridriver`
-* https://github.com/clj-commons/etaoin/issues/408[#408]: Fix `switch-window` for `msedgedriver`
-* https://github.com/clj-commons/etaoin/issues/432[#432]: Switched from `project.clj` to `deps.edn`.
+({lread})
+* {issue}383[#383]: Drop testing for Safari on Windows, Apple no longer releases Safari for Windows
+({lread})
+* {issue}388[#388]: Drop testing for PhantomJS, development has long ago stopped for PhantomJS
+({lread})
+* {issue}387[#387]: No longer testing multiple key modifiers for a single webdriver send keys request
+({lread})
+* {issue}384[#384]: Look for `safaridriver` on PATH by default
+({lread})
+* {issue}402[#402]: Only send body for webdriver `POST` requests to appease `safaridriver`
+({lread})
+* {issue}403[#403]: The `select` fn now clicks on the `select` element before clicking the `option` element to appease `safaridriver`
+({lread})
+* {issue}408[#408]: Fix `switch-window` for `msedgedriver`
+({lread})
+* {issue}432[#432]: Switched from `project.clj` to `deps.edn`.
 This will allow for easier testing of unreleased versions of Etaoin via git deps.
 It also unconvered that our minimum Clojure version was 1.10, instead of the advertised v1.9.
 Fixed.
-* https://github.com/clj-commons/etaoin/issues/455[#455]: Automatically create specified parent dirs for screenshots
-* https://github.com/clj-commons/etaoin/issues/469[#469]: Include WebDriver process liveness in http client exception
-* https://github.com/clj-commons/etaoin/issues/446[#446]: Bump Etaoin dependencies to current releases
+({lread})
+* {issue}455[#455]: Automatically create specified parent dirs for screenshots
+({lread})
+* {issue}469[#469]: Include WebDriver process liveness in http client exception
+({lread})
+* {issue}446[#446]: Bump Etaoin dependencies to current releases
+({lread})
 * Docs
-** https://github.com/clj-commons/etaoin/issues/399[#399]: We now have an Etaoin logo! (a very nice parting gift from Etaoin's founder https://github.com/igrishaev[@igrishaev])
+** {issue}399[#399]: We now have an Etaoin logo! (a very nice parting gift from Etaoin's founder {person}igrishaev[@igrishaev])
 ** Reviewed and updated API docstrings
-** https://github.com/clj-commons/etaoin/issues/393[#393]: Add changelog
-** https://github.com/clj-commons/etaoin/issues/426[#426]: Reorganize into separate guides
-
-** https://github.com/clj-commons/etaoin/issues/396[#396]: Move from Markdown to AsciiDoc
+({lread})
+** {issue}393[#393]: Add changelog
+({lread})
+** {issue}426[#426]: Reorganize into separate guides
+({lread})
+** {issue}396[#396]: Move from Markdown to AsciiDoc
+({lread})
 ** User guide
 *** Reviewed, re-organized, hopefully clarified some things
+({lread})
 *** Checking code blocks with https://github.com/lread/test-doc-blocks[test-doc-blocks]
-*** https://github.com/clj-commons/etaoin/commit/f3f0370fb76bc353c14293243410db1641f99c70[f3f0370]: A new troubleshooting tip (thanks https://github.com/jkrasnay[@jkrasnay]!)
-*** https://github.com/clj-commons/etaoin/pull/364[#364]: A new usage example (thanks https://github.com/kidd[kidd]!)
-*** https://github.com/clj-commons/etaoin/issues/427[#427] https://github.com/clj-commons/etaoin/issues/359[#359]: Describe `execute` function
+({lread})
+*** https://github.com/clj-commons/etaoin/commit/f3f0370fb76bc353c14293243410db1641f99c70[f3f0370]: A new troubleshooting tip (thanks {person}jkrasnay[@jkrasnay]!)
+*** {pr}364[#364]: A new usage example (thanks {person}kidd[kidd]!)
+*** {issue}427[#427] {issue}359[#359]: Describe `execute` function
+({lread})
 * Internal quality
-** https://github.com/clj-commons/etaoin/issues/382[#382]: Fix process fork testing on Windows
-** https://github.com/clj-commons/etaoin/issues/391[#391]: Identify browser name on failed ide tests
-** https://github.com/clj-commons/etaoin/issues/390[#390]: Add internal clj-kondo config
-** https://github.com/clj-commons/etaoin/issues/381[#381]: In addition to ubuntu, now also testing on macOS and Windows (using GitHub Actions https://github.com/clj-commons/etaoin/issues/392[#392] with parallelization https://github.com/clj-commons/etaoin/issues/420[#420])
-** https://github.com/clj-commons/etaoin/issues/422[#422]: Automate release workflow
+** {issue}382[#382]: Fix process fork testing on Windows
+({lread})
+** {issue}391[#391]: Identify browser name on failed ide tests
+({lread})
+** {issue}390[#390]: Add internal clj-kondo config
+({lread})
+** {issue}381[#381]: In addition to ubuntu, now also testing on macOS and Windows (using GitHub Actions {issue}392[#392] with parallelization {issue}420[#420])
+({lread})
+** {issue}422[#422]: Automate release workflow
+({lread})
 
 https://github.com/clj-commons/etaoin/compare/0.4.6\...v1.0.38[Full commit log]
 
-== v0.4.6
+== v0.4.6 - 2021-08-28 [[v0.4.6]]
 
-* https://github.com/clj-commons/etaoin/issues/367[#367]: Use actions to fix double-click
+* {issue}367[#367]: Use actions to fix double-click
+({ivan})
 
-== v0.4.5
+== v0.4.5 - 2021-07-05 [[v0.4.5]]
 
-* https://github.com/clj-commons/etaoin/pull/365[#365]: Improve status messages when waiting
+* {pr}365[#365]: Improve status messages when waiting
+({person}fancygits[@fancygits])
 
-== v0.4.4
+== v0.4.4 - 2021-06-27 [[v0.4.4]]
 
 * Add v2 api
+({ivan})
 
-== v0.4.3
+== v0.4.3 - 2021-06-25 [[v0.4.3]]
 
 * Fix user-agent functions
+({ivan})
 
-== v0.4.2
+== v0.4.2 - 2021-06-25 [[v0.4.2]]
 
 * Add user-agent functions to api
+({ivan})
 
-== v0.4.1
+== v0.4.1 - 2020-10-27 [[v0.4.1]]
 
-* https://github.com/clj-commons/etaoin/issues/347[#347]: Add support for mltiple clicks
-* https://github.com/clj-commons/etaoin/pull/349[#349]: Fix typo for duration within `add-action`
+* {issue}347[#347]: Add support for multiple clicks
+({person}Uunnamed[@Uunnamed])
+* {pr}349[#349]: Fix typo for duration within `add-action`
+({person}ageneau[@ageneau])
 
-== v0.4.0 [breaking]
+== v0.4.0 - 2020-10-20 [breaking] [[v0.4.0]]
 
 Breaking Changes
 
-* https://github.com/clj-commons/etaoin/issues/111[#111]: the driver instance is *now a map instead of an atom*.
+* {issue}111[#111]: the driver instance is *now a map instead of an atom*.
+({person}Uunnamed[@Uunnamed])
 +
 Breaking changes are never embarked on lightly but we felt it important to transition to more a more idiomatic use of Clojure.
 +
@@ -212,106 +268,168 @@ If you have `swap!` or something similar in your code for the driver, please ref
 
 Other Changes
 
-* https://github.com/clj-commons/etaoin/issues/44[#44]: Add `with-screenshots` macro
-* https://github.com/clj-commons/etaoin/issues/196[#196]: Add support for running Selenium IDE files
-** https://github.com/clj-commons/etaoin/issues/336[#336]: Docs
-** https://github.com/clj-commons/etaoin/issues/329[#329]: Cli entry point
-* https://github.com/clj-commons/etaoin/issues/103[#103]: Add w3c webdriver action support
+* {issue}44[#44]: Add `with-screenshots` macro
+({person}Uunnamed[@Uunnamed])
+* {issue}196[#196]: Add support for running Selenium IDE files
+({person}Uunnamed[@Uunnamed])
+** {issue}336[#336]: Docs
+({person}Uunnamed[@Uunnamed])
+** {issue}329[#329]: Cli entry point
+({person}Uunnamed[@Uunnamed])
+* {issue}103[#103]: Add w3c webdriver action support
+({person}Uunnamed[@Uunnamed])
 
-== v0.3.10
+== v0.3.10 - 2020-08-25 [[v0.3.10]]
 
-* https://github.com/clj-commons/etaoin/issues/317[#317]: Add a description of the trouble with chromedriver
-* https://github.com/clj-commons/etaoin/issues/316[#316]: Add with-tmp-dir for tests
-* https://github.com/clj-commons/etaoin/issues/307[#307]: update examples for docker and remote connection
-* https://github.com/clj-commons/etaoin/issues/315[#315]: Add :fn/has-string && return old version has-text
-* https://github.com/clj-commons/etaoin/issues/314[#314]: Fix quit fn for remote driver
-* https://github.com/clj-commons/etaoin/issues/311[#311]: Fix typos - headless
-* https://github.com/clj-commons/etaoin/issues/309[#309]: Add test prevent process fork
-* https://github.com/clj-commons/etaoin/issues/308[#308]: Fix check $HOST
-* https://github.com/clj-commons/etaoin/issues/306[#306]: Make service functions private
-* https://github.com/clj-commons/etaoin/issues/304[#304]: Add default port for remote connection
-* https://github.com/clj-commons/etaoin/issues/303[#303]: Refactoring remote connection capabilities
-* https://github.com/clj-commons/etaoin/issues/302[#302]: Add fns for connecting to remote drivers
-* https://github.com/clj-commons/etaoin/issues/300[#300]: Add x11 for tests
-* https://github.com/clj-commons/etaoin/issues/298[#298]: Make tests run in display mode
-* bump version in readme
-* Version 0.3.10-SNAPSHOT
+* {issue}317[#317]: Add a description of the trouble with chromedriver
+({person}Uunnamed[@Uunnamed])
+* {issue}316[#316]: Add with-tmp-dir for tests
+({person}Uunnamed[@Uunnamed])
+* {issue}307[#307]: update examples for docker and remote connection
+({person}Uunnamed[@Uunnamed])
+* {issue}315[#315]: Add :fn/has-string && return old version has-text
+({person}Uunnamed[@Uunnamed])
+* {issue}314[#314]: Fix quit fn for remote driver
+({person}Uunnamed[@Uunnamed])
+* {issue}311[#311]: Fix typos - headless
+({person}nfedyashev[@nfedyashev])
+* {issue}309[#309]: Add test prevent process fork
+({person}Uunnamed[@Uunnamed])
+* {issue}308[#308]: Fix check $HOST
+({person}Uunnamed[@Uunnamed])
+* {issue}306[#306]: Make service functions private
+({person}Uunnamed[@Uunnamed])
+* {issue}304[#304]: Add default port for remote connection
+({person}Uunnamed[@Uunnamed])
+* {issue}303[#303]: Refactoring remote connection capabilities
+({person}Uunnamed[@Uunnamed])
+* {issue}302[#302]: Add fns for connecting to remote drivers
+({person}Uunnamed[@Uunnamed])
+* {issue}300[#300]: Add x11 for tests
+({person}Uunnamed[@Uunnamed])
+* {issue}298[#298]: Make tests run in display mode
+({person}Uunnamed[@Uunnamed])
 
-== v0.3.9
+== v0.3.9 - 2020-08-18 [[v0.3.9]]
 
 * Fix test ignorance
-* https://github.com/clj-commons/etaoin/issues/297[#297]: Freeze chrome profile test
-* https://github.com/clj-commons/etaoin/issues/293[#293]: Fix chrome profile test && reflect warn
-* https://github.com/clj-commons/etaoin/issues/292[#292]: Add a description of the trouble
-* https://github.com/clj-commons/etaoin/issues/291[#291]: Add log level for driver
-* https://github.com/clj-commons/etaoin/issues/289[#289]: Fix chrome profile
-* https://github.com/clj-commons/etaoin/issues/288[#288]: Fix get-performance-logs
-* https://github.com/clj-commons/etaoin/issues/287[#287]: Fix tests
-* https://github.com/clj-commons/etaoin/issues/286[#286]: Fix example for docker
-* https://github.com/clj-commons/etaoin/issues/285[#285]: Add example for query-all
-* https://github.com/clj-commons/etaoin/issues/284[#284]: Fix :fn/text && :fn/has-text
-* https://github.com/clj-commons/etaoin/issues/281[#281]: Move session opts from run- to connect- driver
-* https://github.com/clj-commons/etaoin/issues/279[#279]: Add click on field to fill-human
-* https://github.com/clj-commons/etaoin/issues/277[#277]: Add fill human multi
-* https://github.com/clj-commons/etaoin/issues/276[#276]: Add :fn/link
-* https://github.com/clj-commons/etaoin/issues/275[#275]: Decrease default timeout
-* https://github.com/clj-commons/etaoin/issues/274[#274]: Add shortcut wait-has-text-everywhere
-* https://github.com/clj-commons/etaoin/issues/273[#273]: Add examples of query functions
-* https://github.com/clj-commons/etaoin/issues/271[#271]: Add wrap-default-timeout && wrap-default-interval
-* https://github.com/clj-commons/etaoin/issues/270[#270]: Add fn select decription && some fix
-* https://github.com/clj-commons/etaoin/issues/269[#269]: Add query-tree fn
-* https://github.com/clj-commons/etaoin/issues/268[#268]: Make some declarations private for :use
+* {issue}297[#297]: Freeze chrome profile test
+({person}Uunnamed[@Uunnamed])
+* {issue}293[#293]: Fix chrome profile test && reflect warn
+({person}Uunnamed[@Uunnamed])
+* {issue}292[#292]: Add a description of the trouble
+({person}Uunnamed[@Uunnamed])
+* {issue}291[#291]: Add log level for driver
+({person}Uunnamed[@Uunnamed])
+* {issue}289[#289]: Fix chrome profile
+({person}Uunnamed[@Uunnamed])
+* {issue}288[#288]: Fix get-performance-logs
+({person}Uunnamed[@Uunnamed])
+* {issue}287[#287]: Fix tests
+({person}Uunnamed[@Uunnamed])
+* {issue}286[#286]: Fix example for docker
+({person}Uunnamed[@Uunnamed])
+* {issue}285[#285]: Add example for query-all
+({person}Uunnamed[@Uunnamed])
+* {issue}284[#284]: Fix :fn/text && :fn/has-text
+({person}Uunnamed[@Uunnamed])
+* {issue}281[#281]: Move session opts from run- to connect- driver
+({person}Uunnamed[@Uunnamed])
+* {issue}279[#279]: Add click on field to fill-human
+({person}Uunnamed[@Uunnamed])
+* {issue}277[#277]: Add fill human multi
+({person}Uunnamed[@Uunnamed])
+* {issue}276[#276]: Add :fn/link
+({person}Uunnamed[@Uunnamed])
+* {issue}275[#275]: Decrease default timeout
+({person}Uunnamed[@Uunnamed])
+* {issue}274[#274]: Add shortcut wait-has-text-everywhere
+({person}Uunnamed[@Uunnamed])
+* {issue}273[#273]: Add examples of query functions
+({person}Uunnamed[@Uunnamed])
+* {issue}271[#271]: Add wrap-default-timeout && wrap-default-interval
+({person}Uunnamed[@Uunnamed])
+* {issue}270[#270]: Add fn select decription && some fix
+({person}Uunnamed[@Uunnamed])
+* {issue}269[#269]: Add query-tree fn
+({person}Uunnamed[@Uunnamed])
+* {issue}268[#268]: Make some declarations private for :use
+({person}Uunnamed[@Uunnamed])
 * Fix creating dirs in postmortem handler
-* https://github.com/clj-commons/etaoin/issues/267[#267]: Fix creating dirs in postmortem handler
-* https://github.com/clj-commons/etaoin/issues/266[#266]: Fix get-inner-html for phantomjs
-* https://github.com/clj-commons/etaoin/issues/265[#265]: Add phantomjs to docker && circleci
-* https://github.com/clj-commons/etaoin/issues/264[#264]: Fix switch-window with PhantomJS
-* https://github.com/clj-commons/etaoin/issues/262[#262]: Add pre checks for query fns
-* https://github.com/clj-commons/etaoin/issues/263[#263]: Fix test-cookies for newest firefox
+* {issue}267[#267]: Fix creating dirs in postmortem handler
+({person}Uunnamed[@Uunnamed])
+* {issue}266[#266]: Fix get-inner-html for phantomjs
+({person}Uunnamed[@Uunnamed])
+* {issue}265[#265]: Add phantomjs to docker && circleci
+({person}Uunnamed[@Uunnamed])
+* {issue}264[#264]: Fix switch-window with PhantomJS
+({person}Uunnamed[@Uunnamed])
+* {issue}262[#262]: Add pre checks for query fns
+({person}Uunnamed[@Uunnamed])
+* {issue}263[#263]: Fix test-cookies for newest firefox
+({person}Uunnamed[@Uunnamed])
 
-== v0.3.8
+== v0.3.8 - 2020-08-04 [[v0.3.8]]
 
-* https://github.com/clj-commons/etaoin/issues/261[#261]: Fix geckodriver install
-* https://github.com/clj-commons/etaoin/issues/259[#259]: Add setting of env
-* https://github.com/clj-commons/etaoin/issues/258[#258]: Fix installation geckodriver in docker
-* https://github.com/clj-commons/etaoin/issues/257[#257]: Add logging to files
-* https://github.com/clj-commons/etaoin/issues/256[#256]: Add opts for human input
-* https://github.com/clj-commons/etaoin/issues/255[#255]: Add driver installation check
-* https://github.com/clj-commons/etaoin/issues/254[#254]: Add http proxy settings
-* https://github.com/clj-commons/etaoin/issues/253[#253]: Add edge support
-* https://github.com/clj-commons/etaoin/issues/252[#252]: Add docker examle
-* https://github.com/clj-commons/etaoin/issues/251[#251]: Add test examples
-* https://github.com/clj-commons/etaoin/issues/248[#248]: Add fixture example
-* https://github.com/clj-commons/etaoin/issues/249[#249]: Fix headless? && save capabilities
-* https://github.com/clj-commons/etaoin/issues/247[#247]: Fix reflection warning && indent project.clj
-* https://github.com/clj-commons/etaoin/issues/246[#246]: Aggressive indent
-* https://github.com/clj-commons/etaoin/issues/245[#245]: Better free port discovery
-* https://github.com/clj-commons/etaoin/issues/244[#244]: Auto release
+* {issue}261[#261]: Fix geckodriver install
+({person}Uunnamed[@Uunnamed])
+* {issue}259[#259]: Add setting of env
+({person}Uunnamed[@Uunnamed])
+* {issue}258[#258]: Fix installation geckodriver in docker
+({person}Uunnamed[@Uunnamed])
+* {issue}257[#257]: Add logging to files
+({person}Uunnamed[@Uunnamed])
+* {issue}256[#256]: Add opts for human input
+({person}Uunnamed[@Uunnamed])
+* {issue}255[#255]: Add driver installation check
+({person}Uunnamed[@Uunnamed])
+* {issue}254[#254]: Add http proxy settings
+({person}Uunnamed[@Uunnamed])
+* {issue}253[#253]: Add edge support
+({person}Uunnamed[@Uunnamed])
+* {issue}252[#252]: Add docker examle
+({person}Uunnamed[@Uunnamed])
+* {issue}251[#251]: Add test examples
+({person}Uunnamed[@Uunnamed])
+* {issue}248[#248]: Add fixture example
+({person}Uunnamed[@Uunnamed])
+* {issue}249[#249]: Fix headless? && save capabilities
+({person}Uunnamed[@Uunnamed])
+* {issue}247[#247]: Fix reflection warning && indent project.clj
+({person}Uunnamed[@Uunnamed])
+* {issue}246[#246]: Aggressive indent
+({person}Uunnamed[@Uunnamed])
+* {issue}245[#245]: Better free port discovery
+({person}Uunnamed[@Uunnamed])
+* {issue}244[#244]: Auto release
+({ivan})
+
+== v0.3.7 - 2020-07-23 [[v0.3.7]]
+
+* {issue}242[#242]: Add release tasks
+({ivan})
 * Readme updated
-* https://github.com/clj-commons/etaoin/issues/241[#241]: Add select fn
-* https://github.com/clj-commons/etaoin/issues/238[#238]: Better legacy code
-* https://github.com/clj-commons/etaoin/issues/237[#237]: Bump clj-http && cheshire
-* https://github.com/clj-commons/etaoin/issues/236[#236]: Add example remote connection
+* {issue}241[#241]: Add select fn
+({person}Uunnamed[@Uunnamed])
+* {issue}238[#238]: Better legacy code
+({person}Uunnamed[@Uunnamed])
+* {issue}237[#237]: Bump clj-http && cheshire
+({person}Uunnamed[@Uunnamed])
+* {issue}236[#236]: Add example remote connection
+({person}Uunnamed[@Uunnamed])
 * Add Dockerfile && fix test
-* https://github.com/clj-commons/etaoin/issues/233[#233]: Fix tests & circleci config
-* https://github.com/clj-commons/etaoin/issues/231[#231]: Move safari from jwp to w3c protocol
-* https://github.com/clj-commons/etaoin/issues/223[#223]: Use dir-img and dir-log if passed
-* https://github.com/clj-commons/etaoin/issues/230[#230]: Move driver installation part and typo fix
-* https://github.com/clj-commons/etaoin/issues/228[#228]: Fix syntax error in docs
+* {issue}233[#233]: Fix tests & circleci config
+({person}Uunnamed[@Uunnamed])
+* {issue}231[#231]: Move safari from jwp to w3c protocol
+({person}Uunnamed[@Uunnamed])
+* {issue}223[#223]: Use dir-img and dir-log if passed
+({person}anthonygalea[@anthonygalea])
+* {issue}230[#230]: Move driver installation part and typo fix
+({person}ghufransyed[@ghufransyed])
+* {issue}228[#228]: Fix syntax error in docs
+({person}AndreaCrotti[@AndreaCrotti])
 * Switch to codox for generating docs
 
-== v0.3.7
+== Earlier Releases
 
-* https://github.com/clj-commons/etaoin/issues/242[#242]: Add release tasks
-* Readme updated
-* https://github.com/clj-commons/etaoin/issues/241[#241]: Add select fn
-* https://github.com/clj-commons/etaoin/issues/238[#238]: Better legacy code
-* https://github.com/clj-commons/etaoin/issues/237[#237]: Bump clj-http && cheshire
-* https://github.com/clj-commons/etaoin/issues/236[#236]: Add example remote connection
-* Add Dockerfile && fix test
-* https://github.com/clj-commons/etaoin/issues/233[#233]: Fix tests & circleci config
-* https://github.com/clj-commons/etaoin/issues/231[#231]: Move safari from jwp to w3c protocol
-* https://github.com/clj-commons/etaoin/issues/223[#223]: Use dir-img and dir-log if passed
-* https://github.com/clj-commons/etaoin/issues/230[#230]: Move driver installation part and typo fix
-* https://github.com/clj-commons/etaoin/issues/228[#228]: Fix syntax error in docs
-* Switch to codox for generating docs
+Not described, see github.
