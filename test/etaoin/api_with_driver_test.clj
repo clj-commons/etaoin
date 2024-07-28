@@ -362,42 +362,41 @@
 (deftest driver-killed-on-failure-to-run
   (doseq [retries [0 4]]
     (testing (format "every failed run should kill driver - %d retries" retries)
-      (let [sigterm-log (str (fs/create-temp-file {:prefix "sigterm" :suffix "log"}))
-            {:keys [exception]}
+      (let [stop-cnt (atom 0)
+            {:keys [^Throwable exception]}
             (with-redefs [log/log* (fn [& _whatever])] ;; suppress any retry logging
               (try
-                (e/with-wait-timeout 0.25
+                (e/with-wait-timeout 0.25 ;; timeout quickly
                   (e/with-driver :chrome
                       {:path-driver (fake-driver-path)
                        :log-stdout :inherit
                        :webdriver-failed-launch-retries retries
-                       :args-driver ["--sigterm-filename" sigterm-log "--start-server" false]}
-                      _driver
-
-                    ))
+                       :args-driver ["--start-server" false] ;; driver process starts but server does not
+                       :post-stop-fns [(fn [driver]
+                                         (is (not (-> driver :process p/alive?)))
+                                         (swap! stop-cnt inc))]} _driver))
                 (catch Throwable ex
                   {:exception ex})))]
+        (is (= :etaoin/timeout (some-> exception .getCause ex-data :type)))
         (is (some? exception))
-        (is (fs/exists? sigterm-log))
-        (is (= (inc retries) (match-count #"SIGTERM" (slurp sigterm-log))))
-        (fs/delete sigterm-log)))))
+        (is (= (inc retries) @stop-cnt))))))
 
 (deftest driver-killed-on-exception
   (doseq [retries [0 4]]
     (testing (format "every failed run should kill driver - %d retries" retries)
-      (let [sigterm-log (str (fs/create-temp-file {:prefix "sigterm" :suffix "log"}))
+      (let [stop-cnt (atom 0)
             {:keys [exception]}
             (with-redefs [log/log* (fn [& _whatever])] ;; there should be no retries
               (try
                 (e/with-driver :chrome
                     {:path-driver (fake-driver-path)
                      :webdriver-failed-launch-retries retries
-                     :args-driver ["--sigterm-filename" sigterm-log]}
-                    _driver
-                  (throw (ex-info "Something bad happened" {})))
+                     :post-stop-fns [(fn [driver]
+                                       (is (not (-> driver :process p/alive?)))
+                                       (swap! stop-cnt inc))]} _driver
+                  (throw (ex-info "Something bad happened" {:type ::badness})))
                 (catch Throwable ex
                   {:exception ex})))]
-        (is (some? exception))
-        (is (fs/exists? sigterm-log))
-        (is (= 1 (match-count #"SIGTERM" (slurp sigterm-log)))) ;; retry only applies to initial launch
-        (fs/delete sigterm-log)))))
+        (is (= ::badness (some-> exception ex-data :type)))
+        ;; driver started fine, so no retries should have occurred
+        (is (= 1 @stop-cnt))))))
