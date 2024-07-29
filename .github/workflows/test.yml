@@ -1,6 +1,7 @@
 name: Test
 
 on:
+  workflow_call: # for Publish
   push:
     branches:
     - master
@@ -9,8 +10,27 @@ on:
     - master
 
 jobs:
-  setup:
+  check-for-skip:
     runs-on: ubuntu-latest
+    outputs:
+      skip_tests: ${{ steps.check_for_skip.outputs.skip_tests }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Babashka
+        uses: DeLaGuardo/setup-clojure@12.5
+        with:
+          bb: 'latest'
+
+      - name: Check if Tests Should Run
+        id: check_for_skip
+        run: bb -ci-set-skip-tests
+
+  setup:
+    needs: check-for-skip
+    runs-on: ubuntu-latest
+    if: needs.check-for-skip.outputs.skip_tests == 'false'
 
     outputs:
       tests: ${{ steps.set-tests.outputs.tests }}
@@ -128,7 +148,6 @@ jobs:
         mv ../../../.deps.clj ${USERPROFILE}
         mv ../../../.gitlibs ${USERPROFILE}
       shell: bash
-
 
     - name: Setup Java
       uses: actions/setup-java@v4

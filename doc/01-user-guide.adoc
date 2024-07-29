@@ -3,6 +3,7 @@
 = User Guide
 :toclevels: 5
 :toc:
+// DO NOT EDIT: the lib-version parameter is automatically updated by publish
 :lib-version: 1.0.40
 :project-src-coords: clj-commons/etaoin
 :project-mvn-coords: etaoin/etaoin
