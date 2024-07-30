@@ -1,26 +1,26 @@
 (ns build-shared
-  (:refer-clojure :exclude [test])
   (:require
-   [cognitect.test-runner :as tr]))
+   [clojure.edn :as edn]
+   [clojure.string :as string]))
 
-;; private fn pasted from original sources
-(defn- do-test
-  [{:keys [dirs nses patterns vars includes excludes]}]
-  (let [adapted {:dir (when (seq dirs) (set dirs))
-                 :namespace (when (seq nses) (set nses))
-                 :namespace-regex (when (seq patterns) (map re-pattern patterns))
-                 :var (when (seq vars) (set vars))
-                 :include (when (seq includes) (set includes))
-                 :exclude (when (seq excludes) (set excludes))}]
-    (tr/test adapted)))
+(defn- project-info []
+  (-> (edn/read-string (slurp "deps.edn"))
+      :aliases :neil :project))
 
+(def version-tag-prefix "v")
 
-(defn test
-  "Reimplement test to not throw but instead exit with 1 on error."
-  [opts]
-  (try
-   (let [{:keys [fail error]} (do-test opts)]
-     (System/exit (if (zero? (+ fail error)) 0 1)))
-   (finally
-     ;; Only called if `test` raises an exception
-     (shutdown-agents))))
+(defn lib-version []
+  (-> (project-info) :version))
+
+(defn lib-artifact-name []
+  (-> (project-info) :name))
+
+(defn lib-github-coords []
+  (-> (project-info) :github-coords))
+
+(defn version->tag [version]
+  (str version-tag-prefix version))
+
+(defn tag->version [ci-tag]
+  (and (string/starts-with? ci-tag version-tag-prefix)
+       (string/replace-first ci-tag version-tag-prefix "")))

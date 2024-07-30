@@ -1,6 +1,7 @@
 name: Test
 
 on:
+  workflow_call: # for Publish
   push:
     branches:
     - master
@@ -13,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
+      skip_tests: ${{ steps.check_for_skip.outputs.skip_tests }}
       tests: ${{ steps.set-tests.outputs.tests }}
 
     steps:
@@ -44,7 +46,12 @@ jobs:
     - name: Bring down deps
       run: bb download-deps
 
+    - name: Check if Tests Should Run
+      id: check_for_skip
+      run: bb -ci-set-skip-tests
+
     - id: set-tests
+      if: steps.check_for_skip.outputs.skip_tests == 'false'
       name: Set test var for matrix
       # run test.clj directly instead of via bb task to avoid generic task output
       run: echo "tests=$(bb script/test_matrix.clj --format json)" >> $GITHUB_OUTPUT
@@ -52,6 +59,7 @@ jobs:
   build:
     needs: setup
     runs-on: ${{ matrix.os }}-latest
+    if: needs.setup.outputs.skip_tests == 'false'
     strategy:
       fail-fast: false
       matrix:
@@ -128,7 +136,6 @@ jobs:
         mv ../../../.deps.clj ${USERPROFILE}
         mv ../../../.gitlibs ${USERPROFILE}
       shell: bash
-
 
     - name: Setup Java
       uses: actions/setup-java@v4

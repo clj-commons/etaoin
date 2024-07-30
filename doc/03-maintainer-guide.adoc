@@ -1,66 +1,68 @@
 = Maintainer Guide
 :toclevels: 5
 :toc:
-:url-release-action: https://github.com/clj-commons/etaoin/actions?query=workflow%3A%22Release%22 
 
-== Introduction
-Notes for project maintainers.
+== Audience
+You are a maintainer of this project.
 
-== Release Workflow
-
-The release workflow is handled by our link:{url-release-action}[Release] GitHub Action.
-
-. Fail fast if:
-.. Change log not ready
-. Bump `version.edn` for release version
-. Create thin jar using release version
-. Apply release version to the following docs:
-.. user guide for usage examples
-.. change log "unreleased" heading
-. Deploy jar to clojars
-. Commit changes made to docs and `version.edn`
-. Create and push a release tag back to the project repo
-. Inform cljdoc of the new release
-
-[IMPORTANT]
-====
-At this time, the release workflow does not run tests.
-The assumption is that you've waited for the last CI test run to complete and are happy with the results.
-====
-
-== Updating the Version
-
-Release num is bumped automatically by release workflow.
-
-Edit `major` and `minor` by editing `version.edn` in the project root.
-
-== Local Verification
-
-To check if things seeem ready:
+== Publishing a New Release
+Is invoked from the command line via:
 
 [source,shell]
 ----
-bb ci-release validate
+bb publish
 ----
 
-If you want to run everything up to, but not including, commit and push:
+The publish task locally validates:
 
-[source,shell]
-----
-bb ci-release prep
-----
+* local git
+** you are not on a fork
+** you are on the default branch
+** do not have any uncommitted code
+** do not have any unpushed commits
+** local head sha matches matches remote head sha
+* changelog
+** Has an "Unreleased" section with content
 
-IMPORTANT: You will NOT want to check in changes made by `prep`.
+TIP: to run these validations without publishing, run `bb pubcheck`
 
-== Special Setup
+Then also locally:
 
-GitHub has been configured with necessary secrets for GitHub Actions to deploy to clojars.
+. bumps the version `<release count>` (our scheme is `major.minor.<release count>`)
+** Our version is stored in `deps.edn` under `:aliases` `:neil` `:project` `:version`
+. applies version to:
+.. `doc/01-user-guide.adoc`
+.. `CHANGELOG.adoc`
+. git commits: `deps.edn` `doc/01-user-guide.adoc` `CHANGELOG.adoc`
+. git tags with release tag `v<version>`
+. pushes commit
+. pushes tag
 
-== Invoking
+Then up on CI, the CI publish workflow is only triggered when it sees a release tag:
 
-As a maintainer you should have sufficient privileges to see a "Run Workflow" dropdown button on the link:{url-release-action}[Release] action page.
-The dropdown will prompt for a branch.
-I did not see a way to disable this prompt, simply leave it at "master" and run the workflow.
+. CI tests workflow is invoked
+. a release jar is published to clojars
+. a GitHub release is created
+. cljdoc is informed of the new release
 
-TIP: Don't forget to pull after a release to get the changes made by the release workflow.
+== Relevant Sources
 
+Scripts:
+
+. `bb.edn` - tasks entry point
+. `script/publish.clj` - client side work
+. `script/ci_publish.clj` - ci side work
+
+CI - We use GitHub Actions for this project
+
+. `.github/workflows/publish.yml`
+
+== Relevant Details
+
+The publish commit message is prefixed with `[publish workflow]`.
+We check for this prefix on CI to avoid running tests twice during publish.
+If a regular commit contains this prefix, tests will be skipped (so don't do that).
+
+== CI Config
+
+Clojars secrets are protected under the `publish` environment which is only referenced by `publish.yml`.

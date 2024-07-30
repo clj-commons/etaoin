@@ -6,7 +6,8 @@
                            :sha "cf44c15f30ea3867227fa61ceb823e5e942c707f"}
         dev.nubank/docopt {:mvn/version "0.6.1-fix7"}
         org.babashka/http-server {:mvn/version "0.1.12"}
-        wevre/natural-compare {:mvn/version "0.0.10"}}
+        wevre/natural-compare {:mvn/version "0.0.10"}
+        io.github.babashka/neil {:git/tag "v0.3.67" :git/sha "054ca51"}}
  :tasks
  {;; setup
   :requires ([babashka.classpath :as cp]
@@ -57,7 +58,7 @@
                   :task (do
                           ;; timbre default logging level is debug, which generates a lot of http logging noise
                           (timbre/set-level! :info)
-                          (exec 'build-shared/test))
+                          (exec 'test-shared/test))
                   :org.babashka/cli {:coerce {:nses [:symbol]
                                               :patterns [:string]
                                               :vars [:symbol]}}}
@@ -110,5 +111,14 @@
   fake-driver {:doc "Fake driver to support testing"
                :task-decoration :none
                :task fake-driver/-main}
-  ci-release     {:doc "release tasks, use --help for args"
-                  :task ci-release/-main}}}
+
+  pubcheck          {:task publish/pubcheck        :doc "Run only publish checks (without publishing)"}
+  publish           {:task publish/-main           :doc "Publish a release (for maintainers)"}
+  ;; let's not rely on a random version of neil
+  neil              {:task babashka.neil/-main     :doc "Pinned version of babashka/neil (used in scripting)"}
+
+  ;; hidden tasks, no need for folks to be trying these ci invoked tasks
+  -ci-set-skip-tests {:task ci-publish/set-skip-tests :doc "used on ci to determine if tests need to be run"}
+  -ci-clojars-deploy {:task ci-publish/clojars-deploy :doc "triggered on ci by release tag"}
+  -ci-github-create-release {:task ci-publish/github-create-release :doc "triggered on ci by release tag"}
+  -ci-cljdoc-request-build {:task ci-publish/cljdoc-request-build :doc "ask cljdoc to build docs for new release"}}}
