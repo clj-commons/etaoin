@@ -51,7 +51,7 @@ jobs:
       run: bb -ci-set-skip-tests
 
     - id: set-tests
-      if: steps.check_for_skip.skip_tests = 'false'
+      if: steps.check_for_skip.skip_tests == 'false'
       name: Set test var for matrix
       # run test.clj directly instead of via bb task to avoid generic task output
       run: echo "tests=$(bb script/test_matrix.clj --format json)" >> $GITHUB_OUTPUT
