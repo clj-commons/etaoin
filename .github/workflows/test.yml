@@ -10,29 +10,11 @@ on:
     - master
 
 jobs:
-  check-for-skip:
+  setup:
     runs-on: ubuntu-latest
+
     outputs:
       skip_tests: ${{ steps.check_for_skip.outputs.skip_tests }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install Babashka
-        uses: DeLaGuardo/setup-clojure@12.5
-        with:
-          bb: 'latest'
-
-      - name: Check if Tests Should Run
-        id: check_for_skip
-        run: bb -ci-set-skip-tests
-
-  setup:
-    needs: check-for-skip
-    runs-on: ubuntu-latest
-    if: needs.check-for-skip.outputs.skip_tests == 'false'
-
-    outputs:
       tests: ${{ steps.set-tests.outputs.tests }}
 
     steps:
@@ -64,7 +46,12 @@ jobs:
     - name: Bring down deps
       run: bb download-deps
 
+    - name: Check if Tests Should Run
+      id: check_for_skip
+      run: bb -ci-set-skip-tests
+
     - id: set-tests
+      if: steps.check_for_skip.skip_tests = 'false'
       name: Set test var for matrix
       # run test.clj directly instead of via bb task to avoid generic task output
       run: echo "tests=$(bb script/test_matrix.clj --format json)" >> $GITHUB_OUTPUT
@@ -72,6 +59,7 @@ jobs:
   build:
     needs: setup
     runs-on: ${{ matrix.os }}-latest
+    if: needs.setup.outputs.skip_tests == 'false'
     strategy:
       fail-fast: false
       matrix:
