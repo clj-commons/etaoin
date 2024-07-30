@@ -49,7 +49,6 @@
   (assert-on-ci)
   (let [workflow (System/getenv "GITHUB_WORKFLOW")
         commit-msg (-> (t/shell {:out :string} "git log -1 --pretty=%B") :out)
-        _ (println "!debug!commit-msg: " commit-msg)
         skip-tests (cond
                      (= "Publish" workflow)
                      (do (println "Tests will be run (as part of Publish workflow)")
