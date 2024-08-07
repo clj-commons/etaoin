@@ -173,7 +173,7 @@
 (def ^:no-doc locator-css "css selector")
 
 (def ^{:doc "WebDriver global option defaults"} defaults-global
-  {:log-level :all
+  {:log-level :all ;; for browser
    :locator default-locator
    :webdriver-failed-launch-retries 0})
 
@@ -259,9 +259,8 @@
   Further requests to this driver will be for this session.
   Etaoin assumes one active session per driver."
   [driver & [capabilities]]
-  (let [data   (if (= (dispatch-driver driver) :safari)
-                 {:capabilities (or capabilities {})} ;; required for safari even if empty
-                 {:desiredCapabilities (or capabilities {})})
+  (let [data  {:capabilities (if capabilities {:firstMatch [capabilities]}
+                                 {})}
         result (execute {:driver driver
                          :method :post
                          :path   [:session]
@@ -3579,13 +3578,13 @@
                     dev              (drv/set-perf-logging (:perf dev))
                     driver-log-level (drv/set-driver-log-level driver-log-level)
                     args-driver      (drv/set-args args-driver)
-                    path-browser     (drv/set-binary path-browser)
+                    path-browser     (drv/set-browser-binary path-browser)
                     download-dir     (drv/set-download-dir download-dir))
         proc-args (drv/get-args driver)
         _         (log/debugf "Starting process: %s" (str/join \space proc-args))
         process   (proc/run proc-args {:log-stdout log-stdout
                                        :log-stderr log-stderr
-                                       :env        env})]
+                                       :env        (merge (:env driver) env)})]
     (util/assoc-some driver
                      :env env
                      :process process
@@ -3730,7 +3729,7 @@
                         size          (drv/set-window-size with height)
                         url           (drv/set-url url)
                         headless      (drv/set-headless)
-                        args          (drv/set-options-args args)
+                        args          (drv/add-browser-args args)
                         proxy         (drv/set-proxy proxy)
                         load-strategy (drv/set-load-strategy load-strategy)
                         prefs         (drv/set-prefs prefs)
