@@ -269,4 +269,3 @@ So, when adding any new macros, think also about our Etaoin users and our clj-ko
 
 * https://chromium.googlesource.com/chromium/src/+/master/chrome/test/chromedriver/[chromedriver]
 * https://github.com/mozilla/geckodriver[firefox geckodriver], https://searchfox.org/mozilla-central/source/testing/webdriver[sources]
-* https://github.com/detro/ghostdriver/blob/[Phantom.js (obsolete, no longer tested)]

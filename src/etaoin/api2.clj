@@ -56,23 +56,6 @@
   `(e/with-driver :edge ~opts ~bind
      ~@body))
 
-(defmacro with-phantom
-  "Executes `body` with a Phantom.JS driver session bound to `bind`.
-
-  Driver is automatically launched and terminated (even if an exception occurs).
-
-  `opts` - optional, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
-
-  Example:
-
-  ```Clojure
-  (with-phantom [driver]
-    (go driver \"https://clojure.org\"))
-  ```"
-  [[bind & [opts]] & body]
-  `(e/with-driver :phantom ~opts ~bind
-     ~@body))
-
 (defmacro with-safari
   "Executes `body` with a Safari driver session bound to `bind`.
 

@@ -21,7 +21,7 @@
 (set! *warn-on-reflection* true)
 
 (def ^:private browsers-set
-  #{:chrome :safari :firefox :edge :phantom})
+  #{:chrome :safari :firefox :edge})
 
 (defn- str->vec
   [string]

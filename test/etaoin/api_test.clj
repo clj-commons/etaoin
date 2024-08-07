@@ -251,21 +251,20 @@
 
 ;; In Safari, alerts work quite slow, so we add some delays.
 (deftest test-alert
-  (e/when-not-phantom  *driver*
-    (doto *driver*
-      (e/click {:id :button-alert})
-      (e/when-safari (e/wait 1))
-      (-> e/get-alert-text (= "Hello!") is)
-      (-> e/has-alert? is)
-      (e/accept-alert)
-      (e/when-safari (e/wait 1))
-      (-> e/has-alert? not is)
-      (e/click {:id :button-alert})
-      (e/when-safari (e/wait 1))
-      (-> e/has-alert? is)
-      (e/dismiss-alert)
-      (e/when-safari (e/wait 1))
-      (-> e/has-alert? not is))))
+  (doto *driver*
+    (e/click {:id :button-alert})
+    (e/when-safari (e/wait 1))
+    (-> e/get-alert-text (= "Hello!") is)
+    (-> e/has-alert? is)
+    (e/accept-alert)
+    (e/when-safari (e/wait 1))
+    (-> e/has-alert? not is)
+    (e/click {:id :button-alert})
+    (e/when-safari (e/wait 1))
+    (-> e/has-alert? is)
+    (e/dismiss-alert)
+    (e/when-safari (e/wait 1))
+    (-> e/has-alert? not is)))
 
 (deftest test-properties
   (e/when-firefox *driver*
@@ -483,7 +482,7 @@
 
 (deftest test-window-position
   (e/when-not-drivers
-      [:phantom :edge] *driver*
+    [:edge] *driver*
       (let [{:keys [x y]} (e/get-window-position *driver*)]
         (is (numeric? x))
         (is (numeric? y))
@@ -597,11 +596,9 @@
                      :secure false
                      :value "test2"}))))
   (testing "deleting a cookie"
-    (e/when-not-phantom
-      *driver*
-      (e/delete-cookie *driver* :cookie3)
-      (let [cookie (e/get-cookie *driver* :cookie3)]
-        (is (nil? cookie)))))
+    (e/delete-cookie *driver* :cookie3)
+    (let [cookie (e/get-cookie *driver* :cookie3)]
+      (is (nil? cookie))))
   (testing "deleting all cookies"
     (doto *driver*
       e/delete-cookies
@@ -611,9 +608,7 @@
 
 (deftest test-page-source
   (let [src (e/get-source *driver*)]
-    (if (e/phantom? *driver*)
-      (is (str/starts-with? src "<!DOCTYPE html>"))
-      (is (str/starts-with? src "<html><head>")))))
+    (is (str/starts-with? src "<html><head>"))))
 
 (defn- valid-image? [file]
   (if-let [image-magick (some-> (fs/which (if (= "Linux" (os-name))
@@ -790,29 +785,28 @@
 
 (deftest test-actions
   (testing "input key and mouse click"
-    (e/when-not-phantom *driver*
-      (let [input    (e/query *driver* :simple-input)
-            password (e/query *driver* :simple-password)
-            textarea (e/query *driver* :simple-textarea)
-            submit   (e/query *driver* :simple-submit)
-            keyboard (-> (e/make-key-input)
-                         e/add-double-pause
-                         (e/with-key-down "\uE01B")
-                         e/add-double-pause
-                         (e/with-key-down "\uE01C")
-                         e/add-double-pause
-                         (e/with-key-down "\uE01D"))
-            mouse    (-> (e/make-mouse-input)
-                         (e/add-pointer-click-el input)
-                         e/add-pause
-                         (e/add-pointer-click-el password)
-                         e/add-pause
-                         (e/add-pointer-click-el textarea)
-                         e/add-pause
-                         (e/add-pointer-click-el submit))]
-        (e/perform-actions *driver* keyboard mouse)
-        (e/wait 1)
-        (is (str/ends-with? (e/get-url *driver*) "?login=1&password=2&message=3"))))))
+    (let [input    (e/query *driver* :simple-input)
+          password (e/query *driver* :simple-password)
+          textarea (e/query *driver* :simple-textarea)
+          submit   (e/query *driver* :simple-submit)
+          keyboard (-> (e/make-key-input)
+                       e/add-double-pause
+                       (e/with-key-down "\uE01B")
+                       e/add-double-pause
+                       (e/with-key-down "\uE01C")
+                       e/add-double-pause
+                       (e/with-key-down "\uE01D"))
+          mouse    (-> (e/make-mouse-input)
+                       (e/add-pointer-click-el input)
+                       e/add-pause
+                       (e/add-pointer-click-el password)
+                       e/add-pause
+                       (e/add-pointer-click-el textarea)
+                       e/add-pause
+                       (e/add-pointer-click-el submit))]
+      (e/perform-actions *driver* keyboard mouse)
+      (e/wait 1)
+      (is (str/ends-with? (e/get-url *driver*) "?login=1&password=2&message=3")))))
 
 (deftest test-shadow-dom
   (testing "basic functional sanity"

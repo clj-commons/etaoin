@@ -70,7 +70,6 @@ Etaoin's test suite covers the following OSes and browsers for both Clojure and 
 |===
 
 1. Our GitHub Actions macOS tests run on silicon (aka arm64, aarch64 or M*) hardware
-2. We did once test against PhantomJS, but since work has long ago stopped on this project, we have dropped testing
 
 == Installation
 
@@ -130,7 +129,6 @@ For a quieter Etaoin experience when using babashka, set the timbre default log 
 :url-chromedriver: https://sites.google.com/chromium.org/driver/
 :url-chromedriver-dl: https://sites.google.com/chromium.org/driver/downloads
 :url-geckodriver-dl: https://github.com/mozilla/geckodriver/releases
-:url-phantom-dl: http://phantomjs.org/download.html
 :url-webkit: https://webkit.org/blog/6900/webdriver-support-in-safari-10/
 :url-edge-dl: https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/
 
@@ -175,12 +173,6 @@ Edge and `msedgedriver` must match so you might need to specify the version:
 `scoop install edgedriver@101.0.1210.0`
 ** Download: link:{url-edge-dl}[Official Microsoft download site]
 
-* Phantom.js browser +
-(obsolete, no longer tested)
-** macOS: `brew install phantomjs`
-** Windows: `scoop install phantomjs`
-** Download: link:{url-phantom-dl}[Official PhantomJS download site]
-
 Check your WebDriver installations launching by launching these commands.
 Each should start a process that includes its own local HTTP server.
 Use Ctrl-C to terminate.
@@ -191,7 +183,6 @@ chromedriver
 geckodriver
 safaridriver -p 0
 msedgedriver
-phantomjs --wd
 ----
 
 You can optionally run the Etaoin test suite to verify your installation.
@@ -1070,7 +1061,7 @@ It acts the same but raises an exception when querying the page returns multiple
 
 Although double-clicking is rarely purposefully employed on web sites, some naive users might think it is the correct way to click on a button or link.
 
-A double-click can be simulated with `double-click` function (Chrome, Phantom.js).
+A double-click can be simulated with `double-click` function (Chrome).
 It can be used, for example, to check your handling of disallowing multiple form submissions.
 
 [source,clojure]
@@ -1812,10 +1803,9 @@ Each map has the following structure:
 ;; => []
 ----
 
-Currently, logs are available in Chrome and Phantom.js only.
+Currently, logs are available in Chrome only.
 The message text and the source type will vary by browser vendor.
 Chrome wipes the logs once they have been read.
-Phantom.js wipes the logs when the page location changes.
 
 === DevTools: Tracking HTTP Requests, XHR (Ajax) [[devtools]]
 
@@ -2343,7 +2333,6 @@ values vary by browser driver vendor:
 ** has only one detailed log level which we enable via its `--diagnose` option and abstract via `"debug"`
 ** only logs to a log file which Etaion automatically discovers and populates as <<opt-driver-log-file>> in the `driver` map
 ** see <<opt-post-stop-fns>> for one way to dump this log file
-* phantomjs "ERROR"` `"WARN"` `"INFO"` `"DEBUG"`
 
 [id=opt-log-stdout,reftext=`:log-stdout`]
 [id=opt-log-stderr,reftext=`:log-sterr`]
@@ -2498,7 +2487,6 @@ Running without a UI is helpful when:
 * running local tests without having them take over your local UI
 
 Ensure your browser supports headless mode by checking if it accepts `--headless` command-line argument when running it from the terminal.
-The Phantom.js driver is headless by its nature (it was never been developed for rendering UI).
 
 When starting a driver, pass the `:headless` boolean flag to switch into headless mode.
 This flag is ignored for Safari which, as of June 2022, still does not support headless mode.
@@ -2525,8 +2513,6 @@ or
 (e/wait 1) ;; seems to appease Firefox on Linux
 (e/quit driver)
 ----
-
-NOTE: PhantomJS will always be in headless mode.
 
 There are several shortcuts to run Chrome or Firefox in headless mode:
 
