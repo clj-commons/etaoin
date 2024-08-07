@@ -12,7 +12,6 @@
   - [[with-chrome]] [[with-chrome-headless]] [[chrome]] [[chrome-headless]] [[chrome?]] [[when-chrome]] [[when-not-chrome]]
   - [[with-edge]] [[with-edge-headless]] [[edge]] [[edge-headless]] [[when-edge]] [[when-not-edge]]
   - [[with-firefox]] [[with-firefox-headless]] [[firefox]] [[firefox-headless]] [[firefox?]] [[when-firefox]] [[when-not-firefox]]
-  - [[with-phantom]] [[phantom]] [[phantom?]] [[when-phantom]] [[when-not-phantom]]
   - [[with-safari]] [[safari]] [[safari?]] [[when-safari]] [[when-not-safari]]
   - [[driver?]] [[running?]] [[headless?]] [[when-headless]] [[when-not-headless]]
   - [[disconnect-driver]] [[stop-driver]] [[quit]]
@@ -185,8 +184,6 @@
              :path-driver "geckodriver"}
    :chrome  {:port 9515
              :path-driver "chromedriver"}
-   :phantom {:port 8910
-             :path-driver "phantomjs"}
    :safari  {:port 4445
              :path-driver "safaridriver"
              :webdriver-failed-launch-retries 4}
@@ -302,7 +299,7 @@
       :value first second))
 
 (defmethods get-active-element*
-  [:chrome :edge :phantom]
+  [:chrome :edge]
   [driver]
   (-> (execute {:driver driver
                 :method :post
@@ -345,7 +342,7 @@
                     :path   [:session (:session driver) :window :handles]})))
 
 (defmethods get-window-handles
-  [:chrome :edge :phantom]
+  [:chrome :edge]
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -365,7 +362,7 @@
             :data   {:handle handle}}))
 
 (defmethods switch-window
-  [:chrome :edge :phantom]
+  [:chrome :edge]
   [driver handle]
   (execute {:driver driver
             :method :post
@@ -979,11 +976,6 @@
             :path   [:session (:session driver) :actions]
             :data   {:actions (cons input inputs)}}))
 
-(defmethod perform-actions
-  :phantom
-  [_driver _input & _inputs]
-  (util/error "Phantom doesn't support w3c actions."))
-
 (defmulti release-actions
   "Have `driver` clear any active action state.
   This includes any key presses and/or a pointer button being held down."
@@ -997,11 +989,6 @@
             :method :delete
             :path   [:session (:session driver) :actions]}))
 
-(defmethod release-actions
-  :phantom
-  [_driver _input & _inputs]
-  (util/error "Phantom doesn't support w3c actions."))
-
 ;;
 ;; mouse
 ;;
@@ -1012,7 +999,7 @@
   dispatch-driver)
 
 (defmethods mouse-btn-down
-  [:chrome :edge :phantom]
+  [:chrome :edge]
   [driver]
   (execute {:driver driver
             :method :post
@@ -1024,7 +1011,7 @@
   dispatch-driver)
 
 (defmethods mouse-btn-up
-  [:chrome :edge :phantom]
+  [:chrome :edge]
   [driver]
   (execute {:driver driver
             :method :post
@@ -1037,7 +1024,7 @@
   dispatch-driver)
 
 (defmethods mouse-move-to
-  [:chrome :edge :phantom :firefox]
+  [:chrome :edge :firefox]
   ([driver q]
    (execute {:driver driver
              :method :post
@@ -1070,17 +1057,9 @@
   See [[query]] for details on `q-from`, `q-to`.
 
   Notes:
-  - does not work in Phantom.js since it does not have a virtual mouse API;
   - does not work in Safari."
   {:arglists '([driver q-from q-to])}
   dispatch-driver)
-
-(defmethod drag-and-drop
-  :phantom
-  [driver q-from q-to]
-  (mouse-move-to driver q-from)
-  (with-mouse-btn driver
-    (mouse-move-to driver q-to)))
 
 (defmethod drag-and-drop
   :default
@@ -1144,8 +1123,8 @@
   "Have `driver` double-click on element `el`.
 
   Note:
-  - the supported browsers are Chrome, and Phantom.js.
-  - for Firefox and Safari, your may try to simulate it as a `click, wait, click` sequence."
+  - supported by Chrome
+  - for Firefox and Safari, your may try to simulate via a `click, wait, click` sequence."
   {:arglists '([driver el])}
   dispatch-driver)
 
@@ -1166,8 +1145,8 @@
   See [[query]] for details on `q`.
 
   Note:
-  - the supported browsers are Chrome, and Phantom.js.
-  - for Firefox and Safari, your may try to simulate via `click, wait, click` sequence."
+  - supported by Chrome
+  - for Firefox and Safari, your may try to simulate via a `click, wait, click` sequence."
   [driver q]
   (double-click-el driver (query driver q)))
 
@@ -1255,7 +1234,7 @@
   dispatch-driver)
 
 (defmethods get-element-size-el
-  [:chrome :edge :phantom]
+  [:chrome :edge]
   [driver el]
   {:pre [(some? el)]}
   (-> (execute {:driver driver
@@ -1291,7 +1270,7 @@
   dispatch-driver)
 
 (defmethods get-element-location-el
-  [:chrome :edge :phantom]
+  [:chrome :edge]
   [driver el]
   {:pre [(some? el)]}
   (-> (execute {:driver driver
@@ -1521,14 +1500,6 @@
                     :method :get
                     :path   [:session (:session driver) :element el :property :innerHTML]})))
 
-(defmethod get-element-inner-html-el
-  :phantom
-  [driver el]
-  {:pre [(some? el)]}
-  (:value (execute {:driver driver
-                    :method :get
-                    :path   [:session (:session driver) :element el :attribute :innerHTML]})))
-
 (defn get-element-inner-html
   "Have `driver` return inner text of element found by query `q`.
 
@@ -1604,11 +1575,6 @@
   :default
   [driver q]
   (get-element-value-el driver (query driver q)))
-
-(defmethods get-element-value
-  [:phantom]
-  [driver q]
-  (get-element-attr driver q :value))
 
 (defmethods get-element-value
   [:firefox :safari]
@@ -2100,7 +2066,7 @@
   dispatch-driver)
 
 (defmethods get-log-types
-  [:chrome :phantom]
+  [:chrome]
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -2119,7 +2085,7 @@
   dispatch-driver)
 
 (defmethods get-logs*
-  [:chrome :phantom]
+  [:chrome]
   [driver logtype]
   (->> (execute {:driver driver
                  :method :post
@@ -2140,19 +2106,12 @@
    :datetime #inst \"2017-11-23T15:03:08.366-00:00\"}
   ```
 
-  Empirical knowledge about browser differences:
+  Supported by Chrome only:
 
-  - Chrome:
-    - Returns all recorded logs.
-    - Clears the logs once they have been read.
-    - JS console logs have `:console-api` for `:source` field.
-    - Entries about errors will have SEVERE level.
-
-  - PhantomJS (obsolete and no longer tested):
-    - Return all recorded logs since the last URL change.
-    - Does not clear recorded logs on subsequent invocations.
-    - JS console logs have nil for `:source` field.
-    - Entries about errors will have WARNING level, as coded [here](https://github.com/detro/ghostdriver/blob/be7ffd9d47c1e76c7bfa1d47cdcde9164fd40db8/src/session.js#L494)."
+  - Returns all recorded logs.
+  - Clears the logs once they have been read.
+  - JS console logs have `:console-api` for `:source` field.
+  - Entries about errors will have SEVERE level."
   ([driver]
    (get-logs driver "browser"))
   ([driver logtype]
@@ -2350,7 +2309,7 @@
 ;;
 
 (defn driver?
-  "Return true if `driver` is of `type` (e.g. on of: `:chrome`, `:edge`, `:firefox`, `:safari`, `:phantom`)"
+  "Return true if `driver` is of `type` (e.g. on of: `:chrome`, `:edge`, `:firefox`, `:safari`)"
   [driver type]
   (= (dispatch-driver driver) type))
 
@@ -2368,11 +2327,6 @@
   "Returns true if a `driver` is Firefox."
   [driver]
   (driver? driver :firefox))
-
-(defn phantom?
-  "Returns true if a `driver` is Phantom.js."
-  [driver]
-  (driver? driver :phantom))
 
 (defn safari?
   "Returns true if a `driver` is Safari."
@@ -2872,11 +2826,6 @@
   [driver & body]
   `(when-not-predicate #(edge? ~driver) ~@body))
 
-(defmacro when-not-phantom
-  "Executes `body` when browser `driver` is NOT Phantom.js."
-  [driver & body]
-  `(when-not-predicate #(phantom? ~driver) ~@body))
-
 (defmacro when-not-firefox
   "Executes `body` when browser `driver` is NOT Firefox."
   [driver & body]
@@ -2902,11 +2851,6 @@
   "Executes `body` when browser `driver` is Chrome."
   [driver & body]
   `(when-predicate #(chrome? ~driver) ~@body))
-
-(defmacro when-phantom
-  "Executes `body` when browser `driver` is Phantom.js."
-  [driver & body]
-  `(when-predicate #(phantom? ~driver) ~@body))
 
 (defmacro when-firefox
   "Executes `body` when browser `driver` is Firefox."
@@ -3523,7 +3467,7 @@
   Arguments:
 
   - `type` is a keyword determines what driver to use. The supported
-  browsers are `:firefox`, `:chrome`, `:phantom` and `:safari`.
+  browsers are `:firefox`, `:chrome`, `:edge`  and `:safari`.
 
   - `opts` is a map with additional options for a driver. The supported
   options are:
@@ -3679,8 +3623,7 @@
 
   -- `:driver-log-level` a keyword to set driver's log level.
   The value is a string. Possible values are:
-  chrome: [ALL, DEBUG, INFO, WARNING, SEVERE, OFF]
-  phantomjs: [ERROR, WARN, INFO, DEBUG] (default INFO)
+  chrome & edge: [ALL, DEBUG, INFO, WARNING, SEVERE, OFF]
   firefox [fatal, error, warn, info, config, debug, trace]
 
   -- `:log-stdout` and `:log-stderr`. Paths to the driver's log files as strings.
@@ -3734,7 +3677,6 @@
   -- `headless` is a boolean flag to run the browser in headless mode
   (i.e. without GUI window). Useful when running tests on CI servers
   rather than local machine. Currently, only FF and Chrome support headless mode.
-  Phantom.js is headless by its nature.
 
   -- `:size` is a vector of two integers specifying initial window size.
 
@@ -3831,7 +3773,7 @@
           (stop-driver driver))))))
 
 (defn boot-driver
-  "Launch and return a driver of `type` (e.g. `:chrome`, `:firefox` `:safari` `:edge` `:phantom`)
+  "Launch and return a driver of `type` (e.g. `:chrome`, `:firefox` `:safari` `:edge`)
   with `opts` options.
 
   - creates a driver
@@ -3882,12 +3824,6 @@
   `opts` map is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
   (partial boot-driver :chrome))
 
-(def ^{:arglists '([] [opts])} phantom
-  "Launch and return a Phantom.js driver.
-
-  `opts` map is optionally, see [Driver Options](/doc/01-user-guide.adoc#driver-options)."
-  (partial boot-driver :phantom))
-
 (def ^{:arglists '([] [opts])} safari
   "Launch and return a Safari driver.
 
@@ -3922,7 +3858,7 @@
    (boot-driver :edge (assoc opts :headless true))))
 
 (defmacro with-driver
-  "Executes `body` with a driver session of `type` (e.g. `:chrome`, `:firefox` `:safari` `:edge` `:phantom`)
+  "Executes `body` with a driver session of `type` (e.g. `:chrome`, `:firefox` `:safari` `:edge`)
   with `opts` options, binding driver instance to `bind`.
 
   Driver is automatically launched and terminated (even if an exception occurs).
@@ -4006,23 +3942,6 @@
   {:arglists '([opts? bind & body])}
   [& args]
   `(with-driver :edge ~@args))
-
-(defmacro with-phantom
-  "Executes `body` with an Phantom.JS driver session bound to `bind`.
-
-  Driver is automatically launched and terminated (even if an exception occurs).
-
-  `opts` map can be omitted, see [Driver Options](/doc/01-user-guide.adoc#driver-options).
-
-  Example:
-
-  ```Clojure
-  (with-phantom driver
-    (go driver \"https://clojure.org\"))
-  ```"
-  {:arglists '([opts? bind & body])}
-  [& args]
-  `(with-driver :phantom ~@args))
 
 (defmacro with-safari
   "Executes `body` with a Safari driver session bound to `bind`.

@@ -86,11 +86,6 @@
   [driver port]
   (set-args driver [(str "--port=" port)]))
 
-(defmethod set-port
-  :phantom
-  [driver port]
-  (set-args driver ["--webdriver" port]))
-
 ;;
 ;; capabilities
 ;;
@@ -263,11 +258,6 @@
   (if-let [args (get-in driver [:capabilities (options-name driver) :args])]
     (contains? (set args) "--headless")
     (:headless driver)))
-
-(defmethod is-headless?
-  :phantom
-  [_driver]
-  true)
 
 ;;
 ;; HTTP proxy
@@ -492,11 +482,6 @@
     (throw (ex-info "Safari Driver only supports debug level logging" {})))
   (-> (set-args driver ["--diagnose"])
       (update :post-run-actions (fnil conj []) :discover-safari-webdriver-log)))
-
-(defmethod set-driver-log-level
-  :phantom
-  [driver log-level]
-  (set-args driver [(format "--webdriver-loglevel=%s" log-level)]))
 
 ;;
 ;; User-Agent

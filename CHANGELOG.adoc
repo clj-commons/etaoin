@@ -17,31 +17,36 @@ A release with an intentional breaking changes is marked with:
 // - unreleased section empty
 // - optional attribute is not [breaking] or [minor breaking]
 //   (adjust these in publish.clj as you see fit)
-== Unreleased
+== Unreleased [minor breaking]
 
-* {pr}552[#552]: Add support for wide characters to input fill functions
+* Technically breaking
+** {issue}613[#612]: Remove all support for long obsolete and long untested PhantomJS
+({lread})
+
+* Other changes
+** {pr}552[#552]: Add support for wide characters to input fill functions
 ({person}tupini07[@tupini07])
-* {issue}566[#566]: Recognize `:driver-log-level` for Edge
+** {issue}566[#566]: Recognize `:driver-log-level` for Edge
 ({lread})
-* {issue}563[#563]: Support `"debug"` `:driver-log-level` for Safari
+** {issue}563[#563]: Support `"debug"` `:driver-log-level` for Safari
 ({lread})
-* {issue}517[#517]: Properly cleanup after failed webdriver launch
+** {issue}517[#517]: Properly cleanup after failed webdriver launch
 ({lread})
-* {issue}604[#604]: Add support for shadow DOM
+** {issue}604[#604]: Add support for shadow DOM
 ({person}dgr[@dgr])
-* {issue}603[#603]: Add :fn/index as alias for :index in map syntax
+** {issue}603[#603]: Add :fn/index as alias for :index in map syntax
 ({person}dgr[@dgr])
-* bump all deps to current versions
+** bump all deps to current versions
 ({lread})
-* tests
-** {issue}572[#572]: stop using chrome `--no-sandbox` option, it has become problematic on Windows (and we did not need it anyway)
+** tests
+*** {issue}572[#572]: stop using chrome `--no-sandbox` option, it has become problematic on Windows (and we did not need it anyway)
 ({lread})
-* docs
-** {issue}534[#534]: better describe `etaoin.api/select` and its alternatives
+** docs
+*** {issue}534[#534]: better describe `etaoin.api/select` and its alternatives
 ({lread})
-** {issue}536[#536]: user guide examples are now all os agnostic and CI tested via test-doc-blocks on all supported OSes
+*** {issue}536[#536]: user guide examples are now all os agnostic and CI tested via test-doc-blocks on all supported OSes
 ({lread})
-** {issue}602[#602]: Document all `:fn/*` query pseudo-functions in a definitive list
+*** {issue}602[#602]: Document all `:fn/*` query pseudo-functions in a definitive list
 ({person}dgr[@dgr])
 
 == v1.0.40 - 2023-03-08 [[v1.0.40]]

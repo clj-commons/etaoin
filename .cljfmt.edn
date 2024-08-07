@@ -7,10 +7,8 @@
            when-not-edge [[:inner 0]]
            when-not-firefox [[:inner 0]]
            when-not-headless [[:inner 0]]
-           when-not-phantom [[:inner 0]]
            when-not-predicate [[:inner 0]]
            when-not-safari [[:inner 0]]
-           when-phantom [[:inner 0]]
            when-predicate [[:inner 0]]
            when-safari [[:inner 0]]
            try+ [[:block 0]]}}
