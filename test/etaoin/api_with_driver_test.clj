@@ -7,6 +7,7 @@
   We do reuse the driver selection mechanism from etaoin.api-test tho."
   (:require [babashka.fs :as fs]
             [babashka.process :as p]
+            [clojure.string :as str]
             [clojure.tools.logging :as log]
             [clojure.test :refer [deftest is testing use-fixtures]]
             [etaoin.api :as e]
@@ -33,6 +34,79 @@
 (use-fixtures
   :once
   api-test/test-server)
+
+
+(deftest capabilities-population-test
+  ;; different browsers support different features and express configuration differently
+  ;; a bit brittle, adjust test expectations accordingly when you make changes to capabilities
+  (doseq [type api-test/drivers
+          :let [capabilities (atom nil)]]
+    (testing type
+      (let [expected-proxy {:proxyType "manual",
+                            :httpProxy "some.http.proxy.com:8080",
+                            :sslProxy "some.ssl.proxy.com:8080",
+                            :ftpProxy "some.ftp.proxy.com:8080",
+                            :socksProxy "socksproxy:1080",
+                            :socksVersion 5,
+                            :noProxy ["http://this.url" "http://that.url"]}]
+        (e/with-driver type {:webdriver-failed-launch-retries 0
+                             :path-driver (fake-driver-path)
+                             :load-strategy :none
+                             :path-browser "custom-browser-bin"
+                             :args ["--extra" "--args"]
+                             :log-level :info
+                             :profile "some/profile/dir"
+                             :size [1122 771]
+                             :url "https://initial-url"
+                             :download-dir "some/download/dir"
+                             :proxy {:http "some.http.proxy.com:8080"
+                                     :ftp "some.ftp.proxy.com:8080"
+                                     :ssl "some.ssl.proxy.com:8080"
+                                     :socks {:host "socksproxy:1080" :version 5}
+                                     :bypass ["http://this.url" "http://that.url"]}} driver
+          (reset! capabilities (:capabilities driver)))
+        (case type
+          :chrome (is (= {:pageLoadStrategy :none
+                          :proxy expected-proxy
+                          :goog:loggingPrefs {:browser "INFO"},
+                          :goog:chromeOptions {:w3c true
+                                               :binary "custom-browser-bin"
+                                               :args ["--window-size=1122,771"
+                                                      "--extra" "--args"
+                                                      "--user-data-dir=some/profile"
+                                                      "--profile-directory=dir"]
+                                               :prefs {:download.default_directory "some/download/dir/"
+                                                       :download.prompt_for_download false}}}
+                         @capabilities))
+          :edge (is (= {:pageLoadStrategy :none
+                        :proxy expected-proxy
+                        :goog:loggingPrefs {:browser "INFO"},
+                        :ms:edgeOptions {:w3c true
+                                         :binary "custom-browser-bin"
+                                         :args ["--window-size=1122,771"
+                                                "--extra" "--args"]
+                                         :prefs {:download.default_directory "some/download/dir/"
+                                                 :download.prompt_for_download false}}}
+                       @capabilities))
+          :firefox (let [save-to-disk (get-in @capabilities [:moz:firefoxOptions :prefs :browser.helperApps.neverAsk.saveToDisk])
+                         capabilities (update-in @capabilities [:moz:firefoxOptions :prefs] dissoc :browser.helperApps.neverAsk.saveToDisk)]
+                     (is (= {:pageLoadStrategy :none
+                             :proxy expected-proxy
+                             :moz:firefoxOptions {:binary "custom-browser-bin"
+                                                  :args ["-width" "1122" "-height" "771"
+                                                         "--new-window" "https://initial-url"
+                                                         "--extra" "--args"
+                                                         "-profile" "some/profile/dir"]
+                                                  :prefs {:browser.download.dir "some/download/dir"
+                                                          :browser.download.folderList 2
+                                                          :browser.download.useDownloadDir true}}}
+                            capabilities))
+                     (is (not (str/blank? save-to-disk))))
+          :safari (is (= {:pageLoadStrategy :none
+                          :proxy expected-proxy
+                          :safari:options {:binary "custom-browser-bin"
+                                           :args ["--extra" "--args"]}}
+                         @capabilities)))))))
 
 (deftest with-driver-tests
   (let [test-page (api-test/test-server-url "test.html")]
