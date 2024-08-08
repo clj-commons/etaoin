@@ -31,8 +31,7 @@
   https://github.com/SeleniumHQ/selenium/wiki/JsonWireProtocol
 
   Selenium Python source code for Firefox
-  https://github.com/SeleniumHQ/selenium/blob/master/py/selenium/webdriver/firefox/options.py
-  "
+  https://github.com/SeleniumHQ/selenium/blob/master/py/selenium/webdriver/firefox/options.py"
   (:require
    [babashka.fs :as fs]
    [clojure.string :as string]
@@ -199,8 +198,8 @@
   (log/infof (unsupported-msg driver "setting initial window size"))
   driver)
 
-(defmethod set-window-size
-  :chrome
+(defmethods set-window-size
+  [:chrome :edge]
   [driver w h]
   (add-browser-args driver [(format "--window-size=%s,%s" w h)]))
 
@@ -253,12 +252,7 @@
       (assoc :headless true)
       (add-browser-args ["--headless"])))
 
-(defmulti is-headless?
-  {:arglists '([driver])}
-  dispatch-driver)
-
-(defmethod is-headless?
-  :default
+(defn is-headless?
   [driver]
   (if-let [args (get-in driver [:capabilities (vendor-options-name driver) :args])]
     (contains? (set args) "--headless")
@@ -339,9 +333,8 @@
 
 ;; https://github.com/rshf/chromedriver/issues/338
 ;; trailing slash is mandatory for Chrome
-(defmethod set-download-dir
-  ;; TODO: Edge?
-  :chrome
+(defmethods set-download-dir
+  [:chrome :edge]
   [driver path]
   (set-prefs driver {:download.default_directory   (add-trailing-slash path)
                      :download.prompt_for_download false}))
@@ -394,12 +387,7 @@
 ;; Browser binary path - is set under vendor specific capability
 ;;
 
-(defmulti set-browser-binary
-  {:arglists '([driver binary])}
-  dispatch-driver)
-
-(defmethod set-browser-binary
-  :default
+(defn set-browser-binary
   [driver binary]
   (update-vendor-capabilities driver :binary identity binary))
 
@@ -488,12 +476,6 @@
 
 (defmulti set-driver-log-level
   dispatch-driver)
-
-(defmethod set-driver-log-level
-  :default
-  [driver _]
-  (log/info (unsupported-msg driver "setting the driver log level"))
-  driver)
 
 (defmethods set-driver-log-level
   [:chrome :edge]

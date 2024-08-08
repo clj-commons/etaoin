@@ -274,7 +274,6 @@
   [driver & [capabilities]]
   (let [data  {:capabilities (if capabilities {:firstMatch [capabilities]}
                                  {})}
-        _ (println "caps>>" (:type driver) (pr-str capabilities))
         result (execute {:driver driver
                          :method :post
                          :path   [:session]
