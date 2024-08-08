@@ -175,7 +175,7 @@
 (def ^:no-doc locator-css "css selector")
 
 (def ^{:doc "WebDriver global option defaults"} defaults-global
-  {:log-level :all ;; for browser
+  {
    :locator default-locator
    :webdriver-failed-launch-retries 0})
 
@@ -184,7 +184,8 @@
   defaults
   {:firefox {:port 4444
              :path-driver "geckodriver"}
-   :chrome  {:port 9515
+   :chrome  {:log-level :all ;; for browser
+             :port 9515
              :path-driver "chromedriver"
              ;; if we don't send some capabilities to chrome it will
              ;; assume legacy mode. w3c true doesn't mean w3c spec, it means
@@ -193,7 +194,8 @@
    :safari  {:port 4445
              :path-driver "safaridriver"
              :webdriver-failed-launch-retries 4}
-   :edge    {:port 17556
+   :edge    {:log-level :all ;; for browser
+             :port 17556
              :path-driver "msedgedriver"
              ;; assume same idea as chrome (TBD)
              :capabilities {:goog:chromeOptions {:w3c true}}}})
@@ -539,7 +541,6 @@
 (defn find-elements-from*
   [driver el locator term]
   {:pre [(some? el)]}
-  (println "fesf-->" el locator term)
   (->> (execute {:driver driver
                  :method :post
                  :path   [:session (:session driver) :element el :elements]
@@ -2899,7 +2900,7 @@
   [driver {:keys [script pageload implicit] :as timeouts}]
   (execute {:driver driver
             :method :post
-            :path [:session (:session driver) :timeout]
+            :path [:session (:session driver) :timeouts]
             :data timeouts} ))
 
 (defn set-script-timeout
