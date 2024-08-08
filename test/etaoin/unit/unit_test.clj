@@ -23,7 +23,6 @@
     (testing "defaults"
       (e/with-firefox driver
         (is (= {:args ["geckodriver" "--port" 12345]
-                :capabilities {:loggingPrefs {:browser "ALL"}}
                 :host "127.0.0.1"
                 :locator "xpath"
                 :port 12345
@@ -76,7 +75,6 @@
                   :capabilities
                   {:default-firefox :val1
                    :default-global :val2
-                   :loggingPrefs {:browser "ALL"},
                    :some {:deeper {:thing0 10
                                    :thing1 100
                                    :thing2 2
@@ -163,7 +161,6 @@
         ;; safari driver has a default of 4 retries
         (e/with-safari driver
           (is (= {:args ["safaridriver" "--port" 12345]
-                  :capabilities {:loggingPrefs {:browser "ALL"}}
                   :host "127.0.0.1"
                   :locator "xpath"
                   :port 12345
