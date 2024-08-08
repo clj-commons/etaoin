@@ -1302,7 +1302,6 @@
   [driver q property]
   (get-element-css-el driver (query driver q) property))
 
-
 (defn get-element-csss
   "Have `driver` return CSS style properties matching `properties` of element found by query `q`.
 
@@ -1329,14 +1328,6 @@
 ;;
 ;; element inner HTML
 ;;
-(defmulti get-element-inner-html-el
-  "Have `driver` return inner text of element `el`.
-
-  For element with `my-id` in `<div id=\"my-id\"><p class=\"foo\">hello</p></div>` return will be
-  `\"<p class=\"foo\">hello</p>\"`."
-  {:arglists '([driver el])}
-  dispatch-driver)
-
 (defn get-element-inner-html-el
   "Have `driver` return inner text of element `el`.
 
@@ -1346,7 +1337,7 @@
   See also: [[get-element-property-el]]"
   [driver el]
   {:pre [(some? el)]}
-  (get-element-property-el driver el :innerHMTL))
+  (get-element-property-el driver el :innerHTML))
 
 (defn get-element-inner-html
   "Have `driver` return inner text of element found by query `q`.

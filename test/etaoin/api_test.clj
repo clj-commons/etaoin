@@ -475,6 +475,7 @@
     (is (numeric? x))
     (is (numeric? y))))
 
+;; Still relevant?:
 ;; Here and below: when running a Safari driver,
 ;; you need to unplug your second monitor. That sounds crazy,
 ;; I know. Bun nevertheless, if a Safari window appears on the second
@@ -482,7 +483,8 @@
 
 (deftest test-window-position
   (e/when-not-drivers
-    [:edge] *driver*
+    [:edge] ;; edge fails this test
+    *driver*
       (let [{:keys [x y]} (e/get-window-position *driver*)]
         (is (numeric? x))
         (is (numeric? y))
@@ -535,28 +537,31 @@
     (e/switch-window-next *driver*)
     (is (= init-handle (e/get-window-handle *driver*)) "wrapped around to original window")))
 
-;; TODO: need refactoring not working for headless & firefox
-#_
 (deftest test-maximize
-  (when-not-headless *driver*
-    (let [{:keys [x y]}          (get-window-position *driver*)
-          {:keys [width height]} (get-window-size *driver*)]
-      (maximize *driver*)
-      (let [{x' :x y' :y}                   (get-window-position *driver*)
-            {width' :width height' :height} (get-window-size *driver*)]
-        (is (not= x x'))
-        (is (not= y y'))
-        (is (not= width width'))
-        (is (not= height height'))))))
+  (when-not (e/headless? *driver*) ;; skip for headless
+    (e/set-window-position *driver* 2 2)
+    (let [orig-rect (e/get-window-rect *driver*)
+          target-rect (-> orig-rect
+                          (update :x #(+ % 2))
+                          (update :y #(+ % 2))
+                          (update :width #(- % 5))
+                          (update :height #(- % 5)))]
+      ;; move the window to ensure values will change when maximized
+      (e/set-window-rect *driver* target-rect)
+      (let [moved-rect (e/get-window-rect *driver*)]
+        ;; sanity test for move
+        (is (= target-rect moved-rect))
+        (e/maximize *driver*)
+        (let [maximed-rect (e/get-window-rect *driver*)]
+          (is (not= moved-rect maximed-rect)))))))
 
 (deftest test-active-element
-  (testing "active element"
-    (e/when-not-safari *driver*
-      (doto *driver*
-        (e/click {:id :set-active-el})
-        (-> (e/get-element-attr :active :id)
-            (= "active-el-input")
-            is)))))
+  (e/when-not-safari *driver*
+    (doto *driver*
+      (e/click {:id :set-active-el})
+      (-> (e/get-element-attr :active :id)
+          (= "active-el-input")
+          is))))
 
 (deftest test-element-text
   (let [text (e/get-element-text *driver* {:id :element-text})]
@@ -637,11 +642,9 @@
     (is (= 3 (count (fs/list-dir dir))))))
 
 (deftest test-screenshot-element
-  (when (or (e/chrome? *driver*)
-            (e/firefox? *driver*))
-    (util/with-tmp-file "screenshot" ".png" path
-      (e/screenshot-element *driver* {:id :css-test} path)
-      (is (valid-image? path)))))
+  (util/with-tmp-file "screenshot" ".png" path
+    (e/screenshot-element *driver* {:id :css-test} path)
+    (is (valid-image? path))))
 
 (deftest test-js-execute
   (testing "simple result"
