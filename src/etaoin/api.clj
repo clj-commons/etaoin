@@ -285,7 +285,7 @@
   "Have `driver` delete the active session.
   Closes the browser window.
 
-  See also: [[quit]], [[delete-window]].
+  See also: [[quit]], [[closed-window]].
 
   https://www.w3.org/TR/webdriver2/#dfn-delete-session"
   [driver]
@@ -341,7 +341,7 @@
             :data   {:handle handle}}))
 
 (defn switch-window-next
-  "An convenience fn to have `driver` switch to next browser window."
+  "A convenience fn to have `driver` switch to next browser window."
   [driver]
   (let [current-handle (try
                          (get-window-handle driver)
@@ -357,6 +357,8 @@
 (defn close-window
   "Have `driver` close current browser window.
   On last window close, closes the session.
+
+  See also: [[delete-session]],[[quit]]
 
   https://www.w3.org/TR/webdriver2/#dfn-close-window" [driver]
   (execute {:driver driver

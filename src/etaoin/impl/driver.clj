@@ -137,6 +137,11 @@
              [:capabilities (vendor-options-name driver) key]
              f val))
 
+(defn- set-vendor-capabilities [driver key val]
+  (assoc-in driver
+            [:capabilities (vendor-options-name driver) key]
+            val))
+
 (defn add-browser-args
   "Adds command line arguments for the browser binary (not the webdriver binary)."
   [driver args]
@@ -389,13 +394,7 @@
 
 (defn set-browser-binary
   [driver binary]
-  (update-vendor-capabilities driver :binary identity binary))
-
-(comment
-  (set-browser-binary {:type :chrome} "foo/bar")
-  ;; => {:type :chrome, :capabilities {:chromeOptions {:binary "foo/bar"}}}
-
-  :eoc)
+  (set-vendor-capabilities driver :binary binary))
 
 ;;
 ;; Browser console logging - is set via vendor specific settings
