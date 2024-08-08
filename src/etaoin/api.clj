@@ -254,7 +254,9 @@
 
   Can indicate readiness to create a new session.
 
-  The return varies for different driver implementations."
+  The return varies for different driver implementations.
+
+  https://www.w3.org/TR/webdriver2/#dfn-status"
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -265,11 +267,13 @@
 
   Opens a browser window as a side-effect (visible if not running headless).
   Further requests to this driver will be for this session.
-  Etaoin assumes one active session per driver."
+  Etaoin assumes one active session per driver.
+
+  https://www.w3.org/TR/webdriver2/#dfn-new-sessions"
   [driver & [capabilities]]
   (let [data  {:capabilities (if capabilities {:firstMatch [capabilities]}
                                  {})}
-        _ (println "caps>>" (pr-str capabilities))
+        _ (println "caps>>" (:type driver) (pr-str capabilities))
         result (execute {:driver driver
                          :method :post
                          :path   [:session]
@@ -281,7 +285,9 @@
   "Have `driver` delete the active session.
   Closes the browser window.
 
-  See also: [[quit]]."
+  See also: [[quit]], [[delete-window]].
+
+  https://www.w3.org/TR/webdriver2/#dfn-delete-session"
   [driver]
   (execute {:driver driver
             :method :delete
@@ -295,7 +301,9 @@
   "Have `driver` return the active element on the page.
 
   An active element is the one with the current focus.
-  It was selected for example by mouse click, a keyboard (tab, arrows), or `autofocus`."
+  It was selected for example by mouse click, a keyboard (tab, arrows), or `autofocus`.
+
+  https://www.w3.org/TR/webdriver2/#dfn-get-active-element"
   [driver]
   (-> (execute {:driver driver
                 :method :get
@@ -309,7 +317,7 @@
 (defn get-window-handle
   "Have `driver` return the current browser window handle string.
 
-  https://www.w3.org/TR/webdriver1/#dfn-get-window-handle"
+  https://www.w3.org/TR/webdriver2/#dfn-get-window-handle"
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -318,7 +326,7 @@
 (defn get-window-handles
   "Have `driver` return a vector of all browser window handle strings.
 
-  https://www.w3.org/TR/webdriver1/#dfn-get-window-handles" [driver]
+  https://www.w3.org/TR/webdriver2/#dfn-get-window-handles" [driver]
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session driver) :window :handles]})))
@@ -326,7 +334,7 @@
 (defn switch-window
   "Have `driver` switch to browser window with `handle`.
 
-  https://www.w3.org/TR/webdriver1/#dfn-switch-to-window" [driver handle]
+  https://www.w3.org/TR/webdriver2/#dfn-switch-to-window" [driver handle]
   (execute {:driver driver
             :method :post
             :path   [:session (:session driver) :window]
@@ -350,7 +358,7 @@
   "Have `driver` close current browser window.
   On last window close, closes the session.
 
-  https://www.w3.org/TR/webdriver1/#dfn-close-window" [driver]
+  https://www.w3.org/TR/webdriver2/#dfn-close-window" [driver]
   (execute {:driver driver
             :method :delete
             :path   [:session (:session driver) :window]}))
@@ -358,7 +366,7 @@
 (defn maximize
   "Have `driver` make the current browser window as large as your screen allows.
 
-  https://www.w3.org/TR/webdriver1/#dfn-maximize-window" [driver]
+  https://www.w3.org/TR/webdriver2/#dfn-maximize-window" [driver]
   (execute {:driver driver
             :method :post
             :path   [:session (:session driver) :window :maximize]}))
@@ -366,7 +374,7 @@
 (defn get-window-rect
   "Have `driver` return the current browser window rect as map of `:x`, `:y`, `:width`, `:height`
 
-  https://www.w3.org/TR/webdriver1/#dfn-get-window-rect"
+  https://www.w3.org/TR/webdriver2/#dfn-get-window-rect"
   [driver]
   (-> (execute {:driver driver
                 :method :get
@@ -393,7 +401,7 @@
 (defn set-window-rect
   "Have `driver` ase the current browser window `:width`, `:height`, `:x` and/or `:y`.
 
-  https://www.w3.org/TR/webdriver1/#dfn-set-window-rect"
+  https://www.w3.org/TR/webdriver2/#dfn-set-window-rect"
   [driver {:keys [width height x y]}]
   (execute {:driver driver
             :method :post
@@ -436,7 +444,7 @@
   (go ff \"http://google.com\")
   ```
 
-  https://www.w3.org/TR/webdriver1/#dfn-navigate-to"
+  https://www.w3.org/TR/webdriver2/#dfn-navigate-to"
   [driver url]
   (execute {:driver driver
             :method :post
@@ -446,7 +454,7 @@
 (defn back
   "Have `driver` navigate backward in the browser history.
 
-  https://www.w3.org/TR/webdriver1/#dfn-back"
+  https://www.w3.org/TR/webdriver2/#dfn-back"
   [driver]
   (execute {:driver driver
             :method :post
@@ -455,7 +463,7 @@
 (defn refresh
   "Have `driver` reload the content in the current browser window.
 
-  https://www.w3.org/TR/webdriver1/#dfn-refresh"
+  https://www.w3.org/TR/webdriver2/#dfn-refresh"
   [driver]
   (execute {:driver driver
             :method :post
@@ -466,7 +474,7 @@
 (defn forward
   "Have `driver` navigate forward in the browser's history.
 
-  https://www.w3.org/TR/webdriver1/#dfn-forward"
+  https://www.w3.org/TR/webdriver2/#dfn-forward"
   [driver]
   (execute {:driver driver
             :method :post
@@ -479,7 +487,7 @@
 (defn get-url
   "Have `driver` return the current url location as a string.
 
-  https://www.w3.org/TR/webdriver1/#dfn-get-current-url"
+  https://www.w3.org/TR/webdriver2/#dfn-get-current-url"
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -488,7 +496,7 @@
 (defn get-title
   "Have `driver` return the current page title.
 
-  https://www.w3.org/TR/webdriver1/#dfn-get-title"
+  https://www.w3.org/TR/webdriver2/#dfn-get-title"
   [driver]
   (:value (execute {:driver driver
                     :method :get
@@ -500,7 +508,6 @@
 
 (defn find-element*
   [driver locator term]
-  (println "fe->" locator (pr-str term))
   (-> (execute {:driver driver
                 :method :post
                 :path   [:session (:session driver) :element]
@@ -511,7 +518,6 @@
 
 (defn find-elements*
   [driver locator term]
-  (println "find-elements*-->" locator term)
   (->> (execute {:driver driver
                  :method :post
                  :path   [:session (:session driver) :elements]
@@ -522,7 +528,6 @@
 (defn find-element-from*
   [driver el locator term]
   {:pre [(some? el)]}
-  (println "fef->" el locator (pr-str term))
   (-> (execute {:driver driver
                 :method :post
                 :path   [:session (:session driver) :element el :element]
@@ -600,8 +605,8 @@
   See [[query]] for details on `q`.
 
   Makes use of:
-  - https://www.w3.org/TR/webdriver1/#dfn-find-elements
-  - https://www.w3.org/TR/webdriver1/#dfn-find-elements-from-element"
+  - https://www.w3.org/TR/webdriver2/#dfn-find-elements
+  - https://www.w3.org/TR/webdriver2/#dfn-find-elements-from-element"
   ([driver q]
    (cond
 
@@ -627,8 +632,8 @@
   See [User Guide](/doc/01-user-guide.adoc#query-tree) for an example.
 
   Makes use of:
-  - https://www.w3.org/TR/webdriver1/#dfn-find-elements
-  - https://www.w3.org/TR/webdriver1/#dfn-find-elements-from-element"
+  - https://www.w3.org/TR/webdriver2/#dfn-find-elements
+  - https://www.w3.org/TR/webdriver2/#dfn-find-elements-from-element"
   [driver q & qs]
   (reduce (fn [elements q]
             (let [[loc term] (query/expand driver q)]
@@ -644,7 +649,7 @@
 
   See [[query]] for details on `q`.
 
-  https://www.w3.org/TR/webdriver1/#dfn-find-element-from-element"
+  https://www.w3.org/TR/webdriver2/#dfn-find-element-from-element"
   [driver ancestor-el q]
   {:pre [(some? ancestor-el)]}
   (let [[loc term] (query/expand driver q)]
@@ -655,7 +660,7 @@
 
   See [[query]] for details on `q`.
 
-  https://www.w3.org/TR/webdriver1/#find-elements-from-element"
+  https://www.w3.org/TR/webdriver2/#find-elements-from-element"
   [driver ancestor-el q]
   {:pre [(some? ancestor-el)]}
   (let [[loc term] (query/expand driver q)]
@@ -875,7 +880,7 @@
  "Have `driver` clear any active action state.
   This includes any key presses and/or a pointer button being held down.
 
-  https://www.w3.org/TR/webdriver1/#release-actions"
+  https://www.w3.org/TR/webdriver2/#release-actions"
   [driver]
   (execute {:driver driver
             :method :delete
@@ -1586,7 +1591,7 @@
 
 (defmethod delete-cookies
   :safari
-  ;; Compensate for Safari delete-cookies currently being no-op (as of 2024-08-08)
+  ;; Compensate for Safari delete-cookies currently being no-op (last checked: 2024-08-08)
   [driver]
   (doseq [cookie (get-cookies driver)]
     (delete-cookie driver (:name cookie))))
