@@ -1586,13 +1586,15 @@
   {:arglists '([driver])}
   dispatch-driver)
 
-(defmethod delete-cookies :default
+(defmethod delete-cookies
+  :default
   [driver]
   (execute {:driver driver
             :method :delete
             :path   [:session (:session driver) :cookie]}))
 
-(defmethod delete-cookies :safari
+(defmethod delete-cookies
+  :safari
   ;; Compensate for Safari delete-cookies currently being no-op (as of 2024-08-08)
   [driver]
   (doseq [cookie (get-cookies driver)]
@@ -2166,14 +2168,16 @@
   {:arglists '([driver el])}
   dispatch-driver)
 
-(defmethod displayed-el? :default
+(defmethod displayed-el?
+  :default
   [driver el]
   {:pre [(some? el)]}
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session driver) :element el :displayed]})))
 
-(defmethod displayed-el? :safari
+(defmethod displayed-el?
+  :safari
   [driver el]
   {:pre [(some? el)]}
   (cond
@@ -2981,17 +2985,13 @@
   (with-open [out (io/output-stream filepath)]
     (.write out ^bytes (b64-decode b64str))))
 
-(defmulti screenshot
-  "Have `driver` save a PNG format screenshot of the current page to `file`.
+(defn screenshot
+ "Have `driver` save a PNG format screenshot of the current page to `file`.
   Throws if screenshot is empty.
 
   `file` can be either a string or `java.io.File`, any missing parent directories are automatically created.
 
   https://www.w3.org/TR/webdriver2/#dfn-take-screenshot "
-  {:arglists '([driver file])}
-  dispatch-driver)
-
-(defmethod screenshot :default
   [driver file]
   (let [resp   (execute {:driver driver
                          :method :get
@@ -3002,26 +3002,14 @@
     (create-dirs-for-file file)
     (b64-to-file b64str file)))
 
-(defmulti screenshot-element
-  "Have `driver` save a PNG format screenshot of the element found by query `q` to `file`.
+(defn screenshot-element
+ "Have `driver` save a PNG format screenshot of the element found by query `q` to `file`.
 
   See [[query]] for details on `q`.
 
   `file` can be either a string or `java.io.File`, any missing parent directories are automatically created.
 
   https://www.w3.org/TR/webdriver2/#dfn-take-element-screenshot"
-  {:arglists '([driver q file])}
-  dispatch-driver)
-
-;; TODO: Inconsistent handling of unsupport browsers
-;; TODO: check on sfari spt
-(defmethod screenshot-element
-  :default
-  [_driver _q _file]
-  (util/error "This driver doesn't support screenshots on elements."))
-
-(defmethods screenshot-element
-  [:chrome :edge :firefox]
   [driver q file]
   (let [el     (query driver q)
         resp   (execute {:driver driver
