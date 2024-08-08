@@ -175,8 +175,7 @@
 (def ^:no-doc locator-css "css selector")
 
 (def ^{:doc "WebDriver global option defaults"} defaults-global
-  {
-   :locator default-locator
+  {:locator default-locator
    :webdriver-failed-launch-retries 0})
 
 (def ^{:doc "WebDriver driver type specific option defaults.

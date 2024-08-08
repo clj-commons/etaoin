@@ -304,8 +304,7 @@
   driver)
 
 (defmethods set-prefs
-  ;; TODO: Edge?
-  [:firefox :chrome]
+  [:firefox :chrome :edge]
   [driver prefs]
   (update-vendor-capabilities driver :prefs merge prefs))
 
@@ -476,11 +475,10 @@
                      page?      false
                      categories [:devtools.network]
                      interval   1000}}]]
-  ;; TODO: Shouldn't this be under vendor specific options?
   (update driver :capabilities
           (fn [capabilities]
             (-> capabilities
-                (assoc-in [:loggingPrefs :performance]
+                (assoc-in [:goog:loggingPrefs :performance]
                           (remap-log-level level))
                 (assoc-in [(vendor-options-name driver) :perfLoggingPrefs]
                           {:enableNetwork                network?
