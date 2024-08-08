@@ -128,7 +128,7 @@
   [_driver]
   :safari:options)
 
-(defmethod vendor-options-names
+(defmethod vendor-options-name
   :edge
   [_driver]
   :ms:edgeOptions)
