@@ -451,7 +451,8 @@
 (defmethod set-browser-log-level
   :default
   [driver _level]
-  (log/info (unsupported-msg driver "setting the browser log level")))
+  (log/info (unsupported-msg driver "setting the browser log level"))
+  driver)
 
 (defmethods set-browser-log-level
   [:chrome :edge]

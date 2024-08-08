@@ -38,7 +38,7 @@
   - [[get-element-text]] [[get-element-text-el]] [[has-text?]]
   - [[get-element-inner-html]] [[get-element-inner-html-el]]
   - [[get-element-value]] [[get-element-value-el]]
-  - [[get-element-size]] [[get-element-size-el]] [[get-element-location]] [[get-element-location-el]] [[get-element-box]] [[intersects?]]
+  - [[get-element-rect]] [[get-element-rect-el]] [[get-element-size]] [[get-element-size-el]] [[get-element-location]] [[get-element-location-el]] [[get-element-box]] [[intersects?]]
   - [[use-css]] [[with-css]] [[use-xpath]] [[with-xpath]]
 
   **Browser Navigation**
@@ -88,6 +88,7 @@
 
   **Browser Windows**
   - [[get-window-handle]] [[get-window-handles]]
+  - [[get-window-rect]] [[set-window-rect]]
   - [[get-window-position]] [[set-window-position]]
   - [[get-window-size]] [[set-window-size]]
   - [[maximize]]
@@ -289,107 +290,46 @@
 ;; active element
 ;;
 
-(defmulti ^:private get-active-element*
+(defn get-active-element*
   "Have `driver` return the active element on the page.
 
   An active element is the one with the current focus.
   It was selected for example by mouse click, a keyboard (tab, arrows), or `autofocus`."
-  dispatch-driver)
-
-(defmethods get-active-element*
-  [:firefox :safari :chrome :edge]
   [driver]
   (-> (execute {:driver driver
                 :method :get
                 :path   [:session (:session driver) :element :active]})
       :value first second))
 
-#_(remove-all-methods get-active-element*)
-
-;; TODO: Likely unneeded
-#_(defmethods get-active-element*
-  [:chrome :edge]
-  [driver]
-  (-> (execute {:driver driver
-                :method :post
-                :path   [:session (:session driver) :element :active]})
-      :value
-      :ELEMENT))
-
 ;;
 ;; windows
 ;;
 
-(defmulti get-window-handle
+(defn get-window-handle
   "Have `driver` return the current browser window handle string.
 
   https://www.w3.org/TR/webdriver1/#dfn-get-window-handle"
-  {:arglists '([driver])}
-  dispatch-driver)
-
-;; TODO: not w3c compliant and probably not needed
-(defmethod get-window-handle :default
-  [driver]
-  (:value (execute {:driver driver
-                    :method :get
-                    :path   [:session (:session driver) :window_handle]})))
-
-;; TODO: Verify edge
-(defmethods get-window-handle
-  [:firefox :safari :chrome :edge]
   [driver]
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session driver) :window]})))
 
-(defmulti get-window-handles
+(defn get-window-handles
   "Have `driver` return a vector of all browser window handle strings.
 
-  https://www.w3.org/TR/webdriver1/#dfn-get-window-handles"
-  {:arglists '([driver])}
-  dispatch-driver)
-
-(defmethods get-window-handles
-  [:firefox :safari :chrome :edge]
-  [driver]
+  https://www.w3.org/TR/webdriver1/#dfn-get-window-handles" [driver]
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session driver) :window :handles]})))
 
-;; TODO: Likely unneeded
-#_(defmethods get-window-handles
-  [:chrome :edge]
-  [driver]
-  (:value (execute {:driver driver
-                    :method :get
-                    :path   [:session (:session driver) :window_handles]})))
-
-(defmulti switch-window
+(defn switch-window
   "Have `driver` switch to browser window with `handle`.
 
-  https://www.w3.org/TR/webdriver1/#dfn-switch-to-window"
-  {:arglists '([driver handle])}
-  dispatch-driver)
-
-(defmethod switch-window
-  [:chrome :edge :firefox :safari]
-  [driver handle]
+  https://www.w3.org/TR/webdriver1/#dfn-switch-to-window" [driver handle]
   (execute {:driver driver
             :method :post
             :path   [:session (:session driver) :window]
             :data   {:handle handle}}))
-
-
-#_(remove-method switch-window :edge)
-
-;;; TODO: likely not needed
-#_(defmethods switch-window
-  [:chrome :edge]
-  [driver handle]
-  (execute {:driver driver
-            :method :post
-            :path   [:session (:session driver) :window]
-            :data   {:name handle}}))
 
 (defn switch-window-next
   "An convenience fn to have `driver` switch to next browser window."
@@ -405,165 +345,69 @@
                            (recur hs)))]
     (switch-window driver next-handle)))
 
-(defmulti close-window
+(defn close-window
   "Have `driver` close current browser window.
   On last window close, closes the session.
 
-  https://www.w3.org/TR/webdriver1/#dfn-close-window"
-  {:arglists '([driver])}
-  dispatch-driver)
-
-(defmethod close-window :default
-  [driver]
+  https://www.w3.org/TR/webdriver1/#dfn-close-window" [driver]
   (execute {:driver driver
             :method :delete
             :path   [:session (:session driver) :window]}))
 
-(defmulti maximize
+(defn maximize
   "Have `driver` make the current browser window as large as your screen allows.
 
-  https://www.w3.org/TR/webdriver1/#dfn-maximize-window"
-  {:arglists '([driver])}
-  dispatch-driver)
-
-(defmethod maximize :default
-  [driver]
+  https://www.w3.org/TR/webdriver1/#dfn-maximize-window" [driver]
   (execute {:driver driver
             :method :post
             :path   [:session (:session driver) :window :maximize]}))
 
-#_(remove-all-methods maximize)
-
-;; TODO: Likely can delete
-#_(defmethods maximize
-  [:chrome :edge]
-  [driver]
-  (let [h (get-window-handle driver)]
-    (execute {:driver driver
-              :method :post
-              :path   [:session (:session driver) :window h :maximize]})))
-
-(defmulti get-window-size
-  "Have `driver` return the current browser window size in pixels as a map of `:width` and `:height`.
+(defn get-window-rect
+  "Have `driver` return the current browser window rect as map of `:x`, `:y`, `:width`, `:height`
 
   https://www.w3.org/TR/webdriver1/#dfn-get-window-rect"
-  {:arglists '([driver])}
-  dispatch-driver)
-
-#_(remove-all-methods get-window-size)
-
-(defmethod get-window-size :default
   [driver]
   (-> (execute {:driver driver
                 :method :get
                 :path   [:session (:session driver) :window :rect]})
-      :value
-      ;; TODO: any reason we aren't returning x and y also
+      :value))
+
+(defn get-window-size
+  "Have `driver` return the current browser window size in pixels as a map of `:width` and `:height`.
+
+  Consider also: [[get-window-rect]]"
+  [driver]
+  (-> (get-window-rect driver)
       (select-keys [:width :height])))
 
-;; TODO: Likely unneeded
-#_(defmethod get-window-size :default
-  [driver]
-  (let [h (get-window-handle driver)]
-    (-> (execute {:driver driver
-                  :method :get
-                  :path   [:session (:session driver) :window h :size]})
-        :value
-        (select-keys [:width :height]))))
-
-(defmulti get-window-position
+(defn get-window-position
   "Have `driver` return the current window position, in pixels relative to the screen, as a map of
   `:x` and `:y`.
 
-  https://www.w3.org/TR/webdriver1/#dfn-get-window-rect"
-  {:arglists '([driver])}
-  dispatch-driver)
-
-(remove-all-methods get-window-position)
-
-(defmethod get-window-position :default
+  Consider also: [[get-window-rect]]"
   [driver]
-  (-> (execute {:driver driver
-                :method :get
-                :path   [:session (:session driver) :window :rect]})
-      :value
+  (-> (get-window-rect driver)
       (select-keys [:x :y])))
-;; TODO: Odd that Etaoin separated these into two calls, why not just get-window-rect?
 
-;; TODO: Likely unneeded
-#_(defmethod get-window-position :default
-  [driver]
-  (let [h (get-window-handle driver)]
-    (-> (execute {:driver driver
-                  :method :get
-                  :path   [:session (:session driver) :window h :position]})
-        :value
-        (select-keys [:x :y]))))
+(defn set-window-rect
+  "Have `driver` ase the current browser window `:width`, `:height`, `:x` and/or `:y`.
 
-(defmulti ^:private set-window-size* dispatch-driver)
-
-(defmethod set-window-size* :firefox
-  [driver width height]
-  (execute {:driver driver
-            :method :post
-            :path   [:session (:session driver) :window :size]
-            :data   {:width width :height height}}))
-
-(defmethods set-window-size*
-  [:safari :chrome :edge]
-  [driver width height]
+  https://www.w3.org/TR/webdriver1/#dfn-set-window-rect"
+  [driver {:keys [width height x y]}]
   (execute {:driver driver
             :method :post
             :path   [:session (:session driver) :window :rect]
-            :data   {:width width :height height}}))
-
-(defmethod set-window-size* :default
-  [driver width height]
-  (let [h (get-window-handle driver)]
-    (execute {:driver driver
-              :method :post
-              :path   [:session (:session driver) :window h :size]
-              :data   {:width width :height height}})))
-
-#_(remove-all-methods set-window-size*)
+            :data   {:width width :height height :x x :y y}}))
 
 (defn set-window-size
   "Have `driver` set the `width` and `height` in pixels of the current window.
   Absolute precision is not guaranteed.
 
-  https://www.w3.org/TR/webdriver1/#dfn-set-window-rect"
+  Condiser also: [[set-window-rect]]"
   ([driver {:keys [width height]}]
-   (set-window-size* driver width height))
+   (set-window-size driver width height))
   ([driver width height]
-   (set-window-size* driver width height)))
-
-(defmulti ^:private set-window-position* dispatch-driver)
-
-(defmethod set-window-position* :firefox
-  ([driver x y]
-   (execute {:driver driver
-             :method :post
-             :path   [:session (:session driver) :window :position]
-             :data   {:x x :y y}})))
-
-#_(remove-all-methods set-window-position*)
-
-(defmethods set-window-position*
-  [:safari :chrome :edge]
-  ([driver x y]
-   (execute {:driver driver
-             :method :post
-             :path   [:session (:session driver) :window :rect]
-             :data   {:x x :y y}})))
-
-;; TODO Likely unneeeded
-#_(defmethod set-window-position* :default
-  ([driver x y]
-   (let [h (get-window-handle driver)]
-     (execute {:driver driver
-               :method :post
-               :path   [:session (:session driver) :window h :position]
-               :data   {:x x :y y}}))))
+   (set-window-rect driver {:width width :height height})))
 
 (defn set-window-position
   "Have `driver` set the `x` `y` position of the current browser window.
@@ -571,13 +415,11 @@
   Position is in pixels and relative to your screen.
   Absolute precision is not guaranteed.
 
-  Uses https://www.w3.org/TR/webdriver1/#dfn-set-window-rect"
+  Condiser also: [[set-window-rect]]"
   ([driver {:keys [x y]}]
-   (set-window-position* driver x y))
+   (set-window-position driver x y))
   ([driver x y]
-   (set-window-position* driver x y)))
-
-;; TODO: Consider adding set-window-rect
+   (set-window-rect driver {:x x :y y})))
 
 ;;
 ;; navigation
@@ -655,10 +497,7 @@
 ;; Finding element(s)
 ;;
 
-(defmulti ^:private find-element* dispatch-driver)
-
-(defmethods find-element*
-  [:firefox :safari :chrome :edge]
+(defn find-element*
   [driver locator term]
   (println "fe->" locator (pr-str term))
   (-> (execute {:driver driver
@@ -669,21 +508,7 @@
       first
       second))
 
-#_(remove-all-methods find-element*)
-
-;; TODO: Likely turf
-#_(defmethod find-element* :default
-  [driver locator term]
-  (println "fe-->" locator (pr-str term))
-  (-> (execute {:driver driver
-                :method :post
-                :path   [:session (:session driver) :element]
-                :data   {:using locator :value term}})
-      :value :ELEMENT))
-
-(defmulti ^:no-doc find-elements* dispatch-driver)
-
-(defmethod find-elements* :default
+(defn find-elements*
   [driver locator term]
   (println "find-elements*-->" locator term)
   (->> (execute {:driver driver
@@ -693,10 +518,7 @@
        :value
        (mapv (comp second first))))
 
-(defmulti ^:private find-element-from* dispatch-driver)
-
-(defmethods find-element-from*
-  [:firefox :safari :chrome :edge]
+(defn find-element-from*
   [driver el locator term]
   {:pre [(some? el)]}
   (println "fef->" el locator (pr-str term))
@@ -708,23 +530,7 @@
       first
       second))
 
-#_(remove-all-methods find-element-from*)
-
-;; TODO: likely turf
-#_(defmethod find-element-from* :default
-  [driver el locator term]
-  {:pre [(some? el)]}
-  (println "fef-->" el locator term)
-  (-> (execute {:driver driver
-                :method :post
-                :path   [:session (:session driver) :element el :element]
-                :data   {:using locator :value term}})
-      :value
-      :ELEMENT))
-
-(defmulti ^:private find-elements-from* dispatch-driver)
-
-(defmethod find-elements-from* :default
+(defn find-elements-from*
   [driver el locator term]
   {:pre [(some? el)]}
   (println "fesf-->" el locator term)
@@ -1052,34 +858,23 @@
        ~@body
        add-pointer-up))
 
-(defmulti perform-actions
-  "Have `driver` perform actions defined in `input` source(s) simultaneously.
+(defn perform-actions
+ "Have `driver` perform actions defined in `input` source(s) simultaneously.
 
   See [Actions](/doc/01-user-guide.adoc#actions) for more details.
 
   https://www.w3.org/TR/webdriver2/#dfn-perform-actions"
-  {:arglists '([driver input & inputs])}
-  dispatch-driver)
-
-;; TODO: All webdrivers support this?
-(defmethod perform-actions
-  :default
   [driver input & inputs]
   (execute {:driver driver
             :method :post
             :path   [:session (:session driver) :actions]
             :data   {:actions (cons input inputs)}}))
 
-(defmulti release-actions
-  "Have `driver` clear any active action state.
+(defn release-actions
+ "Have `driver` clear any active action state.
   This includes any key presses and/or a pointer button being held down.
 
   https://www.w3.org/TR/webdriver1/#release-actions"
-  {:arglists '([driver])}
-  dispatch-driver)
-
-(defmethod release-actions
-  :default
   [driver]
   (execute {:driver driver
             :method :delete
@@ -1089,53 +884,32 @@
 ;; mouse
 ;;
 
-;; TODO: Not available in w3c mode of chromedriver
-(defmulti mouse-btn-down
+(defn mouse-btn-down
   "Have `driver` press down on the button of the virtual mouse."
-  {:arglists '([driver])}
-  dispatch-driver)
-
-(defmethods mouse-btn-down
-  [:chrome :edge]
   [driver]
-  (execute {:driver driver
-            :method :post
-            :path   [:session (:session driver) :buttondown]}))
+  (let [mouse (-> (make-mouse-input)
+                  (add-pointer-down))]
+    (perform-actions driver mouse)))
 
-;; TODO: Not available in w3c mode of chromedriver
-(defmulti mouse-btn-up
+(defn mouse-btn-up
   "Have `driver` release button of the virtual mouse."
-  {:arglists '([driver])}
-  dispatch-driver)
-
-(defmethods mouse-btn-up
-  [:chrome :edge]
   [driver]
-  (execute {:driver driver
-            :method :post
-            :path   [:session (:session driver) :buttonup]}))
+  (let [mouse (-> (make-mouse-input)
+                  (add-pointer-up))]
+    (perform-actions driver mouse)))
 
-(defmulti mouse-move-to
+(defn mouse-move-to
   "Have `driver` moves the virtual mouse pointer either to an element found by query `q`
   or to a specific by `x` and `y` pixel offset within the browser window."
-  {:arglists '([driver q] [driver x y])}
-  dispatch-driver)
-
-;; TODO: not available in chromedriver w3c mode
-(defmethods mouse-move-to
-  [:chrome :edge :firefox]
   ([driver q]
-   (execute {:driver driver
-             :method :post
-             :path   [:session (:session driver) :moveto]
-             :data   {:element (query driver q)}}))
+   (let [mouse (-> (make-mouse-input)
+                   (add-pointer-move-to-el (query driver q)))]
+     (perform-actions driver mouse)))
   ([driver x y]
-   (execute {:driver driver
-             :method :post
-             :path   [:session (:session driver) :moveto]
-             :data   {:xoffset x :yoffset y}})))
+   (let [mouse (-> (make-mouse-input)
+                   (add-pointer-move x y))]
+     (perform-actions driver mouse))))
 
-;; TODO: not available in chromedriver w3c mode
 (defmacro with-mouse-btn
   "Have `driver` press the virtual mouse button, execute `body`, then release the virtual mouse button."
   [driver & body]
@@ -1146,24 +920,15 @@
        (finally
          (mouse-btn-up ~driver)))))
 
-;; TODO: not available in chromedriver w3c mode
-(defmulti drag-and-drop
-  "Have `driver` perform a drag and drop from element found by `q-from` to element found by `q-to`:
+(defn drag-and-drop
+ "Have `driver` perform a drag and drop from element found by `q-from` to element found by `q-to`:
 
   1. moves mouse pointer to an element found with `q-from` query;
   2. holds down the mouse button;
   3. moves mouse to an element found with `q-to` query;
   4. releases the mouse button.
 
-  See [[query]] for details on `q-from`, `q-to`.
-
-  Notes:
-  - does not work in Safari."
-  {:arglists '([driver q-from q-to])}
-  dispatch-driver)
-
-(defmethod drag-and-drop
-  :default
+  See [[query]] for details on `q-from`, `q-to`."
   [driver q-from q-to]
   (let [el-from (query driver q-from)
         el-to   (query driver q-to)
@@ -1222,18 +987,12 @@
 
 ;; Double click
 
-(defmulti double-click-el
-  "Have `driver` double-click on element `el`.
+(defn double-click-el
+ "Have `driver` double-click on element `el`.
 
   Note:
   - supported by Chrome
   - for Firefox and Safari, your may try to simulate via a `click, wait, click` sequence."
-  {:arglists '([driver el])}
-  dispatch-driver)
-
-;; TODO: if only support by chrome then why :default?
-(defmethod double-click-el
-  :default
   [driver el]
   {:pre [(some? el)]}
   (let [mouse   (-> (make-mouse-input)
@@ -1246,41 +1005,21 @@
 (defn double-click
   "Have `driver` double-click on element found by query `q`.
 
-  See [[query]] for details on `q`.
-
-  Note:
-  - supported by Chrome
-  - for Firefox and Safari, your may try to simulate via a `click, wait, click` sequence."
+  See [[query]] for details on `q`."
   [driver q]
   (double-click-el driver (query driver q)))
 
 
 ;; Blind click
 
-(defmulti mouse-click
+(defn mouse-click
   "Have `driver` click `mouse-button` at current mouse pointer position.
 
-  `mouse-button` should be `etaoin.keys/mouse-left`,`etaoin.keys/mouse-middle` or `etaoin.keys/mouse-right`."
-  {:arglists '([driver mouse-button])}
-  dispatch-driver)
-
-(defmethod mouse-click
-  :default
+  `mouse-button` can be `etaoin.keys/mouse-left`,`etaoin.keys/mouse-middle` or `etaoin.keys/mouse-right`."
   [driver mouse-button]
-  (let [{driver-type :type} driver]
-    (throw (ex-info "Mouse click is not supported for that browser"
-                    {:button      mouse-button
-                     :driver-type driver-type}))))
-
-(defmethod mouse-click
-  ;; TODO works in chromedriver but not part of w3c spec
-  :chrome ;; TODO: try safari once the issue with it is solved
-  [driver mouse-button]
-  (execute {:driver driver
-            :method :post
-            ;; TODO: Not part of w3c spec
-            :path   [:session (:session driver) :click]
-            :data   {:button mouse-button}}))
+  (let [mouse (-> (make-mouse-input)
+                  (add-pointer-click mouse-button))]
+    (perform-actions driver mouse)))
 
 (defn left-click
   "Have `driver` click the left mouse button at current mouse pointer position."
@@ -1334,39 +1073,38 @@
 ;; Element size
 ;;
 
-(defmulti get-element-size-el
-  "Have `driver` return map of `:width` and `:height`, in pixels, of element `el`.
+(defn get-element-rect-el
+  "Have `driver` return map of `:width`, `:height`, `:x` and `:y`, in pixels, of element `el`.
 
-  Uses: https://www.w3.org/TR/webdriver2/#dfn-get-element-rect"
-  {:arglists '([driver el])}
-  dispatch-driver)
-
-#_(defmethods get-element-size-el
-  [:chrome :edge]
+  https://www.w3.org/TR/webdriver2/#dfn-get-element-rect"
   [driver el]
-  {:pre [(some? el)]}
-  (-> (execute {:driver driver
-                :method :get
-                :path   [:session (:session driver) :element el :size]})
-      :value
-      (select-keys [:width :height])))
-
-#_(remove-all-methods get-element-size-el)
-
-(defmethods get-element-size-el
-  [:firefox :safari :chrome :edge]
-  [driver el]
-  {:pre [(some? el)]}
   (-> (execute {:driver driver
                 :method :get
                 :path   [:session (:session driver) :element el :rect]})
-      :value
+      :value))
+
+(defn get-element-rect
+  "Have `driver` return map of `:width`, `:height`, `:x` and `:y`, in pixels, of element found by query `q`.
+
+  See [[query]] for details on `q`."
+  [driver q]
+  (get-element-rect-el driver (query driver q)))
+
+(defn get-element-size-el
+  "Have `driver` return map of `:width` and `:height`, in pixels, of element `el`.
+
+  Consider also: [[get-element-rect-el]]"
+  [driver el]
+  {:pre [(some? el)]}
+  (-> (get-element-rect-el driver el)
       (select-keys [:width :height])))
 
 (defn get-element-size
   "Have `driver` return map of `:width` and `:height`, in pixels, of element found by query `q`.
 
-  See [[query]] for details on `q`."
+  See [[query]] for details on `q`.
+
+  Consider also: [[get-element-rect]]"
   [driver q]
   (get-element-size-el driver (query driver q)))
 
@@ -1374,39 +1112,21 @@
 ;; element location
 ;;
 
-(defmulti get-element-location-el
-  "Have `driver` return map of `:x` `:y` offset, in pixels of element `el`.
+(defn get-element-location-el
+ "Have `driver` return map of `:x` `:y` offset, in pixels of element `el`.
 
-  Uses https://www.w3.org/TR/webdriver2/#dfn-get-element-rect"
-  {:arglists '([driver el])}
-  dispatch-driver)
-
-#_(defmethods get-element-location-el
-  [:chrome :edge]
+  Consider also: [[get-element-rect-el]]"
   [driver el]
   {:pre [(some? el)]}
-  (-> (execute {:driver driver
-                :method :get
-                :path   [:session (:session driver) :element el :location]})
-      :value
-      (select-keys [:x :y])))
-
-#_(remove-all-methods get-element-location-el)
-
-(defmethods get-element-location-el
-  [:firefox :safari :chrome :edge]
-  [driver el]
-  {:pre [(some? el)]}
-  (-> (execute {:driver driver
-                :method :get
-                :path   [:session (:session driver) :element el :rect]})
-      :value
+  (-> (get-element-rect-el driver el)
       (select-keys [:x :y])))
 
 (defn get-element-location
   "Have `driver` return map of `:x` `:y` offset, in pixels of element found by query `q`.
 
-  See [[query]] for details on `q`."
+  See [[query]] for details on `q`.
+
+  Consider also: [[get-element-rect]]"
   [driver q]
   (get-element-location-el driver (query driver q)))
 
@@ -1428,10 +1148,7 @@
   - `:width`: width as a difference b/w `:x2` and `:x1`;
   - `:height`: height as a difference b/w `:y2` and `:y1`. "
   [driver q]
-  (let [el                     (query driver q)
-        ;; TODO: interesting might if cross-browser support could replace with get-element-rect
-        {:keys [width height]} (get-element-size-el driver el)
-        {:keys [x y]}          (get-element-location-el driver el)]
+  (let [{:keys [width height x y]} (get-element-rect driver q)]
     {:x1     x
      :x2     (+ x width)
      :y1     y
@@ -1459,6 +1176,8 @@
 (defn get-element-property-el
   "Have `driver` return value for `property` of element `el`.
 
+  -`property` examples: `:innerHTML`, `:outerHTML`, etc
+
   https://www.w3.org/TR/webdriver2/#dfn-get-element-property"
   [driver el property]
   {:pre [(some? el)]}
@@ -1468,6 +1187,8 @@
 
 (defn get-element-property
   "Have `driver` value for  `property` of element found by query `q`.
+
+  -`property` examples: `:innerHTML`, `:outerHTML`, etc
 
   Found property value is returned as string.
   When element is found but property is absent, returns `nil`.
@@ -1481,6 +1202,8 @@
 
   Found property values are returned as strings.
   When element is found but property is absent, result is included in vector as `nil`.
+
+  See also: [[get-element-property]]
 
   See [[query]] for details on `q`."
   [driver q & properties]
@@ -1613,14 +1336,16 @@
   {:arglists '([driver el])}
   dispatch-driver)
 
-;; TODO: why not just call get-element-property-el?
-(defmethod get-element-inner-html-el
-  :default
+(defn get-element-inner-html-el
+  "Have `driver` return inner text of element `el`.
+
+  For element with `my-id` in `<div id=\"my-id\"><p class=\"foo\">hello</p></div>` return will be
+  `\"<p class=\"foo\">hello</p>\"`.
+
+  See also: [[get-element-property-el]]"
   [driver el]
   {:pre [(some? el)]}
-  (:value (execute {:driver driver
-                    :method :get
-                    :path   [:session (:session driver) :element el :property :innerHTML]})))
+  (get-element-property-el driver el :innerHMTL))
 
 (defn get-element-inner-html
   "Have `driver` return inner text of element found by query `q`.
@@ -1628,7 +1353,9 @@
   See [[query]] for details on `q`.
 
   For element with `my-id` in `<div id=\"my-id\"><p class=\"foo\">hello</p></div>` return will be
-  `\"<p class=\"foo\">hello</p>\"`."
+  `\"<p class=\"foo\">hello</p>\"`.
+
+  See also: [[get-element-property]]"
   [driver q]
   (get-element-inner-html-el driver (query driver q)))
 
@@ -1678,44 +1405,27 @@
 ;; Element value
 ;;
 
-;; TODO: Does not exist in w3c spec
-;; can do same via get element property ... :value
 (defn get-element-value-el
   "Have `driver` return the value of element `el`.
 
   To be used on input elements."
   [driver el]
   {:pre [(some? el)]}
-  (:value (execute {:driver driver
-                    :method :get
-                    :path   [:session (:session driver) :element el :value]})))
+  (get-element-property-el driver el :value))
 
-(defmulti get-element-value
+;; this is the way to go for all
+(defn get-element-value
   "Have `driver` return the value of element found by query `q`.
 
   To be used on input elements.
 
   See [[query]] for details on `q`.
 
-  Listed in w3c spec endpoints but not described"
-  {:arglists '([driver q])}
-  dispatch-driver)
-
-#_
-(defmethod get-element-value
-  :default
-  [driver q]
-  (get-element-value-el driver (query driver q)))
-
-;; this is the way to go for all
-(defmethods get-element-value
-  [:firefox :safari :chrome :edge]
-  [driver q]
+  Listed in w3c spec endpoints but not described"[driver q]
   (get-element-property driver q :value))
 
-#_(remove-all-methods get-element-value)
 
-;; TODO: Why not: /session/{session id}/element/{element id}/shadow from w3c spec?
+;; TODO: Dev Doc: Why not: /session/{session id}/element/{element id}/shadow from w3c spec?
 (defn get-element-shadow-root-el
   "Returns the shadow root for the specified element or `nil` if the
   element does not have a shadow root."
@@ -1736,10 +1446,7 @@
 ;;; Shadow root queries
 ;;; 
 
-(defmulti ^:private find-element-from-shadow-root* dispatch-driver)
-
-(defmethods find-element-from-shadow-root*
-  [:firefox :safari :chrome :edge]
+(defn find-element-from-shadow-root*
   [driver shadow-root-el locator term]
   {:pre [(some? shadow-root-el)]}
   (-> (execute {:driver driver
@@ -1750,19 +1457,7 @@
       first
       second))
 
-#_(defmethod find-element-from-shadow-root* :default
-  [driver shadow-root-el locator term]
-  {:pre [(some? shadow-root-el)]}
-  (-> (execute {:driver driver
-                :method :post
-                :path   [:session (:session driver) :shadow shadow-root-el :element]
-                :data   {:using locator :value term}})
-      :value
-      :ELEMENT))
-
-(defmulti ^:private find-elements-from-shadow-root* dispatch-driver)
-
-(defmethod find-elements-from-shadow-root* :default
+(defn find-elements-from-shadow-root*
   [driver shadow-root-el locator term]
   {:pre [(some? shadow-root-el)]}
   (->> (execute {:driver driver
@@ -1849,12 +1544,13 @@
                     :method :get
                     :path   [:session (:session driver) :cookie]})))
 
-;; TODO: There is a w3c spec: GET 	/session/{session id}/cookie/{name}
 (defn get-cookie
   "Have `driver` return first cookie matching `cookie-name`.
 
   When `cookie-name` is a keyword it will be converted appropriately."
   [driver cookie-name]
+  ;; We don't use w3c GET /session/{session id}/cookie/{name}
+  ;; because it is easier this way support keyword translation
   (->> driver
        get-cookies
        (filter #(= (:name %) (name cookie-name)))
@@ -1895,10 +1591,8 @@
             :method :delete
             :path   [:session (:session driver) :cookie]}))
 
-;; TODO test & delete
 (defmethod delete-cookies :safari
-  ;; For some reason, Safari hangs forever when trying to delete
-  ;; all cookies. Currently we delete them in cycle.
+  ;; Compensate for Safari delete-cookies currently being no-op (as of 2024-08-08)
   [driver]
   (doseq [cookie (get-cookies driver)]
     (delete-cookie driver (:name cookie))))
@@ -1939,7 +1633,7 @@
   {:ELEMENT                             el
    :element-6066-11e4-a52e-4f735466cecf el})
 
-(defmulti js-execute
+(defn js-execute
   "Return result of `driver` executing Javascript `script` with `args` synchronously in the browser.
 
   The script is sent as a string (can be multi-line). Under the hood,
@@ -1966,27 +1660,13 @@
   ;; => 43
   ```
   https://www.w3.org/TR/webdriver2/#dfn-execute-script"
-  {:arglists '([driver script & args])}
-  dispatch-driver)
-
-#_(defmethod js-execute :default
-  [driver script & args]
-  (:value (execute {:driver driver
-                    :method :post
-                    :path   [:session (:session driver) :execute]
-                    :data   {:script script :args (vec args)}})))
-
-#_(remove-all-methods js-execute)
-
-(defmethods js-execute
-  [:firefox :safari :chrome :edge]
   [driver script & args]
   (:value (execute {:driver driver
                     :method :post
                     :path   [:session (:session driver) :execute :sync]
                     :data   {:script script :args (vec args)}})))
 
-(defmulti js-async
+(defn js-async
   "Return result of `driver` executing JavaScript `script` with `args` asynchornously in the browser.
 
   Executes an asynchronous script in the browser and returns the result.
@@ -2021,22 +1701,7 @@
     }
   }});
   ```
-  https://www.w3.org/TR/webdriver2/#dfn-execute-async-script"
-  {:arglists '([driver script & args])}
-  dispatch-driver)
-
-#_(defmethod js-async :default
-  [driver script & args]
-  (:value (execute {:driver driver
-                    :method :post
-                    :path   [:session (:session driver) :execute_async]
-                    :data   {:script script :args (vec args)}})))
-
-#_(remove-all-methods js-async)
-
-(defmethods js-async
-  [:firefox :safari :edge :chrome]
-  [driver script & args]
+  https://www.w3.org/TR/webdriver2/#dfn-execute-async-script" [driver script & args]
   (:value (execute {:driver driver
                     :method :post
                     :path   [:session (:session driver) :execute :async]
@@ -2387,72 +2052,32 @@
 ;; alerts
 ;;
 
-(defmulti get-alert-text
+(defn get-alert-text
   "Have `driver` return text string from alert dialog (if present).
 
   https://www.w3.org/TR/webdriver2/#dfn-get-alert-text"
-  {:arglists '([driver])}
-  dispatch-driver)
-
-(defmethods get-alert-text
-  [:firefox :safari :chrome :edge]
   [driver]
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session driver) :alert :text]})))
 
-#_(remove-all-methods get-alert-text)
-
-#_(defmethods get-alert-text
-  [:chrome :edge]
-  [driver]
-  (:value (execute {:driver driver
-                    :method :get
-                    :path   [:session (:session driver) :alert_text]})))
-
-(defmulti dismiss-alert
+(defn dismiss-alert
   "Have `driver` cancel open alert dialog.
 
   https://www.w3.org/TR/webdriver2/#dfn-dismiss-alert"
-  {:arglists '([driver])}
-  dispatch-driver)
-
-(defmethods dismiss-alert
-  [:firefox :safari :chrome :edge]
   [driver]
   (execute {:driver driver
             :method :post
             :path   [:session (:session driver) :alert :dismiss]}))
 
-#_(remove-all-methods dismiss-alert)
+(defn accept-alert
+  "Have `driver` accept open alert dialog.
 
-#_(defmethods dismiss-alert
-  [:chrome :edge]
-  [driver]
-  (execute {:driver driver
-            :method :post
-            :path   [:session (:session driver) :dismiss_alert]}))
-
-(defmulti accept-alert
-  "Have `driver` accept open alert dialog."
-  {:arglists '([driver])}
-  dispatch-driver)
-
-(defmethods accept-alert
-  [:firefox :safari :chrome :edge]
+  https://www.w3.org/TR/webdriver2/#dfn-accept-alert"
   [driver]
   (execute {:driver driver
             :method :post
             :path   [:session (:session driver) :alert :accept]}))
-
-#_(remove-all-methods accept-alert)
-
-#_(defmethods accept-alert
-  [:chrome :edge]
-  [driver]
-  (execute {:driver driver
-            :method :post
-            :path   [:session (:session driver) :accept_alert]}))
 
 ;;
 ;; network
@@ -2530,6 +2155,9 @@
 (defmulti displayed-el?
   "Return true if `driver` finds `el` is displayed/visible.
 
+  Displayed-ness is not part of w3c WebDriver spec and is vendor specific.
+  https://www.w3.org/TR/webdriver2/#element-displayedness
+
   See [[query]] for details on `q`.
 
   Note: Safari webdriver has not implemented `displayed`, for it
@@ -2537,7 +2165,6 @@
   {:arglists '([driver el])}
   dispatch-driver)
 
-;; TODO: Document... not part of w3c spec.. contentious...
 (defmethod displayed-el? :default
   [driver el]
   {:pre [(some? el)]}
@@ -2545,7 +2172,6 @@
                     :method :get
                     :path   [:session (:session driver) :element el :displayed]})))
 
-;; TODO: check status today
 (defmethod displayed-el? :safari
   [driver el]
   {:pre [(some? el)]}
@@ -2559,7 +2185,10 @@
     :else true))
 
 (defn displayed?
-  "Return true if element found by `driver` with query `q` is effectively displayed."
+  "Return true if element found by `driver` with query `q` is effectively displayed.
+
+  Displayed-ness is not part of w3c WebDriver spec and is vendor specific.
+  https://www.w3.org/TR/webdriver2/#element-displayedness"
   [driver q]
   (displayed-el? driver (query driver q)))
 
@@ -2903,87 +2532,63 @@
 ;; touch
 ;;
 
-;; TODO: not part of w3c mode
-(defmulti touch-tap
-  "Have `driver` touch tap element found by query `q`.
+(defn touch-tap
+ "Have `driver` touch tap element found by query `q`.
 
   See [[query]] for details on `q`."
-  {:arglists '([driver q])}
-  dispatch-driver)
-
-(defmethod touch-tap
-  :chrome
   [driver q]
-  (execute {:driver driver
-            :method :post
-            :path   [:session (:session driver) :touch :click]
-            :data   {:element (query driver q)}}))
+  (let [touch (-> (make-touch-input)
+                  (add-pointer-click-el (query driver q)))]
+    (perform-actions driver touch)))
 
-(defmulti touch-down
+(defn touch-down
   "Have `driver` touch down
   - on element found by query `q`
   - or `x` `y` coordinate
 
   See [[query]] for details on `q`."
-  {:arglists '([driver q] [driver x y])}
-  dispatch-driver)
-
-;; TODO: not part of w3c mode
-(defmethod touch-down
-  :chrome
   ([driver q]
-   (let [{:keys [x y]}
-         (get-element-location driver q)]
-     (touch-down driver x y)))
+   (let [touch (-> (make-touch-input)
+                   (add-pointer-move-to-el driver (query driver q))
+                   (add-pointer-down))]
+     (perform-actions driver touch)))
   ([driver x y]
-   (execute {:driver driver
-             :method :post
-             :path   [:session (:session driver) :touch :down]
-             :data   {:x (int x) :y (int y)}})))
+   (let [touch (-> (make-touch-input)
+                   (add-pointer-move driver {:x x :y y})
+                   (add-pointer-down))]
+     (perform-actions driver touch))))
 
-;; TODO: not part of w3c mode
-(defmulti touch-up
+(defn touch-up
   "Have `driver` touch up
   - on element found by query `q`
   - or `x` `y` coordinate
 
   See [[query]] for details on `q`."
-  {:arglists '([driver q] [driver x y])}
-  dispatch-driver)
-
-(defmethod touch-up
-  :chrome
   ([driver q]
-   (let [{:keys [x y]}
-         (get-element-location driver q)]
-     (touch-down driver x y)))
+   (let [touch (-> (make-touch-input)
+                   (add-pointer-move-to-el driver (query driver q))
+                   (add-pointer-up))]
+     (perform-actions driver touch)))
   ([driver x y]
-   (execute {:driver driver
-             :method :post
-             :path   [:session (:session driver) :touch :up]
-             :data   {:x (int x) :y (int y)}})))
+   (let [touch (-> (make-touch-input)
+                   (add-pointer-move driver {:x x :y y})
+                   (add-pointer-up))]
+     (perform-actions driver touch))))
 
-;; TODO: not part of w3c mode
-(defmulti touch-move
-  "Have `driver` touch move
+(defn touch-move
+ "Have `driver` touch move
   - on element found by query `q`
   - or `x` `y` coordinate
 
   See [[query]] for details on `q`."
-  {:arglists '([driver q] [driver x y])}
-  dispatch-driver)
-
-(defmethod touch-move
-  :chrome
   ([driver q]
-   (let [{:keys [x y]}
-         (get-element-location driver q)]
-     (touch-move driver x y)))
+   (let [touch (-> (make-touch-input)
+                   (add-pointer-move-to-el driver (query driver q)))]
+     (perform-actions driver touch)))
   ([driver x y]
-   (execute {:driver driver
-             :method :post
-             :path   [:session (:session driver) :touch :move]
-             :data   {:x (int x) :y (int y)}})))
+   (let [touch (-> (make-touch-input)
+                   (add-pointer-move driver {:x x :y y}))]
+     (perform-actions driver touch))))
 
 ;;
 ;; skip/when driver
@@ -3074,26 +2679,10 @@
 (defn- make-input* [text & more]
   (codepoints (apply str text more)))
 
-(defmulti fill-el
+(defn fill-el
   "Have `driver` fill input element `el` with `text` (and optionally `more` text).
 
   https://www.w3.org/TR/webdriver2/#dfn-element-send-keys"
-  {:arglists '([driver el text & more])}
-  dispatch-driver)
-
-#_(remove-all-methods fill-el)
-
-#_(defmethod fill-el
-  :default
-  [driver el text & more]
-  {:pre [(some? el)]}
-  (execute {:driver driver
-            :method :post
-            :path   [:session (:session driver) :element el :value]
-            :data   {:value (apply make-input* text more)}}))
-
-(defmethods fill-el
-  [:firefox :safari :edge :chrome]
   [driver el text & more]
   {:pre [(some? el)]}
   (execute {:driver driver
@@ -3101,30 +2690,11 @@
             :path   [:session (:session driver) :element el :value]
             :data   {:text (str/join (apply make-input* text more))}}))
 
-(defmulti ^:private fill-active*
-  {:arglists '([driver text & more])}
-  dispatch-driver)
-
-#_(defmethod fill-active*
-  :chrome
-  [driver text & more]
-  (execute {:driver driver
-            :method :post
-            :path   [:session (:session driver) :keys]
-            :data   {:value (apply make-input* text more)}}))
-
-#_(remove-all-methods fill-active*)
-
-(defmethods fill-active*
-  [:firefox :safari :chrome :edge]
-  [driver text & more]
-  (let [el (get-active-element* driver)]
-    (apply fill-el driver el text more)))
-
 (defn fill-active
   "Have `driver` fill active element with `text` (and optionally `more` text)."
   [driver text & more]
-  (apply fill-active* driver text more))
+  (let [el (get-active-element* driver)]
+    (apply fill-el driver el text more)))
 
 (defn fill
   "Have `driver` fill input element found by `q` with `text` (and optionally `more` text).
@@ -3537,19 +3107,12 @@
   - `:shrinkToFit` defaults to `true`
   - `:pageRanges` a vector, 1-based pages to include, example `[\"1-3\" \"6\"]` or `[]` for all (default)
 
-  TODO: review
-  At the time of this writing current WebDriver support:
-  - chrome, works in headless mode only, supports all opts
-  - edge, works in headless only, supports all opts
-  - firefox, might not support all opts
-  - safari, feature is not implemented
-
   https://www.w3.org/TR/webdriver2/#dfn-print-page"
   {:arglists '([driver file] [driver file opts])}
   dispatch-driver)
 
 (defmethod print-page
-  :default
+  :default ;; last checked safari 2024-08-08
   [_driver _file & [_opts]]
   (util/error "This driver doesn't support printing pages to PDF."))
 
