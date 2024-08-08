@@ -125,6 +125,7 @@
   - [[wait-running]]
 
   **Browser Timeouts**
+  - [[get-timeouts]] [[set-timeouts]]
   - [[get-implicit-timeout]] [[set-implicit-timeout]]
   - [[get-page-load-timeout]] [[set-page-load-timeout]]
   - [[get-script-timeout]] [[set-script-timeout]] [[with-script-timeout]]
@@ -2891,88 +2892,54 @@
 ;; https://github.com/SeleniumHQ/selenium/blob/bc19742bb0256c0cb73a47eec5361aa7a5743723/py/selenium/webdriver/remote/webdriver.py#L674
 ;; https://searchfox.org/mozilla-central/source/testing/webdriver/src/command.rs#529
 
-(defmulti ^:private set-timeout*
-  "Basic method to set a specific timeout."
-  {:arglists '([driver type sec])}
-  dispatch-driver)
+(defn set-timeouts
+  "Set `millisecond` timeouts for any of `:script` `:pageload` `implicit`.
 
-(defmethod set-timeout*
-  :default
-  [driver type sec]
+  https://www.w3.org/TR/webdriver2/#dfn-set-timeouts"
+  [driver {:keys [script pageload implicit] :as timeouts}]
   (execute {:driver driver
             :method :post
-            :path   [:session (:session driver) :timeouts]
-            :data   {type (util/sec->ms sec)}}))
+            :path [:session (:session driver) :timeout]
+            :data timeouts} ))
 
-(defmethod set-timeout*
-  :chrome
-  [driver type sec]
-  (execute {:driver driver
-            :method :post
-            :path   [:session (:session driver) :timeouts]
-            :data   {:type type :ms (util/sec->ms sec)}}))
-
-(defmulti set-script-timeout
+(defn set-script-timeout
   "Sets `driver` timeout `seconds` for executing JavaScript."
-  {:arglists '([driver seconds])}
-  dispatch-driver)
-
-(defmethod set-script-timeout
-  :default
   [driver seconds]
-  (set-timeout* driver :script seconds))
+  (set-timeouts driver {:script (util/sec->ms seconds)}))
 
-(defmulti set-page-load-timeout
+(defn set-page-load-timeout
   "Sets `driver` timeout `seconds` for loading a page."
-  {:arglists '([driver seconds])}
-  dispatch-driver)
-
-(defmethod set-page-load-timeout
-  :default
-  [driver sec]
-  (set-timeout* driver :pageLoad sec))
-
-(defmethod set-page-load-timeout
-  :chrome
   [driver seconds]
-  (set-timeout* driver "page load" seconds))
+  (set-timeouts driver {:pageload (util/sec->ms seconds)}))
 
-(defmulti set-implicit-timeout
-  "Sets `driver` timeout `seconds` to find elements on the page."
-  {:arglists '([driver seconds])}
-  dispatch-driver)
-
-(defmethod set-implicit-timeout
-  :default
+(defn set-implicit-timeout
+  "Sets `driver` timeout `seconds` for finding elements on the page."
   [driver seconds]
-  (set-timeout* driver :implicit seconds))
+  (set-timeouts driver {:implicit (util/sec->ms seconds)}))
 
-(defmulti ^:private get-timeout*
-  "Basic method to get a map of all the timeouts."
-  {:arglists '([driver])}
-  dispatch-driver)
+(defn get-timeouts
+  "Get `millisecond` timeouts for `:script` `:pageload` `implicit`.
 
-(defmethod get-timeout*
-  :default
+  https://www.w3.org/TR/webdriver2/#dfn-get-timeouts"
   [driver]
   (:value (execute {:driver driver
                     :method :get
                     :path   [:session (:session driver) :timeouts]})))
 
 (defn get-script-timeout
-  "Returns `driver` timeout in seconds for executing JavaScript."
+  "Returns `driver` timeout in `seconds` for executing JavaScript."
   [driver]
-  (-> driver get-timeout* :script util/ms->sec))
+  (-> driver get-timeouts :script util/ms->sec))
 
 (defn get-page-load-timeout
-  "Returns `driver` timeout in seconds for loading a page."
+  "Returns `driver` timeout in `seconds` for loading a page."
   [driver]
-  (-> driver get-timeout* :pageLoad util/ms->sec))
+  (-> driver get-timeouts :pageLoad util/ms->sec))
 
 (defn get-implicit-timeout
-  "Returns `driver` timeout in seconds to find elements on the page."
+  "Returns `driver` timeout in `seconds` for finding elements on the page."
   [driver]
-  (-> driver get-timeout* :implicit util/ms->sec))
+  (-> driver get-timeouts :implicit util/ms->sec))
 
 (defmacro with-script-timeout
   "Execute `body` temporarily setting `driver` to timeout `seconds` for executing JavaScript.
