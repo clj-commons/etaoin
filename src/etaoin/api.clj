@@ -3384,10 +3384,8 @@
 
   - `opts`: an map of the following optional parameters:
 
-  -- `:capabilities` a map of desired capabilities your
+  -- `:capabilities` a map of the capabilities your
   browser should support;
-
-  -- `:desired-capabilities`: an alias for `:capabilities`.
 
   -- `headless` is a boolean flag to run the browser in headless mode
   (i.e. without GUI window). Useful when running tests on CI servers
@@ -3434,8 +3432,7 @@
                      headless
                      user-agent
                      capabilities
-                     load-strategy
-                     desired-capabilities]}]]
+                     load-strategy]}]]
   (when (not webdriver-url)
     (wait-running driver))
   (let [type          (:type driver)
@@ -3457,8 +3454,7 @@
                         (->
                          (drv/set-capabilities (:capabilities defaults-global))
                          (drv/set-capabilities (get-in defaults [type :capabilities]))
-                         (drv/set-capabilities capabilities)
-                         (drv/set-capabilities desired-capabilities)))
+                         (drv/set-capabilities capabilities)))
         caps          (:capabilities driver)
         session       (create-session driver caps)]
     (assoc driver :session session)))
