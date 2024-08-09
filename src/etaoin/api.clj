@@ -3289,8 +3289,8 @@
 
         driver    (cond-> driver
                     log-level        (drv/set-browser-log-level log-level)
-                    true             (drv/set-path path-driver)
-                    true             (drv/set-port port)
+                    path-driver      (drv/set-path path-driver)
+                    port             (drv/set-port port)
                     dev              (drv/set-perf-logging (:perf dev))
                     driver-log-level (drv/set-driver-log-level driver-log-level)
                     args-driver      (drv/set-args args-driver)
