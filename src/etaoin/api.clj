@@ -197,7 +197,7 @@
              :port 17556
              :path-driver "msedgedriver"
              ;; assume same idea as chrome (TBD)
-             :capabilities {:goog:chromeOptions {:w3c true}}}})
+             :capabilities {:ms:edgeOptions {:w3c true}}}})
 
 ;;
 ;; utils

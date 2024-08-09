@@ -307,14 +307,6 @@
   [driver prefs]
   (update-vendor-capabilities driver :prefs merge prefs))
 
-(comment
-  (set-prefs {:type :chrome} {:new 1})
-  ;; => {:type :chrome, :capabilities {:chromeOptions {:prefs {:new 1}}}}
-  ;; => {:type :chrome, :capabilities {:chromeOptions {:prefs {:new 1}}}}
-  ;; => {:type :chrome, :capabilities {:chromeOptions {:prefs {:new 1}}}}
-
-  :eoc )
-
 ;;
 ;; Download folder
 ;;

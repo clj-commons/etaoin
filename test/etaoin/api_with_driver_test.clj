@@ -34,6 +34,38 @@
   :once
   api-test/test-server)
 
+(deftest capabilities-test
+  (doseq [type api-test/drivers
+          :let [capabilities (atom nil)]]
+    (testing type
+      (e/with-driver type {:webdriver-failed-launch-retries 0
+                           :path-driver (fake-driver-path)
+                           :load-strategy :none
+                           :path-browser "custom-browser-bin"
+                           :args ["browser" "args"]} driver
+        (reset! capabilities (:capabilities driver)))
+      (case type
+        :chrome (is (= {:pageLoadStrategy :none
+                        :goog:loggingPrefs {:browser "ALL"},
+                        :goog:chromeOptions {:w3c true
+                                             :binary "custom-browser-bin"
+                                             :args ["browser" "args"]}}
+                       @capabilities))
+        :edge (is (= {:pageLoadStrategy :none
+                      :goog:loggingPrefs {:browser "ALL"},
+                      :ms:edgeOptions {:w3c true
+                                       :binary "custom-browser-bin"
+                                       :args ["browser" "args"]}}
+                     @capabilities))
+        :firefox (is (= {:pageLoadStrategy :none
+                         :moz:firefoxOptions {:binary "custom-browser-bin"
+                                              :args ["browser" "args"]}}
+                        @capabilities))
+        :safari (is (= {:pageLoadStrategy :none
+                        :safari:options {:binary "custom-browser-bin"
+                                         :args ["browser" "args"]}}
+                       @capabilities))))))
+
 (deftest with-driver-tests
   (let [test-page (api-test/test-server-url "test.html")]
     (when (testing-driver? :chrome)
