@@ -1632,26 +1632,48 @@
   [driver q]
   (get-element-property driver q :value))
 
-(defmulti ^:private get-element-shadow-root* dispatch-driver)
+(defmulti ^:private get-element-shadow-root*
+  "Returns the shadow root element associated with the specified shadow
+  root host element, `el`, or `nil` if the specified element is not a
+  shadow root host."
+  dispatch-driver)
 
 (defmethod get-element-shadow-root*
   :default
   [driver el]
-  ;; Note that this throws with a 404 HTTP error code if the specified
-  ;; element does not have a shadow root
-  (-> (execute {:driver driver
-                :method :get
-                :path [:session (:session driver) :element el :shadow]})
-      :value
-      (unwrap-webdriver-object shadow-root-identifier)))
+  ;; Note that we're using get-element-property-el here, rather than
+  ;; executing a Web Driver Get Element Shadow Root API call. This is
+  ;; because the error handling for this API call is inconsistent
+  ;; across drivers whereas getting the property is consistent and
+  ;; probably not as brittle as drivers are updated.
+  ;;
+  ;; Specifically, if the element does not have a shadow root, then
+  ;; when executing a Get Element Shadow Root API call...
+  ;;   * Firefox: throws 404
+  ;;   * Safari: returns {:value nil}
+  ;;   * Chrome: throws HTTP status 200, Web Driver status 65
+  ;;   * Edge: throws HTTP 200, Web Driver status 65
+  ;;
+  ;; My guess is that Chrome and Edge are probably behaving correctly
+  ;; and Firefox and Safari are not.
+  ;;
+  ;; Perhaps update this at a later date when drivers better conform
+  ;; to the standard.
+  (when-let [root (get-element-property-el driver el "shadowRoot")]
+    (unwrap-webdriver-object root shadow-root-identifier)))
+
+(defmethod get-element-shadow-root*
+  :safari
+  [driver el]
+  ;; Safari gives us the shadow root in a non-standard wrapper
+  (when-let [root (get-element-property-el driver el "shadowRoot")]
+    (-> root first second)))
 
 (defn get-element-shadow-root-el
   "Returns the shadow root for the specified element or `nil` if the
   element does not have a shadow root."
   [driver el]
-  (try+
-    (get-element-shadow-root* driver el)
-    (catch [:status 404] _ nil)))
+  (get-element-shadow-root* driver el))
 
 (defn get-element-shadow-root
   "Returns the shadow root for the first element matching the query, or
