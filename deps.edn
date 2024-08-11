@@ -52,8 +52,8 @@
               :main-opts ["-m" "babashka.cli.exec"]}
 
   :clofidence {:classpath-overrides {org.clojure/clojure nil}
-               :extra-deps {com.github.flow-storm/clojure {:mvn/version "LATEST"} ; >= 1.11.1-15
-                            com.github.flow-storm/clofidence {:mvn/version "LATEST"}}
+               :extra-deps {com.github.flow-storm/clojure {:mvn/version "1.11.4"}
+                            com.github.flow-storm/clofidence {:mvn/version "0.3.1"}}
                :exec-fn clofidence.main/run
                :exec-args {:report-name "Etaoin Test Coverage"
                            :output-folder "target/clofidence"

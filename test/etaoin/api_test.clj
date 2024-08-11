@@ -493,7 +493,7 @@
     (e/perform-actions *driver*
                        (-> (e/make-mouse-input)
                            (e/add-pointer-move-to-el (e/query *driver* doc))
-                           (e/with-pointer-btn-down k/mouse-left
+                           (e/with-pointer-left-btn-down
                              (e/add-pointer-move-to-el (e/query *driver* trash)))))
     (is (= 3 (count (e/query-all *driver* doc)))
         "doc count at end")))

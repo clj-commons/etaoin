@@ -149,7 +149,6 @@
    [cheshire.core :as json]
    [clojure.java.io :as io]
    [clojure.string :as str]
-   [clojure.set :as cset]
    [clojure.tools.logging :as log]
    [etaoin.impl.client :as client]
    [etaoin.impl.driver :as drv]

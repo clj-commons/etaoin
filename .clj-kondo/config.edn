@@ -1,6 +1,7 @@
 {:config-paths ^:replace ;; don't adopt any user preferences
  ["hooks" ;; keep our internal hooks separate from imported ones
   "../resources/clj-kondo.exports/etaoin/etaoin"] ;; include our exported public config
+ :output {:linter-name true}
  :cljc {:features [:clj]} ;; our bb reader conditionals might make some tools also assume cljs, state otherwise
  :hooks
  ;; for internal stuff, I'm fine with using macroexpand, our external config uses analyze-call for
