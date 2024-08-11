@@ -35,7 +35,6 @@
   :once
   api-test/test-server)
 
-
 (deftest capabilities-population-test
   ;; different browsers support different features and express configuration differently
   ;; a bit brittle, adjust test expectations accordingly when you make changes to capabilities
@@ -73,9 +72,14 @@
                                                :binary "custom-browser-bin"
                                                :args ["--window-size=1122,771"
                                                       "--extra" "--args"
-                                                      "--user-data-dir=some/profile"
+                                                      (if (fs/windows?)
+                                                        "--user-data-dir=some\\profile"
+                                                        "--user-data-dir=some/profile")
                                                       "--profile-directory=dir"]
-                                               :prefs {:download.default_directory "some/download/dir/"
+                                               :prefs {:download.default_directory
+                                                       (if (fs/windows?)
+                                                         "some\\download\\dir\\"
+                                                         "some/download/dir/")
                                                        :download.prompt_for_download false}}}
                          @capabilities))
           :edge (is (= {:pageLoadStrategy :none
@@ -85,7 +89,9 @@
                                          :binary "custom-browser-bin"
                                          :args ["--window-size=1122,771"
                                                 "--extra" "--args"]
-                                         :prefs {:download.default_directory "some/download/dir/"
+                                         :prefs {:download.default_directory (if (fs/windows?)
+                                                                               "some\\download\\dir\\"
+                                                                               "some/download/dir/")
                                                  :download.prompt_for_download false}}}
                        @capabilities))
           :firefox (let [save-to-disk (get-in @capabilities [:moz:firefoxOptions :prefs :browser.helperApps.neverAsk.saveToDisk])
@@ -96,7 +102,9 @@
                                                   :args ["-width" "1122" "-height" "771"
                                                          "--new-window" "https://initial-url"
                                                          "--extra" "--args"
-                                                         "-profile" "some/profile/dir"]
+                                                         "-profile" (if (fs/windows?)
+                                                                          "some\\profile\\dir"
+                                                                          "some/profile/dir")]
                                                   :prefs {:browser.download.dir "some/download/dir"
                                                           :browser.download.folderList 2
                                                           :browser.download.useDownloadDir true}}}

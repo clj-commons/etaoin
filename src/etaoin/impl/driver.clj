@@ -40,6 +40,11 @@
 
 (set! *warn-on-reflection* true)
 
+(defn- osify-path [s]
+  (-> s
+      fs/file
+      str))
+
 (defn dispatch-driver
   [driver & _]
   (:type driver))
@@ -171,8 +176,8 @@
                   profile)
         user-data-dir (str (fs/parent profile))
         profile-dir   (str  (fs/file-name profile))]
-    (add-browser-args driver [(format "--user-data-dir=%s" user-data-dir)
-                                      (format "--profile-directory=%s" profile-dir)])))
+    (add-browser-args driver [(format "--user-data-dir=%s" (osify-path user-data-dir))
+                              (format "--profile-directory=%s" (osify-path profile-dir))])))
 
 (defmethod set-profile
   :firefox
@@ -182,7 +187,7 @@
   ;; says to specify a marionette port manually.
   [driver profile]
   (-> driver
-      (add-browser-args ["-profile" profile])
+      (add-browser-args ["-profile" (osify-path profile)])
       ((fn [driver]
          (if (some #(= "--marionette-port" %) (get-args driver))
            driver
@@ -333,7 +338,7 @@
 (defmethods set-download-dir
   [:chrome :edge]
   [driver path]
-  (set-prefs driver {:download.default_directory   (add-trailing-slash path)
+  (set-prefs driver {:download.default_directory   (-> path osify-path add-trailing-slash)
                      :download.prompt_for_download false}))
 
 (def ^{:private true
