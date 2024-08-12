@@ -680,6 +680,27 @@
        :value
        (mapv (comp second first))))
 
+(defn- follow-path-from-element*
+  "Starting at `el`, search for the first query in `path`, then from the
+  resulting element, search for the next, and so on. If `path` is
+  empty, returns `el`. A member of the `path` is limited to:
+
+  * a keyword (converted to an element ID)
+  * a string (converted to an XPath expression)
+  * a map using {:xpath ...} (converted to XPath)
+  * a map using {:css ...} (converted to CSS)
+  * a map following the Etaoin map syntax (converted to the driver default, typically XPath)
+
+  Things that are not supported as `path` elements:
+  * `query`'s `:active` keyword
+  * other sequences"
+  [driver el path]
+  (reduce (fn [el q]
+            (let [[loc term] (query/expand driver q)]
+              (find-element-from* driver el loc term)))
+          el
+          path))
+
 ;;
 ;; Querying elements (high-level API)
 ;;
@@ -1739,10 +1760,14 @@
 
   The `shadow-q` parameter is similar to the `q` parameter of
   the [[query]] function, but some drivers may limit it to specific
-  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations) for more information."
+  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations) for more information.
+  Note that `shadow-q` does not support `query`'s `:active` keyword."
   [driver shadow-root-el shadow-q]
-  (let [[loc term] (query/expand driver shadow-q)]
-    (find-element-from-shadow-root* driver shadow-root-el loc term)))
+  (if (sequential? shadow-q)
+    (let [q1-el (query-from-shadow-root-el driver shadow-root-el (first shadow-q))]
+      (follow-path-from-element* driver q1-el (next shadow-q)))
+    (let [[loc term] (query/expand driver shadow-q)]
+      (find-element-from-shadow-root* driver shadow-root-el loc term))))
 
 (defn query-all-from-shadow-root-el
   "Queries the shadow DOM rooted at `shadow-root-el`, looking for all
@@ -1750,10 +1775,20 @@
 
   The `shadow-q` parameter is similar to the `q` parameter of
   the [[query]] function, but some drivers may limit it to specific
-  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations) for more information."
+  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations) for more information.
+  Note that `shadow-q` does not support `query`'s `:active` keyword."
   [driver shadow-root-el shadow-q]
-  (let [[loc term] (query/expand driver shadow-q)]
-    (find-elements-from-shadow-root* driver shadow-root-el loc term)))
+  (if (sequential? shadow-q)
+    (let [last-q (last shadow-q)
+          but-last-q (butlast shadow-q)]
+      (if-let [first-q (first but-last-q)]
+        (let [first-el (query-from-shadow-root-el driver shadow-root-el first-q)
+              but-last-el (follow-path-from-element* driver first-el (next but-last-q))
+              [loc term] (query/expand driver last-q)]
+          (find-elements-from* driver but-last-el loc term))
+        (query-all-from-shadow-root-el driver shadow-root-el last-q)))
+    (let [[loc term] (query/expand driver shadow-q)]
+      (find-elements-from-shadow-root* driver shadow-root-el loc term))))
 
 (defn query-from-shadow-root
   "First, conducts a standard search (as if by [[query]]) for an element
@@ -1764,7 +1799,8 @@
 
   The `shadow-q` parameter is similar to the `q` parameter of
   the [[query]] function, but some drivers may limit it to specific
-  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations) for more information."
+  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations) for more information.
+  Note that `shadow-q` does not support `query`'s `:active` keyword."
   [driver q shadow-q]
   (query-from-shadow-root-el driver (get-element-shadow-root driver q) shadow-q))
 
@@ -1777,7 +1813,8 @@
 
   The `shadow-q` parameter is similar to the `q` parameter of
   the [[query]] function, but some drivers may limit it to specific
-  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations) for more information."
+  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations) for more information.
+  Note that `shadow-q` does not support `query`'s `:active` keyword."
   [driver q shadow-q]
   (query-all-from-shadow-root-el driver (get-element-shadow-root driver q) shadow-q))
 
