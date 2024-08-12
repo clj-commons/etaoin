@@ -66,8 +66,10 @@
                   :task test-server/-main}
   test:bb        {:doc "Runs tests under Babashka [--help]"
                   :task test/test-bb}
-  test-doc       {:doc "test code blocks in user guide"
+  test-doc       {:doc "Test code blocks in user guide"
                   :task test-doc/test-doc}
+  test-coverage  {:doc "Run doc and unit tests on JVM and generate ./target/clofidence code coverage report"
+                  :task test-coverage/-main}
   test-matrix    {:doc "Returns a test matrix for CI [--help]"
                   :task test-matrix/-main}
   drivers        {:doc "[list|kill] any running WebDrivers"

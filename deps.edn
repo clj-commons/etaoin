@@ -12,7 +12,7 @@
  :aliases
  {;; we use babashka/neil for project attributes
   ;; publish workflow references these values (and automatically bumps patch component of version)
-  :neil {:project {:version "1.0.40" ;; describes last release and is template for next release
+  :neil {:project {:version "1.1.40" ;; describes last release and is template for next release
                    :name  etaoin/etaoin
                    ;; not neilisms - could potentially conflict with new neilisms
                    :github-coords clj-commons/etaoin}}
@@ -50,6 +50,16 @@
                                           :patterns [:string]
                                           :vars [:symbol]}}
               :main-opts ["-m" "babashka.cli.exec"]}
+
+  :clofidence {:classpath-overrides {org.clojure/clojure nil}
+               :extra-deps {com.github.flow-storm/clojure {:mvn/version "1.11.4"}
+                            com.github.flow-storm/clofidence {:mvn/version "0.3.1"}}
+               :exec-fn clofidence.main/run
+               :exec-args {:report-name "Etaoin Test Coverage"
+                           :output-folder "target/clofidence"
+                           :test-fn cognitect.test-runner.api/test
+                           :test-fn-args [{:dirs ["test" "target/test-doc-blocks/test"]}]}
+               :jvm-opts ["-Dclojure.storm.instrumentOnlyPrefixes=etaoin"]}
 
   ;; for consistent linting we use a specific version of clj-kondo through the jvm
   :clj-kondo {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2024.05.24"}}

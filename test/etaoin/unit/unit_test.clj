@@ -23,7 +23,6 @@
     (testing "defaults"
       (e/with-firefox driver
         (is (= {:args ["geckodriver" "--port" 12345]
-                :capabilities {:loggingPrefs {:browser "ALL"}}
                 :host "127.0.0.1"
                 :locator "xpath"
                 :port 12345
@@ -67,25 +66,19 @@
         (e/with-firefox {:capabilities {:specified :val2
                                         :some {:deeper {:thing1 100
                                                         :thing3 300
-                                                        :thing5 500}}}
-                         :desired-capabilities {:specified-desired :val3
-                                                :some {:deeper {:thing3 3000
-                                                                :thing6 6000}}}} driver
+                                                        :thing5 500}}}} driver
           (is (>= (System/currentTimeMillis) (:created-epoch-ms driver)))
           (is (= {:args ["geckodriver" "--port" 12345],
                   :capabilities
                   {:default-firefox :val1
                    :default-global :val2
-                   :loggingPrefs {:browser "ALL"},
                    :some {:deeper {:thing0 10
                                    :thing1 100
                                    :thing2 2
-                                   :thing3 3000
+                                   :thing3 300
                                    :thing4 40
-                                   :thing5 500
-                                   :thing6 6000}}
-                   :specified :val2
-                   :specified-desired :val3}
+                                   :thing5 500}}
+                   :specified :val2}
                   :host "127.0.0.1"
                   :locator "xpath"
                   :port 12345
@@ -163,7 +156,6 @@
         ;; safari driver has a default of 4 retries
         (e/with-safari driver
           (is (= {:args ["safaridriver" "--port" 12345]
-                  :capabilities {:loggingPrefs {:browser "ALL"}}
                   :host "127.0.0.1"
                   :locator "xpath"
                   :port 12345

@@ -2,6 +2,7 @@
   (:require
    [babashka.fs :as fs]
    [babashka.process :as p]
+   [cheshire.core :as json]
    [clojure.edn :as edn]
    [clojure.java.io :as io]
    [clojure.java.shell :as shell]
@@ -127,6 +128,15 @@
   :once
   report-browsers
   test-server)
+
+(deftest test-navigation
+  (is (= (test-server-url "test.html")  (e/get-url *driver*)) "initial page")
+  (e/go *driver* (test-server-url "test2.html"))
+  (is (= (test-server-url "test2.html")  (e/get-url *driver*)) "navigate to 2nd page")
+  (e/back *driver*)
+  (is (= (test-server-url "test.html")  (e/get-url *driver*)) "back to initial page")
+  (e/forward *driver*)
+  (is (= (test-server-url "test2.html")  (e/get-url *driver*)) "forward to 2nd page"))
 
 (deftest test-visible
   (doto *driver*
@@ -456,17 +466,46 @@
   (doto *driver*
     (e/close-window)))
 
-(deftest test-drag-n-drop
+(deftest test-drag-and-drop
   (let [url   (test-server-url "drag-n-drop/index.html")
         doc   {:class :document}
         trash {:xpath "//div[contains(@class, 'trash')]"}]
-    (doto *driver*
-      (e/go url)
-      (e/drag-and-drop doc trash)
-      (e/drag-and-drop doc trash)
-      (e/drag-and-drop doc trash)
-      (e/drag-and-drop doc trash)
-      (-> (e/absent? doc) is))))
+    (e/go *driver* url)
+    (is (= 4 (count (e/query-all *driver* doc)))
+        "doc count at start")
+
+    (doseq [n (range 1 5)]
+      (e/drag-and-drop *driver* doc trash)
+      (is (= (- 4 n) (count (e/query-all *driver* doc)))
+          (format "doc count after drag and drop # %d" n)))
+
+    (is (e/absent? *driver* doc)
+        "no docs after last drag and drop")))
+
+(deftest test-drag-and-drop-alt
+  (let [url   (test-server-url "drag-n-drop/index.html")
+        doc   {:class :document}
+        trash {:xpath "//div[contains(@class, 'trash')]"}]
+    (e/go *driver* url)
+    (is (= 4 (count (e/query-all *driver* doc)))
+        "doc count at start")
+
+    (e/perform-actions *driver*
+                       (-> (e/make-mouse-input)
+                           (e/add-pointer-move-to-el (e/query *driver* doc))
+                           (e/with-pointer-left-btn-down
+                             (e/add-pointer-move-to-el (e/query *driver* trash)))))
+    (is (= 3 (count (e/query-all *driver* doc)))
+        "doc count at end")))
+
+(deftest test-double-click
+  ;; Does not work on Safari 2024-08-10
+  (e/when-not-safari *driver*
+    (e/scroll-bottom *driver*) ;; element needs to be in viewport
+                               ;; TODO: look at wheel action
+    (is (= "[not clicked]" (e/get-element-text *driver* :pointerClickTarget)))
+    (e/double-click *driver* :pointerClickTarget)
+    (is (= "[double clicked]" (e/get-element-text *driver* :pointerClickTarget)))))
 
 (deftest test-element-location
   (let [q             {:id :el-location-input}
@@ -475,6 +514,7 @@
     (is (numeric? x))
     (is (numeric? y))))
 
+;; Still relevant?:
 ;; Here and below: when running a Safari driver,
 ;; you need to unplug your second monitor. That sounds crazy,
 ;; I know. Bun nevertheless, if a Safari window appears on the second
@@ -482,7 +522,8 @@
 
 (deftest test-window-position
   (e/when-not-drivers
-    [:edge] *driver*
+    [:edge] ;; edge fails this test
+    *driver*
       (let [{:keys [x y]} (e/get-window-position *driver*)]
         (is (numeric? x))
         (is (numeric? y))
@@ -535,28 +576,31 @@
     (e/switch-window-next *driver*)
     (is (= init-handle (e/get-window-handle *driver*)) "wrapped around to original window")))
 
-;; TODO: need refactoring not working for headless & firefox
-#_
 (deftest test-maximize
-  (when-not-headless *driver*
-    (let [{:keys [x y]}          (get-window-position *driver*)
-          {:keys [width height]} (get-window-size *driver*)]
-      (maximize *driver*)
-      (let [{x' :x y' :y}                   (get-window-position *driver*)
-            {width' :width height' :height} (get-window-size *driver*)]
-        (is (not= x x'))
-        (is (not= y y'))
-        (is (not= width width'))
-        (is (not= height height'))))))
+  (when-not (e/headless? *driver*) ;; skip for headless
+    (e/set-window-position *driver* 2 2)
+    (let [orig-rect (e/get-window-rect *driver*)
+          target-rect (-> orig-rect
+                          (update :x #(+ % 2))
+                          (update :y #(+ % 2))
+                          (update :width #(- % 5))
+                          (update :height #(- % 5)))]
+      ;; move the window to ensure values will change when maximized
+      (e/set-window-rect *driver* target-rect)
+      (let [moved-rect (e/get-window-rect *driver*)]
+        ;; sanity test for move
+        (is (= target-rect moved-rect))
+        (e/maximize *driver*)
+        (let [maximed-rect (e/get-window-rect *driver*)]
+          (is (not= moved-rect maximed-rect)))))))
 
 (deftest test-active-element
-  (testing "active element"
-    (e/when-not-safari *driver*
-      (doto *driver*
-        (e/click {:id :set-active-el})
-        (-> (e/get-element-attr :active :id)
-            (= "active-el-input")
-            is)))))
+  (e/when-not-safari *driver*
+    (doto *driver*
+      (e/click {:id :set-active-el})
+      (-> (e/get-element-attr :active :id)
+          (= "active-el-input")
+          is))))
 
 (deftest test-element-text
   (let [text (e/get-element-text *driver* {:id :element-text})]
@@ -566,6 +610,9 @@
   (let [{:keys [width height]} (e/get-element-size *driver* {:id :element-text})]
     (is (numeric? width))
     (is (numeric? height))))
+
+(deftest get-element-tag
+  (is (= "TITLE" (str/upper-case (e/get-element-tag *driver* {:tag :title})))))
 
 (deftest test-cookies
   (testing "getting all cookies"
@@ -595,6 +642,11 @@
                      :path "/"
                      :secure false
                      :value "test2"}))))
+  (testing "setting a cookie"
+    (let [cookie {:name "etaoin-testing123" :value "foobarbaz"}]
+      (e/set-cookie *driver* cookie)
+      (is (= cookie
+             (select-keys (e/get-cookie *driver* :etaoin-testing123) [:name :value])))))
   (testing "deleting a cookie"
     (e/delete-cookie *driver* :cookie3)
     (let [cookie (e/get-cookie *driver* :cookie3)]
@@ -637,11 +689,9 @@
     (is (= 3 (count (fs/list-dir dir))))))
 
 (deftest test-screenshot-element
-  (when (or (e/chrome? *driver*)
-            (e/firefox? *driver*))
-    (util/with-tmp-file "screenshot" ".png" path
-      (e/screenshot-element *driver* {:id :css-test} path)
-      (is (valid-image? path)))))
+  (util/with-tmp-file "screenshot" ".png" path
+    (e/screenshot-element *driver* {:id :css-test} path)
+    (is (valid-image? path))))
 
 (deftest test-js-execute
   (testing "simple result"
@@ -783,30 +833,79 @@
 
 ;; actions
 
-(deftest test-actions
-  (testing "input key and mouse click"
-    (let [input    (e/query *driver* :simple-input)
-          password (e/query *driver* :simple-password)
-          textarea (e/query *driver* :simple-textarea)
-          submit   (e/query *driver* :simple-submit)
-          keyboard (-> (e/make-key-input)
-                       e/add-double-pause
-                       (e/with-key-down "\uE01B")
-                       e/add-double-pause
-                       (e/with-key-down "\uE01C")
-                       e/add-double-pause
-                       (e/with-key-down "\uE01D"))
-          mouse    (-> (e/make-mouse-input)
-                       (e/add-pointer-click-el input)
-                       e/add-pause
-                       (e/add-pointer-click-el password)
-                       e/add-pause
-                       (e/add-pointer-click-el textarea)
-                       e/add-pause
-                       (e/add-pointer-click-el submit))]
-      (e/perform-actions *driver* keyboard mouse)
-      (e/wait 1)
-      (is (str/ends-with? (e/get-url *driver*) "?login=1&password=2&message=3")))))
+(deftest test-mouse-state-actions
+  (testing "mouse state and release"
+    (is (= "[no clicks yet]" (e/get-element-text *driver* :mouseButtonState)))
+    (testing "left mouse down"
+      (e/perform-actions *driver* (-> (e/make-mouse-input)
+                                      (e/add-pointer-down)))
+      (let [button-state (-> (e/get-element-text *driver* :mouseButtonState)
+                             (json/parse-string true))]
+        (is (= {:type "mousedown"
+                :left true
+                :right false
+                :wheel false
+                :back false
+                :forward false} button-state))))
+    (e/when-not-safari *driver* ;; safari currently fails behaves differently one 2024-08-10
+      (testing "right mouse down is not additive to left mouse down in new transaction"
+        (e/perform-actions *driver* (-> (e/make-mouse-input)
+                                        (e/add-pointer-down k/mouse-middle)))
+        (let [button-state (-> (e/get-element-text *driver* :mouseButtonState)
+                               (json/parse-string true))]
+          (is (= {:type "mousedown"
+                  :left false
+                  :right false
+                  :wheel true
+                  :back false
+                  :forward false} button-state))))
+      (testing "multiple mouse buttons can be pressed in a single transaction"
+        (e/perform-actions *driver* (-> (e/make-mouse-input)
+                                        (e/add-pointer-down k/mouse-left)
+                                        (e/add-pointer-down k/mouse-middle)))
+        (let [button-state (-> (e/get-element-text *driver* :mouseButtonState)
+                               (json/parse-string true))]
+          (is (= {:type "mousedown"
+                  :left true
+                  :right false
+                  :wheel true
+                  :back false
+                  :forward false} button-state)))))
+    (testing "release actions wipes state"
+      (e/release-actions *driver*)
+      (let [button-state (-> (e/get-element-text *driver* :mouseButtonState)
+                             (json/parse-string true))]
+          (is (= {:type "mouseup"
+                  :left false
+                  :right false
+                  :wheel false
+                  :back false
+                  :forward false} button-state))))))
+
+(deftest test-combined-actions
+    (testing "input key and mouse click"
+        (let [input    (e/query *driver* :simple-input)
+              password (e/query *driver* :simple-password)
+              textarea (e/query *driver* :simple-textarea)
+              submit   (e/query *driver* :simple-submit)
+              keyboard (-> (e/make-key-input)
+                           e/add-double-pause
+                           (e/with-key-down "\uE01B")
+                           e/add-double-pause
+                           (e/with-key-down "\uE01C")
+                           e/add-double-pause
+                           (e/with-key-down "\uE01D"))
+              mouse    (-> (e/make-mouse-input)
+                           (e/add-pointer-click-el input)
+                           e/add-pause
+                           (e/add-pointer-click-el password)
+                           e/add-pause
+                           (e/add-pointer-click-el textarea)
+                           e/add-pause
+                           (e/add-pointer-click-el submit))]
+          (e/perform-actions *driver* keyboard mouse)
+          (e/wait 1)
+          (is (str/ends-with? (e/get-url *driver*) "?login=1&password=2&message=3")))))
 
 (deftest test-shadow-dom
   (testing "basic functional sanity"
@@ -847,12 +946,28 @@
            (->> (e/query-all-shadow-root *driver* {:id "shadow-root-host"} {:css "span"})
                 (mapv #(e/get-element-text-el *driver* %)))))))
 
+(deftest test-timeouts
+  (let [timeouts {:implicit 32134
+                  :script 78921
+                  :pageLoad 98765}]
+    (e/set-timeouts *driver* timeouts)
+    (is (= timeouts (e/get-timeouts *driver*)))
+    (e/set-page-load-timeout *driver* 987)
+    (e/set-implicit-timeout *driver* 876)
+    (e/set-script-timeout *driver* 765)
+    (is (= 987 (e/get-page-load-timeout *driver*)))
+    (is (= 876 (e/get-implicit-timeout *driver*)))
+    (is (= 765 (e/get-script-timeout *driver*)))
+    (is (= {:pageLoad 987000 :implicit 876000 :script 765000}
+           (e/get-timeouts *driver*)))))
+
 (comment
   ;; start test server
   (def test-server (p/process {:out :inherit :err :inherit} "bb test-server --port" 9993))
   (def url (format "http://localhost:%d/%s" 9993 "test.html"))
 
   ;; start your favourite webdriver
+  (def driver (e/chrome))
   (def driver (e/safari))
   (def driver (e/firefox))
 
