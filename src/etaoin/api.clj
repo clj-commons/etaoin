@@ -159,7 +159,7 @@
    [etaoin.query :as query]
    [slingshot.slingshot :refer [throw+ try+]])
   (:import
-   java.text.SimpleDateFormat
+   (java.text SimpleDateFormat)
    (java.util Base64 Date)))
 
 (set! *warn-on-reflection* true)
@@ -3463,12 +3463,11 @@
   (let [[opts bind & body] (if (symbol? (second args))
                              args
                              (cons nil args))]
-    `(client/with-pool {}
-       (let [~bind (boot-driver ~type ~opts)]
-         (try
-           ~@body
-           (finally
-             (quit ~bind)))))))
+    `(let [~bind (boot-driver ~type ~opts)]
+      (try
+        ~@body
+        (finally
+          (quit ~bind))))))
 
 (defmacro ^:no-doc with-headless-driver
   {:arglists '([type opts? bind & body])}

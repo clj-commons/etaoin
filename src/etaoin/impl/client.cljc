@@ -1,12 +1,11 @@
 (ns ^:no-doc etaoin.impl.client
   (:require
+   [babashka.http-client :as client]
    [cheshire.core :as json]
    [clojure.string :as str]
    [clojure.tools.logging :as log]
    [etaoin.impl.proc :as proc]
    [etaoin.impl.util :as util]
-   #?(:bb [clj-http.lite.client :as client]
-      :clj [clj-http.client :as client])
    [slingshot.slingshot :refer [throw+]]))
 
 (set! *warn-on-reflection* true)
@@ -30,19 +29,10 @@
 (def timeout (read-timeout))
 
 (def default-api-params
-  #?(:bb
-     {:accept         :json
-      :content-type   :json
-      :socket-timeout (* 1000 timeout)
-      :conn-timeout   (* 1000 timeout)
-      :debug false}
-     :clj
-     {:as             :json
-      :accept         :json
-      :content-type   :json
-      :socket-timeout (* 1000 timeout)
-      :conn-timeout   (* 1000 timeout)
-      :debug          false}))
+  {:headers {:accept "application/json"
+             :content-type "application/json"}
+   :timeout (* 1000 timeout)  ;; request timeout
+   :connect-timeout (* 1000 timeout)})
 
 ;;
 ;; helpers
@@ -57,10 +47,6 @@
 
 (defn- get-url-path [items]
   (str/join "/" (map url-item-str items)))
-
-(defmacro with-pool [opt & body]
-  `(client/with-connection-pool ~opt
-     ~@body))
 
 (defn- parse-json [body]
   (let [body* (str/replace body #"Invalid Command Method -" "")]
@@ -84,7 +70,6 @@
       ;; if, by chance, something goes wrong while trying to realize process liveness
       (assoc driver :process-liveness-ex ex))))
 
-
 (defn http-request
   "an isolated http-request to support mocking"
   [params]
@@ -103,13 +88,12 @@
                  (format "http://%s:%s/%s" host port path))
         params (cond-> (merge
                         default-api-params
-                        {:url              url
-                         :method           method
-                         :throw-exceptions false})
+                        {:uri     url
+                         :method  method
+                         :throw   false})
                  (= :post method)
-                 #?(:bb (assoc :body (.getBytes (json/generate-string (or payload {}))
-                                                "UTF-8"))
-                    :clj (assoc :form-params (or payload {}))))
+                 (assoc :body (.getBytes (json/generate-string (or payload {}))
+                                         "UTF-8")))
         _ (log/debugf "%s %s %6s %s %s"
                       (name driver-type)
                       (if webdriver-url
@@ -131,8 +115,7 @@
                      {:exception ex}))]
     (if (:exception resp)
       (throw+ @error (:exception resp))
-      (let [body  #?(:bb (some-> resp :body parse-json)
-                     :clj (:body resp))
+      (let [body  (some-> resp :body parse-json)
             error (delay (assoc @error
                                 :type :etaoin/http-error
                                 :status (:status resp)
@@ -146,3 +129,8 @@
 
           :else
           body)))))
+
+(comment
+  (http-request {:method :get :uri "https://clojure.org"})
+
+  )
