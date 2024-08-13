@@ -20,7 +20,7 @@ A release with an intentional breaking changes is marked with:
 == Unreleased [minor breaking]
 
 * Minor breaking
-** {issue}615[#615]: Drop support for JDK8, Etaion now requires a minimum of JDK11
+** {issue}615[#615]: Etaoin now requires a minimum of JDK11 and Clojure 1.10
 ** {issue}613[#612]: Remove all support for long obsolete and long untested PhantomJS
 ({lread})
 ** {issue}467[#467]: Move to W3C WebDriver spec.
