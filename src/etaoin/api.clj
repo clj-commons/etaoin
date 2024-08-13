@@ -24,7 +24,7 @@
 
   **Querying/Selecting DOM Elements**
   - [[query]] [[query-all]] [[query-tree]]
-  - [[query-shadow-root]] [[query-shadow-root-el]] [[query-all-shadow-root]] [[query-all-shadow-root-el]]
+  - [[query-from-shadow-root]] [[query-from-shadow-root-el]] [[query-all-from-shadow-root]] [[query-all-from-shadow-root-el]]
   - [[has-shadow-root?]] [[has-shadow-root-el?]]
   - [[exists?]] [[absent?]]
   - [[displayed?]] [[displayed-el?]] [[enabled?]] [[enabled-el?]] [[disabled?]] [[invisible?]] [[visible?]]
@@ -196,6 +196,12 @@
              ;; assume same idea as chrome (TBD)
              :capabilities {:ms:edgeOptions {:w3c true}}}})
 
+;; Web Driver identifiers used as object type tags
+;; See: https://www.w3.org/TR/webdriver2/#elements
+(def ^:private shadow-root-identifier :shadow-6066-11e4-a52e-4f735466cecf)
+;; See: https://www.w3.org/TR/webdriver2/#shadow-root
+(def ^:private web-element-identifier :element-6066-11e4-a52e-4f735466cecf)
+
 ;;
 ;; utils
 ;;
@@ -210,6 +216,20 @@
   [driver feature]
   (when (get-method feature (:type driver))
     true))
+
+(defn- unwrap-webdriver-object
+  "Unwraps an object tagged with `identifier` from a Web Driver JSON object,
+  `web-driver-obj`. If `web-driver-obj` is not tagged with
+  `identifier` (i.e., the specified identifer is not present), throw
+  an exception."
+  [web-driver-obj identifier]
+  (let [obj (get web-driver-obj identifier ::not-found)]
+    (if (= obj ::not-found)
+      (throw (ex-info (str "Could not find object tagged with " identifier
+                           " in " (str web-driver-obj))
+                      {:web-driver-obj web-driver-obj
+                       :identifier identifier}))
+      obj)))
 
 ;;
 ;; api
@@ -544,6 +564,27 @@
                  :data   {:using locator :value term}})
        :value
        (mapv (comp second first))))
+
+(defn- follow-path-from-element*
+  "Starting at `el`, search for the first query in `path`, then from the
+  resulting element, search for the next, and so on. If `path` is
+  empty, returns `el`. A member of the `path` is limited to:
+
+  * a keyword (converted to an element ID)
+  * a string (converted to an XPath expression)
+  * a map using {:xpath ...} (converted to XPath)
+  * a map using {:css ...} (converted to CSS)
+  * a map following the Etaoin map syntax (converted to the driver default, typically XPath)
+
+  Things that are not supported as `path` elements:
+  * `query`'s `:active` keyword
+  * other sequences"
+  [driver el path]
+  (reduce (fn [el q]
+            (let [[loc term] (query/expand driver q)]
+              (find-element-from* driver el loc term)))
+          el
+          path))
 
 ;;
 ;; Querying elements (high-level API)
@@ -1348,15 +1389,48 @@
   [driver q]
   (get-element-value-el driver (query driver q)))
 
+(defmulti ^:private get-element-shadow-root*
+  "Returns the shadow root element associated with the specified shadow
+  root host element, `el`, or `nil` if the specified element is not a
+  shadow root host."
+  dispatch-driver)
 
-;; TODO: Dev Doc: Why not: /session/{session id}/element/{element id}/shadow from w3c spec?
+(defmethod get-element-shadow-root*
+  :default
+  [driver el]
+  ;; Note that we're using get-element-property-el here, rather than
+  ;; executing a Web Driver Get Element Shadow Root API call. This is
+  ;; because the error handling for this API call is inconsistent
+  ;; across drivers whereas getting the property is consistent and
+  ;; probably not as brittle as drivers are updated.
+  ;;
+  ;; Specifically, if the element does not have a shadow root, then
+  ;; when executing a Get Element Shadow Root API call... (as of August 2024)
+  ;;   * Firefox: throws 404
+  ;;   * Safari: returns {:value nil}
+  ;;   * Chrome: throws HTTP status 200, Web Driver status 65
+  ;;   * Edge: throws HTTP 200, Web Driver status 65
+  ;;
+  ;; My guess is that Chrome and Edge are probably behaving correctly
+  ;; and Firefox and Safari are not.
+  ;;
+  ;; Perhaps update this at a later date when drivers better conform
+  ;; to the standard.
+  (when-let [root (get-element-property-el driver el "shadowRoot")]
+    (unwrap-webdriver-object root shadow-root-identifier)))
+
+(defmethod get-element-shadow-root*
+  :safari
+  [driver el]
+  ;; Safari gives us the shadow root in a non-standard wrapper
+  (when-let [root (get-element-property-el driver el "shadowRoot")]
+    (-> root first second)))
+
 (defn get-element-shadow-root-el
   "Returns the shadow root for the specified element or `nil` if the
   element does not have a shadow root."
   [driver el]
-  (-> (get-element-property-el driver el "shadowRoot")
-      first
-      second))
+  (get-element-shadow-root* driver el))
 
 (defn get-element-shadow-root
   "Returns the shadow root for the first element matching the query, or
@@ -1378,8 +1452,7 @@
                 :path   [:session (:session driver) :shadow shadow-root-el :element]
                 :data   {:using locator :value term}})
       :value
-      first
-      second))
+      (unwrap-webdriver-object web-element-identifier)))
 
 (defn- find-elements-from-shadow-root*
   [driver shadow-root-el locator term]
@@ -1389,9 +1462,9 @@
                  :path   [:session (:session driver) :shadow shadow-root-el :elements]
                  :data   {:using locator :value term}})
        :value
-       (mapv (comp second first))))
+       (mapv #(unwrap-webdriver-object % web-element-identifier))))
 
-(defn query-shadow-root-el
+(defn query-from-shadow-root-el
   "Queries the shadow DOM rooted at `shadow-root-el`, looking for the
   first element specified by `shadow-q`.
 
@@ -1399,12 +1472,17 @@
   the [[query]] function, but some drivers may limit it to specific
   formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations) for more information.
 
+  Note that `shadow-q` does not support `query`'s `:active` keyword.
+
   https://www.w3.org/TR/webdriver2/#dfn-find-element-from-shadow-root"
   [driver shadow-root-el shadow-q]
-  (let [[loc term] (query/expand driver shadow-q)]
-    (find-element-from-shadow-root* driver shadow-root-el loc term)))
+  (if (sequential? shadow-q)
+    (let [q1-el (query-from-shadow-root-el driver shadow-root-el (first shadow-q))]
+      (follow-path-from-element* driver q1-el (next shadow-q)))
+    (let [[loc term] (query/expand driver shadow-q)]
+      (find-element-from-shadow-root* driver shadow-root-el loc term))))
 
-(defn query-all-shadow-root-el
+(defn query-all-from-shadow-root-el
   "Queries the shadow DOM rooted at `shadow-root-el`, looking for all
   elements specified by `shadow-q`.
 
@@ -1412,12 +1490,23 @@
   the [[query]] function, but some drivers may limit it to specific
   formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations) for more information.
 
+  Note that `shadow-q` does not support `query`'s `:active` keyword.
+
   https://www.w3.org/TR/webdriver2/#dfn-find-elements-from-shadow-root"
   [driver shadow-root-el shadow-q]
-  (let [[loc term] (query/expand driver shadow-q)]
-    (find-elements-from-shadow-root* driver shadow-root-el loc term)))
+  (if (sequential? shadow-q)
+    (let [last-q (last shadow-q)
+          but-last-q (butlast shadow-q)]
+      (if-let [first-q (first but-last-q)]
+        (let [first-el (query-from-shadow-root-el driver shadow-root-el first-q)
+              but-last-el (follow-path-from-element* driver first-el (next but-last-q))
+              [loc term] (query/expand driver last-q)]
+          (find-elements-from* driver but-last-el loc term))
+        (query-all-from-shadow-root-el driver shadow-root-el last-q)))
+    (let [[loc term] (query/expand driver shadow-q)]
+      (find-elements-from-shadow-root* driver shadow-root-el loc term))))
 
-(defn query-shadow-root
+(defn query-from-shadow-root
   "First, conducts a standard search (as if by [[query]]) for an element
   with a shadow root. Then, from that shadow root element, conducts a
   search of the shadow DOM for the first element matching `shadow-q`.
@@ -1426,11 +1515,12 @@
 
   The `shadow-q` parameter is similar to the `q` parameter of
   the [[query]] function, but some drivers may limit it to specific
-  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations) for more information."
+  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations) for more information.
+  Note that `shadow-q` does not support `query`'s `:active` keyword."
   [driver q shadow-q]
-  (query-shadow-root-el driver (get-element-shadow-root driver q) shadow-q))
+  (query-from-shadow-root-el driver (get-element-shadow-root driver q) shadow-q))
 
-(defn query-all-shadow-root
+(defn query-all-from-shadow-root
   "First, conducts a standard search (as if by [[query]]) for an element
   with a shadow root. Then, from that shadow root element, conducts a
   search of the shadow DOM for all elements matching `shadow-q`.
@@ -1439,9 +1529,10 @@
 
   The `shadow-q` parameter is similar to the `q` parameter of
   the [[query]] function, but some drivers may limit it to specific
-  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations) for more information."
+  formats (e.g., CSS). See [this note](/doc/01-user-guide.adoc#shadow-root-browser-limitations) for more information.
+  Note that `shadow-q` does not support `query`'s `:active` keyword."
   [driver q shadow-q]
-  (query-all-shadow-root-el driver (get-element-shadow-root driver q) shadow-q))
+  (query-all-from-shadow-root-el driver (get-element-shadow-root driver q) shadow-q))
 
 ;;
 ;; cookies
@@ -1543,7 +1634,7 @@
 (defn el->ref
   "Return map representing an element reference for WebDriver.
 
-  The magic `:element-` constant in source is taken from the [WebDriver Spec](https://www.w3.org/TR/webdriver/#elements).
+  The magic `:element-` constant in source is taken from the [WebDriver Spec](https://www.w3.org/TR/webdriver2/#elements).
 
   Passing the element reference map to `js-execute` automatically expands it
   into a DOM node. For example:
@@ -1556,8 +1647,8 @@
   (js-execute driver \"arguments[0].scrollIntoView()\", (el->ref el))
   ```"
   [el]
-  {:ELEMENT                             el
-   :element-6066-11e4-a52e-4f735466cecf el})
+  {:ELEMENT               el
+   web-element-identifier el})
 
 (defn js-execute
   "Return result of `driver` executing Javascript `script` with `args` synchronously in the browser.
