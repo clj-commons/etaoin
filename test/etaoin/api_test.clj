@@ -918,32 +918,92 @@
                                              (e/query *driver* {:id "shadow-root-host"})))))
   (testing "whether an element has a shadow root"
     (is (e/has-shadow-root? *driver* {:id "shadow-root-host"}))
-    (is (e/has-shadow-root-el? *driver* (e/query *driver* {:id "shadow-root-host"}))))
+    (is (e/has-shadow-root-el? *driver* (e/query *driver* {:id "shadow-root-host"})))
+    (is (not (e/has-shadow-root? *driver* :not-in-shadow)))
+    (is (not (e/has-shadow-root-el? *driver* (e/query *driver* :not-in-shadow)))))
   (let [shadow-root (e/get-element-shadow-root *driver* {:id "shadow-root-host"})]
     (testing "querying the shadow root element for a single element"
       (is (= "I'm in the shadow DOM"
-             (->> (e/query-shadow-root-el *driver*
-                                          shadow-root
-                                          {:css "#in-shadow"})
+             (->> (e/query-from-shadow-root-el *driver*
+                                               shadow-root
+                                               {:css "#in-shadow"})
                   (e/get-element-text-el *driver*))))
       (is (= "I'm also in the shadow DOM"
-             (->> (e/query-shadow-root-el *driver*
-                                          shadow-root
-                                          {:css "#also-in-shadow"})
+             (->> (e/query-from-shadow-root-el *driver*
+                                               shadow-root
+                                               {:css "#also-in-shadow"})
                   (e/get-element-text-el *driver*)))))
+    (testing "vector syntax for single element shadow root queries"
+      (is (thrown? Exception
+                   (->> (e/query-from-shadow-root-el *driver*
+                                                     shadow-root
+                                                     [])
+                        (e/get-element-text-el *driver*))))
+      (is (= "Level 3 text."
+             (->> (e/query-from-shadow-root-el *driver*
+                                               shadow-root
+                                               [{:css "#level-3"}])
+                  (e/get-element-text-el *driver*)
+                  str/trim)))
+      (is (= "Level 3 text."
+             (->> (e/query-from-shadow-root-el *driver*
+                                               shadow-root
+                                               [{:css "#level-2"}
+                                                {:css "#level-3"}])
+                  (e/get-element-text-el *driver*)
+                  str/trim)))
+      (is (= "Level 3 text."
+             (->> (e/query-from-shadow-root-el *driver*
+                                               shadow-root
+                                               [{:css "#level-1"}
+                                                {:css "#level-2"}
+                                                {:css "#level-3"}])
+                  (e/get-element-text-el *driver*)
+                  str/trim))))
     (testing "querying the shadow root element for multiple elements"
-      (is (= ["I'm in the shadow DOM" "I'm also in the shadow DOM"]
-             (->> (e/query-all-shadow-root-el *driver*
-                                              shadow-root
-                                              {:css "span"})
-                  (mapv #(e/get-element-text-el *driver* %)))))))
+      (is (= ["I'm in the shadow DOM" "I'm also in the shadow DOM" "1" "2" "3"]
+             (->> (e/query-all-from-shadow-root-el *driver*
+                                                   shadow-root
+                                                   {:css "span"})
+                  (mapv #(e/get-element-text-el *driver* %))))))
+    (testing "vector syntax for -all shadow root queries"
+      (is (thrown? Exception
+                   (e/query-all-from-shadow-root-el *driver*
+                                                    shadow-root
+                                                    [])))
+      (is (= ["I'm in the shadow DOM" "I'm also in the shadow DOM" "1" "2" "3"]
+             (->> (e/query-all-from-shadow-root-el *driver*
+                                                   shadow-root
+                                                   [{:css "span"}])
+                  (map #(e/get-element-text-el *driver* %)))))
+      (is (= ["1" "2" "3"]
+             (->> (e/query-all-from-shadow-root-el *driver*
+                                                   shadow-root
+                                                   [{:css "#level-3-all"}
+                                                    {:css "span"}])
+                  (map #(e/get-element-text-el *driver* %)))))
+      (is (= ["1" "2" "3"]
+             (->> (e/query-all-from-shadow-root-el *driver*
+                                                   shadow-root
+                                                   [{:css "#level-2"}
+                                                    {:css "#level-3-all"}
+                                                    {:css "span"}])
+                  (map #(e/get-element-text-el *driver* %)))))
+      (is (= ["1" "2" "3"]
+             (->> (e/query-all-from-shadow-root-el *driver*
+                                                   shadow-root
+                                                   [{:css "#level-1"}
+                                                    {:css "#level-2"}
+                                                    {:css "#level-3-all"}
+                                                    {:css "span"}])
+                  (map #(e/get-element-text-el *driver* %)))))))
   (testing "querying the shadow root element"
     (is (= "I'm in the shadow DOM"
-           (->> (e/query-shadow-root *driver* {:id "shadow-root-host"} {:css "#in-shadow"})
+           (->> (e/query-from-shadow-root *driver* {:id "shadow-root-host"} {:css "#in-shadow"})
                 (e/get-element-text-el *driver*)))))
   (testing "querying the shadow root element for multiple elements"
-    (is (= ["I'm in the shadow DOM" "I'm also in the shadow DOM"]
-           (->> (e/query-all-shadow-root *driver* {:id "shadow-root-host"} {:css "span"})
+    (is (= ["I'm in the shadow DOM" "I'm also in the shadow DOM" "1" "2" "3"]
+           (->> (e/query-all-from-shadow-root *driver* {:id "shadow-root-host"} {:css "span"})
                 (mapv #(e/get-element-text-el *driver* %)))))))
 
 (deftest test-timeouts
