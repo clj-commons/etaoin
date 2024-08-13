@@ -968,9 +968,9 @@
                   (mapv #(e/get-element-text-el *driver* %))))))
     (testing "vector syntax for -all shadow root queries"
       (is (thrown? Exception
-                   (->> (e/query-all-from-shadow-root-el *driver*
-                                                         shadow-root
-                                                         []))))
+                   (e/query-all-from-shadow-root-el *driver*
+                                                    shadow-root
+                                                    [])))
       (is (= ["I'm in the shadow DOM" "I'm also in the shadow DOM" "1" "2" "3"]
              (->> (e/query-all-from-shadow-root-el *driver*
                                                    shadow-root
