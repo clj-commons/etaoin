@@ -1442,7 +1442,10 @@
 ;;; Shadow root queries
 ;;; 
 
-(defn- find-element-from-shadow-root*
+(defmulti ^:private find-element-from-shadow-root* dispatch-driver)
+
+(defmethods find-element-from-shadow-root*
+  [:firefox :safari]
   [driver shadow-root-el locator term]
   {:pre [(some? shadow-root-el)]}
   (-> (execute {:driver driver
