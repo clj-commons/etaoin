@@ -2323,7 +2323,7 @@ values vary by browser driver vendor:
 * firefox `"fatal"` `"error"` `"warn"` `"info"` `"config"` `"debug"` or `"trace"`
 * safari `"debug"` - safaridriver
 ** has only one detailed log level which we enable via its `--diagnose` option and abstract via `"debug"`
-** only logs to a log file which Etaion automatically discovers and populates as <<opt-driver-log-file>> in the `driver` map
+** only logs to a log file which Etaoin automatically discovers and populates as <<opt-driver-log-file>> in the `driver` map
 ** see <<opt-post-stop-fns>> for one way to dump this log file
 
 [id=opt-log-stdout,reftext=`:log-stdout`]
