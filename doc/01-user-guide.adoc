@@ -82,7 +82,7 @@ There are two steps to installation:
 
 ==== For Clojure Users
 
-Etaoin supports Clojure v1.9 and above.
+Etaoin supports Clojure v1.10 and above on JDK11 and above.
 
 Add the following into the `:dependencies` vector in your `project.clj` file:
 

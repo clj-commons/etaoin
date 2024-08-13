@@ -110,7 +110,7 @@
       (let [deadline (+ (System/currentTimeMillis) 15000)
             test-url (test-server-url "test.html") ]
         (loop []
-          (let [resp (try (client/http-request {:method :get :url test-url})
+          (let [resp (try (client/http-request {:method :get :uri test-url})
                           (catch Throwable _ :not-ready))]
             (when (= :not-ready resp)
               (if (< (System/currentTimeMillis) deadline)

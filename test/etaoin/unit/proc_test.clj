@@ -1,28 +1,35 @@
 (ns etaoin.unit.proc-test
   (:require
-   [clojure.java.shell :as shell]
    [clojure.string :as str]
    [clojure.test :refer [deftest is]]
    [etaoin.api :as e]
    [etaoin.impl.client :as client]
    [etaoin.impl.proc :as proc]
-   [etaoin.test-report]))
+   [etaoin.impl.util :as util]
+   [etaoin.test-report])
+  (:import (java.lang ProcessHandle)))
+
+(defn all-processes []
+  (for [^ProcessHandle p (-> (ProcessHandle/allProcesses) .iterator iterator-seq)
+        :when (some-> p .info .command .isPresent)
+        :let [info (.info p)
+              command (-> info .command .get)
+              arguments (when (-> info .arguments .isPresent)
+                          (->> info .arguments .get (into [])))
+              start-instant (-> info .startInstant .get)]]
+    {:pid (.pid p)
+     :is-alive (.isAlive p)
+     :start-instant start-instant
+     :handle p
+     :command command
+     :arguments arguments}))
 
 (defn get-count-driver-instances
   [drivername]
-  (if proc/windows?
-    (let [instance-report (-> (shell/sh "powershell" "-command" (format "(Get-Process %s -ErrorAction SilentlyContinue).Path" drivername))
-                              :out
-                              str/split-lines)]
-      (->> instance-report
-           (remove #(str/includes? % "\\scoop\\shims\\")) ;; for the scoop users, exclude the shim process
-           (filter #(str/includes? % drivername))
-           count))
-    (->> (shell/sh "sh" "-c" "ps aux")
-         :out
-         str/split-lines
-         (filter #(str/includes? % drivername))
-         count)))
+  (->> (all-processes)
+       (remove #(str/includes? (:command %) "\\scoop\\shims\\")) ;; exclude windows scoop shims
+       (filter #(str/includes? (:command %) drivername))
+       count))
 
 (defn get-count-chromedriver-instances []
   (get-count-driver-instances "chromedriver"))
@@ -31,7 +38,7 @@
   (get-count-driver-instances "geckodriver"))
 
 (deftest test-process-forking-port-specified-is-in-use
-  (let [port    9997
+  (let [port    (util/get-free-port)
         process (proc/run ["chromedriver" (format "--port=%d" port)])]
     (try
       (e/wait-running {:port port :host "localhost"})
@@ -44,7 +51,7 @@
         (proc/kill process)))))
 
 (deftest test-process-forking-port-not-specified-so-random-port-is-picked
-  (let [port    9998
+  (let [port    (util/get-free-port)
         process (proc/run ["chromedriver" (format "--port=%d" port)])]
     (try
       (e/wait-running {:port port :host "localhost"})
@@ -58,7 +65,7 @@
         (proc/kill process)))))
 
 (deftest test-process-forking-connect-existing-webdriver-host
-  (let [port    9999
+  (let [port    (util/get-free-port)
         process (proc/run ["chromedriver" (format "--port=%d" port)])]
     (try
       (e/wait-running {:port port :host "localhost"})
@@ -70,7 +77,7 @@
         (proc/kill process)))))
 
 (deftest test-process-forking-connect-existing-webdriver-url
-  (let [port    9999
+  (let [port    (util/get-free-port)
         process (proc/run ["chromedriver" (format "--port=%d" port)])]
     (try
       (e/wait-running {:port port :host "localhost"})
@@ -112,9 +119,9 @@
 
 (deftest http-exception-after-create-proc-now-dead
   (let [orig-http-request client/http-request]
-    (with-redefs [client/http-request (fn [{:keys [method url] :as params}]
+    (with-redefs [client/http-request (fn [{:keys [method uri] :as params}]
                                         ;; allow create session through, fail on everything else
-                                        (if (and (= :post method) (str/ends-with? url "/session"))
+                                        (if (and (= :post method) (str/ends-with? uri "/session"))
                                           (orig-http-request params)
                                           (throw (ex-info "read timeout" {}))))]
       (let [ex (try
@@ -135,9 +142,9 @@
 (deftest http-error-after-create-proc-now-dead
   ;; unlikely, we know we just talked to the driver because it returned an http error, but for completeness
   (let [orig-http-request client/http-request]
-    (with-redefs [client/http-request (fn [{:keys [method url] :as params}]
+    (with-redefs [client/http-request (fn [{:keys [method uri] :as params}]
                                         ;; allow create session through, fail on everything else
-                                        (if (and (= :post method) (str/ends-with? url "/session"))
+                                        (if (and (= :post method) (str/ends-with? uri "/session"))
                                           (orig-http-request params)
                                           {:status 418}))]
       (let [ex (try
@@ -157,7 +164,7 @@
         (is (= 0 (get-count-firefoxdriver-instances)))))))
 
 (deftest test-cleanup-connect-existing-on-create-error
-  (let [port    9999
+  (let [port    (util/get-free-port)
         process (proc/run ["chromedriver" (format "--port=%d" port)])]
     (try
       (e/wait-running {:port port :host "localhost"})

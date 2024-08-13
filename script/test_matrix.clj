@@ -41,11 +41,8 @@
    :desc (str "test-doc " os " jdk" jdk-version)} )
 
 (defn- github-actions-matrix []
-  (let [os-jdks {"ubuntu" ["8" "11" "17" "21"]
-                 ;; macOS on GitHub Actions is now arm-based and does not include jdk8
-                 "macos" ["11" "17" "21"]
-                 "windows" ["8" "11" "17" "21"]}
-        oses (keys os-jdks)
+  (let [jdks ["11" "17" "21"]
+        oses ["ubuntu" "macos" "windows"]
         ide-browsers ["chrome" "firefox"]
         api-browsers ["chrome" "firefox" "edge" "safari"]
         platforms ["jvm" "bb"]
@@ -67,14 +64,14 @@
              (test-def (merge default-opts {:os os :id "api" :platform platform :browser browser})))
            ;; for jdk coverage we don't need to run across all oses and browsers
            (for [id ["unit" "ide" "api"]
-                 jdk-version (get os-jdks "ubuntu")
+                 jdk-version jdks
                  :when (not= jdk-version (:jdk-version default-opts))]
              (test-def {:jdk-version jdk-version :os "ubuntu" :id id
                         :platform "jvm"
                         :browser (when (not= "unit" id) "firefox")}))
            (for [os oses]
              (test-doc (merge default-opts {:os os})))
-           (for [jdk-version (get os-jdks "ubuntu")
+           (for [jdk-version jdks
                  :when (not= jdk-version (:jdk-version default-opts))]
              (test-doc {:jdk-version jdk-version :os "ubuntu"})))
          (sort-by :desc natural-compare/natural-compare)

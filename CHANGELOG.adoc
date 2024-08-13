@@ -19,7 +19,8 @@ A release with an intentional breaking changes is marked with:
 //   (adjust these in publish.clj as you see fit)
 == Unreleased [minor breaking]
 
-* Technically breaking
+* Minor breaking
+** {issue}615[#615]: Etaoin now requires a minimum of JDK11 and Clojure 1.10
 ** {issue}613[#612]: Remove all support for long obsolete and long untested PhantomJS
 ({lread})
 ** {issue}467[#467]: Move to W3C WebDriver spec.
