@@ -1442,10 +1442,7 @@
 ;;; Shadow root queries
 ;;; 
 
-(defmulti ^:private find-element-from-shadow-root* dispatch-driver)
-
-(defmethods find-element-from-shadow-root*
-  [:firefox :safari]
+(defn- find-element-from-shadow-root*
   [driver shadow-root-el locator term]
   {:pre [(some? shadow-root-el)]}
   (-> (execute {:driver driver
@@ -1455,20 +1452,7 @@
       :value
       (unwrap-webdriver-object web-element-identifier)))
 
-(defmethod find-element-from-shadow-root* :default
-  [driver shadow-root-el locator term]
-  {:pre [(some? shadow-root-el)]}
-  (-> (execute {:driver driver
-                :method :post
-                :path   [:session (:session driver) :shadow shadow-root-el :element]
-                :data   {:using locator :value term}})
-      :value
-      (unwrap-webdriver-object :ELEMENT)))
-
-(defmulti ^:private find-elements-from-shadow-root* dispatch-driver)
-
-(defmethods find-elements-from-shadow-root*
-  [:firefox :safari]
+(defn- find-elements-from-shadow-root*
   [driver shadow-root-el locator term]
   {:pre [(some? shadow-root-el)]}
   (->> (execute {:driver driver
@@ -1477,16 +1461,6 @@
                  :data   {:using locator :value term}})
        :value
        (mapv #(unwrap-webdriver-object % web-element-identifier))))
-
-(defmethod find-elements-from-shadow-root* :default
-  [driver shadow-root-el locator term]
-  {:pre [(some? shadow-root-el)]}
-  (->> (execute {:driver driver
-                 :method :post
-                 :path   [:session (:session driver) :shadow shadow-root-el :elements]
-                 :data   {:using locator :value term}})
-       :value
-       (mapv #(unwrap-webdriver-object % :ELEMENT))))
 
 (defn query-from-shadow-root-el
   "Queries the shadow DOM rooted at `shadow-root-el`, looking for the
