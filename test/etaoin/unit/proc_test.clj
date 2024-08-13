@@ -7,10 +7,10 @@
    [etaoin.impl.proc :as proc]
    [etaoin.impl.util :as util]
    [etaoin.test-report])
-  (:import (java.lang ProcessHandle)))
+  (:import (java.lang ProcessHandle Process)))
 
 (defn all-processes []
-  (for [p (-> (ProcessHandle/allProcesses) .iterator iterator-seq)
+  (for [^Process p (-> (ProcessHandle/allProcesses) .iterator iterator-seq)
         :when (some-> p .info .command .isPresent)
         :let [info (.info p)
               command (-> info .command .get)
@@ -29,21 +29,7 @@
   (->> (all-processes)
        (remove #(str/includes? (:command %) "\\scoop\\shims\\")) ;; exclude windows scoop shims
        (filter #(str/includes? (:command %) drivername))
-       count)
-
-  #_(if proc/windows?
-    (let [instance-report (-> (shell/sh "powershell" "-command" (format "(Get-Process %s -ErrorAction SilentlyContinue).Path" drivername))
-                              :out
-                              str/split-lines)]
-      (->> instance-report
-           (remove #(str/includes? % "\\scoop\\shims\\")) ;; for the scoop users, exclude the shim process
-           (filter #(str/includes? % drivername))
-           count))
-    (->> (shell/sh "sh" "-c" "ps aux")
-         :out
-         str/split-lines
-         (filter #(str/includes? % drivername))
-         count)))
+       count))
 
 (defn get-count-chromedriver-instances []
   (get-count-driver-instances "chromedriver"))
