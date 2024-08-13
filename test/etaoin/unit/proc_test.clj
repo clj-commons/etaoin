@@ -7,10 +7,10 @@
    [etaoin.impl.proc :as proc]
    [etaoin.impl.util :as util]
    [etaoin.test-report])
-  (:import (java.lang ProcessHandle Process)))
+  (:import (java.lang ProcessHandle)))
 
 (defn all-processes []
-  (for [^Process p (-> (ProcessHandle/allProcesses) .iterator iterator-seq)
+  (for [^ProcessHandle p (-> (ProcessHandle/allProcesses) .iterator iterator-seq)
         :when (some-> p .info .command .isPresent)
         :let [info (.info p)
               command (-> info .command .get)
