@@ -8,7 +8,7 @@ assignees: ''
 ---
 
 **Version**
-[Please specify what version of Etaion you are using.  If you are referencing via `:git/url`, specify the `:sha`]
+[Please specify what version of Etaoin you are using.  If you are referencing via `:git/url`, specify the `:sha`]
 
 **Platform**
 [Please specify relevant info, delete anything that is not relevant]
