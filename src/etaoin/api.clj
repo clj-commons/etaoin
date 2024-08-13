@@ -1405,7 +1405,7 @@
   ;; probably not as brittle as drivers are updated.
   ;;
   ;; Specifically, if the element does not have a shadow root, then
-  ;; when executing a Get Element Shadow Root API call...
+  ;; when executing a Get Element Shadow Root API call... (as of August 2024)
   ;;   * Firefox: throws 404
   ;;   * Safari: returns {:value nil}
   ;;   * Chrome: throws HTTP status 200, Web Driver status 65
