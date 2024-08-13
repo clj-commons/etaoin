@@ -196,8 +196,10 @@
              ;; assume same idea as chrome (TBD)
              :capabilities {:ms:edgeOptions {:w3c true}}}})
 
-;; Various Web Driver identifiers used as object type tags
+;; Web Driver identifiers used as object type tags
+;; See: https://www.w3.org/TR/webdriver2/#elements
 (def ^:private shadow-root-identifier :shadow-6066-11e4-a52e-4f735466cecf)
+;; See: https://www.w3.org/TR/webdriver2/#shadow-root
 (def ^:private web-element-identifier :element-6066-11e4-a52e-4f735466cecf)
 
 ;;
@@ -1632,7 +1634,7 @@
 (defn el->ref
   "Return map representing an element reference for WebDriver.
 
-  The magic `:element-` constant in source is taken from the [WebDriver Spec](https://www.w3.org/TR/webdriver/#elements).
+  The magic `:element-` constant in source is taken from the [WebDriver Spec](https://www.w3.org/TR/webdriver2/#elements).
 
   Passing the element reference map to `js-execute` automatically expands it
   into a DOM node. For example:
@@ -1645,8 +1647,8 @@
   (js-execute driver \"arguments[0].scrollIntoView()\", (el->ref el))
   ```"
   [el]
-  {:ELEMENT                             el
-   :element-6066-11e4-a52e-4f735466cecf el})
+  {:ELEMENT               el
+   web-element-identifier el})
 
 (defn js-execute
   "Return result of `driver` executing Javascript `script` with `args` synchronously in the browser.
