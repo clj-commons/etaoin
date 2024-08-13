@@ -10,7 +10,14 @@
         org.clojure/tools.logging {:mvn/version "1.3.0"}
         lambdaisland/uri {:mvn/version "1.19.155"}}
  :aliases
- {:1.11 {:replace-deps {org.clojure/clojure {:mvn/version "1.11.3"}}}
+ {;; we use babashka/neil for project attributes
+  ;; publish workflow references these values (and automatically bumps patch component of version)
+  :neil {:project {:version "1.1.40" ;; describes last release and is template for next release
+                   :name  etaoin/etaoin
+                   ;; not neilisms - could potentially conflict with new neilisms
+                   :github-coords clj-commons/etaoin}}
+
+  :1.11 {:replace-deps {org.clojure/clojure {:mvn/version "1.11.3"}}}
   :1.12 {:replace-deps {org.clojure/clojure {:mvn/version "1.12.0-beta1"}}}
   :debug {:extra-paths ["env/dev/resources"]}
   :test {:extra-paths ["test" "env/test/resources" "build"]
@@ -19,7 +26,7 @@
                       ch.qos.logback/logback-classic {:mvn/version "1.3.14"}
                       ;; for http-client which uses apache http client 4.x which uses commons logging
                       org.slf4j/jcl-over-slf4j {:mvn/version "2.0.13"}}
-         :exec-fn build-shared/test
+         :exec-fn test-shared/test
          :org.babashka/cli {:coerce {:nses [:symbol]
                                      :patterns [:string]
                                      :vars [:symbol]}}
@@ -44,6 +51,16 @@
                                           :vars [:symbol]}}
               :main-opts ["-m" "babashka.cli.exec"]}
 
+  :clofidence {:classpath-overrides {org.clojure/clojure nil}
+               :extra-deps {com.github.flow-storm/clojure {:mvn/version "1.11.4"}
+                            com.github.flow-storm/clofidence {:mvn/version "0.3.1"}}
+               :exec-fn clofidence.main/run
+               :exec-args {:report-name "Etaoin Test Coverage"
+                           :output-folder "target/clofidence"
+                           :test-fn cognitect.test-runner.api/test
+                           :test-fn-args [{:dirs ["test" "target/test-doc-blocks/test"]}]}
+               :jvm-opts ["-Dclojure.storm.instrumentOnlyPrefixes=etaoin"]}
+
   ;; for consistent linting we use a specific version of clj-kondo through the jvm
   :clj-kondo {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2024.05.24"}}
               :main-opts ["-m" "clj-kondo.main"]}
@@ -56,6 +73,7 @@
                                                :exclude-linters [:local-shadows-var]}]}
 
   :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.4"}}
+          :extra-paths ["build"]
           :ns-default build}
 
   ;; keep deploy deps separate from build deps to avoid download-deps issues

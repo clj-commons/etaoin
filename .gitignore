@@ -9,6 +9,7 @@ pom.xml.asc
 .hgignore
 .hg/
 .DS_Store
+*~
 
 gh-pages
 node_modules
@@ -34,3 +35,4 @@ build.xml
 /fiddle/
 /.cljdoc-preview
 /.vscode
+

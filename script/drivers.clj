@@ -10,8 +10,7 @@
   [{:name "Chrome" :bin "chromedriver"}
    {:name "Firefox":bin "geckodriver"}
    {:name "Microsoft Edge" :bin "msedgedriver"}
-   {:name "Safari" :bin "safaridriver"}
-   {:name "PhantomJS" :bin "phantomjs"}])
+   {:name "Safari" :bin "safaridriver"}])
 
 (defn driver-processes []
   (->> (ps/all-processes)

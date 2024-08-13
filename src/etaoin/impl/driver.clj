@@ -31,8 +31,7 @@
   https://github.com/SeleniumHQ/selenium/wiki/JsonWireProtocol
 
   Selenium Python source code for Firefox
-  https://github.com/SeleniumHQ/selenium/blob/master/py/selenium/webdriver/firefox/options.py
-  "
+  https://github.com/SeleniumHQ/selenium/blob/master/py/selenium/webdriver/firefox/options.py"
   (:require
    [babashka.fs :as fs]
    [clojure.string :as string]
@@ -40,6 +39,11 @@
    [etaoin.impl.util :refer [deep-merge defmethods]]))
 
 (set! *warn-on-reflection* true)
+
+(defn- osify-path [s]
+  (-> s
+      fs/file
+      str))
 
 (defn dispatch-driver
   [driver & _]
@@ -66,13 +70,15 @@
   [driver]
   (or (:args driver) []))
 
+(defn- unsupported-msg [driver feature]
+  (format "%s does not support %s" (:type driver) feature))
 
 ;;
-;; Port
+;; WebDriver Port - via webdriver command line arg
 ;;
 
 (defmulti set-port
-  "Updates driver's map with the given port added to the args."
+  "Communication port for the webdriver, set as a command line arg."
   {:arglists '([driver port])}
   dispatch-driver)
 
@@ -86,13 +92,8 @@
   [driver port]
   (set-args driver [(str "--port=" port)]))
 
-(defmethod set-port
-  :phantom
-  [driver port]
-  (set-args driver ["--webdriver" port]))
-
 ;;
-;; capabilities
+;; Capabilities - are sent during webdriver session creation
 ;;
 
 (defn set-capabilities
@@ -101,59 +102,67 @@
     (update driver :capabilities deep-merge caps)
     driver))
 
+;;
+;; Load strategy is a w3c webdrive spec capability
+;;
+
 (defn set-load-strategy
+  "Page load strategy is part of the w3c spec"
   [driver strategy]
   (assoc-in driver [:capabilities :pageLoadStrategy] strategy))
 
-
 ;;
-;; options utils
+;; Vendor specific options are specified in capabalities under a vendor specific name
 ;;
 
-(defmulti options-name dispatch-driver) ;; todo nil default
+(defmulti vendor-options-name dispatch-driver) ;; todo nil default
 
-(defmethod options-name
+(defmethod vendor-options-name
   :firefox
   [_driver]
   :moz:firefoxOptions)
 
-(defmethod options-name
+(defmethod vendor-options-name
   :chrome
   [_driver]
-  :chromeOptions)
+  :goog:chromeOptions)
 
-(defmethod options-name
+(defmethod vendor-options-name
   :safari
   [_driver]
-  :safariOptions)
+  :safari:options)
 
-(defmethod options-name
+(defmethod vendor-options-name
   :edge
   [_driver]
-  :edgeOptions)
+  :ms:edgeOptions)
 
-(defmethod options-name
-  :opera
-  [_driver]
-  :operaOptions)
-
-(defn set-options-args
-  "Adds command line arguments for a browser binary (not a driver)."
-  [driver args]
+(defn- update-vendor-capabilities [driver key f val]
   (update-in driver
-             [:capabilities (options-name driver) :args]
-             append-args (map str args)))
+             [:capabilities (vendor-options-name driver) key]
+             f val))
+
+(defn- set-vendor-capabilities [driver key val]
+  (assoc-in driver
+            [:capabilities (vendor-options-name driver) key]
+            val))
+
+(defn add-browser-args
+  "Adds command line arguments for the browser binary (not the webdriver binary)."
+  [driver args]
+  (update-vendor-capabilities driver :args append-args (map str args)))
 
 ;;
-;; Profiles
+;; Profiles - if supported, are set via browser args
 ;;
 
+;; vendor specific
 (defmulti set-profile dispatch-driver)
 
 (defmethod set-profile
   :default
   [driver _profile]
-  (log/infof "This driver doesn't support setting a profile.")
+  (log/infof (unsupported-msg driver "setting a profile"))
   driver)
 
 (defmethod set-profile
@@ -167,8 +176,8 @@
                   profile)
         user-data-dir (str (fs/parent profile))
         profile-dir   (str  (fs/file-name profile))]
-    (set-options-args driver [(format "--user-data-dir=%s" user-data-dir)
-                              (format "--profile-directory=%s" profile-dir)])))
+    (add-browser-args driver [(format "--user-data-dir=%s" (osify-path user-data-dir))
+                              (format "--profile-directory=%s" (osify-path profile-dir))])))
 
 (defmethod set-profile
   :firefox
@@ -178,14 +187,14 @@
   ;; says to specify a marionette port manually.
   [driver profile]
   (-> driver
-      (set-options-args ["-profile" profile])
+      (add-browser-args ["-profile" (osify-path profile)])
       ((fn [driver]
          (if (some #(= "--marionette-port" %) (get-args driver))
            driver
            (set-args driver ["--marionette-port" 2828]))))))
 
 ;;
-;; window size
+;; Browser initial window size, if supported, is set via command line args
 ;;
 
 (defmulti set-window-size
@@ -196,21 +205,21 @@
 (defmethod set-window-size
   :default
   [driver _w _h]
-  (log/infof "This driver doesn't support setting window size.")
+  (log/infof (unsupported-msg driver "setting initial window size"))
   driver)
 
-(defmethod set-window-size
-  :chrome
+(defmethods set-window-size
+  [:chrome :edge]
   [driver w h]
-  (set-options-args driver [(format "--window-size=%s,%s" w h)]))
+  (add-browser-args driver [(format "--window-size=%s,%s" w h)]))
 
 (defmethod set-window-size
   :firefox
   [driver w h]
-  (set-options-args driver ["-width" w "-height" h]))
+  (add-browser-args driver ["-width" w "-height" h]))
 
 ;;
-;; initial URL
+;; Initial URL - Set, if supported, via browser arg
 ;;
 
 (defmulti set-url
@@ -221,19 +230,19 @@
 (defmethod set-url
   :default
   [driver _url]
-  (log/infof "This driver doesn't support setting initial URL.")
+  (log/infof (unsupported-msg driver "setting initial URL to load"))
   driver)
 
 (defmethod set-url
   :firefox
   [driver url]
-  (set-options-args driver ["--new-window" url]))
+  (add-browser-args driver ["--new-window" url]))
 
 ;; Don't know why but Chrome ignores all the --new-window, --app
 ;; or --google-base-url parameters when starting.
 
 ;;
-;; headless feature
+;; Headless mode, if supported, is supported via browser arg
 ;;
 
 (defmulti set-headless
@@ -243,7 +252,7 @@
 (defmethod set-headless
   :default
   [driver]
-  (log/infof "This driver doesn't support setting headless mode.")
+  (log/infof (unsupported-msg driver "headless mode"))
   driver)
 
 (defmethods set-headless
@@ -251,26 +260,16 @@
   [driver]
   (-> driver
       (assoc :headless true)
-      (set-options-args ["--headless"])))
+      (add-browser-args ["--headless"])))
 
-(defmulti is-headless?
-  {:arglists '([driver])}
-  dispatch-driver)
-
-(defmethod is-headless?
-  :default
+(defn is-headless?
   [driver]
-  (if-let [args (get-in driver [:capabilities (options-name driver) :args])]
+  (if-let [args (get-in driver [:capabilities (vendor-options-name driver) :args])]
     (contains? (set args) "--headless")
     (:headless driver)))
 
-(defmethod is-headless?
-  :phantom
-  [_driver]
-  true)
-
 ;;
-;; HTTP proxy
+;; HTTP proxy - is part of the w3c webdriver capabilities spec
 ;;
 
 (defn proxy->w3c
@@ -289,12 +288,13 @@
       bypass         (assoc :noProxy bypass))))
 
 (defn set-proxy
+  "The proxy is part of the w3c spec"
   [driver proxy]
   (let [proxy-w3c (proxy->w3c proxy)]
     (set-capabilities driver {:proxy proxy-w3c})))
 
 ;;
-;; Custom preferences
+;; Custom preferences - are vendor specific capabilities
 ;;
 
 (defmulti set-prefs
@@ -304,15 +304,13 @@
 (defmethod set-prefs
   :default
   [driver _prefs]
-  (log/infof "This driver doesn't support setting preferences.")
+  (log/info (unsupported-msg driver "setting vendor preferences"))
   driver)
 
 (defmethods set-prefs
-  [:firefox :chrome]
+  [:firefox :chrome :edge]
   [driver prefs]
-  (update-in driver
-             [:capabilities (options-name driver) :prefs]
-             merge prefs))
+  (update-vendor-capabilities driver :prefs merge prefs))
 
 ;;
 ;; Download folder
@@ -332,20 +330,20 @@
 (defmethod set-download-dir
   :default
   [driver _path]
-  (log/infof "This driver doesn't support setting a download directory.")
+  (log/info (unsupported-msg driver "setting download directory"))
   driver)
 
 ;; https://github.com/rshf/chromedriver/issues/338
 ;; trailing slash is mandatory for Chrome
-(defmethod set-download-dir
-  :chrome
+(defmethods set-download-dir
+  [:chrome :edge]
   [driver path]
-  (set-prefs driver {:download.default_directory   (add-trailing-slash path)
+  (set-prefs driver {:download.default_directory   (-> path osify-path add-trailing-slash)
                      :download.prompt_for_download false}))
 
 (def ^{:private true
        :doc     "A set of content types that should be downloaded without asking a user."}
-  ff-content-types
+  firefox-content-types
   #{"application/gzip"
     "application/json"
     "application/msword"
@@ -385,25 +383,18 @@
                      :browser.download.folderList     2
                      :browser.download.useDownloadDir true
                      :browser.helperApps.neverAsk.saveToDisk
-                     (string/join ";" ff-content-types)}))
+                     (string/join ";" firefox-content-types)}))
 
 ;;
-;; binary path
+;; Browser binary path - is set under vendor specific capability
 ;;
 
-(defmulti set-binary
-  {:arglists '([driver binary])}
-  dispatch-driver)
-
-(defmethod set-binary
-  :default
+(defn set-browser-binary
   [driver binary]
-  (assoc-in driver
-            [:capabilities (options-name driver) :binary]
-            binary))
+  (set-vendor-capabilities driver :binary binary))
 
 ;;
-;; logging
+;; Browser console logging - is set via vendor specific settings
 ;;
 
 (defn- remap-log-level
@@ -423,11 +414,17 @@
      :crit
      :critical) "SEVERE"
     :all        "ALL"
-    (assert false (format "Logging level %s is unsupported." level))))
+    (assert false (format "Logging level %s is unrecognized." level))))
 
+(comment
+  (remap-log-level :off)
+  (remap-log-level :foo)
+
+  )
 
 ;;
-;; https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities#loggingpreferences-json-object
+;; These used to be supported by loggingPrefs, but with newer capabilities model
+;; are browser specific.
 ;;
 (defmulti set-browser-log-level
   "Sets browser logging level."
@@ -436,11 +433,18 @@
 
 (defmethod set-browser-log-level
   :default
+  [driver _level]
+  (log/info (unsupported-msg driver "setting the browser log level"))
+  driver)
+
+(defmethods set-browser-log-level
+  [:chrome :edge]
   [driver level]
   (assoc-in driver
-            [:capabilities :loggingPrefs :browser]
+            ;; supports: ALL, DEBUG, INFO, WARNING, SEVERE, or OFF.
+            ;; a bit counter-intuitive, but does not go under goog:chromeOptions
+            [:capabilities :goog:loggingPrefs :browser]
             (remap-log-level level)))
-
 
 ;; http://chromedriver.chromium.org/capabilities
 ;; http://chromedriver.chromium.org/logging/performance-log
@@ -458,9 +462,9 @@
   (update driver :capabilities
           (fn [capabilities]
             (-> capabilities
-                (assoc-in [:loggingPrefs :performance]
+                (assoc-in [:goog:loggingPrefs :performance]
                           (remap-log-level level))
-                (assoc-in [(options-name driver) :perfLoggingPrefs]
+                (assoc-in [(vendor-options-name driver) :perfLoggingPrefs]
                           {:enableNetwork                network?
                            :enablePage                   page?
                            :traceCategories              (string/join "," (map name categories))
@@ -468,12 +472,6 @@
 
 (defmulti set-driver-log-level
   dispatch-driver)
-
-(defmethod set-driver-log-level
-  :default
-  [driver _]
-  (log/infof "The log level setting is not implemented for this driver.")
-  driver)
 
 (defmethods set-driver-log-level
   [:chrome :edge]
@@ -486,13 +484,15 @@
   (set-args driver ["--log" log-level]))
 
 (defmethod set-driver-log-level
-  :phantom
+  :safari
   [driver log-level]
-  (set-args driver [(format "--webdriver-loglevel=%s" log-level)]))
-
+  (when-not (= "debug" (string/lower-case log-level))
+    (throw (ex-info "Safari Driver only supports debug level logging" {})))
+  (-> (set-args driver ["--diagnose"])
+      (update :post-run-actions (fnil conj []) :discover-safari-webdriver-log)))
 
 ;;
-;; User-Agent
+;; User-Agent - supported through various custom schemes
 ;; https://stackoverflow.com/questions/29916054/
 ;;
 
@@ -502,17 +502,17 @@
   dispatch-driver)
 
 (defmethods set-user-agent
+  [:default]
+  [driver _user-agent]
+  (log/info (unsupported-msg driver "setting the user-agent" ))
+  driver)
+
+(defmethods set-user-agent
   [:chrome :edge]
   [driver user-agent]
-  (set-options-args driver [(str "--user-agent=" user-agent)]))
+  (add-browser-args driver [(str "--user-agent=" user-agent)]))
 
 (defmethods set-user-agent
   [:firefox]
   [driver user-agent]
   (set-prefs driver {:general.useragent.override user-agent}))
-
-(defmethods set-user-agent
-  [:default]
-  [driver _user-agent]
-  (log/infof "This driver doesn't support setting a user-agent.")
-  driver)

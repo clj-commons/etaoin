@@ -6,7 +6,8 @@
                            :sha "cf44c15f30ea3867227fa61ceb823e5e942c707f"}
         dev.nubank/docopt {:mvn/version "0.6.1-fix7"}
         org.babashka/http-server {:mvn/version "0.1.12"}
-        wevre/natural-compare {:mvn/version "0.0.10"}}
+        wevre/natural-compare {:mvn/version "0.0.10"}
+        io.github.babashka/neil {:git/tag "v0.3.67" :git/sha "054ca51"}}
  :tasks
  {;; setup
   :requires ([babashka.classpath :as cp]
@@ -22,13 +23,12 @@
                                       :default "localhost"}}
                               :restrict true}]
                 (cli/parse-opts args cli-spec))))
-  :enter (let [{:keys [name]} (current-task)]
-           (when-not (string/starts-with? name "-")
-             (status/line :head "TASK %s %s" name (string/join " " *command-line-args*))))
-  :leave (let [{:keys [name]} (current-task)]
-           (when-not (string/starts-with? name "-")
+  :enter (let [{:keys [name task-decoration] :as f} (current-task)]
+           (when-not (= :none task-decoration)
+             (status/line :head "TASK %s" name)))
+  :leave (let [{:keys [name task-decoration] :as f} (current-task)]
+           (when-not (= :none task-decoration)
              (status/line :detail "\nTASK %s done." name)))
-
   ;; commands
   dev:jvm        {:doc "start a Clojure nrepl server/prompt"
                   :task (let [opts (parse-repl-args *command-line-args*)
@@ -47,6 +47,7 @@
   test:jvm       {:doc "Runs tests under JVM Clojure [--help]"
                   :task test/test-jvm}
   -test:bb       {:doc "bb test runner, invoked within script/test.clj"
+                  :task-decoration :none
                   :requires ([taoensso.timbre :as timbre])
                   ;; repeat :test paths from deps.edn
                   :extra-paths ["test" "env/test/resources"]
@@ -57,7 +58,7 @@
                   :task (do
                           ;; timbre default logging level is debug, which generates a lot of http logging noise
                           (timbre/set-level! :info)
-                          (exec 'build-shared/test))
+                          (exec 'test-shared/test))
                   :org.babashka/cli {:coerce {:nses [:symbol]
                                               :patterns [:string]
                                               :vars [:symbol]}}}
@@ -65,8 +66,10 @@
                   :task test-server/-main}
   test:bb        {:doc "Runs tests under Babashka [--help]"
                   :task test/test-bb}
-  test-doc       {:doc "test code blocks in user guide"
+  test-doc       {:doc "Test code blocks in user guide"
                   :task test-doc/test-doc}
+  test-coverage  {:doc "Run doc and unit tests on JVM and generate ./target/clofidence code coverage report"
+                  :task test-coverage/-main}
   test-matrix    {:doc "Returns a test matrix for CI [--help]"
                   :task test-matrix/-main}
   drivers        {:doc "[list|kill] any running WebDrivers"
@@ -98,6 +101,7 @@
   docker-build   {:doc "build etaoin docker image"
                   :task (shell/command "docker build --no-cache -t etaoin:latest .")}
   -docker-install {:doc "helper to setup docker image"
+                   :task-decoration :none
                    :task docker-install/-main}
   docker-run     {:doc "run etaoin docker image (specify no commmands for interactive)"
                   :task (let [{:keys [exit]} (apply shell/command {:continue true}
@@ -106,5 +110,17 @@
                                                     "etaoin:latest"
                                                     *command-line-args*)]
                           (System/exit exit))}
-  ci-release     {:doc "release tasks, use --help for args"
-                  :task ci-release/-main}}}
+  fake-driver {:doc "Fake driver to support testing"
+               :task-decoration :none
+               :task fake-driver/-main}
+
+  pubcheck          {:task publish/pubcheck        :doc "Run only publish checks (without publishing)"}
+  publish           {:task publish/-main           :doc "Publish a release (for maintainers)"}
+  ;; let's not rely on a random version of neil
+  neil              {:task babashka.neil/-main     :doc "Pinned version of babashka/neil (used in scripting)"}
+
+  ;; hidden tasks, no need for folks to be trying these ci invoked tasks
+  -ci-set-skip-tests {:task ci-publish/set-skip-tests :doc "used on ci to determine if tests need to be run"}
+  -ci-clojars-deploy {:task ci-publish/clojars-deploy :doc "triggered on ci by release tag"}
+  -ci-github-create-release {:task ci-publish/github-create-release :doc "triggered on ci by release tag"}
+  -ci-cljdoc-request-build {:task ci-publish/cljdoc-request-build :doc "ask cljdoc to build docs for new release"}}}

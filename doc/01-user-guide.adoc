@@ -3,6 +3,7 @@
 = User Guide
 :toclevels: 5
 :toc:
+// DO NOT EDIT: the lib-version parameter is automatically updated by publish
 :lib-version: 1.0.40
 :project-src-coords: clj-commons/etaoin
 :project-mvn-coords: etaoin/etaoin
@@ -69,7 +70,6 @@ Etaoin's test suite covers the following OSes and browsers for both Clojure and 
 |===
 
 1. Our GitHub Actions macOS tests run on silicon (aka arm64, aarch64 or M*) hardware
-2. We did once test against PhantomJS, but since work has long ago stopped on this project, we have dropped testing
 
 == Installation
 
@@ -129,7 +129,6 @@ For a quieter Etaoin experience when using babashka, set the timbre default log 
 :url-chromedriver: https://sites.google.com/chromium.org/driver/
 :url-chromedriver-dl: https://sites.google.com/chromium.org/driver/downloads
 :url-geckodriver-dl: https://github.com/mozilla/geckodriver/releases
-:url-phantom-dl: http://phantomjs.org/download.html
 :url-webkit: https://webkit.org/blog/6900/webdriver-support-in-safari-10/
 :url-edge-dl: https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/
 
@@ -174,13 +173,7 @@ Edge and `msedgedriver` must match so you might need to specify the version:
 `scoop install edgedriver@101.0.1210.0`
 ** Download: link:{url-edge-dl}[Official Microsoft download site]
 
-* Phantom.js browser +
-(obsolete, no longer tested)
-** macOS: `brew install phantomjs`
-** Windows: `scoop install phantomjs`
-** Download: link:{url-phantom-dl}[Official PhantomJS download site]
-
-Check your WebDriver installations launching by launching these commands.
+Check your WebDriver installations by launching these commands.
 Each should start a process that includes its own local HTTP server.
 Use Ctrl-C to terminate.
 
@@ -190,7 +183,6 @@ chromedriver
 geckodriver
 safaridriver -p 0
 msedgedriver
-phantomjs --wd
 ----
 
 You can optionally run the Etaoin test suite to verify your installation.
@@ -198,7 +190,7 @@ You can optionally run the Etaoin test suite to verify your installation.
 TIP: Some Etaoin API tests rely on ImageMagick.
 Install it prior to running test.
 
-From a clone of the https://github.com/clj-commons/etaoin[Etaoin GitHub repo]
+From a clone of the https://github.com/clj-commons/etaoin[Etaoin GitHub repo]:
 
 * To check tools of interest to Etaoin:
 +
@@ -341,7 +333,7 @@ A portion of the above rewritten with `doto`:
 ----
 
 == Playing Along in your REPL
-We encourage you to try the examples in from this user guide in your REPL.
+We encourage you to try the examples from this user guide in your REPL.
 
 The Interwebs is constantly changing.
 This makes testing against live sites impractical.
@@ -393,7 +385,7 @@ into:
 ;; => ["username2" "pass2" "some text2"]
 ----
 
-If any exception occurs during a browser session, the WebDriver process might hang until you kill it manually.
+If any exception occurs during a browser session, the WebDriver process might hang around until you kill it manually.
 To prevent that, we recommend the `with-<browser>` macros:
 
 [source,clojure]
@@ -947,7 +939,7 @@ The `query-from-shadow-root-el` and `query-all-from-shadow-root-el` allow you to
 (def shadow-root (e/get-element-shadow-root-el driver host))
 (e/get-element-text-el driver (e/query-from-shadow-root-el driver shadow-root {:css "#in-shadow"}))
 ;; => "I'm in the shadow DOM"
- 
+
 (->> (e/query-all-from-shadow-root-el driver shadow-root {:css "span"})
      (map #(e/get-element-text-el driver %)))
 ;; > ("I'm in the shadow DOM" "I'm also in the shadow DOM")
@@ -1069,7 +1061,7 @@ It acts the same but raises an exception when querying the page returns multiple
 
 Although double-clicking is rarely purposefully employed on web sites, some naive users might think it is the correct way to click on a button or link.
 
-A double-click can be simulated with `double-click` function (Chrome, Phantom.js).
+A double-click can be simulated with `double-click` function (Chrome).
 It can be used, for example, to check your handling of disallowing multiple form submissions.
 
 [source,clojure]
@@ -1077,17 +1069,7 @@ It can be used, for example, to check your handling of disallowing multiple form
 (e/double-click driver {:tag :button :name "submit"})
 ----
 
-There are also "blind" clicking functions.
-They trigger mouse clicks on the current mouse position:
-
-[source,clojure]
-----
-(e/left-click driver)
-(e/middle-click driver)
-(e/right-click driver)
-----
-
-Another set of functions do the same but move the mouse pointer to a specified element before clicking on them:
+Functions that move the mouse pointer to a specified element before clicking on it:
 
 [source,clojure]
 ----
@@ -1583,7 +1565,7 @@ The `:eager` option only works with Firefox at the moment.
 
 Etaoin supports link:{actions}[Webdriver Actions].
 They are described as "virtual input devices".
-They act as little device input scripts that run simultaneously.
+They act as little device input scripts that can even be run simultaneously.
 
 Here, in raw form, we have an example of two actions.
 One controls the keyboard, the other the pointer (mouse).
@@ -1811,10 +1793,9 @@ Each map has the following structure:
 ;; => []
 ----
 
-Currently, logs are available in Chrome and Phantom.js only.
+Currently, logs are available in Chrome only.
 The message text and the source type will vary by browser vendor.
 Chrome wipes the logs once they have been read.
-Phantom.js wipes the logs when the page location changes.
 
 === DevTools: Tracking HTTP Requests, XHR (Ajax) [[devtools]]
 
@@ -2324,6 +2305,8 @@ From least to most verbose:
 * `:debug`
 * `:all` for all messages.
 
+Applies to Chrome and Edge only.
+
 See <<console-logs>>
 
 [id=opt-driver-log-level,reftext=`:driver-log-level`]
@@ -2338,6 +2321,10 @@ values vary by browser driver vendor:
 
 * chrome & edge `"OFF"` `"SEVERE"` `"WARNING"` `"INFO"` or `"DEBUG"`
 * firefox `"fatal"` `"error"` `"warn"` `"info"` `"config"` `"debug"` or `"trace"`
+* safari `"debug"` - safaridriver
+** has only one detailed log level which we enable via its `--diagnose` option and abstract via `"debug"`
+** only logs to a log file which Etaion automatically discovers and populates as <<opt-driver-log-file>> in the `driver` map
+** see <<opt-post-stop-fns>> for one way to dump this log file
 
 [id=opt-log-stdout,reftext=`:log-stdout`]
 [id=opt-log-stderr,reftext=`:log-sterr`]
@@ -2353,6 +2340,36 @@ _Example:_
 ----
 
 Specify `:inherit` to have WebDriver process output destination inherit from its calling process (for example, the console or some existing redirection to a file).
+
+[id=opt-driver-log-file,reftext=`:driver-log-file`]
+=== `:driver-log-file` for discovered WebDriver log file
+
+_Default:_ `<not set>` Etaoin will set this value for you
+
+_Example:_ `<n/a>` Not set by user
+
+Only populated for safaridriver when <<opt-driver-log-level>> set to `"debug"`.
+
+[id=opt-post-stop-fns,reftext=`:post-stop-fns`]
+=== `:post-stop-fns` to hook in behaviour at driver stop
+
+_Default:_ `<not set>`
+
+_Example:_
+One usage is to dump safaridriver <<opt-driver-log-file>>.
+
+//:test-doc-blocks/skip
+[source,clojure]
+----
+:post-stop-fns [(fn dump-discovered-log [driver]
+                  (if-let [log (:driver-log-file driver)]
+                    (do
+                      (println "-[start]-safaridriver log file" log)
+                      (with-open [in (io/input-stream log)]
+                        (io/copy in *out*))
+                      (println "-[end]-safaridriver log file" log))
+                    (println "-no safaridriver log file discovered-")))]
+----
 
 [id=opt-profile,reftext=`:profile`]
 === `:profile` path to web browser profile
@@ -2448,9 +2465,9 @@ _Default:_ <not set>
 
 _Example:_ See <<http-proxy>> for an example usage.
 
-A *WebDriver*'s capabilities can be vendor specific and define preferred options.
+A *WebDriver*'s capabilities can be vendor-specific and define preferred options.
 Read WebDriver vendor docs before setting anything here.
-While reading docs, note that Etaoin passes along `:capabilities` as `desiredCapabilties`.
+While reading docs, note that Etaoin passes along `:capabilities` under `firstMatch`.
 
 === Using Headless Drivers [[headless]]
 
@@ -2462,10 +2479,9 @@ Running without a UI is helpful when:
 * running local tests without having them take over your local UI
 
 Ensure your browser supports headless mode by checking if it accepts `--headless` command-line argument when running it from the terminal.
-The Phantom.js driver is headless by its nature (it was never been developed for rendering UI).
 
 When starting a driver, pass the `:headless` boolean flag to switch into headless mode.
-This flag is ignored for Safari which, as of June 2022, still does not support headless mode.
+This flag is ignored for Safari which, as of August 2024, still does not support headless mode.
 
 //{:test-doc-blocks/test-ns user-guide-headless-test}
 [source,clojure]
@@ -2489,8 +2505,6 @@ or
 (e/wait 1) ;; seems to appease Firefox on Linux
 (e/quit driver)
 ----
-
-NOTE: PhantomJS will always be in headless mode.
 
 There are several shortcuts to run Chrome or Firefox in headless mode:
 
@@ -2544,7 +2558,7 @@ To specify a directory where the browser should download files, use the `:downlo
 ----
 
 Now, when you click on a download link, the file will be saved to that folder.
-Currently, only Chrome and Firefox are supported.
+Currently, only Chrome, Edge and Firefox are supported.
 
 Firefox requires specifying MIME-types of the files that should be downloaded without showing a system dialog.
 By default, when the `:download-dir` parameter is passed, the library adds the most common MIME-types: archives, media files, office documents, etc.
@@ -2576,7 +2590,7 @@ Set a custom `User-Agent` header with the `:user-agent` option when creating a d
 ----
 
 Setting this header is important when using <<headless,headless browsers>> as many websites implement some sort of blocking when the User-Agent includes the "headless" string.
-This can lead to 403 response or some weird behavior of the site.
+This can lead to 403 responses or some weird behavior of the site.
 
 === HTTP Proxy [[http-proxy]]
 
@@ -2600,7 +2614,7 @@ To set proxy settings use environment variables `HTTP_PROXY`/`HTTPS_PROXY` or pa
 NOTE: A `:pac-url` is for a https://en.wikipedia.org/wiki/Proxy_auto-config#The_PAC_File[proxy autoconfiguration file].
 Used with Safari as other proxy options do not work in Safari.
 
-To fine tune the proxy you use the original https://www.w3.org/TR/webdriver/#proxy[object] and pass it to capabilities:
+To fine tune the proxy you use the original https://www.w3.org/TR/webdriver/#proxy[object] and pass it as capabilities:
 
 //:test-doc-blocks/skip
 [source,clojure]

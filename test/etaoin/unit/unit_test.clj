@@ -23,14 +23,13 @@
     (testing "defaults"
       (e/with-firefox driver
         (is (= {:args ["geckodriver" "--port" 12345]
-                :capabilities {:loggingPrefs {:browser "ALL"}}
                 :host "127.0.0.1"
                 :locator "xpath"
                 :port 12345
                 :process {:some :process}
                 :session "session-key"
                 :type :firefox
-                :url "http://127.0.0.1:12345"} driver))))
+                :url "http://127.0.0.1:12345"} (dissoc driver :created-epoch-ms)))))
     (testing "port"
       (e/with-firefox {:port 1234} driver
         (is (= ["geckodriver" "--port" 1234]
@@ -67,31 +66,26 @@
         (e/with-firefox {:capabilities {:specified :val2
                                         :some {:deeper {:thing1 100
                                                         :thing3 300
-                                                        :thing5 500}}}
-                         :desired-capabilities {:specified-desired :val3
-                                                :some {:deeper {:thing3 3000
-                                                                :thing6 6000}}}} driver
+                                                        :thing5 500}}}} driver
+          (is (>= (System/currentTimeMillis) (:created-epoch-ms driver)))
           (is (= {:args ["geckodriver" "--port" 12345],
                   :capabilities
                   {:default-firefox :val1
                    :default-global :val2
-                   :loggingPrefs {:browser "ALL"},
                    :some {:deeper {:thing0 10
                                    :thing1 100
                                    :thing2 2
-                                   :thing3 3000
+                                   :thing3 300
                                    :thing4 40
-                                   :thing5 500
-                                   :thing6 6000}}
-                   :specified :val2
-                   :specified-desired :val3}
+                                   :thing5 500}}
+                   :specified :val2}
                   :host "127.0.0.1"
                   :locator "xpath"
                   :port 12345
                   :process {:some :process}
                   :session "session-key"
                   :type :firefox
-                  :url "http://127.0.0.1:12345"} driver)))))))
+                  :url "http://127.0.0.1:12345"} (dissoc driver :created-epoch-ms))))))))
 
 (deftest test-chrome-profile
   (fs/with-temp-dir [chrome-dir {:prefix "chrome-dir"}]
@@ -111,20 +105,24 @@
 (deftest test-retry-launch
   (testing "give up after max tries"
     (let [run-calls (atom 0)
+          kill-calls (atom 0)
           warnings-logged (atom [])
           ex (ex-info "firefox badness" {})]
       (with-redefs
         [etaoin.impl.proc/run  (fn [_ _]
                                  (swap! run-calls inc)
                                  {:some :process})
+         etaoin.impl.proc/kill (fn [_]
+                                 (swap! kill-calls inc))
          e/running? (fn [_] (throw ex ))
          log/log* (fn [_logger level _throwable message]
-                                      (swap! warnings-logged conj [level message]))]
+                    (swap! warnings-logged conj [level message]))]
         (is (thrown-with-msg?
               ExceptionInfo
               #"gave up trying to launch :firefox after 8 tries"
               (e/with-firefox {:webdriver-failed-launch-retries 7} driver
                 driver)))
+        (is (= 8 @kill-calls) "kill calls")
         (is (= 8 @run-calls) "run calls")
         (is (= [[:warn "unexpected exception occurred launching :firefox, try 1 (of a max of 8)"]
                 [:warn "unexpected exception occurred launching :firefox, try 2 (of a max of 8)"]
@@ -136,6 +134,7 @@
                @warnings-logged) "warnings logged"))))
   (testing "succeed before max tries"
     (let [run-calls (atom 0)
+          kill-calls (atom 0)
           succeed-when-calls 3
           warnings-logged (atom [])
           ex (ex-info "safari badness" {})]
@@ -144,7 +143,8 @@
                                  (swap! run-calls inc)
                                  {:some :process})
          e/create-session   (fn [_ _] "session-key")
-         proc/kill identity
+         proc/kill (fn [_]
+                     (swap! kill-calls inc))
          e/delete-session   identity
          e/running? (fn [_]
                       (if (< @run-calls succeed-when-calls)
@@ -156,14 +156,15 @@
         ;; safari driver has a default of 4 retries
         (e/with-safari driver
           (is (= {:args ["safaridriver" "--port" 12345]
-                  :capabilities {:loggingPrefs {:browser "ALL"}}
                   :host "127.0.0.1"
                   :locator "xpath"
                   :port 12345
                   :process {:some :process}
                   :session "session-key"
                   :type :safari,
-                  :url "http://127.0.0.1:12345"} driver)))
+                  :url "http://127.0.0.1:12345"} (dissoc driver :created-epoch-ms)))
+          (is (= (dec succeed-when-calls) @kill-calls)))
+        (is (= succeed-when-calls @kill-calls))
         (is (= succeed-when-calls @run-calls))
         (is (= [[:warn "unexpected exception occurred launching :safari, try 1 (of a max of 5)"]
                 [:warn "unexpected exception occurred launching :safari, try 2 (of a max of 5)"]]

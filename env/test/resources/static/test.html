@@ -6,16 +6,16 @@
     </head>
     <body>
 
-
         <h3>Click section</h3>
         <script>
             function fill() {
                 document.getElementById("baz").innerHTML = "clicked";
             }
-        </script>
+
+       </script>
         <button id="foo" onclick="fill()">Click me</button>
         <span id="baz"></span>
-        <hr>
+       <hr>
 
         <h3>CSS section</h3>
         <style>
@@ -269,7 +269,48 @@
             </template>
         </div>
 
-        <h3 id="document-end">Document end</h3>
+        <hr>
 
+        <h3>Pointer Click Target</h3>
+        <div id="pointerClickTarget" style="border: 1px solid black;">
+            [not clicked]
+        </div>
+
+        <h3>Mouse Button State</h3>
+        <pre id="mouseButtonState">[no clicks yet]</pre>
+
+        <h3 id="document-end">Document end</h3>
+        <script>
+            // Mouse button state, taken from:
+            // https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/buttons
+            const buttonNames = ["left", "right", "wheel", "back", "forward"];
+            function mouseButtonPressed(event, buttonName) {
+               // Use binary `&` with the relevant power of 2 to check if a given button is pressed
+               return Boolean(event.buttons & (1 << buttonNames.indexOf(buttonName)));
+            }
+
+            function format(event) {
+              const { type, buttons } = event;
+              const obj = { type };
+              for (const buttonName of buttonNames) {
+                obj[buttonName] = mouseButtonPressed(event, buttonName);
+              }
+              return JSON.stringify(obj, null, 2);
+            }
+
+            const log = document.getElementById("log");
+            function logButtons(event) {
+              // Avoid interfering with form elements
+              mouseButtonState.textContent = format(event);
+            }
+            document.addEventListener("mouseup", logButtons);
+            document.addEventListener("mousedown", logButtons);
+
+            // pointer click target
+            const pointerClickTarget = document.getElementById("pointerClickTarget");
+            pointerClickTarget.addEventListener("dblclick", (e) => {
+                pointerClickTarget.textContent = "[double clicked]";
+            });
+        </script>
     </body>
 </html>

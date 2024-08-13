@@ -237,6 +237,20 @@ Run `bb cljdoc-preview --help` for help.
 * `bb cljdoc-preview view` opens a view to your imported docs in your default web browser
 * `bb cljdoc-preview stop` stops the docker image
 
+=== Test Coverage
+Sometimes it's nice to get an idea of what parts of Etaoin its unit and doc tests (or more importantly, don't) cover.
+
+[source,shell]
+----
+bb test-coverage
+----
+
+The intent is not to strive for some percentage of coverage, just information on what is not covered.
+
+When possible, run from macOS, the only OS where we hit all supported browsers (you'll need all browsers and WebDrivers installed and up to date).
+
+It will take a while, but after tests are complete, crack open `./target/clofidence/index.html` for results.
+
 == Other Notes
 
 === Logging
@@ -269,4 +283,3 @@ So, when adding any new macros, think also about our Etaoin users and our clj-ko
 
 * https://chromium.googlesource.com/chromium/src/+/master/chrome/test/chromedriver/[chromedriver]
 * https://github.com/mozilla/geckodriver[firefox geckodriver], https://searchfox.org/mozilla-central/source/testing/webdriver[sources]
-* https://github.com/detro/ghostdriver/blob/[Phantom.js (obsolete, no longer tested)]
