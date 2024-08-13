@@ -28,12 +28,12 @@
 
 (def timeout (read-timeout))
 
-(def default-api-params
-  {:headers {:accept "application/json"
-             :content-type "application/json"}
-   :timeout (* 1000 timeout)  ;; request timeout
-   :connect-timeout (* 1000 timeout)})
-
+(def client (delay (client/client
+                     {:request {:headers {:accept "application/json"
+                                          :content-type "application/json"
+                                          :accept-encoding ["gzip" "deflate"]}
+                                :timeout (* 1000 timeout)}  ;; request timeout
+                      :connect-timeout (* 1000 timeout)})))
 ;;
 ;; helpers
 ;;
@@ -86,11 +86,10 @@
         url    (if webdriver-url
                  (format "%s/%s" webdriver-url path)
                  (format "http://%s:%s/%s" host port path))
-        params (cond-> (merge
-                        default-api-params
-                        {:uri     url
-                         :method  method
-                         :throw   false})
+        params (cond-> {:uri     url
+                        :method  method
+                        :client  @client
+                        :throw   false}
                  (= :post method)
                  (assoc :body (.getBytes (json/generate-string (or payload {}))
                                          "UTF-8")))
@@ -131,6 +130,9 @@
           body)))))
 
 (comment
-  (http-request {:method :get :uri "https://clojure.org"})
+  (http-request {:method :head
+                 :uri "https://clojure.org"
+                 :client  @client})
+
 
   )
