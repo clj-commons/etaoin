@@ -102,7 +102,7 @@ jobs:
         brew install --cask microsoft-edge
         EDGE_VERSION=$(defaults read /Applications/Microsoft\ Edge.app/Contents/Info CFBundleShortVersionString)
         MAJOR_VERSION=$(echo $EDGE_VERSION | cut -d'.' -f1)
-        DRIVER_VERSION=$(curl -s "https://msedgedriver.azureedge.net/LATEST_RELEASE_${MAJOR_VERSION}_MACOS" | iconv -f UTF-16LE -t UTF-8 | tr -d '\r\n')
+        DRIVER_VERSION=$(curl -s "https://msedgedriver.azureedge.net/LATEST_RELEASE_${MAJOR_VERSION}_MACOS" | iconv -f UTF-16LE -t UTF-8 | sed 's/^\xEF\xBB\xBF//' | tr -d '\r\n')
         echo "Installing msedgedriver version ${DRIVER_VERSION} for Edge version ${EDGE_VERSION}"
         DRIVER_URL="https://msedgedriver.azureedge.net/${DRIVER_VERSION}/edgedriver_mac64_m1.zip"
         wget $DRIVER_URL
