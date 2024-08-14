@@ -39,6 +39,7 @@ jobs:
       uses: DeLaGuardo/setup-clojure@12.5
       with:
         bb: 'latest'
+        cli: 'latest'
 
     - name: Deploy to clojars
       env:
