@@ -49,7 +49,7 @@
   (let [current-branch (->> (t/shell {:out :string} "git rev-parse --abbrev-ref HEAD")
                             :out
                             string/trim)]
-    (= "main" current-branch)))
+    (= "master" current-branch)))
 
 (defn- uncommitted-code? []
   (-> (t/shell {:out :string}
@@ -69,7 +69,7 @@
     (and (zero? exit) (-> out string/trim seq))))
 
 (defn- commit-matches-default-head? []
-  (let [repo-head-sha (-> (t/shell {:out :string} (format "git ls-remote https://github.com/%s.git main" (build-shared/lib-github-coords)))
+  (let [repo-head-sha (-> (t/shell {:out :string} (format "git ls-remote https://github.com/%s.git master" (build-shared/lib-github-coords)))
                              :out
                              (string/split #"\s+")
                              first)

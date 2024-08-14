@@ -8,7 +8,7 @@
             [clojure.string :as str]
             [lread.status-line :as status]))
 
-(def ^:private changelog-url (format "https://github.com/%s/blob/main/CHANGELOG.adoc" (build-shared/lib-github-coords)))
+(def ^:private changelog-url (format "https://github.com/%s/blob/master/CHANGELOG.adoc" (build-shared/lib-github-coords)))
 
 (defn- assert-on-ci []
   (when (not (System/getenv "CI"))
