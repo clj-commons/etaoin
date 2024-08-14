@@ -17,9 +17,7 @@ A release with an intentional breaking changes is marked with:
 // - unreleased section empty
 // - optional attribute is not [breaking] or [minor breaking]
 //   (adjust these in publish.clj as you see fit)
-== Unreleased
-
-== v1.1.41 [minor breaking] - 2024-08-14 [[v1.1.41]]
+== Unreleased [minor breaking]
 
 * Minor breaking
 ** {issue}615[#615]: Etaoin now requires a minimum of JDK11 and Clojure 1.10
@@ -86,8 +84,6 @@ The implementation was either ultra legacy or misunderstood legacy APIs.
 ({lread})
 *** {issue}522[#522]: Describe how to get other common properties in docstrings
 ({lread})
-
-https://github.com/clj-commons/etaoin/compare/v1.0.40\...v1.1.41[commit log]
 
 == v1.0.40 - 2023-03-08 [[v1.0.40]]
 

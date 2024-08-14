@@ -4,7 +4,7 @@
 :toclevels: 5
 :toc:
 // DO NOT EDIT: the lib-version parameter is automatically updated by publish
-:lib-version: 1.1.41
+:lib-version: 1.0.40
 :project-src-coords: clj-commons/etaoin
 :project-mvn-coords: etaoin/etaoin
 :url-webdriver: https://www.w3.org/TR/webdriver/
