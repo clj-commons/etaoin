@@ -21,6 +21,7 @@ A release with an intentional breaking changes is marked with:
 
 * Minor breaking
 ** {issue}615[#615]: Etaoin now requires a minimum of JDK11 and Clojure 1.10
+({lread})
 ** {issue}613[#612]: Remove all support for long obsolete and long untested PhantomJS
 ({lread})
 ** {issue}467[#467]: Move to W3C WebDriver spec.
@@ -43,6 +44,8 @@ The following Chrome-specific fns have been deleted:
 The implementation was either ultra legacy or misunderstood legacy APIs.
 
 * Other changes
+** bump all deps to current versions
+({lread})
 ** Add new fns that more lightly abstract W3C WebDriver Spec (as part of {issue}467[#467] API review sweep)
 ({lread})
 *** `get-timeouts` - as alternative to `get-*-timeout`
@@ -52,8 +55,6 @@ The implementation was either ultra legacy or misunderstood legacy APIs.
 *** `get-window-rect` - as alternative to `get-window-size`, `get-window-position`
 *** `set-window-rect` - as alternative to `set-window-size`, `set-window-position`
 ** Review tests and add some missing coverage (as part of {issue}467[#467] API review sweep)
-({lread})
-** {issue}467[#467]: Required a full sweep of the API, so also includes:
 ({lread})
 ** {pr}552[#552]: Add support for wide characters to input fill functions
 ({person}tupini07[@tupini07])
@@ -65,14 +66,14 @@ The implementation was either ultra legacy or misunderstood legacy APIs.
 ({lread})
 ** {issue}604[#604]: Add support for shadow DOM
 ({person}dgr[@dgr])
-** {issue}603[#603]: Add :fn/index as alias for :index in map syntax
+** {issue}603[#603]: Add `:fn/index` as alias for `:index` in map syntax
 ({person}dgr[@dgr])
-** bump all deps to current versions
-({lread})
 ** tests
 *** {issue}572[#572]: stop using chrome `--no-sandbox` option, it has become problematic on Windows (and we did not need it anyway)
 ({lread})
 ** docs
+*** Review docs for spellos, punctuation, clarity
+({lread})
 *** {issue}534[#534]: better describe `etaoin.api/select` and its alternatives
 ({lread})
 *** {issue}536[#536]: user guide examples are now all os agnostic and CI tested via test-doc-blocks on all supported OSes
@@ -80,7 +81,9 @@ The implementation was either ultra legacy or misunderstood legacy APIs.
 *** {issue}602[#602]: Document all `:fn/*` query pseudo-functions in a definitive list
 ({person}dgr[@dgr])
 *** {issue}484[#484]: Add W3C WebDriver Spec links to docstrings
-*** {issue}522[#522]: Via better docstrings on getting properties
+({lread})
+*** {issue}522[#522]: Describe how to get other common properties in docstrings
+({lread})
 
 == v1.0.40 - 2023-03-08 [[v1.0.40]]
 
