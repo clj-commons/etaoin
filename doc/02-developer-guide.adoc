@@ -8,8 +8,9 @@ We very much appreciate contributions from the community.
 
 === Issue First Please
 
-If you have an idea or a fix, please do raise a GitHub issue before investing in any coding effort. That way we can discuss first.
-Writing code is the easy part, maintaining it forever is the hard part.
+If you have an idea or a fix, please raise a GitHub issue before investing in any coding effort.
+That way, we can discuss first.
+Writing code is the easy part; maintaining it forever is the hard part.
 
 That said, if you notice a simple typo, a PR without an issue is fine.
 
@@ -18,28 +19,28 @@ That said, if you notice a simple typo, a PR without an issue is fine.
 The entire <<running-tests,test suite>> can take several minutes to run.
 Depending on your change, you might choose to sanity test with a subset of tests or browsers.
 
-When you submit a PR, GitHub Actions will kick in and test across all supported browsers, OSes, Babashka and Clojure.
-There's no shame in it finding a problem you didn't anticipate.
-Given the nature of WebDrivers and browsers, it is not entirely unusual for a job or two to fail.
+When you submit a PR, GitHub Actions will kick in and test across all supported browsers, OSes, Babashka, and Clojure.
+There's no shame in finding a problem you didn't anticipate.
+Given the nature of CI, WebDrivers, and browsers, it is not entirely unusual for a job or two to fail.
 You can request GitHub Actions to rerun the failed jobs.
-If they fail a second time you might have an issue to solve.
+If they fail a second time, you might have an issue to solve.
 
 == Environmental Overview
 
 === Supported Environments
 
-Etaoin is tested on macOS, Ubuntu and Windows via GitHub Actions on each commit to the master branch.
+Etaoin is tested on macOS, Ubuntu and Windows via GitHub Actions for each commit to the master branch.
 All tests are run under Clojure and Babashka.
-We test against against Chrome, Firefox, Edge and Safari xref:01-user-guide.adoc#supported-os-browser[depending on the OS].
+We test against against Chrome, Firefox, Edge, and Safari xref:01-user-guide.adoc#supported-os-browser[depending on the OS].
 
 === Developer Prerequisites
 
-* Java Development Kit 1.8 or above
+* Java Development Kit 11 or above
 * Current version of Clojure cli for `clojure` command
-** Note: the Etaoin library itself supports Clojure v1.9 and above
-* Current vesion of Babashka
+** Note: the Etaoin library itself supports Clojure v1.10 and above
+* Current version of Babashka
 * Browsers and WebDrivers, see xref:01-user-guide.adoc#install-webdrivers[installation tips instructions in user guide]
-** We currently test against is installed by GitHub Actions on their virtual environments.
+** We currently test against what is installed by GitHub Actions on their virtual environments.
 They seem to keep browsers and drivers up to date. If we find we need to, we'll invest in tweaking these defaults, but we don't see a need as of this writing.
 * ImageMagick - used by tests to verify that screenshots produce valid PNG files
 
@@ -49,15 +50,15 @@ It is also useful to have access to the variety of OSes that Etaoin supports to 
 
 Etaoin is babashka compatible.
 
-Babashka supports everything that Etaoin needs, but when making changes, be aware that your code must also work under Babashka. For example, to make Etaoin Babashka compatible we made the following changes:
+Babashka supports everything Etaoin needs, but when making changes, be aware that your code must also work under Babashka. For example, to make Etaoin Babashka compatible we made the following changes:
 
 1. Turf unused reference to `java.lang.IllegalThreadStateException`
 2. Replace use of `org.clojure/data.codec` with JDK's `Base64`
 3. Replace use of `ImageIO` in tests with a callout to ImageMagick instead.
 4. Replace some JDK file related class references with `babashka/fs` abstractions
-5. Use `http-client-lite` in place of `http-client` when running under Babashka
+5. Switch to `babashka/http-client`
 
-Nothing earth shattering there, but gives you and idea.
+Nothing earth-shattering there, but it gives you an idea.
 
 == Docs
 
@@ -68,7 +69,8 @@ We host our docs on cljdoc and have support for <<cljdoc-preview,previewing>>
 
 == Babashka Tasks
 
-We use Babashka tasks, to see all available tasks run:
+We use Babashka tasks.
+To see all available tasks run:
 
 [source,shell]
 ----
@@ -130,8 +132,8 @@ In an attempt to ensure they are in working order, we run a selection of them th
 bb test-doc
 ----
 
-If you are updating the user guide, it preferable if your code block can be run through test-doc-blocks.
-But if this is impractal, you can also have test-doc-blocks skip a code block.
+If you are updating the user guide, it is preferable that your code blocks are run through test-doc-blocks.
+But if this is impractical, you can also have test-doc-blocks skip a code block.
 
 [[testing-within-docker]]
 ==== Testing within Docker
@@ -139,8 +141,8 @@ But if this is impractal, you can also have test-doc-blocks skip a code block.
 If you wish, you can build a local docker image for testing on Linux.
 You may want to try this because:
 
-* you are developing on macOS and want to run a sanity test on Linux
-* or maybe you'd like to isolate a test run without windows popping up hither and thither (on docker we use a virtual display)
+* You are developing on macOS and want to run a sanity test on Linux
+* Or maybe you'd like to isolate a test run without windows popping up hither and thither (on docker we use a virtual display)
 
 To build a local docker image with Chrome and Firefox support:
 [source,shell]
@@ -175,7 +177,7 @@ The docker image is catered to running Etaoin tests.
 
 === WebDriver Processes
 
-Sometimes WebDriver processes might hang around longer than you'd like.
+Sometimes, WebDriver processes might hang around longer than you'd like.
 
 To list them:
 [source,shell]
@@ -200,7 +202,7 @@ bb lint
 ----
 
 We like to keep our code free of lint warnings and fail CI if there are any lint issues.
-This keeps our code tidy and also helps us to ensure our <<clj-kondo-export,clj-kondo export config>> is working as expected.
+This keeps our code tidy and helps us to ensure our <<clj-kondo-export,clj-kondo export config>> is working as expected.
 
 TIP: https://github.com/borkdude/clj-kondo/blob/master/doc/editor-integration.md[Integrate clj-kondo into your editor] to catch mistakes as you type them.
 
@@ -238,7 +240,7 @@ Run `bb cljdoc-preview --help` for help.
 * `bb cljdoc-preview stop` stops the docker image
 
 === Test Coverage
-Sometimes it's nice to get an idea of what parts of Etaoin its unit and doc tests (or more importantly, don't) cover.
+Sometimes, it's nice to get an idea of what parts of Etaoin's unit and doc tests (or more importantly, don't) cover.
 
 [source,shell]
 ----
@@ -260,7 +262,7 @@ When running tests under the JVM, info level logging is configured via `env/test
 For Babashka, logging levels are controlled via the built-in timbre library.
 See `script/bb_test_runner.clj` and tweak if necessary.
 
-Sometimes tools like WireShark can also be helpful.
+Sometimes, tools like WireShark can also be helpful.
 @lread personally used a combination of RawCap and WireShark on Windows to successfully diagnose an issue.
 
 [[clj-kondo-export]]
@@ -281,5 +283,6 @@ So, when adding any new macros, think also about our Etaoin users and our clj-ko
 
 == Useful References
 
+* https://www.w3.org/TR/webdriver2/[W3C WebDriver Spec]
 * https://chromium.googlesource.com/chromium/src/+/master/chrome/test/chromedriver/[chromedriver]
 * https://github.com/mozilla/geckodriver[firefox geckodriver], https://searchfox.org/mozilla-central/source/testing/webdriver[sources]

@@ -20,8 +20,8 @@ It is a thin abstraction atop the link:{url-webdriver}[W3C WebDriver protocol] t
 
 === History
 
-Ivan Grishaev (https://github.com/igrishaev[@igrishaev]) created Etaoin and published its first release to Clojars in Feb of 2017.
-He and his band of faithful contributors grew Etaoin into a well respected goto-library for browser automation.
+Ivan Grishaev (https://github.com/igrishaev[@igrishaev]) created Etaoin and published its first release to Clojars in February 2017.
+He and his band of faithful contributors grew Etaoin into a well-respected goto-library for browser automation.
 
 In May 2022, finding his time had gravitated more to back-end development, Ivan offered Etaoin for adoption to clj-commons.
 It is now currently under the loving care of https://github.com/lread[@lread] and https://github.com/borkdude[@borkdude].
@@ -69,7 +69,7 @@ Etaoin's test suite covers the following OSes and browsers for both Clojure and 
 
 |===
 
-1. Our GitHub Actions macOS tests run on silicon (aka arm64, aarch64 or M*) hardware
+1. Our GitHub Actions macOS tests run on silicon (aka arm64, aarch64, or M*) hardware
 
 == Installation
 
@@ -140,8 +140,8 @@ Each browser has its own WebDriver implementation that must be installed.
 
 [TIP]
 ====
-If it is not already installed, you will need to install the web browser too (Chrome, Firefox, Edge).
-This is usually via a download from its official site.
+If it is not already installed, you will need to install the web browser (Chrome, Firefox, Edge).
+This is usually done via a download from the browser's official site.
 Safari comes bundled with macOS.
 ====
 
@@ -167,9 +167,9 @@ Some ways to install WebDrivers:
 ** macOS only: Set up Safari options as the link:{url-webkit}[Webkit page] instructs (scroll down to "Running the Example in Safari" section).
 
 * Microsoft Edge Driver
-** macos: (download manually)
+** macOS: (download manually)
 ** Windows: `scoop install edgedriver` +
-Edge and `msedgedriver` must match so you might need to specify the version:
+Edge and `msedgedriver` must match, so you might need to specify the version:
 `scoop install edgedriver@101.0.1210.0`
 ** Download: link:{url-edge-dl}[Official Microsoft download site]
 
@@ -188,7 +188,7 @@ msedgedriver
 You can optionally run the Etaoin test suite to verify your installation.
 
 TIP: Some Etaoin API tests rely on ImageMagick.
-Install it prior to running test.
+Install it before running tests.
 
 From a clone of the https://github.com/clj-commons/etaoin[Etaoin GitHub repo]:
 
@@ -204,7 +204,7 @@ bb tools-versions
 ----
 bb test:bb
 ----
-* For a smaller sanity test, you might want to run api tests against browsers you are particularly intested in. Example:
+* For a smaller sanity test, you might want to run api tests against browsers you are particularly interested in. Example:
 +
 [source,bash]
 ----
@@ -244,10 +244,10 @@ endif::[]
 
 ;; let's perform a quick Wiki session
 
-;; navigate to wikipedia
+;; navigate to Wikipedia
 (e/go driver "https://en.wikipedia.org/")
 
-;; make sure we aren't using large screen layout
+;; make sure we aren't using a large screen layout
 (e/set-window-size driver {:width 1280 :height 800})
 
 ;; wait for the search input to load
@@ -272,7 +272,7 @@ endif::[]
 (e/get-title driver)
 ;; => "Clojure - Wikipedia"
 
-;; does page have Clojure in it?
+;; does the page have Clojure in it?
 (e/has-text? driver "Clojure")
 ;; => true
 
@@ -288,8 +288,8 @@ endif::[]
 (e/get-element-text driver {:css "table.infobox caption"})
 ;; => "Clojure"
 
-;; Ok,now let's try something trickier
-;; Maybe we are interested what value the infobox holds for the Family row:
+;; Ok, now let's try something trickier
+;; Maybe we are interested in what value the infobox holds for the Family row:
 (let [wikitable (e/query driver {:css "table.infobox.vevent tbody"})
       row-els (e/children driver wikitable {:tag :tr})]
   (for [row row-els
@@ -300,11 +300,11 @@ endif::[]
     (e/get-element-text-el driver (e/child driver row {:tag :td}))))
 ;; => ("Lisp")
 
-;; Etaoin gives you many options, we can do the same-ish in one swoop in XPath:
+;; Etaoin gives you many options; we can do the same-ish in one swoop in XPath:
 (e/get-element-text driver "//table[@class='infobox vevent']/tbody/tr/th[text()='Family']/../td")
 ;; => "Lisp"
 
-;; When we are done we quit, which stops the Firefox WebDriver
+;; When we are done, we quit, which stops the Firefox WebDriver
 (e/quit driver) ;; the Firefox Window should close
 ----
 
@@ -335,11 +335,10 @@ A portion of the above rewritten with `doto`:
 == Playing Along in your REPL
 We encourage you to try the examples from this user guide in your REPL.
 
-The Interwebs is constantly changing.
-This makes testing against live sites impractical.
-The code in this user guide has instead been tested to work against our link:{url-sample-page}[little sample page].
+The Internet is constantly changing, making testing against live sites impractical.
+The code in this user guide has been tested to work against our link:{url-sample-page}[little sample page].
 
-Until we figure out something more clever, it might be easiest to clone the etaoin GitHub repository and run a REPL from there.
+Until we figure out something more clever, it might be easiest to clone the Etaoin GitHub repository and run a REPL from its project root.
 
 Unless otherwise directed, our examples throughout the rest of this guide will assume you've already executed the equivalent of:
 
@@ -407,9 +406,9 @@ In addition to these docs, the link:{url-tests}[Etaoin api tests] are also a goo
 
 == Creating and Quitting the Driver
 
-Etaoin comes with many options to create a WebDriver instance.
+Etaoin provides many ways to create a WebDriver instance.
 
-TIP: As previously mentioned, we recommend the `with-<browser>` convention when you need proper cleanup.
+TIP: As mentioned, we recommend the `with-<browser>` convention when you need proper cleanup.
 
 Let's say we want to create a chrome headless driver:
 
@@ -484,7 +483,7 @@ Queries (aka selectors) are used to select the elements on the page that Etaoin 
 [TIP]
 ====
 An exception is thrown if a query does not find an element.
-Use exists? to check for element existence:
+Use `exists?` to check for element existence:
 
 [source,clojure]
 ----
@@ -521,8 +520,8 @@ So there is no need to click on it first:
 ----
 
 * a string containing an link:{xpath-sel}[XPath] expression.
-(Be careful when writing XPath manually, see <<troubleshooting>>.)
-Here we find an `input` tag with an attribute `id` of `uname` and an attribute `name` of `username`:
+(Be careful when writing XPath manually; see <<troubleshooting>>.)
+Here, we find an `input` tag with an attribute `id` of `uname` and an attribute `name` of `username`:
 +
 [source,clojure]
 ----
@@ -562,15 +561,16 @@ Defaults to `*`.
 There are several query functions of the form `:fn/*`.
 Each query function takes a parameter which is the value associated with the query function keyword in the map.
 
-* `:fn/index`: Takes an positive integer parameter.
+* `:fn/index`: Takes a positive integer parameter.
   This expands into a trailing XPath `[x]` clause and is useful when you need to select a specific row in a table, for example.
 * `:fn/text`: Takes a string parameter. Matches if the element has the exact text specified.
 * `:fn/has-text`: Takes a string parameter.
   Matches if the element includes the specified text.
 * `:fn/has-string`: Takes a string parameter.
   Matches if the element string contains the specified string.
-  The difference between `:fn/has-text` and `:fn/has-string` is the difference between the XPath `text()` and `string()` functions (`text()` is the text within a given element and `string()` is the text of all descendant elements concatenated together in document order).
-  Generally, if you're targeting an element at the top of the hierarchy, you probably want `:fn/has-string`, and if you're targeting a single element at the bottom of the hierarchy, you probably want to use `:fn/has-text`.
+  The difference between `:fn/has-text` and `:fn/has-string` is the difference between the XPath `text()` and `string()` functions (`text()` is the text within a given element, and `string()` is the text of all descendant elements concatenated together in document order).
+  Generally, if you are targeting an element at the top of the hierarchy, you probably want `:fn/has-string`.
+  If you are targeting a single element at the bottom of the hierarchy, you probably want to use `:fn/has-text`.
 * `:fn/has-class`: Takes a string parameter.
   Matches if the element's `class` attribute includes the string. Unlike using a `:class` key in the map, `:fn/has-class` can match single classes, whereas `:class` is an exact match of the whole class string.
 * `:fn/has-classes`: Takes a vector of strings parameter.
@@ -714,7 +714,7 @@ A simple, somewhat contrived, example:
 [source,clojure]
 ----
 (e/click driver [{:tag :html} {:tag :body} {:tag :button}])
-;; our sample page shows form submits, did it work?
+;; our sample page shows form submits; did it work?
 (e/get-element-text driver :submit-count)
 ;; => "1"
 ----
@@ -739,7 +739,7 @@ TIP: Reminder: the leading dot in an XPath expression means starting at the curr
 
 ==== Querying the _nth_ Element Matched
 
-Sometimes you may want to interact with the _nth_ element of a query.
+Sometimes, you may want to interact with the _nth_ element of a query.
 Maybe you want to click on the second link within:
 
 [source,html]
@@ -803,7 +803,7 @@ Notice:
 
 `query-tree` pipes selectors.
 Every selector queries elements from the previous one.
-The first selector finds elements from the root, subsquent selectors find elements downward from each of the previous found elements.
+The first selector finds elements from the root, and subsequent selectors find elements downward from each of the previously found elements.
 
 Given the following HTML:
 [source,html]
@@ -827,7 +827,7 @@ Given the following HTML:
 </div>
 ----
 
-The following query will find a vector of `div` tags, then return a set of all `a` tags under those `div` tags:
+The following query will find a vector of `div` tags then return a set of all `a` tags under those `div` tags:
 
 [source,clojure]
 ----
@@ -862,11 +862,11 @@ The following examples use this HTML fragment in the User Guide sample HTML that
 </div>
 ----
 
-Everthing in the `template` element is part of the shadow DOM.
+Everything in the `template` element is part of the shadow DOM.
 The `div` with the `id` of `shadow-root-host` is, as the ID suggests, the shadow root host element.
 
 Given this HTML, you can run a standard `query` to find the shadow root host and then use `get-element-property-el` to return to the `"shadowRoot"` property.
-Note that the element IDs returned in the following examples will be unique to the specific Etaoin driver and driver session and you will not see the same IDs.
+Note that the element IDs returned in the following examples will be unique to the specific Etaoin driver and driver session, and you will not see the same IDs.
 
 [source,clojure]
 ----
@@ -981,8 +981,8 @@ You can collect elements into a vector and arbitrarily interact with them at any
 Some basic interactions are covered under <<querying>>, here we go into other types of interactions and more detail.
 
 === UNICODE and Emojis
-As of this writing, Chrome and Edge https://bugs.chromium.org/p/chromedriver/issues/detail?id=2269[only support] filling inputs with UNICODE in the https://en.wikipedia.org/wiki/Plane_(Unicode)#Basic_Multilingual_Plane[Basic Multilingual Plane].
-This includes many characters, but not many emojis 😢.
+As of this writing, Chrome, and Edge https://bugs.chromium.org/p/chromedriver/issues/detail?id=2269[only support] filling inputs with UNICODE in the https://en.wikipedia.org/wiki/Plane_(Unicode)#Basic_Multilingual_Plane[Basic Multilingual Plane].
+This includes many characters but not many emojis 😢.
 
 Firefox and Safari seem to support UNICODE more generally 🙂.
 
@@ -1061,7 +1061,7 @@ It acts the same but raises an exception when querying the page returns multiple
 
 Although double-clicking is rarely purposefully employed on web sites, some naive users might think it is the correct way to click on a button or link.
 
-A double-click can be simulated with `double-click` function (Chrome).
+A double-click can be simulated with the `double-click` function.
 It can be used, for example, to check your handling of disallowing multiple form submissions.
 
 [source,clojure]
@@ -1079,7 +1079,7 @@ Functions that move the mouse pointer to a specified element before clicking on 
 ----
 
 A middle mouse click can open a link in a new background tab.
-The right click sometimes is used to imitate a context menu in web applications.
+The right-click sometimes is used to imitate a context menu in web applications.
 
 === Selecting an option from a dropdown [[select-dropdown]]
 
@@ -1097,7 +1097,7 @@ Given the following HTML:
 </select>
 ----
 
-Click on option with value `o4`:
+Click on the option with value `o4`:
 [source,clojure]
 ----
 (e/click driver [{:id :dropdown} {:value "o4"}])
@@ -1105,7 +1105,7 @@ Click on option with value `o4`:
 ;; => "o4"
 ----
 
-Click on option with text `bar three`:
+Click on the option with text `bar three`:
 [source,clojure]
 ----
 (e/click driver [{:id :dropdown} {:fn/text "bar three"}])
@@ -1119,7 +1119,7 @@ TIP: Safari Quirk: You might need to first click on the `select` element, then t
 ====
 Etaoin also includes the https://cljdoc.org/d/etaoin/etaoin/CURRENT/api/etaoin.api#select[select] convenience function. It will select the first option from a dropdown that includes the specified text. It also automatically handles the Safari quirk.
 
-Click first matching option with text `bar`:
+Click the first matching option with text `bar`:
 [source,clojure]
 ----
 (e/select driver :dropdown "bar")
@@ -1127,7 +1127,7 @@ Click first matching option with text `bar`:
 ;; => "o2"
 ----
 
-The same operation expressed with `click`:
+The same operation, expressed with `click`:
 [source,clojure]
 ----
 (e/click driver :dropdown) ;; needed for Safari quirk only
@@ -1140,7 +1140,7 @@ The same operation expressed with `click`:
 === Keyboard Chords
 
 There is an option to input a series of keys simultaneously.
-This useful to imitate holding a system key like Control, Shift or whatever when typing.
+This is useful to imitate holding a system key like Control, Shift, or whatever when typing.
 
 The namespace `etaoin.keys` includes key constants as well as a set of functions related to keyboard input.
 
@@ -1228,7 +1228,7 @@ The WebDriver will throw an error if it does not exist.
 
 Etaoin includes functions to scroll the web page.
 
-The most important one, `scroll-query` jumps the the first element found with the query term:
+The most important one, `scroll-query` jumps the first element found with the query term:
 
 [source,clojure]
 ----
@@ -1236,7 +1236,7 @@ The most important one, `scroll-query` jumps the the first element found with th
 ;; scroll to the 5th h2 heading
 (e/scroll-query driver {:tag :h2} {:fn/index 5})
 
-;; and back up to first h1
+;; and back up to the first h1
 (e/scroll-query driver {:tag :h1})
 ----
 
@@ -1271,7 +1271,7 @@ The following functions scroll the page in all directions:
 
 [source,clojure]
 ----
-(e/scroll driver [0 0])     ;; let's start at top left
+(e/scroll driver [0 0])     ;; let's start at the top left
 
 (e/scroll-down driver 200)  ;; scrolls down by 200 pixels
 (e/scroll-down driver)      ;; scrolls down by the default (100) number of pixels
@@ -1292,7 +1292,7 @@ Ensure your browser has it enabled.
 
 === Working with frames and iframes
 
-You can only interact with items within an individual frame or iframe by first swithing to them.
+You can only interact with items within an individual frame or iframe by first switching to them.
 
 Say you have an HTML layout like this:
 
@@ -1344,7 +1344,7 @@ To reach nested frames, you can dig down like so:
 (e/switch-frame-parent driver)
 ----
 
-Use the `with-frame` macro to temporarily switch to a target frame, do some work, returning its last expression, while preserving your original frame context.
+Use the `with-frame` macro to temporarily switch to a target frame, then do some work, returning its last expression while preserving your original frame context.
 
 [source,clojure]
 ----
@@ -1404,10 +1404,10 @@ Example:
 (e/js-async
   driver
   "var args = arguments; // preserve the global args
-  // WebDriver added the callback as the last arg, we grab it here
+  // WebDriver added the callback as the last arg; we grab it here
   var callback = args[args.length-1];
   setTimeout(function() {
-    // We call the WebDriver callback passing with what we want it to return
+    // We call the WebDriver callback, passing with what we want it to return
     // In this case we pass we chose to return 42 from the arg we passed in
     callback(args[0].foo.bar.baz);
   },
@@ -1441,8 +1441,8 @@ or for a block of code via `with-script-timeout`:
 
 === Wait Functions
 
-The main difference between a program and a human being is that the first one operates very fast.
-A computer operates so fast, that sometimes a browser cannot render new HTML in time.
+The main difference between a program and a human being is that the first operates very fast.
+A computer operates so fast that sometimes a browser cannot render new HTML in time.
 After each action, you might consider including a `wait-<something>` function that polls a browser until the predicate evaluates to true.
 Or just `(wait <seconds>)` if you don't care about optimization.
 
@@ -1472,7 +1472,7 @@ is executed something along the lines of:
 and thus returns the result of the last form of the original body.
 
 The `(doto-wait n driver & body)` acts like the standard `doto` but prepends each form with `(wait n)`.
-The above example re-expressed with `doto-wait`:
+The above example, re-expressed with `doto-wait`:
 
 [source,clojure]
 ----
@@ -1496,7 +1496,7 @@ This is effectively the same as:
 ----
 
 In addition to `with-wait` and `do-wait` there are a number of waiting functions: `wait-visible`, `wait-has-alert`, `wait-predicate`, etc (see the full list in the link:{url-doc}/CURRENT/api/etaoin.api#wait[API docs].
-They accept default timeout/interval values that can be redefined using the `with-wait-timeout` and `with-wait-interval` macros, respectively.
+They accept default timeout/interval values that can be redefined using the `with-wait-timeout` and `with-wait-interval` macros.
 They all throw if the wait timeout is exceeded.
 
 [source,clojure]
@@ -1568,7 +1568,7 @@ They are described as "virtual input devices".
 They act as little device input scripts that can even be run simultaneously.
 
 Here, in raw form, we have an example of two actions.
-One controls the keyboard, the other the pointer (mouse).
+One controls the keyboard, the other controls the pointer (mouse).
 
 [source,clojure]
 ----
@@ -1608,8 +1608,8 @@ You can create a map manually and send it to the `perform-actions` method:
 (e/perform-actions driver keyboard-input)
 ----
 
-Or you might choose to use Etaoin's action helpers.
-First you create the virtual input device:
+Or, you might choose to use Etaoin's action helpers.
+First, you create the virtual input device:
 
 [source,clojure]
 ----
@@ -1631,7 +1631,7 @@ Here's a slightly larger working annotated example:
 
 [source,clojure]
 ----
-;; virtual inputs run simultaneously so we'll create a little helper to generate n pauses
+;; multiple virtual inputs run simultaneously, so we'll create a little helper to generate n pauses
 (defn add-pauses [input n]
   (->> (iterate e/add-pause input)
        (take (inc n))
@@ -1672,7 +1672,7 @@ To clear the state of virtual input devices, release all currently pressed keys 
 
 == Capturing Screenshots
 
-Calling the `screenshot` function dumps the current visible page into a PNG image file on your disk.
+The `screenshot` function dumps the currently visible page to a PNG image file on your disk.
 Specify any absolute or relative path.
 Specify a string:
 
@@ -1803,7 +1803,7 @@ You can trace events that come from the DevTools panel.
 This means that everything you see in the developer console now is available through the Etaoin API.
 This currently only works for Google Chrome.
 
-To start a driver with devtools support enabled specify a `:dev` map.
+To start a driver with devtools support enabled, specify a `:dev` map.
 
 //let's put this driver in its own namespace
 //{:test-doc-blocks/test-ns user-guide-devtools-test}
@@ -2009,10 +2009,10 @@ You'd like to check if a certain request has been fired to the server.
 So you press a button, wait for a while, and then read the requests made by your browser.
 
 Having a list of requests, you search for the one you need (e.g. by its URL) and then check its state.
-The `:state` field has got the same semantics of the `XMLHttpRequest.readyState`.
+The `:state` field has the same semantics of the `XMLHttpRequest.readyState`.
 It's an integer from 1 to 4 with the same behavior.
 
-To check if a request has been finished, done or failed, use these predicates:
+To check if a request has been finished, done, or failed, use these predicates:
 
 // Having too many failures on CI with this one, skip for now
 //:test-doc-blocks/skip
@@ -2039,11 +2039,11 @@ To check if a request has been finished, done or failed, use these predicates:
 Note that `request-done?` doesn't mean the request has succeeded.
 It only means its pipeline has reached a final step.
 
-TIP: when you read dev logs, you consume them from an internal buffer that gets flushed.
+TIP: When you read dev logs, you consume them from an internal buffer that gets flushed.
 The second call to `get-requests` or `get-ajax` will return an empty list.
 
 Perhaps you want to collect these logs.
-A function `dev/get-performance-logs` return a list of logs so you accumulate them in an atom or whatever:
+The function `dev/get-performance-logs` returns a list of logs, so you accumulate them in an atom or whatever:
 
 //{:test-doc-blocks/test-ns user-guide-devtools-test}
 [source,clojure]
@@ -2116,7 +2116,7 @@ Unlike `get-requests` and `get-ajax`, they are pure functions and won't flush an
 ----
 
 When working with logs and requests, pay attention to their count and size.
-The maps have plenty of keys and the number of items in collections can become very large.
+The maps have many keys, and the number of items in collections can be large.
 Printing a slew of events might freeze your editor.
 Consider using `clojure.pprint/pprint` as it relies on max level and length limits.
 
@@ -2131,7 +2131,7 @@ endif::[]
 
 === Postmortem: Auto-save Artifacts in Case of Exception [[postmortem]]
 
-Sometimes, it can be difficult to diagnose what went wrong during a failed UI test run.
+Sometimes, diagnosing what went wrong during a failed UI test run can be difficult.
 Use the `with-postmortem` to save useful data to disk before the exception was triggered:
 
 * a screenshot of the visible browser page
@@ -2167,7 +2167,7 @@ The available `with-postmortem` options are:
 [source,clojure]
 ----
 {;; directory to save artifacts
- ;; will be created if it does not already exist, defaults to current working directory
+ ;; will be created if it does not already exist, defaults to the current working directory
  :dir "/home/ivan/UI-tests"
 
  ;; directory to save screenshots; defaults to :dir
@@ -2212,8 +2212,8 @@ Alternative: see <<opt-webdriver-url>>.
 [id=opt-port,reftext=`:port`]
 === `:port` for WebDriver
 
-_Default:_ Etaoin selects a random unused port when lanching a local WebDriver process.
-When connecting to a remote WebDriver process, varies by vendor:
+_Default:_ Etaoin selects a random unused port when launching a local WebDriver process.
+When connecting to a remote WebDriver process, it varies by vendor:
 
 * chrome `9515`
 * firefox `4444`
@@ -2232,7 +2232,7 @@ _Example:_ `:web-driver-url "https://chrome.browserless.io/webdriver"`
 
 When:
 
-* Specified, Etaoin attempts to connect to an pre-existing running *WebDriver* process.
+* Specified, Etaoin attempts to connect to a pre-existing running *WebDriver* process.
 * Omitted, creates a new local *WebDriver* process (unless <<opt-host>> is specified).
 
 See <<connecting-existing>>.
@@ -2287,7 +2287,7 @@ _Default:_ <not set>
 
 _Example:_ `:args ["--incognito" "--app" "http://example.com"]`
 
-Specifies extra command line arguments for the *web browser* binary, see vendor docs for what is available.
+Specifies extra command line arguments for the *web browser* binary; see vendor docs for what is available.
 
 [id=opt-log-level,reftext=`:log-level`]
 === `:log-level` for the web browser console
@@ -2317,7 +2317,7 @@ _Default:_ <not set>
 _Example:_ `:driver-log-level "INFO"`
 
 *WebDriver* minimal log level.
-values vary by browser driver vendor:
+Values vary by browser driver vendor:
 
 * chrome & edge `"OFF"` `"SEVERE"` `"WARNING"` `"INFO"` or `"DEBUG"`
 * firefox `"fatal"` `"error"` `"warn"` `"info"` `"config"` `"debug"` or `"trace"`
@@ -2465,7 +2465,7 @@ _Default:_ <not set>
 
 _Example:_ See <<http-proxy>> for an example usage.
 
-A *WebDriver*'s capabilities can be vendor-specific and define preferred options.
+A *WebDriver*'s capabilities can be vendor-specific and can specify preferred options.
 Read WebDriver vendor docs before setting anything here.
 While reading docs, note that Etaoin passes along `:capabilities` under `firstMatch`.
 
@@ -2481,7 +2481,7 @@ Running without a UI is helpful when:
 Ensure your browser supports headless mode by checking if it accepts `--headless` command-line argument when running it from the terminal.
 
 When starting a driver, pass the `:headless` boolean flag to switch into headless mode.
-This flag is ignored for Safari which, as of August 2024, still does not support headless mode.
+This flag is ignored for Safari, which, as of August 2024, still does not support headless mode.
 
 //{:test-doc-blocks/test-ns user-guide-headless-test}
 [source,clojure]
@@ -2532,14 +2532,14 @@ There are several shortcuts to run Chrome or Firefox in headless mode:
   (e/go driver "https://clojure.org"))
 ----
 
-There are also the `when-headless` and `when-not-headless` macros that conditonally execute a block of commands:
+There are also the `when-headless` and `when-not-headless` macros that conditionally execute a block of commands:
 
 //{:test-doc-blocks/test-ns user-guide-headless-test}
 [source,clojure]
 ----
 (e/with-chrome driver
   (e/when-not-headless driver
-    ;;... some actions that might be not available in headless mode
+    ;;... some actions that might not be available in headless mode
     )
   ;;... common actions for both versions
   )
@@ -2590,7 +2590,7 @@ Set a custom `User-Agent` header with the `:user-agent` option when creating a d
 ----
 
 Setting this header is important when using <<headless,headless browsers>> as many websites implement some sort of blocking when the User-Agent includes the "headless" string.
-This can lead to 403 responses or some weird behavior of the site.
+This can lead to 403 responses or some weird behavior on the site.
 
 === HTTP Proxy [[http-proxy]]
 
@@ -2614,7 +2614,7 @@ To set proxy settings use environment variables `HTTP_PROXY`/`HTTPS_PROXY` or pa
 NOTE: A `:pac-url` is for a https://en.wikipedia.org/wiki/Proxy_auto-config#The_PAC_File[proxy autoconfiguration file].
 Used with Safari as other proxy options do not work in Safari.
 
-To fine tune the proxy you use the original https://www.w3.org/TR/webdriver/#proxy[object] and pass it as capabilities:
+To fine-tune the proxy you use the original https://www.w3.org/TR/webdriver/#proxy[object] and pass it as capabilities:
 
 //:test-doc-blocks/skip
 [source,clojure]
@@ -2634,7 +2634,7 @@ To fine tune the proxy you use the original https://www.w3.org/TR/webdriver/#pro
 
 To connect to an existing WebDriver, specify the `:host` parameter.
 
-TIP: When neither the `:host` nor the `:webdriver-url` parameter is specified Etaoin will launch a new WebDriver process.
+TIP: When neither the `:host` nor the `:webdriver-url` parameter is specified, Etaoin will launch a new WebDriver process.
 
 The `:host` can be a hostname (localhost, some.remote.host.net) or an IP address (127.0.0.1, 183.102.156.31).
 If the port is not specified, the <<driver-options,default>> `:port` is assumed.
@@ -2679,9 +2679,9 @@ And it can affect certain WebDriver implementations, https://github.com/clj-comm
 
 ==== Create and Find a Profile in Chrome
 
-. In the right top corner of the main window, click on a user button.
+. In the top right corner of the main window, click on a user button.
 . In the dropdown, select "Manage People".
-. Click "Add person", submit a name and press "Save".
+. Click "Add person", submit a name, and press "Save".
 . The new browser window should appear.
 Now, setup the new profile as you want.
 . Open `chrome://version/` page.
@@ -2689,9 +2689,9 @@ Copy the file path that is beneath the `Profile Path` caption.
 
 ==== Create and Find a Profile in Firefox
 
-. Run Firefox with `-P`, `-p` or `-ProfileManager` key as the https://support.mozilla.org/en-US/kb/profile-manager-create-and-remove-firefox-profiles[official page] describes.
+. Run Firefox with `-P`, `-p`, or `-ProfileManager` key as the https://support.mozilla.org/en-US/kb/profile-manager-create-and-remove-firefox-profiles[official page] describes.
 . Create a new profile and run the browser.
-. Setup the profile as you need.
+. Setup the profile as needed.
 . Open `about:support` page.
 Near the `Profile Folder` caption, press the `Show in Finder` button.
 A new folder window should appear.
@@ -2720,13 +2720,13 @@ Once you've got a profile path, launch a driver with the `:profile` key as follo
 == Writing and Running Integration Tests For Your Application
 
 === Headless Testing [[headless-testing]]
-Is is not unusual for Continuous Integration services to have no display.
-This seems to be especially true for Linux runners.
+It is not unusual for Continuous Integration services to have no display.
+This is especially true for Linux runners.
 
 When running your tests on Linux with no display, you have 2 choices:
 
-* run the WebDriver in <<headless,headless>> mode
-* use a virtual display
+* Run the WebDriver in <<headless,headless>> mode
+* Use a virtual display
 
 NOTE: Things being what they are, WebDrivers can behave differently when run headless.
 
@@ -2804,7 +2804,7 @@ A dynamic `+*driver*+` var might be used to hold the driver.
     ))
 ----
 
-If for some reason you want to reuse a single driver instance for all tests:
+If, for some reason, you want to reuse a single driver instance for all tests:
 
 //:test-doc-blocks/skip
 [source,clojure]
@@ -2843,7 +2843,7 @@ If for some reason you want to reuse a single driver instance for all tests:
 ...some tests
 ----
 
-For faster testing you can use this example:
+For faster testing, you can use this example:
 
 //:test-doc-blocks/skip
 [source,clojure]
@@ -2886,9 +2886,9 @@ In that case, your fixture may become a bit more complex:
 ----
 
 Now, each test will be run twice.
-Once for Firefox and then once Chrome.
+Once for Firefox and then once for Chrome.
 Please note the test call is prepended with the `testing` macro that puts the driver name into the report.
-Once you've got an error, you'll easily find what driver failed the tests exactly.
+When a test fails, you'll know what driver failed the test.
 
 TIP: See also link:{url-tests}[Etaoin's API tests] for an example of this strategy.
 
@@ -2910,7 +2910,7 @@ To save some artifacts in case of an exception, wrap the body of your test into 
 
 If any exception occurs in that test, artifacts will be saved.
 
-To not copy and paste the options map, declare it at the top of the module.
+To avoid copying and pasting the options map, declare it at the top of the module.
 If you use Circle CI, it would be great to save the data into a special artifacts directory that might be downloaded as a zip file once the build has been finished:
 
 //:test-doc-blocks/skip
@@ -2935,7 +2935,7 @@ Now pass that map everywhere into PM handler:
     )
 ----
 
-Once an error occurs, you will find a PNG image that represents your browser page at the moment of exception and HTML dump.
+When an error occurs, you will find a PNG image of your browser page at the time of the exception and an HTML dump.
 
 See <<postmortem>>.
 
@@ -2945,7 +2945,7 @@ Since UI tests may take lots of time to pass, it's definitely a good practice to
 
 If you are using leiningen, here are a few tips.
 
-First, add `+^:integration+` tag to all the tests that are run under the browser like follows:
+First, add `+^:integration+` tag to all the tests that are run under the browser as follows:
 
 //:test-doc-blocks/skip
 [source,clojure]
@@ -2972,12 +2972,12 @@ To run integration tests, launch `lein test :integration`.
 
 === Check Whether a File has been Downloaded [[test-file-downloads]]
 
-Sometimes, a file starts to download automatically when you click on a link or just visit some page.
-In tests, you might need to ensure a file really has been downloaded successfully.
-A common scenario would be:
+Sometimes, a file downloads automatically when you click a link or visit a page.
+In tests, you might need to ensure a file has been downloaded successfully.
+A typical scenario would be:
 
-* provide a custom empty download folder when running a browser (see <<download-dir>>).
-* Click on a link or perform any action needed to start file downloading.
+* Provide a custom empty download folder when running a browser (see <<download-dir>>).
+* Click on a link or perform any action needed to start the file download.
 * Wait for some time;
 for small files, 5-10 seconds would be enough.
 * Using files API, scan that directory and try to find a new file.
@@ -3017,7 +3017,7 @@ Etaoin can play the files produced by link:{ide}[Selenium IDE].
 Selenium IDE allows you to record web interactions for later playback.
 It is installed as an optional extension in your web browser.
 
-Once installed, and activated, it records your actions into a JSON file with the `.side` extension.
+Once installed and activated, it records your actions to a JSON file with the `.side` extension.
 You can save that file and run it with Etaoin.
 
 Let's imagine you've installed the IDE and recorded some actions as per Selenium IDE documentation.
@@ -3101,12 +3101,12 @@ This must be an EDN string representing a Clojure map.
 That's the same map that you pass into a driver at creation time.
 
 Please note the IDE support is still experimental.
-If you encounter unexpected behavior feel free to open an issue.
+If you encounter unexpected behavior, feel free to open an issue.
 At the moment, we only support Chrome and Firefox for IDE files.
 
 == Webdriver in Docker
 
-To work with the driver in Docker, you can take ready-made images:
+To work with the WebDrivers in Docker, you can take ready-made images:
 
 Example for https://hub.docker.com/r/robcherry/docker-chromedriver/[Chrome]:
 
@@ -3122,9 +3122,9 @@ for https://hub.docker.com/r/instrumentisto/geckodriver[Firefox]:
 docker run --name geckodriver -p 4444:4444 -d instrumentisto/geckodriver
 ----
 
-To connect to an existing running WebDriver process you need to specify the `:host`.
+To connect to an existing running WebDriver process, you need to specify the `:host`.
 In this example `:host` would be `localhost` or `127.0.0.1`.
-The `:port` would be the appropirate port for the running WebDriver process as exposed by docker.
+The `:port` would be the appropriate port for the running WebDriver process as exposed by docker.
 If the port is not specified, the <<driver-options,default>> port is set.
 
 //:test-doc-blocks/skip
@@ -3135,6 +3135,12 @@ If the port is not specified, the <<driver-options,default>> port is set.
 ----
 
 == Troubleshooting [[troubleshooting]]
+
+=== WebDriver Support Across Vendors is Inconsistent
+
+Vendors don't always do a great job of completely following or implementing the https://www.w3.org/TR/webdriver2/[W3C WebDriver Spec].
+
+The https://wpt.fyi/results/webdriver/tests/classic[web-plaforms-tests dashboard] is a great way to get a feel for vendor support of the spec.
 
 === Old Versions of WebDrivers can have Limitations
 
@@ -3147,7 +3153,7 @@ Reproduction:: For example, `chromedriver` used to throw an error when calling `
   (e/maximize driver))
 ;; an exception with "cannot get automation extension" was thrown
 ----
-Cause:: This was a bug in `chromedriver` that was fixed in chromdriver v2.28.
+Cause:: This was a bug in `chromedriver` that was fixed in chromedriver v2.28.
 Solution:: Updating to the current WebDriver resolved the issue.
 
 === New Versions of WebDrivers can Introduce Bugs

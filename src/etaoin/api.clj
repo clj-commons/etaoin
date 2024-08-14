@@ -50,7 +50,7 @@
   - [[click]] [[click-el]] [[click-single]] [[click-multi]]
   - [[left-click-on]] [[middle-click-on]] [[right-click-on]] [[mouse-click-on]]
   - [[double-click]] [[double-click-el]]
-  - [[drag-and-drop]] [[mouse-btn-down]] [[mouse-btn-up]]
+  - [[drag-and-drop]]
   - [[touch-tap]]
 
   **Inputs/Forms**

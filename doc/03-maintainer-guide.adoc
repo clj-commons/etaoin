@@ -20,7 +20,7 @@ The publish task locally validates:
 ** you are on the default branch
 ** do not have any uncommitted code
 ** do not have any unpushed commits
-** local head sha matches matches remote head sha
+** local head sha matches remote head sha
 * changelog
 ** Has an "Unreleased" section with content
 
@@ -38,7 +38,7 @@ Then also locally:
 . pushes commit
 . pushes tag
 
-Then up on CI, the CI publish workflow is only triggered when it sees a release tag:
+Then, up on CI, the CI publish workflow is only triggered when it sees a release tag:
 
 . CI tests workflow is invoked
 . a release jar is published to clojars
@@ -60,9 +60,9 @@ CI - We use GitHub Actions for this project
 == Relevant Details
 
 The publish commit message is prefixed with `[publish workflow]`.
-We check for this prefix on CI to avoid running tests twice during publish.
+We check for this prefix on CI to avoid running tests twice during a publish.
 If a regular commit contains this prefix, tests will be skipped (so don't do that).
 
 == CI Config
 
-Clojars secrets are protected under the `publish` environment which is only referenced by `publish.yml`.
+Clojars secrets are protected under the `publish` environment, which is only referenced by `publish.yml`.

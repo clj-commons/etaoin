@@ -79,8 +79,8 @@ You are most welcome to submit your company or project to this list.
 
 Eatoin uses: `major`.`minor`.`patch`-`test-qualifier`
 
-* `major` increments when a non alpha release API has been broken - something, as a rule, we'd like to avoid.
-* `minor` increments to convey significant new features have been added.
+* `major` increments when a non alpha release API has been majorly broken - something, as a rule, we'd like to avoid.
+* `minor` increments to convey significant new features have been added or minor breakage.
 * `patch` indicates bug fixes or minor changes - it is the total number of releases to date.
 * `test-qualifier` is absent for stable releases.
 Can be `alpha`, `beta`, `rc1`, etc.
