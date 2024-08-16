@@ -683,10 +683,14 @@
             (find-elements* driver loc term))
           qs))
 
-(defn child
+(defn ^{:deprecated "1.1.42"} child
   "Uses `driver` to return single element satisfying query `q` under given `ancestor-el` element.
 
   See [[query]] for details on `q`.
+
+  NOTE: `child` has been deprecated in favor of `query-from` which
+  more closely supports `query`'s syntax for `q` and has a name which
+  better matches its functionality and the latest W3C WebDriver spec.
 
   https://www.w3.org/TR/webdriver2/#dfn-find-element-from-element"
   [driver ancestor-el q]
@@ -694,10 +698,14 @@
   (let [[loc term] (query/expand driver q)]
     (find-element-from* driver ancestor-el loc term)))
 
-(defn children
+(defn ^{:deprecated "1.1.42"} children
   "Use `driver` to return a vector of unique elements satisfying query `q` under given `ancestor-el` element.
 
   See [[query]] for details on `q`.
+
+  NOTE: `children` has been deprecated in favor of `query-all-from` which
+  more closely supports `query`'s syntax for `q` and has a name which
+  better matches its functionality and the latest W3C WebDriver spec.
 
   https://www.w3.org/TR/webdriver2/#find-elements-from-element"
   [driver ancestor-el q]
