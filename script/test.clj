@@ -52,6 +52,7 @@
   (status/line :detail (cli/format-opts {:spec cli-spec :order [:nses :patterns :vars]}))
 
   (status/line :detail "\nNotes
+- plural options can accept multiple values, ex: --browsers chrome firefox --suites api ide
 - ide tests default to (and support) firefox and chrome only (other browsers will be ignored).
 - api tests default browsers based on OS on which they are run .
 - unit tests pay no attention to --browsers, but do rely on firefox and chrome.
