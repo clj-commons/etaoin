@@ -62,8 +62,6 @@
                   :org.babashka/cli {:coerce {:nses [:symbol]
                                               :patterns [:string]
                                               :vars [:symbol]}}}
-  test-server    {:doc "Static server to support tests (automatically lanched by tests that need it)"
-                  :task test-server/-main}
   test:bb        {:doc "Runs tests under Babashka [--help]"
                   :task test/test-bb}
   test-doc       {:doc "Test code blocks in user guide"
@@ -110,9 +108,11 @@
                                                     "etaoin:latest"
                                                     *command-line-args*)]
                           (System/exit exit))}
-  fake-driver {:doc "Fake driver to support testing"
-               :task-decoration :none
-               :task fake-driver/-main}
+  test-server    {:doc "Static server to support tests (automatically lanched by tests that need it)"
+                  :task test-server/-main}
+  fake-driver    {:doc "Fake driver to support testing"
+                  :task-decoration :none
+                  :task fake-driver/-main}
 
   pubcheck          {:task publish/pubcheck        :doc "Run only publish checks (without publishing)"}
   publish           {:task publish/-main           :doc "Publish a release (for maintainers)"}
