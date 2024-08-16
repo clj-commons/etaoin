@@ -291,13 +291,13 @@ endif::[]
 ;; Ok, now let's try something trickier
 ;; Maybe we are interested in what value the infobox holds for the Family row:
 (let [wikitable (e/query driver {:css "table.infobox.vevent tbody"})
-      row-els (e/children driver wikitable {:tag :tr})]
+      row-els (e/query-all-from driver wikitable {:tag :tr})]
   (for [row row-els
         :let [header-col-text (e/with-http-error
                                 (e/get-element-text-el driver
-                                                       (e/child driver row {:tag :th})))]
+                                                       (e/query-from driver row {:tag :th})))]
         :when (= "Family" header-col-text)]
-    (e/get-element-text-el driver (e/child driver row {:tag :td}))))
+    (e/get-element-text-el driver (e/query-from driver row {:tag :td}))))
 ;; => ("Lisp")
 
 ;; Etaoin gives you many options; we can do the same-ish in one swoop in XPath:

@@ -23,7 +23,7 @@
   - [[get-status]] [[create-session]] [[delete-session]]
 
   **Querying/Selecting DOM Elements**
-  - [[query]] [[query-all]] [[query-tree]]
+  - [[query]] [[query-all]] [[query-tree]] [[query-from]] [[query-all-from]]
   - [[query-from-shadow-root]] [[query-from-shadow-root-el]] [[query-all-from-shadow-root]] [[query-all-from-shadow-root-el]]
   - [[has-shadow-root?]] [[has-shadow-root-el?]]
   - [[exists?]] [[absent?]]
@@ -704,6 +704,46 @@
   {:pre [(some? ancestor-el)]}
   (let [[loc term] (query/expand driver q)]
     (find-elements-from* driver ancestor-el loc term)))
+
+(defn query-from
+  "Use `driver` to return a single element satisfying query `q`,
+  starting the search at the element specified by `el`. `query-from`
+  is similar to `query` but starts the search from `el` rather than
+  the DOM root.
+
+  See [[query]] for details on `q`.
+
+  https://www.w3.org/TR/webdriver2/#dfn-find-element-from-element"
+  [driver el q]
+  (if (sequential? q)
+    (follow-path-from-element* driver el q)
+    (let [[loc term] (query/expand driver q)]
+      (find-element-from* driver el loc term))))
+
+(defn query-all-from
+  "Use `driver` to return a vector of elements satisfying query `q`,
+  starting the search at the element specified by `el`. If `q` is a
+  vector of queries, then the search starts from `el` and identifies
+  single candidates for the first item in `q`, and then uses that
+  element as the root of the next search, with the exception of the
+  last item, which is then searched for all matching
+  elements. `query-all-from` is similar to `query-all` but starts the
+  search from `el` rather than the DOM root.
+
+  See [[query]] for details on `q`.
+
+  https://www.w3.org/TR/webdriver2/#dfn-find-elements-from-element"
+  [driver el q]
+  (if (sequential? q)
+    (let [last-q (last q)
+          but-last-q (butlast q)]
+      (let [but-last-el (if (some? but-last-q)
+                          (follow-path-from-element* driver el but-last-q)
+                          el)
+            [loc term] (query/expand driver last-q)]
+        (find-elements-from* driver but-last-el loc term)))
+    (let [[loc term] (query/expand driver q)]
+      (find-elements-from* driver el loc term))))
 
 ;; actions
 

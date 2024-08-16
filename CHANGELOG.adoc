@@ -19,6 +19,8 @@ A release with an intentional breaking changes is marked with:
 //   (adjust these in publish.clj as you see fit)
 == Unreleased
 
+* {issue}559[#559]: Create `query-from` and `query-all-from` as replacements for `child` and `children`. Rewrite logic such that `q` parameter allows for vector syntax similar to `query` and `query-all`. Deprecate `child` and `children`.
+
 == v1.1.41 [minor breaking] - 2024-08-14 [[v1.1.41]]
 
 * Minor breaking
