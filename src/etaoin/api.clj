@@ -24,6 +24,7 @@
 
   **Querying/Selecting DOM Elements**
   - [[query]] [[query-all]] [[query-tree]] [[query-from]] [[query-all-from]]
+  - [[get-active-element]]
   - [[query-from-shadow-root]] [[query-from-shadow-root-el]] [[query-all-from-shadow-root]] [[query-all-from-shadow-root-el]]
   - [[has-shadow-root?]] [[has-shadow-root-el?]]
   - [[exists?]] [[absent?]]
@@ -314,7 +315,7 @@
 ;; active element
 ;;
 
-(defn- get-active-element*
+(defn get-active-element
   "Have `driver` return the active element on the page.
 
   An active element is the one with the current focus.
@@ -623,7 +624,7 @@
    (cond
 
      (= q :active)
-     (get-active-element* driver)
+     (get-active-element driver)
 
      (vector? q)
      (apply query driver q)
@@ -2707,7 +2708,7 @@
 (defn fill-active
   "Have `driver` fill active element with `text` (and optionally `more` text)."
   [driver text & more]
-  (let [el (get-active-element* driver)]
+  (let [el (get-active-element driver)]
     (apply fill-el driver el text more)))
 
 (defn fill

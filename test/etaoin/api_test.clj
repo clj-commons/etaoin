@@ -595,12 +595,17 @@
           (is (not= moved-rect maximed-rect)))))))
 
 (deftest test-active-element
-  (e/when-not-safari *driver*
-    (doto *driver*
-      (e/click {:id :set-active-el})
-      (-> (e/get-element-attr :active :id)
-          (= "active-el-input")
-          is))))
+  (e/click *driver* {:id :set-active-el})
+  ;; Test old query API since get-element-attr uses query underneath
+  (is (= "active-el-input" (e/get-element-attr *driver* :active :id)))
+  ;; Test old query using :active directly
+  (is (= "active-el-input" (e/get-element-attr-el *driver*
+                                                  (e/query *driver* :active)
+                                                  :id)))
+  ;; Test new get-active-element API. This is preferred.
+  (is (= "active-el-input" (e/get-element-attr-el *driver*
+                                                  (e/get-active-element *driver*)
+                                                  :id))))
 
 (deftest test-element-text
   (let [text (e/get-element-text *driver* {:id :element-text})]

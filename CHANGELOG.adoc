@@ -20,6 +20,7 @@ A release with an intentional breaking changes is marked with:
 == Unreleased
 
 * {issue}559[#559]: Create `query-from` and `query-all-from` as replacements for `child` and `children`. Rewrite logic such that `q` parameter allows for vector syntax similar to `query` and `query-all`. Deprecate `child` and `children`.
+* {issue}559[#559]: Make get-active-element a public API. This was previously private.
 
 == v1.1.41 [minor breaking] - 2024-08-14 [[v1.1.41]]
 
