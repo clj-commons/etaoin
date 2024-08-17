@@ -326,7 +326,8 @@
   (-> (execute {:driver driver
                 :method :get
                 :path   [:session (:session driver) :element :active]})
-      :value first second))
+      :value
+      (unwrap-webdriver-object web-element-identifier)))
 
 ;;
 ;; windows
