@@ -92,8 +92,7 @@
         (e/wait-visible driver {:id :document-end})
         (binding [*driver* driver
                   test-report/*context* (name type)]
-          (testing (name type)
-            (f)))))))
+          (f))))))
 
 (use-fixtures
   :each
