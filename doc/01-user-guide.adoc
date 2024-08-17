@@ -499,17 +499,26 @@ Use `exists?` to check for element existence:
 :xpath-sel: https://www.w3schools.com/xml/xpath_syntax.asp
 :css-sel: https://www.w3schools.com/cssref/css_selectors.asp
 
-* `:active` finds the current active element.
-The Google page, for example, automatically places the focus on the search input.
-So there is no need to click on it first:
+* `:active` finds the currently active element.
+Note that querying for `:active` is deprecated.
+Users are encouraged to call `get-active-element` to retrieve the active element.
+The Google homepage, for example, automatically places the focus on the search input, so there is no need to click on it first.
 +
 [source,clojure]
 ----
+;; Deprecated
 (e/go driver "https://google.com")
 (e/fill driver :active "Let's search for something" k/enter)
+;; Better
+(e/go driver "https://google.com")
+(e/fill-el driver (e/get-active-element driver) "Let's search for something" k/enter)
+;; This case is so common that the API includes `fill-active`
+(e/go driver "https://google.com")
+(e/fill-active driver "Let's search for something" k/enter)
 ----
 
-* any other keyword is translated to an html id attribute:
+* any other keyword is translated to an HTML ID attribute.
+Note that this means that you cannot query for an HTML element with an ID of "active".
 +
 [source,clojure]
 ----
@@ -1156,7 +1165,7 @@ A quick example of entering ordinary characters while holding Shift:
 (e/refresh driver)
 (e/wait 1) ;; maybe we need a sec for active element to focus
 (e/fill-active driver (k/with-shift "caps is great"))
-(e/get-element-value driver :active)
+(e/get-element-value-el driver (e/get-active-element driver))
 ;; => "CAPS IS GREAT"
 ----
 
@@ -1168,7 +1177,7 @@ Let's duplicate the text via select-all, copy, and paste keyboard shortcuts:
 (if (= "Mac OS X" (System/getProperty "os.name"))
   (e/fill-active driver (k/with-command "a") (k/with-command "c") k/arrow-right " " (k/with-command "v"))
   (e/fill-active driver (k/with-ctrl "a") (k/with-ctrl "c") k/arrow-right " " (k/with-ctrl "v")))
-(e/get-element-value driver :active)
+(e/get-element-value-el driver (e/get-active-element driver))
 ;; => "CAPS IS GREAT CAPS IS GREAT"
 ----
 
@@ -1180,7 +1189,7 @@ And now let's clear the input by:
 [source,clojure]
 ----
 (e/fill-active driver k/home (k/with-shift k/end) k/delete)
-(e/get-element-value driver :active)
+(e/get-element-value-el driver (e/get-active-element driver))
 ;; => ""
 ----
 

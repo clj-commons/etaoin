@@ -596,10 +596,14 @@
 
    Query `q` can be:
 
-   - `:active` the current active element
+   - `:active` the current active element. Note that this is deprecated.
+     Use [[get-active-element]] instead to find the currently active element.
    - a keyword to find element by it's ID attribute:
      - `:my-id`
      - (use `{:id \"my-id\"}` for ids that cannot be represented as keywords)
+     - Note that `:active` currently conflicts with this usage and therefore you
+       cannot search for a keyword named `:active` and expect to find an element
+       with ID equal to \"active\". In this case, use `{:id \"active\"}`.
    - an XPath expression:
      - `\".//input[@id='uname']\"`
    - a map with either `:xpath` or `:css`:
