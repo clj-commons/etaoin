@@ -69,7 +69,8 @@
              :main-opts ["-m" "eastwood.lint" {:source-paths ["src"]
                                                :test-paths ["test"]
                                                :add-linters [:performance]
-                                               :exclude-linters [:local-shadows-var]}]}
+                                               :exclude-linters [:local-shadows-var]
+                                               :ignored-faults {:deprecations {etaoin.api-test true}}}]}
 
   :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.5"}}
           :extra-paths ["build"]
