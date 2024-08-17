@@ -512,13 +512,14 @@ The Google homepage, for example, automatically places the focus on the search i
 ;; Better
 (e/go driver "https://google.com")
 (e/fill-el driver (e/get-active-element driver) "Let's search for something" k/enter)
-;; This case is so common that the API includes `fill-active`
+;; Or best... This case is so common that the API includes `fill-active`
 (e/go driver "https://google.com")
 (e/fill-active driver "Let's search for something" k/enter)
 ----
 
 * any other keyword is translated to an HTML ID attribute.
-Note that this means that you cannot query for an HTML element with an ID of "active".
+Note that you cannot query for an HTML element with an ID of "active" using this keyword syntax because the special keyword `:active` conflicts.
+If you want to query for an element with an ID of "active", use the map syntax, described below (e.g., `{:id "active"}` or `{:id :active}`).
 +
 [source,clojure]
 ----
