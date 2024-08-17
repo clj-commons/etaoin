@@ -37,8 +37,7 @@
                   *base-url*       base-url
                   *test-file-path* test-file-path
                   test-report/*context* (name type)]
-          (testing (name type)
-            (f)))))))
+          (f))))))
 
 (use-fixtures
   :each
