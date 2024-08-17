@@ -534,8 +534,7 @@
                 :path   [:session (:session driver) :element]
                 :data   {:using locator :value term}})
       :value
-      first
-      second))
+      (unwrap-webdriver-object web-element-identifier)))
 
 (defn ^:no-doc find-elements*
   [driver locator term]
@@ -544,7 +543,7 @@
                  :path   [:session (:session driver) :elements]
                  :data   {:using locator :value term}})
        :value
-       (mapv (comp second first))))
+       (mapv #(unwrap-webdriver-object % web-element-identifier))))
 
 (defn- find-element-from*
   [driver el locator term]
@@ -554,8 +553,7 @@
                 :path   [:session (:session driver) :element el :element]
                 :data   {:using locator :value term}})
       :value
-      first
-      second))
+      (unwrap-webdriver-object web-element-identifier)))
 
 (defn- find-elements-from*
   [driver el locator term]
@@ -565,7 +563,7 @@
                  :path   [:session (:session driver) :element el :elements]
                  :data   {:using locator :value term}})
        :value
-       (mapv (comp second first))))
+       (mapv #(unwrap-webdriver-object % web-element-identifier))))
 
 (defn- follow-path-from-element*
   "Starting at `el`, search for the first query in `path`, then from the
@@ -1476,7 +1474,7 @@
 (defmethod get-element-shadow-root*
   :safari
   [driver el]
-  ;; Safari gives us the shadow root in a non-standard wrapper
+  ;; As of Aug 2024, Safari gives us the shadow root in a non-standard wrapper
   (when-let [root (get-element-property-el driver el "shadowRoot")]
     (-> root first second)))
 
@@ -1688,10 +1686,11 @@
 (defn el->ref
   "Return map representing an element reference for WebDriver.
 
-  The magic `:element-` constant in source is taken from the [WebDriver Spec](https://www.w3.org/TR/webdriver2/#elements).
+  The magic `web-element-identifier` constant in the source is 
+  taken from the [WebDriver Spec](https://www.w3.org/TR/webdriver2/#elements).
 
-  Passing the element reference map to `js-execute` automatically expands it
-  into a DOM node. For example:
+  Passing the element reference map to `js-execute` automatically
+  expands it into a DOM node. For example:
 
   ```Clojure
   ;; returns UUID string for the element
