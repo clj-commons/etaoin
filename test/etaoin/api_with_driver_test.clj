@@ -120,7 +120,6 @@
   (let [test-page (api-test/test-server-url "test.html")]
     (when (testing-driver? :chrome)
       (testing "chrome"
-        (println "testing chrome")
         ;; with opts
         (is (= my-agent
                (e/with-driver :chrome {:user-agent my-agent} driver
@@ -186,7 +185,6 @@
 
     (when (testing-driver? :firefox)
       (testing "firefox"
-        (println "testing firefox")
         ;; with opts
         (is (= my-agent
                (e/with-driver :firefox {:user-agent my-agent} driver
@@ -244,7 +242,6 @@
 
     (when (testing-driver? :edge)
       (testing "edge"
-        (println "testing edge")
         ;; with opts
         (is (= my-agent
                (e/with-driver :edge {:user-agent my-agent} driver
@@ -302,7 +299,6 @@
 
     (when (testing-driver? :safari)
       (testing "safari"
-        (println "testing safari")
         ;; with opts
         ;; safari driver does supports neither user agent nor headless
         ;; not sure what other safari option is reflected in session... port?
@@ -344,7 +340,6 @@
   (let [test-page (api-test/test-server-url "test.html")]
     (when (testing-driver? :chrome)
       (testing "chrome"
-        (println "testing chrome")
         (util/with-tmp-file "chromedriver" ".log" path
           ;; chromedriver logs to stderr
           (e/with-chrome {:driver-log-level "DEBUG" :log-stderr path} driver
@@ -352,7 +347,6 @@
             (is (re-find #"\[DEBUG\]:" (slurp path)))))))
     (when (testing-driver? :edge)
       (testing "edge"
-        (println "testing edge")
         (util/with-tmp-file "edgedriver" ".log" path
           ;; edgedriver logs to stderr
           (e/with-edge {:driver-log-level "DEBUG" :log-stderr path} driver
@@ -360,7 +354,6 @@
             (is (re-find #"\[DEBUG\]:" (slurp path)))))))
     (when (testing-driver? :firefox)
       (testing "firefox"
-        (println "testing firefox")
         (util/with-tmp-file "firefoxdriver" ".log" path
           ;; geckodriver logs to stdout
           (e/with-firefox {:driver-log-level "debug" :log-stdout path} driver
