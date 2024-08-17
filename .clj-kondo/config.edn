@@ -8,4 +8,7 @@
  ;; finer grained error reporting
  {:macroexpand
   {etaoin.impl.util/defmethods etaoin.impl.util/defmethods
-   etaoin.impl.util/with-tmp-file etaoin.impl.util/with-tmp-file}}}
+   etaoin.impl.util/with-tmp-file etaoin.impl.util/with-tmp-file}}
+ :linters {:deprecated-var
+           {:exclude {etaoin.api/child {:namespaces [etaoin.api-test]}
+                      etaoin.api/children {:namespaces [etaoin.api-test]}}}}}
