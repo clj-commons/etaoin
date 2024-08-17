@@ -19,6 +19,13 @@ A release with an intentional breaking changes is marked with:
 //   (adjust these in publish.clj as you see fit)
 == Unreleased
 
+* Changes
+** {issue}559[#559]: Create `query-from` and `query-all-from` as replacements for `child` and `children`. Rewrite logic such that `q` parameter allows for vector syntax similar to `query` and `query-all`. Deprecate `child` and `children`. ({person}dgr[@dgr])
+** {issue}559[#559]: Make `get-active-element` a public API. This was previously private. ({person}dgr[@dgr])
+
+* Docs
+** {issue}559[#559]: Deprecate use of `:active` with `query` and other APIs that use `query` under the hood. ({person}dgr[@dgr])
+
 == v1.1.41 [minor breaking] - 2024-08-14 [[v1.1.41]]
 
 * Minor breaking

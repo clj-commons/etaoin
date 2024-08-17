@@ -595,12 +595,17 @@
           (is (not= moved-rect maximed-rect)))))))
 
 (deftest test-active-element
-  (e/when-not-safari *driver*
-    (doto *driver*
-      (e/click {:id :set-active-el})
-      (-> (e/get-element-attr :active :id)
-          (= "active-el-input")
-          is))))
+  (e/click *driver* {:id :set-active-el})
+  ;; Test old query API since get-element-attr uses query underneath
+  (is (= "active-el-input" (e/get-element-attr *driver* :active :id)))
+  ;; Test old query using :active directly
+  (is (= "active-el-input" (e/get-element-attr-el *driver*
+                                                  (e/query *driver* :active)
+                                                  :id)))
+  ;; Test new get-active-element API. This is preferred.
+  (is (= "active-el-input" (e/get-element-attr-el *driver*
+                                                  (e/get-active-element *driver*)
+                                                  :id))))
 
 (deftest test-element-text
   (let [text (e/get-element-text *driver* {:id :element-text})]
@@ -795,6 +800,50 @@
     (is (= ["p" "p"] (map #(str/lower-case (e/get-element-tag-el *driver* %)) children-els)))
     (is (str/includes? (first children-texts) "From the depths I've come!"))
     (is (str/includes? (last children-texts) "I've come from the darkness of the pit!"))))
+
+(deftest test-query-from
+  (testing "single item query"
+    (let [parent-el (e/query *driver* {:css "#wc3-barks"})
+          child-el  (e/query-from *driver* parent-el {:css ".crypt-lord"})
+          tag-name  (str/lower-case (e/get-element-tag-el *driver* child-el))
+          tag-text  (e/get-element-text-el *driver* child-el)]
+      (is (= "span" tag-name))
+      (is (str/includes? tag-text "From the depths I've come!"))))
+  (testing "vector query"
+    (let [start-el (e/query *driver* :deep-query-root)
+          final-el (e/query-from *driver*
+                                 start-el
+                                 [{:class "intermediate-node-1-2"}
+                                  ;; skip over intermediate-node-2
+                                  {:css "#intermediate-node-3"}
+                                  :intermediate-node-4
+                                  {:tag "li"}])
+          tag-name (str/lower-case (e/get-element-tag-el *driver* final-el))
+          tag-text (e/get-element-text-el *driver* final-el)]
+      (is (= "li" tag-name))
+      (is (= "One" tag-text)))))
+
+(deftest test-query-all-from
+  (testing "single item query"
+    (let [parent-el      (e/query *driver* {:css "#wc3-barks"})
+          children-els   (e/query-all-from *driver* parent-el {:css "p"})
+          children-texts (map #(e/get-element-text-el *driver* %) children-els)]
+      (is (= ["p" "p"] (map #(str/lower-case (e/get-element-tag-el *driver* %)) children-els)))
+      (is (str/includes? (first children-texts) "From the depths I've come!"))
+      (is (str/includes? (last children-texts) "I've come from the darkness of the pit!"))))
+  (testing "vector query"
+    (let [start-el (e/query *driver* :deep-query-root)
+          final-els (e/query-all-from *driver*
+                                      start-el
+                                      [{:class "intermediate-node-1-2"}
+                                       ;; skip over intermediate-node-2
+                                       {:css "#intermediate-node-3"}
+                                       :intermediate-node-4
+                                       {:tag "li"}])
+          tag-names (mapv #(str/lower-case (e/get-element-tag-el *driver* %)) final-els)
+          tag-texts (mapv #(e/get-element-text-el *driver* %) final-els)]
+      (is (= ["li" "li" "li"] tag-names))
+      (is (= ["One" "Two" "Three"] tag-texts)))))
 
 (deftest test-postmortem
   (let [dir-tmp (format

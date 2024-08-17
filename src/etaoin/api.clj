@@ -23,7 +23,8 @@
   - [[get-status]] [[create-session]] [[delete-session]]
 
   **Querying/Selecting DOM Elements**
-  - [[query]] [[query-all]] [[query-tree]]
+  - [[query]] [[query-all]] [[query-tree]] [[query-from]] [[query-all-from]]
+  - [[get-active-element]]
   - [[query-from-shadow-root]] [[query-from-shadow-root-el]] [[query-all-from-shadow-root]] [[query-all-from-shadow-root-el]]
   - [[has-shadow-root?]] [[has-shadow-root-el?]]
   - [[exists?]] [[absent?]]
@@ -314,7 +315,7 @@
 ;; active element
 ;;
 
-(defn- get-active-element*
+(defn get-active-element
   "Have `driver` return the active element on the page.
 
   An active element is the one with the current focus.
@@ -325,7 +326,8 @@
   (-> (execute {:driver driver
                 :method :get
                 :path   [:session (:session driver) :element :active]})
-      :value first second))
+      :value
+      (unwrap-webdriver-object web-element-identifier)))
 
 ;;
 ;; windows
@@ -595,10 +597,14 @@
 
    Query `q` can be:
 
-   - `:active` the current active element
+   - `:active` the current active element. Note that this is deprecated.
+     Use [[get-active-element]] instead to find the currently active element.
    - a keyword to find element by it's ID attribute:
      - `:my-id`
      - (use `{:id \"my-id\"}` for ids that cannot be represented as keywords)
+     - Note that `:active` conflicts with this usage and therefore you
+       cannot search for a keyword named `:active` and expect to find an element
+       with ID equal to \"active\". In this case, use `{:id \"active\"}`.
    - an XPath expression:
      - `\".//input[@id='uname']\"`
    - a map with either `:xpath` or `:css`:
@@ -623,7 +629,7 @@
    (cond
 
      (= q :active)
-     (get-active-element* driver)
+     (get-active-element driver)
 
      (vector? q)
      (apply query driver q)
@@ -683,10 +689,14 @@
             (find-elements* driver loc term))
           qs))
 
-(defn child
+(defn ^{:deprecated "1.1.42"} child
   "Uses `driver` to return single element satisfying query `q` under given `ancestor-el` element.
 
   See [[query]] for details on `q`.
+
+  NOTE: `child` has been deprecated in favor of `query-from` which
+  more closely supports `query`'s syntax for `q` and has a name which
+  better matches its functionality and the latest W3C WebDriver spec.
 
   https://www.w3.org/TR/webdriver2/#dfn-find-element-from-element"
   [driver ancestor-el q]
@@ -694,16 +704,60 @@
   (let [[loc term] (query/expand driver q)]
     (find-element-from* driver ancestor-el loc term)))
 
-(defn children
+(defn ^{:deprecated "1.1.42"} children
   "Use `driver` to return a vector of unique elements satisfying query `q` under given `ancestor-el` element.
 
   See [[query]] for details on `q`.
+
+  NOTE: `children` has been deprecated in favor of `query-all-from` which
+  more closely supports `query`'s syntax for `q` and has a name which
+  better matches its functionality and the latest W3C WebDriver spec.
 
   https://www.w3.org/TR/webdriver2/#find-elements-from-element"
   [driver ancestor-el q]
   {:pre [(some? ancestor-el)]}
   (let [[loc term] (query/expand driver q)]
     (find-elements-from* driver ancestor-el loc term)))
+
+(defn query-from
+  "Use `driver` to return a single element satisfying query `q`,
+  starting the search at the element specified by `el`. `query-from`
+  is similar to `query` but starts the search from `el` rather than
+  the DOM root.
+
+  See [[query]] for details on `q`.
+
+  https://www.w3.org/TR/webdriver2/#dfn-find-element-from-element"
+  [driver el q]
+  (if (sequential? q)
+    (follow-path-from-element* driver el q)
+    (let [[loc term] (query/expand driver q)]
+      (find-element-from* driver el loc term))))
+
+(defn query-all-from
+  "Use `driver` to return a vector of elements satisfying query `q`,
+  starting the search at the element specified by `el`. If `q` is a
+  vector of queries, then the search starts from `el` and identifies
+  single candidates for the first item in `q`, and then uses that
+  element as the root of the next search, with the exception of the
+  last item, which is then searched for all matching
+  elements. `query-all-from` is similar to `query-all` but starts the
+  search from `el` rather than the DOM root.
+
+  See [[query]] for details on `q`.
+
+  https://www.w3.org/TR/webdriver2/#dfn-find-elements-from-element"
+  [driver el q]
+  (if (sequential? q)
+    (let [last-q (last q)
+          but-last-q (butlast q)
+          but-last-el (if (some? but-last-q)
+                        (follow-path-from-element* driver el but-last-q)
+                        el)
+          [loc term] (query/expand driver last-q)]
+      (find-elements-from* driver but-last-el loc term))
+    (let [[loc term] (query/expand driver q)]
+      (find-elements-from* driver el loc term))))
 
 ;; actions
 
@@ -2659,7 +2713,7 @@
 (defn fill-active
   "Have `driver` fill active element with `text` (and optionally `more` text)."
   [driver text & more]
-  (let [el (get-active-element* driver)]
+  (let [el (get-active-element driver)]
     (apply fill-el driver el text more)))
 
 (defn fill

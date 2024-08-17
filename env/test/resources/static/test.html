@@ -248,6 +248,27 @@
             </p>
         </div>
 
+        <div id="deep-query-root">
+            <div class="intermediate-node-1">
+                We want to skip over this
+            </div>
+            <div class="intermediate-node-1-2">
+                We want to dive into this.
+                <div id="intermediate-node-2">
+                    <div id="intermediate-node-3">
+                        <div id="intermediate-node-4">
+                            <ul>
+                                <li>One</li>
+                                <li>Two</li>
+                                <li>Three</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
         <h3>Shadow DOM</h3>
         <span id="not-in-shadow">I'm not in the shadow DOM</span>
         <div id="shadow-root-host">
