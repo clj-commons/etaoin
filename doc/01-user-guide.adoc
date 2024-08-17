@@ -3023,7 +3023,7 @@ Example:
 
 == Running Selenium IDE files [[selenium-ide]]
 
-Etaoin can play the files produced by link:{ide}[Selenium IDE].
+Etaoin can play the files produced by https://www.selenium.dev/documentation/ide/[Selenium IDE].
 Selenium IDE allows you to record web interactions for later playback.
 It is installed as an optional extension in your web browser.
 
