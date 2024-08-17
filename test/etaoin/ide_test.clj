@@ -2,7 +2,7 @@
   (:require
    [clojure.edn :as edn]
    [clojure.java.io :as io]
-   [clojure.test :refer [deftest testing use-fixtures]]
+   [clojure.test :refer [deftest use-fixtures]]
    [etaoin.api :as e]
    [etaoin.ide.flow :as ide]
    [etaoin.test-report :as test-report]))
