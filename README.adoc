@@ -27,11 +27,10 @@ Use the Etaoin library to automate a browser, test your frontend behaviour, simu
 * Lightweight, fast.
 Simple, easy to understand.
 * Compact: just one main namespace with a couple of helpers.
-* Declarative: the code is just a list of actions.
 
 == Capabilities
 
-* Currently supports Chrome, Firefox, Safari and Edge.
+* Currently supports Chrome, Firefox, Safari, and Edge.
 * Can either connect to a remote WebDriver process, or have Etaoin launch one for you.
 * Run your unit tests directly from Emacs by pressing `C-t t` as usual.
 * Can imitate human-like behaviour (delays, typos, etc).
@@ -114,7 +113,7 @@ Can be `alpha`, `beta`, `rc1`, etc.
 * https://github.com/igrishaev[Ivan Grishaev]
 
 Etaoin is open for your improvements and ideas.
-If any of unit tests fail on your machine, please submit an issue giving your OS version, browser and console output.
+If any of the unit tests fail on your machine, please submit an issue giving your OS version, browser, and console output.
 
 == License
 
