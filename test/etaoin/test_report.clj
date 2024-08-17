@@ -24,6 +24,6 @@
       (println (format "=== %s [%s]" test-name platform)))))
 
 (defmethod clojure.test/report :begin-testing [{:keys [testing-contexts]}]
-  (println (format "•••%s %s"
-                   (apply str (repeat (count testing-contexts) "•"))
+  (println (format "...%s %s"
+                   (apply str (repeat (count testing-contexts) "."))
                    (first testing-contexts))))
