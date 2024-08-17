@@ -750,12 +750,12 @@
   [driver el q]
   (if (sequential? q)
     (let [last-q (last q)
-          but-last-q (butlast q)]
-      (let [but-last-el (if (some? but-last-q)
-                          (follow-path-from-element* driver el but-last-q)
-                          el)
-            [loc term] (query/expand driver last-q)]
-        (find-elements-from* driver but-last-el loc term)))
+          but-last-q (butlast q)
+          but-last-el (if (some? but-last-q)
+                        (follow-path-from-element* driver el but-last-q)
+                        el)
+          [loc term] (query/expand driver last-q)]
+      (find-elements-from* driver but-last-el loc term))
     (let [[loc term] (query/expand driver q)]
       (find-elements-from* driver el loc term))))
 
