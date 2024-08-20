@@ -56,7 +56,7 @@
 
   **Inputs/Forms**
   - [[fill]] [[fill-active]] [[fill-el]] [[fill-multi]]
-  - [[fill-human]] [[fill-human-el]] [[fill-human-multi]]
+  - [[fill-human]] [[fill-active-human]] [[fill-human-el]] [[fill-human-multi]]
   - [[select]] [[selected?]] [[selected-el?]]
   - [[upload-file]] [[remote-file]]
   - [[disabled?]] [[enabled?]]
@@ -2785,6 +2785,14 @@
   ([driver q text]  (fill-human driver q text {}))
   ([driver q text opts]
    (fill-human-el driver (query driver q) text opts)))
+
+(defn fill-active-human
+  "Fills the currently active element with `text` as if it were a real
+  human using `opts`. This is a simple convience function wrapped
+  around `get-active-element` and `fill-human-el`."
+  ([driver text] (fill-active-human driver text {}))
+  ([driver text opts]
+   (fill-human-el driver (get-active-element driver) text opts)))
 
 (defn fill-human-multi
   "Have `driver` fill multiple elements as if it were a real human being via `q-text` using `opts`.
