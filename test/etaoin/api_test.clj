@@ -195,7 +195,7 @@
       (e/click :simple-password)
       (e/fill-active-human "MyPassword2")
       (e/click :simple-textarea)
-      (e/fill-active "Some text 2")
+      (e/fill-active-human "Some text 2")
       (e/click :simple-submit)
       (e/when-safari (e/wait 3)))
     (is (str/ends-with? (e/get-url *driver*)
