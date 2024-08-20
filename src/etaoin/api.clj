@@ -2779,9 +2779,7 @@
 
   See [[query]] for details on `q`.
 
-  `opts`
-  - `:mistake-prob` probability of making a typo (0 to 1.0) (default: `0.1`)
-  - `:pause-max` maximum amount of time in seconds to pause between keystrokes (can be fractional) (default: `0.2`)"
+  See [[fill-human-el]] for details on `opts`."
   ([driver q text]  (fill-human driver q text {}))
   ([driver q text opts]
    (fill-human-el driver (query driver q) text opts)))
@@ -2789,7 +2787,9 @@
 (defn fill-active-human
   "Fills the currently active element with `text` as if it were a real
   human using `opts`. This is a simple convience function wrapped
-  around `get-active-element` and `fill-human-el`."
+  around `get-active-element` and `fill-human-el`.
+
+  See [[fill-human-el]] for details on `opts`."
   ([driver text] (fill-active-human driver text {}))
   ([driver text opts]
    (fill-human-el driver (get-active-element driver) text opts)))
@@ -2803,9 +2803,7 @@
 
   See [[query]] for details on `q`s.
 
-  `opts`
-  - `:mistake-prob` probability of making a typo (0 to 1.0) (default: `0.1`)
-  - `:pause-max` maximum amount of time in seconds to pause between keystrokes (can be fractional) (default: `0.2`)"
+  See [[fill-human-el]] for details on `opts`."
   ([driver q-text]  (fill-human-multi driver q-text {}))
   ([driver q-text opts]
    (cond
