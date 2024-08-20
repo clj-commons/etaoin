@@ -187,6 +187,18 @@
       (-> e/get-url
           (str/ends-with? "?login=1test2+A&password=&message=")
           is)))
+    (testing "fill active"
+    (doto *driver*
+      (e/click :simple-input)
+      (e/fill-active "MyLogin")
+      (e/click :simple-password)
+      (e/fill-active "MyPassword")
+      (e/click :simple-textarea)
+      (e/fill-active "Some text")
+      (e/click :simple-submit)
+      (e/when-safari (e/wait 3)))
+    (is (str/ends-with? (e/get-url *driver*)
+                        "?login=MyLogin&password=MyPassword&message=Some+text")))
   (testing "fill active human"
     (doto *driver*
       (e/click :simple-input)
