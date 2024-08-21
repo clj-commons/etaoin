@@ -9,6 +9,7 @@
    [clojure.test :refer [is]]
    [clojure.tools.logging :as log]
    [etaoin.api :as e]
+   [etaoin.query :as query]
    [etaoin.impl.util :refer [defmethods]]
    [etaoin.keys :as k]))
 
@@ -433,7 +434,7 @@
 (defmethod run-command
   :storeXpathCount
   [driver {:keys [target value]} & [{vars :vars}]]
-  (let [cnt (count (e/find-elements* driver e/locator-xpath target))]
+  (let [cnt (count (e/find-elements* driver query/locator-xpath target))]
     (swap! vars assoc (str->var value) cnt)))
 
 (defmethod run-command
