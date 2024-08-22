@@ -1078,6 +1078,9 @@
            (->> (e/query-all-from-shadow-root *driver* {:id "shadow-root-host"} {:css "span"})
                 (mapv #(e/get-element-text-el *driver* %)))))))
 
+(deftest test-driver-type
+  (is (#{:chrome :firefox :safari :edge} (e/driver-type *driver*))))
+
 (deftest test-timeouts
   (let [timeouts {:implicit 32134
                   :script 78921
