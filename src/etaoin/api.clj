@@ -2178,9 +2178,14 @@
 ;;
 
 (defn driver?
-  "Return true if `driver` is of `type` (e.g. on of: `:chrome`, `:edge`, `:firefox`, `:safari`)"
+  "Return true if `driver` is of `type` (e.g. one of: `:chrome`, `:edge`, `:firefox`, `:safari`)"
   [driver type]
   (= (dispatch-driver driver) type))
+
+(defn driver-type
+  "Returns the type of driver (e.g., `:chrome`, `:firefox`, `:safari`, or `:edge`)."
+  [driver]
+  (dispatch-driver driver))
 
 (defn chrome?
   "Returns true if a `driver` is Chrome."
