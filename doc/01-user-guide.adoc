@@ -241,6 +241,8 @@ endif::[]
 
 ;; Start WebDriver for Firefox
 (def driver (e/firefox)) ;; a Firefox window should appear
+(e/driver-type driver)
+;; => :firefox
 
 ;; let's perform a quick Wiki session
 

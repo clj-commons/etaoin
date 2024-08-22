@@ -13,7 +13,8 @@
   - [[with-edge]] [[with-edge-headless]] [[edge]] [[edge-headless]] [[when-edge]] [[when-not-edge]]
   - [[with-firefox]] [[with-firefox-headless]] [[firefox]] [[firefox-headless]] [[firefox?]] [[when-firefox]] [[when-not-firefox]]
   - [[with-safari]] [[safari]] [[safari?]] [[when-safari]] [[when-not-safari]]
-  - [[driver?]] [[running?]] [[headless?]] [[when-headless]] [[when-not-headless]]
+  - [[driver?]] [[driver-type]] [[running?]] 
+  - [[headless?]] [[when-headless]] [[when-not-headless]]
   - [[disconnect-driver]] [[stop-driver]] [[quit]]
 
   **WebDriver Lower Level Comms**
@@ -2178,9 +2179,14 @@
 ;;
 
 (defn driver?
-  "Return true if `driver` is of `type` (e.g. on of: `:chrome`, `:edge`, `:firefox`, `:safari`)"
+  "Return true if `driver` is of `type` (e.g. one of: `:chrome`, `:edge`, `:firefox`, `:safari`)"
   [driver type]
   (= (dispatch-driver driver) type))
+
+(defn driver-type
+  "Returns the type of driver (e.g., `:chrome`, `:firefox`, `:safari`, or `:edge`)."
+  [driver]
+  (dispatch-driver driver))
 
 (defn chrome?
   "Returns true if a `driver` is Chrome."

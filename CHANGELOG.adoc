@@ -26,6 +26,7 @@ A release with an intentional breaking changes is marked with:
 ** {issue}620[#620]: Get stricter when unwrapping elements. ({person}dgr[@dgr])
 * Docs
 ** {issue}559[#559]: Deprecate use of `:active` with `query` and other APIs that use `query` under the hood. ({person}dgr[@dgr])
+** {issue}642[#642]: Add `driver-type` to retrieve driver type keyword. ({person}dgr[@dgr])
 
 == v1.1.41 [minor breaking] - 2024-08-14 [[v1.1.41]]
 
