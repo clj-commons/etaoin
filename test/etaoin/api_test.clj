@@ -779,6 +779,16 @@
       (is (= (count elements) 2))
       (is (= texts ["1" "2"])))))
 
+(deftest test-switch-default-locators
+  (testing "xpath locator"
+    (let [driver (e/use-xpath *driver*)
+          text (e/get-element-text driver {:class :target})]
+      (is (= "target-1" text))))
+  (testing "css locator"
+    (let [driver (e/use-css *driver*)
+          text (e/get-element-text driver {:class :target})]
+      (is (= "target-1" text)))))
+
 (deftest test-fn-index
   (testing ":fn/index"
     (let [items (for [index (range 1 6)]
