@@ -2619,8 +2619,10 @@
 ;; skip/when driver
 ;;
 
-(defmacro when-not-predicate
-  "Executes `body` when `predicate` returns falsy."
+(defmacro ^{:deprecated "1.1.42"} when-not-predicate
+  "Executes `body` when `predicate` returns falsy.
+
+  Deprecated: Use `clojure.core/when-not` instead."
   [predicate & body]
   `(when-not (~predicate)
      ~@body))
@@ -2628,35 +2630,37 @@
 (defmacro when-not-drivers
   "Executes `body` when browser `driver` is NOT in `browsers`, ex: `#{:chrome :safari}`"
   [browsers driver & body]
-  `(when-not-predicate #((set ~browsers) (dispatch-driver ~driver)) ~@body))
+  `(when-not ((set ~browsers) (driver-type ~driver)) ~@body))
 
 (defmacro when-not-chrome
   "Executes `body` when browser `driver` is NOT Chrome."
   [driver & body]
-  `(when-not-predicate #(chrome? ~driver) ~@body))
+  `(when-not (chrome? ~driver) ~@body))
 
 (defmacro when-not-edge
   "Executes `body` when browser `driver` is NOT Edge."
   [driver & body]
-  `(when-not-predicate #(edge? ~driver) ~@body))
+  `(when-not (edge? ~driver) ~@body))
 
 (defmacro when-not-firefox
   "Executes `body` when browser `driver` is NOT Firefox."
   [driver & body]
-  `(when-not-predicate #(firefox? ~driver) ~@body))
+  `(when-not (firefox? ~driver) ~@body))
 
 (defmacro when-not-safari
   "Executes `body` when browser `driver` is NOT Safari."
   [driver & body]
-  `(when-not-predicate #(safari? ~driver) ~@body))
+  `(when-not (safari? ~driver) ~@body))
 
 (defmacro when-not-headless
   "Executes `body` when browser `driver` is NOT in headless mode."
   [driver & body]
-  `(when-not-predicate #(headless? ~driver) ~@body))
+  `(when-not (headless? ~driver) ~@body))
 
-(defmacro when-predicate
-  "Executes `body` when `predicate` returns truthy."
+(defmacro ^{:deprecated "1.1.42"} when-predicate
+  "Executes `body` when `predicate` returns truthy.
+
+  Deprecated: Use `clojure.core/when` instead."
   [predicate & body]
   `(when (~predicate)
      ~@body))
@@ -2664,27 +2668,27 @@
 (defmacro when-chrome
   "Executes `body` when browser `driver` is Chrome."
   [driver & body]
-  `(when-predicate #(chrome? ~driver) ~@body))
+  `(when (chrome? ~driver) ~@body))
 
 (defmacro when-firefox
   "Executes `body` when browser `driver` is Firefox."
   [driver & body]
-  `(when-predicate #(firefox? ~driver) ~@body))
+  `(when (firefox? ~driver) ~@body))
 
 (defmacro when-edge
   "Executes `body` when browser `driver` is Edge."
   [driver & body]
-  `(when-predicate #(edge? ~driver) ~@body))
+  `(when (edge? ~driver) ~@body))
 
 (defmacro when-safari
   "Executes `body` when browser `driver` is Safari."
   [driver & body]
-  `(when-predicate #(safari? ~driver) ~@body))
+  `(when (safari? ~driver) ~@body))
 
 (defmacro when-headless
   "Executes `body` when the `driver` is in headless mode."
   [driver & body]
-  `(when-predicate #(headless? ~driver) ~@body))
+  `(when (headless? ~driver) ~@body))
 
 ;;
 ;; input

@@ -27,6 +27,7 @@ A release with an intentional breaking changes is marked with:
 * Docs
 ** {issue}559[#559]: Deprecate use of `:active` with `query` and other APIs that use `query` under the hood. ({person}dgr[@dgr])
 ** {issue}642[#642]: Add `driver-type` to retrieve driver type keyword. ({person}dgr[@dgr])
+** {issue}644[#644]: Deprecate `when-predicate` and `when-not-predicate` macros. See docstrings for guidance on alternatives. These will may be removed from the API at the next release that contains breaking changes. ({person}dgr[@dgr])
 
 == v1.1.41 [minor breaking] - 2024-08-14 [[v1.1.41]]
 
