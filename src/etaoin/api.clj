@@ -143,7 +143,7 @@
   - [[perform-actions]] [[release-actions]]
 
   **Convenience**
-  - [[rand-uuid]] [[when-predicate]] [[when-not-predicate]]
+  - [[rand-uuid]]
   "
   (:require
    [babashka.fs :as fs]
