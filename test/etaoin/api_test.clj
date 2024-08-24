@@ -187,6 +187,7 @@
 
 (deftest test-input
   (testing "fill multiple inputs"
+    ;; Test with map form
     (doto *driver*
       (e/fill-multi {:simple-input    1
                      :simple-password 2
@@ -195,12 +196,33 @@
       (e/when-safari (e/wait 3))
       (-> e/get-url
           (str/ends-with? "?login=1&password=2&message=3")
+          is))
+    ;; Test with vector form
+    (doto *driver*
+      (e/fill-multi [:simple-input    1
+                     :simple-password 2
+                     :simple-textarea 3])
+      (e/click :simple-submit)
+      (e/when-safari (e/wait 3))
+      (-> e/get-url
+          (str/ends-with? "?login=1&password=2&message=3")
           is)))
   (testing "fill human multiple inputs"
     (doto *driver*
+      ;; Test with map form
       (e/fill-human-multi {:simple-input    "login"
                            :simple-password "123"
                            :simple-textarea "text"})
+      (e/click :simple-submit)
+      (e/when-safari (e/wait 3))
+      (-> e/get-url
+          (str/ends-with? "?login=login&password=123&message=text")
+          is))
+    (doto *driver*
+      ;; Test with vector form
+      (e/fill-human-multi [:simple-input    "login"
+                           :simple-password "123"
+                           :simple-textarea "text"])
       (e/click :simple-submit)
       (e/when-safari (e/wait 3))
       (-> e/get-url
