@@ -148,7 +148,12 @@
     (e/when-edge *driver*
                  (is (e/driver? *driver* :edge)))
     (e/when-not-edge *driver*
-                     (is (not (e/driver? *driver* :edge))))))
+                     (is (not (e/driver? *driver* :edge)))))
+  (testing "Headless conditionals"
+    (e/when-headless *driver*
+                     (is (e/headless? *driver*)))
+    (e/when-not-headless *driver*
+                         (is (not (e/headless? *driver*))))))
 
 (deftest test-navigation
   (is (= (test-server-url "test.html")  (e/get-url *driver*)) "initial page")
@@ -622,7 +627,7 @@
     (is (= init-handle (e/get-window-handle *driver*)) "wrapped around to original window")))
 
 (deftest test-maximize
-  (when-not (e/headless? *driver*) ;; skip for headless
+  (e/when-not-headless *driver* ;; skip for headless
     (e/set-window-position *driver* 2 2)
     (let [orig-rect (e/get-window-rect *driver*)
           target-rect (-> orig-rect
