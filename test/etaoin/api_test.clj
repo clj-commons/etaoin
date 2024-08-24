@@ -128,6 +128,28 @@
   report-browsers
   test-server)
 
+(deftest test-browser-conditionals
+  (testing "Chrome conditionals"
+    (e/when-chrome *driver*
+                   (is (e/driver? *driver* :chrome)))
+    (e/when-not-chrome *driver*
+                       (is (not (e/driver? *driver* :chrome)))))
+  (testing "Firefox conditionals"
+    (e/when-firefox *driver*
+                    (is (e/driver? *driver* :firefox)))
+    (e/when-not-firefox *driver*
+                        (is (not (e/driver? *driver* :firefox)))))
+  (testing "Safari conditionals"
+    (e/when-safari *driver*
+                   (is (e/driver? *driver* :safari)))
+    (e/when-not-safari *driver*
+                       (is (not (e/driver? *driver* :safari)))))
+  (testing "Edge conditionals"
+    (e/when-edge *driver*
+                 (is (e/driver? *driver* :edge)))
+    (e/when-not-edge *driver*
+                     (is (not (e/driver? *driver* :edge))))))
+
 (deftest test-navigation
   (is (= (test-server-url "test.html")  (e/get-url *driver*)) "initial page")
   (e/go *driver* (test-server-url "test2.html"))
