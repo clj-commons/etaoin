@@ -1081,6 +1081,18 @@
 (deftest test-driver-type
   (is (#{:chrome :firefox :safari :edge} (e/driver-type *driver*))))
 
+(deftest test-intersects
+  (testing "self-intersection"
+    ;; Things must intersect with themselves
+    (is (e/intersects? *driver* {:class :target} {:class :target})))
+  (testing "non-intersection"
+    ;; Choose two things near each other, that overlap in one
+    ;; dimension, but not two
+    (is (not (e/intersects? *driver*
+                            {:class :target}
+                            [{:class :bar} {:class :deep}
+                             {:class :inside} {:tag :span}])))))
+
 (deftest test-timeouts
   (let [timeouts {:implicit 32134
                   :script 78921
