@@ -1192,10 +1192,13 @@
   [driver q1 q2]
   (let [a (get-element-box driver q1)
         b (get-element-box driver q2)]
-    (or (< (a :y1) (b :y2))
-        (> (a :y2) (b :y1))
-        (< (a :x2) (b :x1))
-        (> (a :x1) (b :x2)))))
+    ;; Elements do not intersect if one element is above, below, left
+    ;; or right of the other element. So, elements do intersect if
+    ;; none of these conditions apply.
+    (not (or (> (a :y1) (b :y2))
+             (< (a :y2) (b :y1))
+             (< (a :x2) (b :x1))
+             (> (a :x1) (b :x2))))))
 
 ;;
 ;; properties
