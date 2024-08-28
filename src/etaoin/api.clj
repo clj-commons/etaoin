@@ -206,7 +206,7 @@
 ;; utils
 ;;
 
-(defn ^:no-doc dispatch-driver
+(defn- dispatch-driver
   "Returns the current driver's type. Used as dispatcher in
   multimethods."
   [driver & _]
