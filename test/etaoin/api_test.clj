@@ -814,19 +814,26 @@
       (-> e/get-url (str/ends-with? "/test.html#goodbye") is))))
 
 (deftest test-find-element
-  (let [text (e/get-element-text *driver* {:class :target})]
-    (is (= text "target-1")))
-  (let [text (e/get-element-text *driver* [{:class :foo}
-                                         {:class :target}])]
-    (is (= text "target-2")))
-  (e/with-xpath *driver*
-    (let [text (e/get-element-text *driver* ".//div[@class='target'][1]")]
+  (testing "finding basic elements"
+    (let [text (e/get-element-text *driver* {:class :target})]
+      (is (= text "target-1")))
+    (let [text (e/get-element-text *driver* [{:class :foo}
+                                             {:class :target}])]
+      (is (= text "target-2"))))
+  (testing "finding with XPath and CSS string syntax"
+    (e/with-xpath *driver*
+      (let [text (e/get-element-text *driver* ".//div[@class='target'][1]")]
+        (is (= text "target-1"))))
+    (e/with-css *driver*
+      (let [text (e/get-element-text *driver* ".bar .deep .inside span")]
+        (is (= text "target-3")))))
+  (testing "finding with CSS map syntax"
+    (let [text (e/get-element-text *driver* {:css ".target"})]
       (is (= text "target-1"))))
-  (let [text (e/get-element-text *driver* {:css ".target"})]
-    (is (= text "target-1")))
-  (let [q    [{:css ".bar"} ".//div[@class='inside']" {:tag :span}]
-        text (e/get-element-text *driver* q)]
-    (is (= text "target-3"))))
+  (testing "finding with vector syntax"
+    (let [q    [{:css ".bar"} ".//div[@class='inside']" {:tag :span}]
+          text (e/get-element-text *driver* q)]
+      (is (= text "target-3")))))
 
 (deftest test-find-elements-more
   (testing "simple case"
