@@ -185,6 +185,21 @@
   (is (e/selected? *driver* :vehicle2))
   (is (e/selected? *driver* :vehicle3)))
 
+(deftest test-submit
+  (doto *driver*
+    (e/fill-multi {:simple-input    1
+                   :simple-password 2
+                   :simple-textarea 3})
+    (e/submit :simple-input)
+    ;; Both Safari and Firefox need a slight delay here before the URL
+    ;; corresponding to the submitted form is valid. Chrome and Edge
+    ;; seem to do OK without. As of Aug 28, 2024.
+    (e/when-safari (e/wait 3))
+    (e/when-firefox (e/wait 3))
+    (-> e/get-url
+        (str/ends-with? "?login=1&password=2&message=3")
+        is)))
+
 (deftest test-input
   (testing "fill multiple inputs"
     ;; Test with map form
