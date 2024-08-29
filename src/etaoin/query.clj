@@ -10,7 +10,6 @@
 
 (set! *warn-on-reflection* true)
 
-;; todo duplicates with api.clj
 (def locator-xpath "xpath")
 (def locator-css "css selector")
 

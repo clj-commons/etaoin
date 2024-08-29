@@ -169,9 +169,7 @@
 ;;
 ;; WebDriver defaults
 ;;
-(def ^:no-doc default-locator "xpath")
-(def ^:no-doc locator-xpath "xpath")
-(def ^:no-doc locator-css "css selector")
+(def ^:private default-locator query/locator-xpath)
 
 (def ^{:doc "WebDriver global option defaults"} defaults-global
   {:locator default-locator
@@ -208,7 +206,7 @@
 ;; utils
 ;;
 
-(defn ^:no-doc dispatch-driver
+(defn- dispatch-driver
   "Returns the current driver's type. Used as dispatcher in
   multimethods."
   [driver & _]
@@ -2099,12 +2097,12 @@
 (defn use-xpath
   "Return new `driver` with default locator set to XPath."
   [driver]
-  (use-locator driver locator-xpath))
+  (use-locator driver query/locator-xpath))
 
 (defn use-css
   "Return new `driver` with default locator set to CSS."
   [driver]
-  (use-locator driver locator-css))
+  (use-locator driver query/locator-css))
 
 (defmacro ^:no-doc with-locator [driver locator & body]
   `(binding [~driver (assoc ~driver :locator ~locator)]
@@ -2113,13 +2111,13 @@
 (defmacro with-xpath
   "Execute `body` with default locator set to XPath."
   [driver & body]
-  `(with-locator ~driver locator-xpath
+  `(with-locator ~driver query/locator-xpath
      ~@body))
 
 (defmacro with-css
   "Execute `body` with default locator set to CSS."
   [driver & body]
-  `(with-locator ~driver locator-css
+  `(with-locator ~driver query/locator-css
      ~@body))
 
 ;;

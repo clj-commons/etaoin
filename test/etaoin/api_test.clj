@@ -227,21 +227,21 @@
         (is (= (f data) (e/get-element-value *driver* f)))))))
 
 (deftest test-unicode-above-bmp-input
-    ;; as of 2023-04-29 not supported on chrome and edge
-    ;; https://bugs.chromium.org/p/chromedriver/issues/detail?id=2269
-    (when-not (#{:chrome :edge} (e/dispatch-driver *driver*))
-      (let [data {:simple-input "😊🍂input🍃"
-                  :simple-password "🔆password☠️ "
-                  :simple-textarea "🎉🚀textarea👀☀️"}]
-        (testing "fill-multi"
-          (e/fill-multi *driver* data)
-          (doseq [f [:simple-input :simple-password :simple-textarea]]
-            (is (= (f data) (e/get-element-value *driver* f)))))
-        (testing "fill-human-multi"
-          (e/refresh *driver*)
-          (e/fill-human-multi *driver* data)
-          (doseq [f [:simple-input :simple-password :simple-textarea]]
-            (is (= (f data) (e/get-element-value *driver* f))))))))
+  ;; as of 2023-04-29 not supported on chrome and edge
+  ;; https://bugs.chromium.org/p/chromedriver/issues/detail?id=2269
+  (e/when-not-drivers #{:chrome :edge} *driver*
+                      (let [data {:simple-input "😊🍂input🍃"
+                                  :simple-password "🔆password☠️ "
+                                  :simple-textarea "🎉🚀textarea👀☀️"}]
+                        (testing "fill-multi"
+                          (e/fill-multi *driver* data)
+                          (doseq [f [:simple-input :simple-password :simple-textarea]]
+                            (is (= (f data) (e/get-element-value *driver* f)))))
+                        (testing "fill-human-multi"
+                          (e/refresh *driver*)
+                          (e/fill-human-multi *driver* data)
+                          (doseq [f [:simple-input :simple-password :simple-textarea]]
+                            (is (= (f data) (e/get-element-value *driver* f))))))))
 
 (deftest test-clear
   (testing "simple clear"
