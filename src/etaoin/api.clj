@@ -2745,8 +2745,10 @@
   "Have `driver` fill multiple inputs via `q-text`.
 
   `q-text` can be:
-  - a map of `{q1 \"text1\" q2 \"text2\" ...}`
-  - a vector of `[q1 \"text1\" q2 \"text2\" ...]`
+  - a map of `{q1 \"text1\" q2 \"text2\" ...}`. There are no guarantees 
+    about the order in which fields are filled.
+  - a vector of `[q1 \"text1\" q2 \"text2\" ...]`. The fields are filled 
+    in the order the fields are listed in the vector.
 
   See [[query]] for details on `q`s."
   [driver q-text]
@@ -2756,7 +2758,12 @@
       (fill driver q text))
 
     (vector? q-text)
-    (recur driver (apply hash-map q-text))
+    (if (even? (count q-text))
+      (doseq [[q text] (partition 2 q-text)]
+        (fill driver q text))
+      (throw+ {:type    :etaoin/argument
+               :message "Vector q-text must have even length"
+               :arg     q-text}))
 
     :else (throw+ {:type    :etaoin/argument
                    :message "Wrong argument type"
@@ -2811,8 +2818,10 @@
   "Have `driver` fill multiple elements as if it were a real human being via `q-text` using `opts`.
 
   `q-text` can be:
-  - a map of `{q1 \"text1\" q2 \"text2\" ...}`
-  - a vector of `[q1 \"text1\" q2 \"text2\" ...]`
+  - a map of `{q1 \"text1\" q2 \"text2\" ...}`. There are no guarantees 
+    about the order in which fields are filled.
+  - a vector of `[q1 \"text1\" q2 \"text2\" ...]`. The fields are filled 
+    in the order the fields are listed in the vector.
 
   See [[query]] for details on `q`s.
 
@@ -2825,7 +2834,12 @@
        (fill-human driver q text opts))
 
      (vector? q-text)
-     (recur driver (apply hash-map q-text) opts)
+     (if (even? (count q-text))
+       (doseq [[q text] (partition 2 q-text)]
+         (fill driver q text))
+       (throw+ {:type    :etaoin/argument
+                :message "Vector q-text must have even length"
+                :arg     q-text}))
 
      :else (throw+ {:type    :etaoin/argument
                     :message "Wrong argument type"
