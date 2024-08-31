@@ -2763,11 +2763,12 @@
         (fill driver q text))
       (throw+ {:type    :etaoin/argument
                :message "Vector q-text must have even length"
-               :arg     q-text}))
+               :q-text  q-text
+               :length  (count q-text)}))
 
     :else (throw+ {:type    :etaoin/argument
-                   :message "Wrong argument type"
-                   :arg     q-text})))
+                   :message "Argument q-text must be a map or vector"
+                   :q-text  q-text})))
 
 (defn fill-human-el
   "Have `driver` fill element `el` with `text` as if it were a real human using `opts`.
@@ -2838,12 +2839,13 @@
        (doseq [[q text] (partition 2 q-text)]
          (fill driver q text))
        (throw+ {:type    :etaoin/argument
-                :message "Vector q-text must have even length"
-                :arg     q-text}))
+               :message "Vector q-text must have even length"
+               :q-text  q-text
+               :length  (count q-text)}))
 
      :else (throw+ {:type    :etaoin/argument
-                    :message "Wrong argument type"
-                    :arg     q-text}))))
+                   :message "Argument q-text must be a map or vector"
+                   :q-text  q-text}))))
 
 (defn select
   "Convenience function to have `driver` select first option that includes `text` for select element found by query `q`.
