@@ -22,13 +22,13 @@ A release with an intentional breaking changes is marked with:
 * Changes
 ** {issue}559[#559]: Create `query-from` and `query-all-from` as replacements for `child` and `children`. Rewrite logic such that `q` parameter allows for vector syntax similar to `query` and `query-all`. Deprecate `child` and `children`. ({person}dgr[@dgr])
 ** {issue}559[#559]: Make `get-active-element` a public API. This was previously private. ({person}dgr[@dgr])
-** {issue}629[#629]: Added `fill-human-active` as a convenience function that fills the currently active input using `fill-human-el`. ({person}dgr[@dgr])
-** {issue}620[#620]: Get stricter when unwrapping elements. ({person}dgr[@dgr])
-* Docs
 ** {issue}559[#559]: Deprecate use of `:active` with `query` and other APIs that use `query` under the hood. ({person}dgr[@dgr])
+** {issue}620[#620]: Get stricter when unwrapping elements. ({person}dgr[@dgr])
+** {issue}629[#629]: Added `fill-human-active` as a convenience function that fills the currently active input using `fill-human-el`. ({person}dgr[@dgr])
 ** {issue}642[#642]: Add `driver-type` to retrieve driver type keyword. ({person}dgr[@dgr])
 ** {issue}644[#644]: Deprecate `when-predicate` and `when-not-predicate` macros. See docstrings for guidance on alternatives. These will may be removed from the API at the next release that contains breaking changes. ({person}dgr[@dgr])
 ** {issue}647[#647]: Fix logic bug in `intersects?`. Added tests to test suite. ({person}dgr[@dgr])
+** {issue}649[#649]: When supplied a vector argument for `q-text`, `fill-multi` and `fill-human-multi` now fill fields in the order that fields appear in the vector. Previously, the order was not guaranteed. ({person}dgr[@dgr])
 
 == v1.1.41 [minor breaking] - 2024-08-14 [[v1.1.41]]
 
