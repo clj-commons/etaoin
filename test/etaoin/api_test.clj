@@ -13,7 +13,8 @@
    [etaoin.impl.client :as client]
    [etaoin.keys :as k]
    [etaoin.test-report :as test-report]
-   [slingshot.slingshot :refer [try+]])
+   [slingshot.slingshot :refer [try+]]
+   [slingshot.test])
   (:import [java.net ServerSocket]))
 
 (defn numeric? [val]
@@ -222,6 +223,13 @@
       (-> e/get-url
           (str/ends-with? "?login=1&password=2&message=3")
           is)))
+  (testing "fill-multi bad inputs"
+    (is (thrown+? [:type :etaoin/argument]
+                  (e/fill-multi *driver* #{:set :is :not :allowed})))
+    (is (thrown+? [:type :etaoin/argument]
+                  (e/fill-multi *driver* '(:list :is :not :allowed))))
+    (is (thrown+? [:type :etaoin/argument]
+                  (e/fill-multi *driver* [:vector :with :odd :length :is :not :allowed]))))
   (testing "fill human multiple inputs"
     (doto *driver*
       ;; Test with map form
@@ -243,6 +251,13 @@
       (-> e/get-url
           (str/ends-with? "?login=login&password=123&message=text")
           is)))
+  (testing "fill-human-multi bad inputs"
+    (is (thrown+? [:type :etaoin/argument]
+                  (e/fill-multi *driver* #{:set :is :not :allowed})))
+    (is (thrown+? [:type :etaoin/argument]
+                  (e/fill-multi *driver* '(:list :is :not :allowed))))
+    (is (thrown+? [:type :etaoin/argument]
+                  (e/fill-multi *driver* [:vector :with :odd :length :is :not :allowed]))))
   (testing "fill multiple vars"
     (doto *driver*
       (e/fill :simple-input 1 "test" 2 \space \A)
