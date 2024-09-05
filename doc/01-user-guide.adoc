@@ -531,7 +531,10 @@ If you want to query for an element with an ID of "active", use the map syntax, 
 (e/fill driver {:id "uname"} "Etaoin Again" k/enter)
 ----
 
-* a string containing an link:{xpath-sel}[XPath] expression.
+* a string containing either an link:{xpath-sel}[XPath] or a link:{css-sel}[CSS] expression.
+The way `query` interprets this string depends on the driver's `:locator` setting.
+By default, the driver's `:locator` is set to `"xpath"`.
+The `:locator` can be changed using the `use-css`, `with-css`, `use-xpath`, and `with-xpath` functions and macros.
 (Be careful when writing XPath manually; see <<troubleshooting>>.)
 Here, we find an `input` tag with an attribute `id` of `uname` and an attribute `name` of `username`:
 +
@@ -543,6 +546,15 @@ Here, we find an `input` tag with an attribute `id` of `uname` and an attribute 
 ;; let's check if that worked as expected:
 (e/get-element-value driver :uname)
 ;; => "XPath can be tricky"
+
+;; let's modify the driver to use CSS rather than XPath
+;; note that this returns a new, modified copy of the driver
+;; the old driver is still valid, however
+(def driver-css (e/use-css driver))
+(e/refresh driver-css)
+(e/fill driver-css "input#uname[name='username']" "CSS can be tricky, too")
+(e/get-element-value driver-css :uname)
+;; => "CSS can be tricky, too"
 ----
 
 * a map with either `:xpath` or `:css` key with a string in corresponding syntax:

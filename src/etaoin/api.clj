@@ -602,25 +602,32 @@
      - Note that `:active` conflicts with this usage and therefore you
        cannot search for a keyword named `:active` and expect to find an element
        with ID equal to \"active\". In this case, use `{:id \"active\"}`.
-   - an XPath expression:
-     - `\".//input[@id='uname']\"`
+   - a string that contains either an XPath or CSS expression, depending on the
+     driver's locator setting. Defaults to XPath.
+     See [[use-css]], [[with-css]], [[use-xpath]], [[with-xpath]] for methods
+     changing the driver's locator setting.
+     - XPath: `\".//input[@id='uname'][@name='username']\"`
+     - CSS: `\"input#uname[name='username']\"`
    - a map with either `:xpath` or `:css`:
      - `{:xpath \".//input[@id='uname']\"`}`
      - `{:css \"input#uname[name='username']\"}`
    - any other map is converted to an XPath expression:
      - `{:tag :div}`
      - is equivalent to XPath: `\".//div\"`
-   - multiple of the above (wrapped in a vector or not).
-     The result of each expression is fed into the next.
-     - `{:tag :div} \".//input[@id='uname']\"`
-     - `[{:tag :div} \".//input[@id='uname']\"]`
+  - multiple of the above (wrapped in a vector or not).
+    The result of each search anchors the search for the next,
+    effectively providing a path through the DOM (though you do not
+    have to specify each and every point in the path).
+    - `{:tag :div} \".//input[@id='uname']\"`
+    - `[{:tag :div} \".//input[@id='uname']\"]`
+    Returns the final element's unique identifier, or throws if any element
+    is not found.
 
-   Returns the found element's unique identifier, or throws when not found.
-
-   See [Selecting Elements](/doc/01-user-guide.adoc#querying) for more details.
+  See [Selecting Elements](/doc/01-user-guide.adoc#querying) for more details.
 
   Makes use of:
   - https://www.w3.org/TR/webdriver2/#dfn-get-active-element
+  - https://www.w3.org/TR/webdriver2/#dfn-find-element
   - https://www.w3.org/TR/webdriver2/#dfn-find-element-from-element"
   ([driver q]
    (cond
