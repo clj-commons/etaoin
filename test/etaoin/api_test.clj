@@ -1094,19 +1094,27 @@
                              {:class :inside} {:tag :span}])))))
 
 (deftest test-timeouts
-  (let [timeouts {:implicit 32134
-                  :script 78921
-                  :pageLoad 98765}]
-    (e/set-timeouts *driver* timeouts)
-    (is (= timeouts (e/get-timeouts *driver*)))
-    (e/set-page-load-timeout *driver* 987)
-    (e/set-implicit-timeout *driver* 876)
-    (e/set-script-timeout *driver* 765)
-    (is (= 987 (e/get-page-load-timeout *driver*)))
-    (is (= 876 (e/get-implicit-timeout *driver*)))
-    (is (= 765 (e/get-script-timeout *driver*)))
-    (is (= {:pageLoad 987000 :implicit 876000 :script 765000}
-           (e/get-timeouts *driver*)))))
+  (testing "basic timeout tests"
+    (let [timeouts {:implicit 32134
+                    :script 78921
+                    :pageLoad 98765}]
+      (e/set-timeouts *driver* timeouts)
+      (is (= timeouts (e/get-timeouts *driver*)))
+      (e/set-page-load-timeout *driver* 987)
+      (e/set-implicit-timeout *driver* 876)
+      (e/set-script-timeout *driver* 765)
+      (is (= 987 (e/get-page-load-timeout *driver*)))
+      (is (= 876 (e/get-implicit-timeout *driver*)))
+      (is (= 765 (e/get-script-timeout *driver*)))
+      (is (= {:pageLoad 987000 :implicit 876000 :script 765000}
+             (e/get-timeouts *driver*)))))
+  (testing "non-integer timeout values"
+    ;; These should not throw. If they do, the test runner will record
+    ;; a test failure.
+    (is (do (e/set-page-load-timeout *driver* 1.33333)
+            true))
+    (is (do (e/set-page-load-timeout *driver* 100/3)
+            true))))
 
 (comment
   ;; start test server
