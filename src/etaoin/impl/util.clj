@@ -26,7 +26,7 @@
      (defmethod ~multifn dispatch-val# ~@fn-tail)))
 
 (defn sec->ms [sec]
-  (* sec 1000))
+  (long (* sec 1000)))
 
 (defn ms->sec [ms]
   (/ ms 1000))
