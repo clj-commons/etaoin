@@ -29,6 +29,7 @@ A release with an intentional breaking changes is marked with:
 ** {issue}644[#644]: Deprecate `when-predicate` and `when-not-predicate` macros. See docstrings for guidance on alternatives. These will may be removed from the API at the next release that contains breaking changes. ({person}dgr[@dgr])
 ** {issue}647[#647]: Fix logic bug in `intersects?`. Added tests to test suite. ({person}dgr[@dgr])
 ** {issue}649[#649]: When supplied a vector argument for `q-text`, `fill-multi` and `fill-human-multi` now fill fields in the order that fields appear in the vector. Previously, the order was not guaranteed. ({person}dgr[@dgr])
+** {issue}657[#657]: Make `set-<xyz>-timeout` functions resilient to reasonable non-integer timeouts (e.g., rationals, doubles, etc.). ({person}dgr[@dgr])
 
 == v1.1.41 [minor breaking] - 2024-08-14 [[v1.1.41]]
 
