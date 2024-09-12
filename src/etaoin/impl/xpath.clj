@@ -79,7 +79,7 @@
 
 (defmethod clause :fn/enabled
   [[_ bool]]
-  (node-boolean "@enabled" bool))
+  (node-boolean "@disabled" (not bool)))
 
 (defmethod clause :fn/index
   [[_ idx]]
