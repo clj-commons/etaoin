@@ -863,7 +863,14 @@
           texts    (for [el elements]
                      (e/get-element-text-el *driver* el))]
       (is (= (count elements) 2))
-      (is (= texts ["1" "2"])))))
+      (is (= texts ["1" "2"]))))
+  (testing "returning multiple elements via XPath"
+    (let [q         {:xpath ".//div[@id='operate-multiple-elements']//*"}
+          elements  (e/query-all *driver* q)
+          tag-names (for [el elements]
+                      (str/lower-case (e/get-element-tag-el *driver* el)))]
+      (is (= (vec tag-names)
+             ["div" "b" "p" "span"])))))
 
 (deftest test-switch-default-locators
   (testing "xpath locator"
@@ -881,15 +888,6 @@
                   (->> (e/query *driver* {:class :indexed :fn/index index})
                        (e/get-element-text-el *driver*)))]
       (is (= items ["One" "Two" "Three" "Four" "Five"])))))
-
-(deftest test-multiple-elements
-  (testing "tag names"
-    (let [q         {:xpath ".//div[@id='operate-multiple-elements']//*"}
-          elements  (e/query-all *driver* q)
-          tag-names (for [el elements]
-                      (str/lower-case (e/get-element-tag-el *driver* el)))]
-      (is (= (vec tag-names)
-             ["div" "b" "p" "span"])))))
 
 (deftest test-query-tree
   (let [url            (test-server-url "test2.html")
