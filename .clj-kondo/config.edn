@@ -11,4 +11,6 @@
    etaoin.impl.util/with-tmp-file etaoin.impl.util/with-tmp-file}}
  :linters {:deprecated-var
            {:exclude {etaoin.api/child {:namespaces [etaoin.api-test]}
-                      etaoin.api/children {:namespaces [etaoin.api-test]}}}}}
+                      etaoin.api/children {:namespaces [etaoin.api-test]}}}
+           :unresolved-symbol
+           {:exclude [(clojure.test/is [thrown+? thrown+-with-msg?])]}}}
