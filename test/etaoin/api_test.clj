@@ -829,6 +829,9 @@
       (-> e/get-url (str/ends-with? "/test.html#goodbye") is))))
 
 (deftest test-query
+  (testing "finding an element by id keyword"
+    (let [el (e/query *driver* :find-element-by-id)]
+      (is (= "target-1" (e/get-element-text-el *driver* el)))))
   (testing "finding basic elements"
     (let [text (e/get-element-text *driver* {:class :target})]
       (is (= text "target-1")))
