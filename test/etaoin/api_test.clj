@@ -828,7 +828,7 @@
       (e/set-hash "goodbye")
       (-> e/get-url (str/ends-with? "/test.html#goodbye") is))))
 
-(deftest test-find-element
+(deftest test-query
   (testing "finding basic elements"
     (let [text (e/get-element-text *driver* {:class :target})]
       (is (= text "target-1")))
@@ -850,7 +850,7 @@
           text (e/get-element-text *driver* q)]
       (is (= text "target-3")))))
 
-(deftest test-find-elements-more
+(deftest test-query-all
   (testing "simple case"
     (let [q        {:class :find-elements-target}
           elements (e/query-all *driver* q)]
