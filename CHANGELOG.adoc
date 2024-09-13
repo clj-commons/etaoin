@@ -30,6 +30,7 @@ A release with an intentional breaking changes is marked with:
 ** {issue}647[#647]: Fix logic bug in `intersects?`. Added tests to test suite. ({person}dgr[@dgr])
 ** {issue}649[#649]: When supplied a vector argument for `q-text`, `fill-multi` and `fill-human-multi` now fill fields in the order that fields appear in the vector. Previously, the order was not guaranteed. ({person}dgr[@dgr])
 ** {issue}657[#657]: Make `set-<xyz>-timeout` functions resilient to reasonable non-integer timeouts (e.g., rationals, doubles, etc.). ({person}dgr[@dgr])
+** {issue}661[#661]: Fix `:fn/enabled`. ({person}dgr[@dgr])
 * Docs
 ** {issue}656[#656]: Correctly describe behavior when query's parameter is a string. The User Guide and `query` doc strings say that a string passed to `query` is interpreted as an XPath expression. In fact, `query` interprets this as either XPath or CSS depending on the setting of the driver's `:locator` parameter, which can be changed. ({person}dgr[@dgr])
 

@@ -22,10 +22,13 @@
 
    [{:tag :input :fn/disabled true} ".//input[@disabled=true()]"]
 
-   [{:tag :input :fn/enabled false} ".//input[@enabled=false()]"]
+   [{:tag :input :fn/enabled false} ".//input[@disabled=true()]"]
 
-   [{:tag :a :fn/link "yandex"} ".//a[contains(@href, \"yandex\")]"]
-   ])
+   [{:tag :input :fn/disabled false} ".//input[@disabled=false()]"]
+
+   [{:tag :input :fn/enabled true} ".//input[@disabled=false()]"]
+
+   [{:tag :a :fn/link "yandex"} ".//a[contains(@href, \"yandex\")]"]])
 
 (deftest test-xpath-expand
   (doseq [[q xpath] xpath-samples]
