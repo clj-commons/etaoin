@@ -636,7 +636,11 @@
      (get-active-element driver)
 
      (vector? q)
-     (apply query driver q)
+     (if (empty? q)
+       (throw+ {:type :etaoin/argument
+                :message "Vector query must be non-empty"
+                :q q})
+       (apply query driver q))
 
      :else
      (let [[loc term] (query/expand driver q)]
