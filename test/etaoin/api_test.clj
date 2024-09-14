@@ -832,26 +832,87 @@
   (testing "finding an element by id keyword"
     (let [el (e/query *driver* :find-element-by-id)]
       (is (= "target-1" (e/get-element-text-el *driver* el)))))
-  (testing "finding basic elements"
-    (let [text (e/get-element-text *driver* {:class :target})]
-      (is (= text "target-1")))
-    (let [text (e/get-element-text *driver* [{:class :foo}
-                                             {:class :target}])]
-      (is (= text "target-2"))))
-  (testing "finding with XPath and CSS string syntax"
+  (testing "XPath and CSS string syntax"
     (e/with-xpath *driver*
-      (let [text (e/get-element-text *driver* ".//div[@class='target'][1]")]
-        (is (= text "target-1"))))
+      (let [el (e/query *driver* ".//div[@class='target'][1]")]
+        (is (= "target-1" (e/get-element-text-el *driver* el)))))
     (e/with-css *driver*
-      (let [text (e/get-element-text *driver* ".bar .deep .inside span")]
-        (is (= text "target-3")))))
-  (testing "finding with CSS map syntax"
-    (let [text (e/get-element-text *driver* {:css ".target"})]
-      (is (= text "target-1"))))
-  (testing "finding with vector syntax"
-    (let [q    [{:css ".bar"} ".//div[@class='inside']" {:tag :span}]
-          text (e/get-element-text *driver* q)]
-      (is (= text "target-3")))))
+      (let [el (e/query *driver* ".bar .deep .inside span") ]
+        (is (= "target-3" (e/get-element-text-el *driver* el))))))
+  (testing "XPath and CSS map syntax"
+    (let [el (e/query *driver* {:xpath ".//*[@class='target']"})]
+      (is (= "target-1" (e/get-element-text-el *driver* el))))
+    (let [el (e/query *driver* {:css ".target"})]
+      (is (= "target-1" (e/get-element-text-el *driver* el)))))
+  (testing "map syntax"
+    ;; 1. tags
+    (testing "tags"
+      (let [el (e/query *driver* {:tag :h3 :id :find-element})]
+        (is (= "Find element" (e/get-element-text-el *driver* el)))))
+    ;; 2. class
+    (testing "class"
+      (let [el (e/query *driver* {:class :target})]
+        (is (= "target-1" (e/get-element-text-el *driver* el)))))
+    ;; 3. random attributes
+    (testing "random attributes"
+      (let [el (e/query *driver* {:strangeattribute :foo})]
+        (is (= "DIV with strange attribute" (e/get-element-text-el *driver* el)))))
+    ;; 4. :fn/*
+    (testing ":fn/* functions"
+      ;; :index and :fn/index
+      (let [el (e/query *driver* {:class :list :index 3})] ; deprecated syntax
+        (is (= "ordered 3" (e/get-element-text-el *driver* el))))
+      (let [el (e/query *driver* {:class :list :fn/index 3})] ; new syntax
+        (is (= "ordered 3" (e/get-element-text-el *driver* el))))
+      ;; :fn/text
+      (let [el (e/query *driver* {:fn/text "multiple classes"})]
+        (is (= "multiple-classes" (e/get-element-attr-el *driver* el "id"))))
+      ;; :fn/has-text
+      (let [el (e/query *driver* {:fn/has-text "ple cla"})] ; pick out the middle
+        (is (= "multiple-classes" (e/get-element-attr-el *driver* el "id"))))
+      ;; :fn/has-string
+      (let [el (e/query *driver* {:tag :ol :fn/has-string "ordered 3"})]
+        (is (= "ordered-list"  (e/get-element-attr-el *driver* el "id"))))
+      ;; :fn/has-class
+      (let [el (e/query *driver* {:fn/has-class "ol-class1"})]
+        (is (= "ordered-list"  (e/get-element-attr-el *driver* el "id"))))
+      ;; :fn/has-classes
+      ;; verify that order doesn't matter
+      (let [elx (e/query *driver* {:fn/has-classes [:ol-class1 :ol-class2]})
+            ely (e/query *driver* {:fn/has-classes [:ol-class2 :ol-class1]})
+            elz (e/query *driver* :ordered-list)]
+        (is (= elx ely elz)))
+      ;; :fn/link
+      (let [el (e/query *driver* {:fn/link "https://www.github.com/"})]
+        (is (= "Link to GitHub" (e/get-element-text-el *driver* el))))
+      ;; :fn/enabled
+      (let [el (e/query *driver* [:enabled-disabled {:type :checkbox :fn/enabled true}])]
+        (is (= "checkbox-1" (e/get-element-attr-el *driver* el "id"))))
+      (let [el (e/query *driver* [:enabled-disabled {:type :checkbox :fn/enabled false}])]
+        (is (= "checkbox-2" (e/get-element-attr-el *driver* el "id"))))
+      (let [el (e/query *driver* [:enabled-disabled {:type :checkbox :fn/enabled true :fn/index 2}])]
+        (is (= "checkbox-3" (e/get-element-attr-el *driver* el "id"))))
+      ;; :fn/disabled
+      (let [el (e/query *driver* [:enabled-disabled {:type :checkbox :fn/disabled false}])]
+        (is (= "checkbox-1" (e/get-element-attr-el *driver* el "id"))))
+      (let [el (e/query *driver* [:enabled-disabled {:type :checkbox :fn/disabled true}])]
+        (is (= "checkbox-2" (e/get-element-attr-el *driver* el "id"))))
+      (let [el (e/query *driver* [:enabled-disabled {:type :checkbox :fn/disabled false :fn/index 2}])]
+        (is (= "checkbox-3" (e/get-element-attr-el *driver* el "id"))))))
+  (testing "vector syntax"
+    ;; TODO: should check vectors with length 1, 2, and 3.
+    (e/with-xpath *driver*       ; force XPath because we use a string
+      (let [el (e/query *driver* [{:css ".bar"} ".//div[@class='inside']" {:tag :span}])]
+        (is (= "target-3" (e/get-element-text-el *driver* el)))))
+    (let [el (e/query *driver* [{:class :foo} {:class :target}])]
+      (is (= "target-2" (e/get-element-text-el *driver* el)))))
+  (testing "variable arguments syntax"
+    ;; Same as vector syntax but just provided as separate arguments to `query`
+    (e/with-xpath *driver*
+      (let [el (e/query *driver* {:css ".bar"} ".//div[@class='inside']" {:tag :span})]
+        (is (= "target-3" (e/get-element-text-el *driver* el)))))
+    (let [el (e/query *driver* {:class :foo} {:class :target})]
+      (is (= "target-2" (e/get-element-text-el *driver* el))))))
 
 (deftest test-query-all
   (testing "simple case"

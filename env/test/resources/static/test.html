@@ -169,7 +169,7 @@
         <h3>Element property section</h3>
         <div type="text" id="element-props" value="value text"><div>Inner HTML</div></div>
 
-        <h3>Find element</h3>
+        <h3 id="find-element">Find element</h3>
         <div id="find-element-by-id" class="target">target-1</div>
         <div class="foo">
             <div class="target">target-2</div>
@@ -181,6 +181,23 @@
                 </div>
             </div>
         </div>
+        <div strangeattribute="foo">DIV with strange attribute</div>
+        <h3>:fn/* tests</h3>
+        <div id="multiple-classes" class="class1, class2">multiple classes</div>
+        <div>Test Indexing</div>
+        <ol id="ordered-list" class="ol-class1, ol-class2">
+            <li class="list">ordered 1</li>
+            <li class="list">ordered 2</li>
+            <li class="list">ordered 3</li>
+        </ol>
+        <a href="https://www.github.com/">Link to GitHub</a>
+        <div id="enabled-disabled">Enabled/Disabled elements<br>
+            <input id="checkbox-1" type="checkbox" />Checkbox 1 - Enabled<br>
+            <input id="checkbox-2" type="checkbox" disabled />Checkbox 2 - Disabled<br>
+            <input id="checkbox-3" type="checkbox" />Checkbox 3 - Enabled<br>
+        </div>
+
+        
 
         <h3>Find multiple elements</h3>
         <div id="find-elements">
