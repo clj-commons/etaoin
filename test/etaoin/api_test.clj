@@ -912,7 +912,14 @@
       (let [el (e/query *driver* {:css ".bar"} ".//div[@class='inside']" {:tag :span})]
         (is (= "target-3" (e/get-element-text-el *driver* el)))))
     (let [el (e/query *driver* {:class :foo} {:class :target})]
-      (is (= "target-2" (e/get-element-text-el *driver* el))))))
+      (is (= "target-2" (e/get-element-text-el *driver* el)))))
+  (testing "negative test cases"
+    ;; TODO:
+    ;; 1. searching for nothing
+    (testing "zero-length vector queries"
+      ;; 1. pass a vector of length 0 to query
+      (is (thrown+? [:type :etaoin/argument] (e/query *driver* []))))
+    ))
 
 (deftest test-query-all
   (testing "simple case"
