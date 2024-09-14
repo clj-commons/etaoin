@@ -919,6 +919,19 @@
     (testing "zero-length vector queries"
       ;; 1. pass a vector of length 0 to query
       (is (thrown+? [:type :etaoin/argument] (e/query *driver* []))))
+    ;; 2. searching for an element that can't be found
+    (testing "querying for missing elements"
+      ;; 2a. searching for a missing element with missing ID
+      (is (thrown+? [:type :etaoin/http-error] (e/query *driver* :missing-element)))
+      (is (thrown+? [:type :etaoin/http-error] (e/query *driver* [:missing-element])))
+      ;; 2a. element not found in middle of a vector query
+      (is (thrown+? [:type :etaoin/http-error] (e/query *driver* [{:css ".bar"}
+                                                                  :missing-element
+                                                                  {:tag :span}])))
+      ;; 2b. element not found at the end of a vector query
+      (is (thrown+? [:type :etaoin/http-error] (e/query *driver* [{:css ".bar"}
+                                                                  {:tag :div :class :inside}
+                                                                  :missing-element]))))
     ))
 
 (deftest test-query-all
