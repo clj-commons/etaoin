@@ -932,6 +932,11 @@
       (is (thrown+? [:type :etaoin/http-error] (e/query *driver* [{:css ".bar"}
                                                                   {:tag :div :class :inside}
                                                                   :missing-element]))))
+    ;; 3. malformed XPath
+    ;; 4. malformed CSS
+    ;; 5. query isn't a string, map, or vector. Perhaps a list and set.
+    ;; 6. bad :fn/... keywords
+    ;; 7. vector queries with vector elements (vectors in vectors)
     ))
 
 (deftest test-query-all
