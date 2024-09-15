@@ -961,15 +961,13 @@
       (is (= (vec tag-names)
              ["div" "b" "p" "span"])))))
 
-(deftest test-switch-default-locators
+(deftest test-switch-default-locator
   (testing "xpath locator"
-    (let [driver (e/use-xpath *driver*)
-          text (e/get-element-text driver {:class :target})]
-      (is (= "target-1" text))))
+    (let [driver (e/use-xpath *driver*)]
+      (is (= "target-1" (e/get-element-text driver ".//*[@class='target']")))))
   (testing "css locator"
-    (let [driver (e/use-css *driver*)
-          text (e/get-element-text driver {:class :target})]
-      (is (= "target-1" text)))))
+    (let [driver (e/use-css *driver*)]
+      (is (= "target-1" (e/get-element-text driver ".target"))))))
 
 (deftest test-fn-index
   (testing ":fn/index"
