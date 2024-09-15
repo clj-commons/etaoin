@@ -13,7 +13,8 @@
    [etaoin.impl.client :as client]
    [etaoin.keys :as k]
    [etaoin.test-report :as test-report]
-   [slingshot.slingshot :refer [try+]])
+   [slingshot.slingshot :refer [try+]]
+   [slingshot.test])
   (:import [java.net ServerSocket]))
 
 (defn numeric? [val]
@@ -128,6 +129,33 @@
   report-browsers
   test-server)
 
+(deftest test-browser-conditionals
+  (testing "Chrome conditionals"
+    (e/when-chrome *driver*
+                   (is (e/driver? *driver* :chrome)))
+    (e/when-not-chrome *driver*
+                       (is (not (e/driver? *driver* :chrome)))))
+  (testing "Firefox conditionals"
+    (e/when-firefox *driver*
+                    (is (e/driver? *driver* :firefox)))
+    (e/when-not-firefox *driver*
+                        (is (not (e/driver? *driver* :firefox)))))
+  (testing "Safari conditionals"
+    (e/when-safari *driver*
+                   (is (e/driver? *driver* :safari)))
+    (e/when-not-safari *driver*
+                       (is (not (e/driver? *driver* :safari)))))
+  (testing "Edge conditionals"
+    (e/when-edge *driver*
+                 (is (e/driver? *driver* :edge)))
+    (e/when-not-edge *driver*
+                     (is (not (e/driver? *driver* :edge)))))
+  (testing "Headless conditionals"
+    (e/when-headless *driver*
+                     (is (e/headless? *driver*)))
+    (e/when-not-headless *driver*
+                         (is (not (e/headless? *driver*))))))
+
 (deftest test-navigation
   (is (= (test-server-url "test.html")  (e/get-url *driver*)) "initial page")
   (e/go *driver* (test-server-url "test2.html"))
@@ -158,8 +186,24 @@
   (is (e/selected? *driver* :vehicle2))
   (is (e/selected? *driver* :vehicle3)))
 
+(deftest test-submit
+  (doto *driver*
+    (e/fill-multi {:simple-input    1
+                   :simple-password 2
+                   :simple-textarea 3})
+    (e/submit :simple-input)
+    ;; Both Safari and Firefox need a slight delay here before the URL
+    ;; corresponding to the submitted form is valid. Chrome and Edge
+    ;; seem to do OK without. As of Aug 28, 2024.
+    (e/when-safari (e/wait 3))
+    (e/when-firefox (e/wait 3))
+    (-> e/get-url
+        (str/ends-with? "?login=1&password=2&message=3")
+        is)))
+
 (deftest test-input
   (testing "fill multiple inputs"
+    ;; Test with map form
     (doto *driver*
       (e/fill-multi {:simple-input    1
                      :simple-password 2
@@ -168,9 +212,27 @@
       (e/when-safari (e/wait 3))
       (-> e/get-url
           (str/ends-with? "?login=1&password=2&message=3")
+          is))
+    ;; Test with vector form
+    (doto *driver*
+      (e/fill-multi [:simple-input    1
+                     :simple-password 2
+                     :simple-textarea 3])
+      (e/click :simple-submit)
+      (e/when-safari (e/wait 3))
+      (-> e/get-url
+          (str/ends-with? "?login=1&password=2&message=3")
           is)))
+  (testing "fill-multi bad inputs"
+    (is (thrown+? [:type :etaoin/argument]
+                  (e/fill-multi *driver* #{:set :is :not :allowed})))
+    (is (thrown+? [:type :etaoin/argument]
+                  (e/fill-multi *driver* '(:list :is :not :allowed))))
+    (is (thrown+? [:type :etaoin/argument]
+                  (e/fill-multi *driver* [:vector :with :odd :length :is :not :allowed]))))
   (testing "fill human multiple inputs"
     (doto *driver*
+      ;; Test with map form
       (e/fill-human-multi {:simple-input    "login"
                            :simple-password "123"
                            :simple-textarea "text"})
@@ -178,7 +240,24 @@
       (e/when-safari (e/wait 3))
       (-> e/get-url
           (str/ends-with? "?login=login&password=123&message=text")
+          is))
+    (doto *driver*
+      ;; Test with vector form
+      (e/fill-human-multi [:simple-input    "login"
+                           :simple-password "123"
+                           :simple-textarea "text"])
+      (e/click :simple-submit)
+      (e/when-safari (e/wait 3))
+      (-> e/get-url
+          (str/ends-with? "?login=login&password=123&message=text")
           is)))
+  (testing "fill-human-multi bad inputs"
+    (is (thrown+? [:type :etaoin/argument]
+                  (e/fill-multi *driver* #{:set :is :not :allowed})))
+    (is (thrown+? [:type :etaoin/argument]
+                  (e/fill-multi *driver* '(:list :is :not :allowed))))
+    (is (thrown+? [:type :etaoin/argument]
+                  (e/fill-multi *driver* [:vector :with :odd :length :is :not :allowed]))))
   (testing "fill multiple vars"
     (doto *driver*
       (e/fill :simple-input 1 "test" 2 \space \A)
@@ -600,7 +679,7 @@
     (is (= init-handle (e/get-window-handle *driver*)) "wrapped around to original window")))
 
 (deftest test-maximize
-  (when-not (e/headless? *driver*) ;; skip for headless
+  (e/when-not-headless *driver* ;; skip for headless
     (e/set-window-position *driver* 2 2)
     (let [orig-rect (e/get-window-rect *driver*)
           target-rect (-> orig-rect
@@ -749,22 +828,118 @@
       (e/set-hash "goodbye")
       (-> e/get-url (str/ends-with? "/test.html#goodbye") is))))
 
-(deftest test-find-element
-  (let [text (e/get-element-text *driver* {:class :target})]
-    (is (= text "target-1")))
-  (let [text (e/get-element-text *driver* [{:class :foo}
-                                         {:class :target}])]
-    (is (= text "target-2")))
-  (e/with-xpath *driver*
-    (let [text (e/get-element-text *driver* ".//div[@class='target'][1]")]
-      (is (= text "target-1"))))
-  (let [text (e/get-element-text *driver* {:css ".target"})]
-    (is (= text "target-1")))
-  (let [q    [{:css ".bar"} ".//div[@class='inside']" {:tag :span}]
-        text (e/get-element-text *driver* q)]
-    (is (= text "target-3"))))
+(deftest test-query
+  (testing "finding an element by id keyword"
+    (let [el (e/query *driver* :find-element-by-id)]
+      (is (= "target-1" (e/get-element-text-el *driver* el)))))
+  (testing "XPath and CSS string syntax"
+    (e/with-xpath *driver*
+      (let [el (e/query *driver* ".//div[@class='target'][1]")]
+        (is (= "target-1" (e/get-element-text-el *driver* el)))))
+    (e/with-css *driver*
+      (let [el (e/query *driver* ".bar .deep .inside span") ]
+        (is (= "target-3" (e/get-element-text-el *driver* el))))))
+  (testing "XPath and CSS map syntax"
+    (let [el (e/query *driver* {:xpath ".//*[@class='target']"})]
+      (is (= "target-1" (e/get-element-text-el *driver* el))))
+    (let [el (e/query *driver* {:css ".target"})]
+      (is (= "target-1" (e/get-element-text-el *driver* el)))))
+  (testing "map syntax"
+    ;; 1. tags
+    (testing "tags"
+      (let [el (e/query *driver* {:tag :h3 :id :find-element})]
+        (is (= "Find element" (e/get-element-text-el *driver* el)))))
+    ;; 2. class
+    (testing "class"
+      (let [el (e/query *driver* {:class :target})]
+        (is (= "target-1" (e/get-element-text-el *driver* el)))))
+    ;; 3. random attributes
+    (testing "random attributes"
+      (let [el (e/query *driver* {:strangeattribute :foo})]
+        (is (= "DIV with strange attribute" (e/get-element-text-el *driver* el)))))
+    ;; 4. :fn/*
+    (testing ":fn/* functions"
+      ;; :index and :fn/index
+      (let [el (e/query *driver* {:class :list :index 3})] ; deprecated syntax
+        (is (= "ordered 3" (e/get-element-text-el *driver* el))))
+      (let [el (e/query *driver* {:class :list :fn/index 3})] ; new syntax
+        (is (= "ordered 3" (e/get-element-text-el *driver* el))))
+      ;; :fn/text
+      (let [el (e/query *driver* {:fn/text "multiple classes"})]
+        (is (= "multiple-classes" (e/get-element-attr-el *driver* el "id"))))
+      ;; :fn/has-text
+      (let [el (e/query *driver* {:fn/has-text "ple cla"})] ; pick out the middle
+        (is (= "multiple-classes" (e/get-element-attr-el *driver* el "id"))))
+      ;; :fn/has-string
+      (let [el (e/query *driver* {:tag :ol :fn/has-string "ordered 3"})]
+        (is (= "ordered-list"  (e/get-element-attr-el *driver* el "id"))))
+      ;; :fn/has-class
+      (let [el (e/query *driver* {:fn/has-class "ol-class1"})]
+        (is (= "ordered-list"  (e/get-element-attr-el *driver* el "id"))))
+      ;; :fn/has-classes
+      ;; verify that order doesn't matter
+      (let [elx (e/query *driver* {:fn/has-classes [:ol-class1 :ol-class2]})
+            ely (e/query *driver* {:fn/has-classes [:ol-class2 :ol-class1]})
+            elz (e/query *driver* :ordered-list)]
+        (is (= elx ely elz)))
+      ;; :fn/link
+      (let [el (e/query *driver* {:fn/link "https://www.github.com/"})]
+        (is (= "Link to GitHub" (e/get-element-text-el *driver* el))))
+      ;; :fn/enabled
+      (let [el (e/query *driver* [:enabled-disabled {:type :checkbox :fn/enabled true}])]
+        (is (= "checkbox-1" (e/get-element-attr-el *driver* el "id"))))
+      (let [el (e/query *driver* [:enabled-disabled {:type :checkbox :fn/enabled false}])]
+        (is (= "checkbox-2" (e/get-element-attr-el *driver* el "id"))))
+      (let [el (e/query *driver* [:enabled-disabled {:type :checkbox :fn/enabled true :fn/index 2}])]
+        (is (= "checkbox-3" (e/get-element-attr-el *driver* el "id"))))
+      ;; :fn/disabled
+      (let [el (e/query *driver* [:enabled-disabled {:type :checkbox :fn/disabled false}])]
+        (is (= "checkbox-1" (e/get-element-attr-el *driver* el "id"))))
+      (let [el (e/query *driver* [:enabled-disabled {:type :checkbox :fn/disabled true}])]
+        (is (= "checkbox-2" (e/get-element-attr-el *driver* el "id"))))
+      (let [el (e/query *driver* [:enabled-disabled {:type :checkbox :fn/disabled false :fn/index 2}])]
+        (is (= "checkbox-3" (e/get-element-attr-el *driver* el "id"))))))
+  (testing "vector syntax"
+    ;; TODO: should check vectors with length 1, 2, and 3.
+    (e/with-xpath *driver*       ; force XPath because we use a string
+      (let [el (e/query *driver* [{:css ".bar"} ".//div[@class='inside']" {:tag :span}])]
+        (is (= "target-3" (e/get-element-text-el *driver* el)))))
+    (let [el (e/query *driver* [{:class :foo} {:class :target}])]
+      (is (= "target-2" (e/get-element-text-el *driver* el)))))
+  (testing "variable arguments syntax"
+    ;; Same as vector syntax but just provided as separate arguments to `query`
+    (e/with-xpath *driver*
+      (let [el (e/query *driver* {:css ".bar"} ".//div[@class='inside']" {:tag :span})]
+        (is (= "target-3" (e/get-element-text-el *driver* el)))))
+    (let [el (e/query *driver* {:class :foo} {:class :target})]
+      (is (= "target-2" (e/get-element-text-el *driver* el)))))
+  (testing "negative test cases"
+    ;; TODO:
+    ;; 1. searching for nothing
+    (testing "zero-length vector queries"
+      ;; 1. pass a vector of length 0 to query
+      (is (thrown+? [:type :etaoin/argument] (e/query *driver* []))))
+    ;; 2. searching for an element that can't be found
+    (testing "querying for missing elements"
+      ;; 2a. searching for a missing element with missing ID
+      (is (thrown+? [:type :etaoin/http-error] (e/query *driver* :missing-element)))
+      (is (thrown+? [:type :etaoin/http-error] (e/query *driver* [:missing-element])))
+      ;; 2a. element not found in middle of a vector query
+      (is (thrown+? [:type :etaoin/http-error] (e/query *driver* [{:css ".bar"}
+                                                                  :missing-element
+                                                                  {:tag :span}])))
+      ;; 2b. element not found at the end of a vector query
+      (is (thrown+? [:type :etaoin/http-error] (e/query *driver* [{:css ".bar"}
+                                                                  {:tag :div :class :inside}
+                                                                  :missing-element]))))
+    ;; 3. malformed XPath
+    ;; 4. malformed CSS
+    ;; 5. query isn't a string, map, or vector. Perhaps a list and set.
+    ;; 6. bad :fn/... keywords
+    ;; 7. vector queries with vector elements (vectors in vectors)
+    ))
 
-(deftest test-find-elements-more
+(deftest test-query-all
   (testing "simple case"
     (let [q        {:class :find-elements-target}
           elements (e/query-all *driver* q)]
@@ -777,7 +952,22 @@
           texts    (for [el elements]
                      (e/get-element-text-el *driver* el))]
       (is (= (count elements) 2))
-      (is (= texts ["1" "2"])))))
+      (is (= texts ["1" "2"]))))
+  (testing "returning multiple elements via XPath"
+    (let [q         {:xpath ".//div[@id='operate-multiple-elements']//*"}
+          elements  (e/query-all *driver* q)
+          tag-names (for [el elements]
+                      (str/lower-case (e/get-element-tag-el *driver* el)))]
+      (is (= (vec tag-names)
+             ["div" "b" "p" "span"])))))
+
+(deftest test-switch-default-locator
+  (testing "xpath locator"
+    (let [driver (e/use-xpath *driver*)]
+      (is (= "target-1" (e/get-element-text driver ".//*[@class='target']")))))
+  (testing "css locator"
+    (let [driver (e/use-css *driver*)]
+      (is (= "target-1" (e/get-element-text driver ".target"))))))
 
 (deftest test-fn-index
   (testing ":fn/index"
@@ -785,15 +975,6 @@
                   (->> (e/query *driver* {:class :indexed :fn/index index})
                        (e/get-element-text-el *driver*)))]
       (is (= items ["One" "Two" "Three" "Four" "Five"])))))
-
-(deftest test-multiple-elements
-  (testing "tag names"
-    (let [q         {:xpath ".//div[@id='operate-multiple-elements']//*"}
-          elements  (e/query-all *driver* q)
-          tag-names (for [el elements]
-                      (str/lower-case (e/get-element-tag-el *driver* el)))]
-      (is (= (vec tag-names)
-             ["div" "b" "p" "span"])))))
 
 (deftest test-query-tree
   (let [url            (test-server-url "test2.html")
