@@ -847,6 +847,10 @@
         (is (= "ordered 3" (e/get-element-text-el *driver* el))))
       (let [el (e/query *driver* {:class :list :fn/index 3})] ; new syntax
         (is (= "ordered 3" (e/get-element-text-el *driver* el))))
+      (let [items (for [index (range 1 6)]
+                    (->> (e/query *driver* {:class :indexed :fn/index index})
+                         (e/get-element-text-el *driver*)))]
+        (is (= items ["One" "Two" "Three" "Four" "Five"])))
       ;; :fn/text
       (let [el (e/query *driver* {:fn/text "multiple classes"})]
         (is (= "multiple-classes" (e/get-element-attr-el *driver* el "id"))))
@@ -954,13 +958,6 @@
   (testing "css locator"
     (let [driver (e/use-css *driver*)]
       (is (= "target-1" (e/get-element-text driver ".target"))))))
-
-(deftest test-fn-index
-  (testing ":fn/index"
-    (let [items (for [index (range 1 6)]
-                  (->> (e/query *driver* {:class :indexed :fn/index index})
-                       (e/get-element-text-el *driver*)))]
-      (is (= items ["One" "Two" "Three" "Four" "Five"])))))
 
 (deftest test-query-tree
   (let [url            (test-server-url "test2.html")
