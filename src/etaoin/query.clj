@@ -5,8 +5,8 @@
   Why do folks need to use this directly?
   Maybe they are extending defmulti with more conversions?"
   (:require
-   [etaoin.impl.util :as util]
-   [etaoin.impl.xpath :as xpath]))
+   [etaoin.impl.xpath :as xpath]
+   [slingshot.slingshot :refer [throw+]]))
 
 (set! *warn-on-reflection* true)
 
@@ -51,7 +51,9 @@
 
 (defmethod to-query :default
   [_driver q]
-  (util/error "Wrong query: %s" q))
+  (throw+ {:type :etaoin/argument
+           :message "Unsupported query argument type"
+           :q q}))
 
 (defn expand
   "Return expanded query `q` for `driver`."
