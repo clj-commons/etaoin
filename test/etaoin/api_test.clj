@@ -901,7 +901,6 @@
     (let [el (e/query *driver* {:class :foo} {:class :target})]
       (is (= "target-2" (e/get-element-text-el *driver* el)))))
   (testing "negative test cases"
-    ;; TODO:
     ;; 1. searching for nothing
     (testing "zero-length vector queries"
       ;; 1. pass a vector of length 0 to query
@@ -920,7 +919,14 @@
                                                                   {:tag :div :class :inside}
                                                                   :missing-element]))))
     ;; 3. malformed XPath
+    (testing "invalid XPath"
+      (e/with-xpath *driver*
+        (is (thrown+? [:type :etaoin/http-error] (e/query *driver* "..///[@@]")))))
     ;; 4. malformed CSS
+    (testing "invalid CSS"
+      (e/with-css *driver*
+        ;; Turns out "..///[@@]" is also malformed CSS, too.
+        (is (thrown+? [:type :etaoin/http-error] (e/query *driver* "..///[@@]")))))
     ;; 5. query isn't a string, map, or vector. Perhaps a list and set.
     ;; 6. unknown :fn/... keywords
     (testing "unknown :fn/* keywords"
