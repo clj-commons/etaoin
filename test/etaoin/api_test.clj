@@ -927,7 +927,14 @@
       (e/with-css *driver*
         ;; Turns out "..///[@@]" is also malformed CSS, too.
         (is (thrown+? [:type :etaoin/http-error] (e/query *driver* "..///[@@]")))))
-    ;; 5. query isn't a string, map, or vector. Perhaps a list and set.
+    ;; 5. query isn't a string, map, or vector
+    (testing "unsupported query parameter types"
+      ;; 5a. Try a set
+      (is (thrown+? [:type :etaoin/argument] (e/query *driver* #{{:tag :div}})))
+      ;; 5b. Try a list
+      (is (thrown+? [:type :etaoin/argument] (e/query *driver* '({:tag :div}))))
+      ;; 5c. Try a number
+      (is (thrown+? [:type :etaoin/argument] (e/query *driver* 1))))
     ;; 6. unknown :fn/... keywords
     (testing "unknown :fn/* keywords"
       ;; ":fn/indx" is probably a typo and the user really wants ":fn/index"
