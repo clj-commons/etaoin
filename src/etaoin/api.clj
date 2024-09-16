@@ -3059,7 +3059,8 @@
                          :path   [:session (:session driver) :screenshot]})
         b64str (-> resp :value not-empty)]
     (when (not b64str)
-      (util/error "Empty screenshot"))
+      (throw+ {:type :etaoin/failed
+               :message "Empty screenshot"}))
     (create-dirs-for-file file)
     (b64-to-file b64str file)))
 
@@ -3078,7 +3079,9 @@
                          :path   [:session (:session driver) :element el :screenshot]})
         b64str (-> resp :value not-empty)]
     (when (not b64str)
-      (util/error "Empty screenshot, query: %s" q))
+      (throw+ {:type :etaoin/failed
+               :message "Empty screenshot"
+               :q q}))
     (create-dirs-for-file file)
     (b64-to-file b64str file)))
 
@@ -3129,8 +3132,10 @@
 
 (defmethod print-page
   :default ;; last checked safari 2024-08-08
-  [_driver _file & [_opts]]
-  (util/error "This driver doesn't support printing pages to PDF."))
+  [driver _file & [_opts]]
+  (throw+ {:type :etaoin/unsupported
+           :message "This driver doesn't support printing pages to PDF."
+           :driver driver}))
 
 (defmethods print-page
   [:chrome :edge :firefox]
@@ -3141,7 +3146,8 @@
                          :data opts})
         b64str (-> resp :value not-empty)]
     (when (not b64str)
-      (util/error "Empty page"))
+      (throw+ {:type :etaoin/failed
+               :message "Empty page"}))
     (create-dirs-for-file file)
     (b64-to-file b64str file)))
 

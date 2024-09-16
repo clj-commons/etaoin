@@ -35,12 +35,6 @@
   [& args]
   (mapv class args))
 
-(defn error
-  ([msg]
-   (throw (Exception. ^String msg)))
-  ([tpl & args]
-   (error (apply format tpl args))))
-
 (defn get-free-port []
   (let [socket (ServerSocket. 0)]
     (.close socket)
