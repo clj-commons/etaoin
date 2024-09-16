@@ -1,6 +1,7 @@
 (ns ^:no-doc etaoin.impl.xpath
   "A special module to work with XPath language."
-  (:require [clojure.string :as string]))
+  (:require [clojure.string :as string]
+            [slingshot.slingshot :refer [throw+]]))
 
 (set! *warn-on-reflection* true)
 
@@ -49,7 +50,16 @@
 
 (defmethod clause :default
   [[attr text]]
-  (node-equals (format "@%s" (to-str attr)) text))
+  ;; If we fall through to the default case and yet the attribute
+  ;; looks like a query function, then the user probably has a typo
+  ;; in their program, so we throw.
+  ;; Else treat it like an attribute
+  (if (and (keyword? attr) (= (namespace attr) "fn"))
+    (throw+ {:type :etaoin/argument
+             :message "Unknown query function"
+             :fn attr
+             :arg text})
+    (node-equals (format "@%s" (to-str attr)) text)))
 
 (defmethod clause :fn/text
   [[_ text]]
