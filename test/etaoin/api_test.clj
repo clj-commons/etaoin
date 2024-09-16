@@ -182,11 +182,10 @@
   (is (= (test-server-url "test2.html")  (e/get-url *driver*)) "forward to 2nd page"))
 
 (deftest test-visible
-  (doto *driver*
-    (-> (e/visible? {:id :button-visible}) is)
-    (-> (e/invisible? {:id :button-hidden}) is)
-    (-> (e/invisible? {:id :div-hidden}) is)
-    (-> (e/invisible? {:id :dunno-foo-bar}) is)))
+  (is (e/visible?   *driver* {:id :button-visible}))
+  (is (e/invisible? *driver* {:id :button-hidden}))
+  (is (e/invisible? *driver* {:id :div-hidden}))
+  (is (e/invisible? *driver* {:id :dunno-foo-bar})))
 
 (deftest test-select
   (testing "test `select` on select-box"
