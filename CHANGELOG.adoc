@@ -33,6 +33,7 @@ A release with an intentional breaking changes is marked with:
 ** {issue}661[#661]: Fix `:fn/enabled`. ({person}dgr[@dgr])
 ** {issue}663[#663]: `query` throws a more accurate exception with a more accurate error message when provided with an empty query vector. ({person}dgr[@dgr])
 ** {issue}666[#666]: Previously, in some error conditions, Etaoin would throw a very generic `clojure.lang.Exception` object. Some of those cases have been replaced by throwing a map with Slingshot, providing more information about the problem. ({person}dgr[@dgr])
+** {issue}668[#668]: Throw an exception for unknown `:fn/*` keywords in map queries.
 * Docs
 ** {issue}656[#656]: Correctly describe behavior when query's parameter is a string. The User Guide and `query` doc strings say that a string passed to `query` is interpreted as an XPath expression. In fact, `query` interprets this as either XPath or CSS depending on the setting of the driver's `:locator` parameter, which can be changed. ({person}dgr[@dgr])
 * Quality

@@ -935,7 +935,10 @@
     ;; 3. malformed XPath
     ;; 4. malformed CSS
     ;; 5. query isn't a string, map, or vector. Perhaps a list and set.
-    ;; 6. bad :fn/... keywords
+    ;; 6. unknown :fn/... keywords
+    (testing "unknown :fn/* keywords"
+      ;; ":fn/indx" is probably a typo and the user really wants ":fn/index"
+      (is (thrown+? [:type :etaoin/argument] (e/query *driver* {:tag :div :fn/indx 1}))))
     ;; 7. vector queries with vector elements (vectors in vectors)
     ))
 
