@@ -860,6 +860,7 @@
       ;; :fn/has-string
       (let [el (e/query *driver* {:tag :ol :fn/has-string "ordered 3"})]
         (is (= "ordered-list"  (e/get-element-attr-el *driver* el "id"))))
+      (is (boolean (e/query *driver* {:fn/has-string "From the depth"})))
       ;; :fn/has-class
       (let [el (e/query *driver* {:fn/has-class "ol-class1"})]
         (is (= "ordered-list"  (e/get-element-attr-el *driver* el "id"))))
@@ -1054,9 +1055,7 @@
     (-> (e/has-text? "'quote") is)))
 
 (deftest test-has-text
-  (testing "test :fn/has-string"
-    (is (boolean (e/query *driver* {:fn/has-string "From the depth"}))))
-  (testing "gloval"
+  (testing "global"
     (is (e/has-text? *driver* "From the depths I've come!"))
     (is (e/has-text? *driver* "I've come from the dark")))
   (testing "relative"
