@@ -635,10 +635,10 @@
      (= q :active)
      (get-active-element driver)
 
-     (vector? q)
+     (sequential? q)
      (if (empty? q)
        (throw+ {:type :etaoin/argument
-                :message "Vector query must be non-empty"
+                :message "Queries must be non-empty"
                 :q q})
        (apply query driver q))
 
@@ -647,10 +647,16 @@
        (find-element* driver loc term))))
 
   ([driver q & more]
-   (letfn [(folder [el q]
-             (let [[loc term] (query/expand driver q)]
-               (find-element-from* driver el loc term)))]
-     (reduce folder (query driver q) more))))
+   (let [[q & more :as full-q] (flatten (cons q more))]
+     (if (empty? full-q)
+       (throw+ {:type :etaoin/argument
+                :message "Queries must be non-empty"
+                :q full-q})
+       (reduce (fn [el q]
+                 (let [[loc term] (query/expand driver q)]
+                   (find-element-from* driver el loc term)))
+               (query driver q)
+               more)))))
 
 (defn query-all
   "Use `driver` to return a vector of all elements on current page matching `q`.
