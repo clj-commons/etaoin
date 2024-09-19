@@ -900,21 +900,91 @@
       (let [el (e/query *driver* [:enabled-disabled {:type :checkbox :fn/disabled false :fn/index 2}])]
         (is (= "checkbox-3" (e/get-element-attr-el *driver* el "id"))))))
   (testing "vector syntax"
-    ;; TODO: should check vectors with length 1, 2, and 3.
+    ;; vector length 0
+    (is (thrown+? [:type :etaoin/argument] (e/query *driver* [])))
+    ;; vector length 1
+    (let [el (e/query *driver* [:find-elements-nested])]
+      (is (= "div" (str/lower-case (e/get-element-tag-el *driver* el)))))
+    ;; vector length 2
+    (let [el (e/query *driver* [{:class :foo} {:class :target}])]
+      (is (= "target-2" (e/get-element-text-el *driver* el))))
+    ;; vector length 3
     (e/with-xpath *driver*       ; force XPath because we use a string
       (let [el (e/query *driver* [{:css ".bar"} ".//div[@class='inside']" {:tag :span}])]
-        (is (= "target-3" (e/get-element-text-el *driver* el)))))
-    (let [el (e/query *driver* [{:class :foo} {:class :target}])]
-      (is (= "target-2" (e/get-element-text-el *driver* el)))))
+        (is (= "target-3" (e/get-element-text-el *driver* el))))))
+  (testing "sequences syntax"
+    ;; sequence length 0
+    (is (thrown+? [:type :etaoin/argument] (e/query *driver* '())))
+    ;; sequence length 1
+    (let [el (e/query *driver* '(:find-elements-nested))]
+      (is (= "div" (str/lower-case (e/get-element-tag-el *driver* el)))))
+    ;; sequence length 2
+    (let [el (e/query *driver* '({:class :foo} {:class :target}))]
+      (is (= "target-2" (e/get-element-text-el *driver* el))))
+    ;; sequence length 3
+    (e/with-xpath *driver*       ; force XPath because we use a string
+      (let [el (e/query *driver* '({:css ".bar"} ".//div[@class='inside']" {:tag :span}))]
+        (is (= "target-3" (e/get-element-text-el *driver* el))))))
   (testing "variable arguments syntax"
-    ;; Same as vector syntax but just provided as separate arguments to `query`
+    ;; Same as vector/sequence syntax but just provided as separate
+    ;; arguments to `query`.
+
+    ;; arg length 0
+    ;;   This test is passes, but Eastwood complains about :wrong-arity
+    ;;   and doesn't have a good way to turn off the linter for this
+    ;;   specific line.
+    ;; (is (thrown? clojure.lang.ArityException (e/query *driver* ,,,)))
+
+    ;; arg length 1
+    (let [el (e/query *driver* :find-elements-nested)]
+      (is (= "div" (str/lower-case (e/get-element-tag-el *driver* el)))))
+    ;; arg length 2
+    (let [el (e/query *driver* {:class :foo} {:class :target})]
+      (is (= "target-2" (e/get-element-text-el *driver* el))))
+    ;; arg length 3
     (e/with-xpath *driver*
       (let [el (e/query *driver* {:css ".bar"} ".//div[@class='inside']" {:tag :span})]
-        (is (= "target-3" (e/get-element-text-el *driver* el)))))
-    (let [el (e/query *driver* {:class :foo} {:class :target})]
-      (is (= "target-2" (e/get-element-text-el *driver* el)))))
+        (is (= "target-3" (e/get-element-text-el *driver* el))))))
+  (testing "sequences in a sequence"
+    ;; Just test whether we can find an element or not
+    ;; 1. [[ ]]
+    (is (e/query *driver* [[:find-elements-nested]]))
+    ;; 2. [[ ] [ ]]
+    (is (e/query *driver* [[:find-elements-nested] [:find-elements-nested-1]]))
+    ;; 3. [[ ] [ ] [ ]]
+    (is (e/query *driver* [[:find-elements-nested]
+                           [:find-elements-nested-1]
+                           [:find-elements-nested-2]]))
+    ;; 4. [[[ ] [ ]] [ ]]
+    (is (e/query *driver* [[[:find-elements-nested] [:find-elements-nested-1]]
+                           [:find-elements-nested-2]]))
+    ;; 5. [[ ] [[ ] [ ]]]
+    (is (e/query *driver* [[:find-elements-nested]
+                           [[:find-elements-nested-1] [:find-elements-nested-2]]]))
+    (is (e/query *driver* [:find-elements-nested (for [i (range 1 3)]
+                                                   (-> (str "find-elements-nested-" i)
+                                                       keyword))]))
+    )
+  (testing "sequences in variable argument syntax"
+    ;; Just test whether we can find an element or not
+    ;; 1. [ ]
+    (is (e/query *driver* [:find-elements-nested]))
+    ;; 2. [ ] [ ]
+    (is (e/query *driver* [:find-elements-nested] [:find-elements-nested-1]))
+    ;; 3. [ ] [ ] [ ]
+    (is (e/query *driver*
+                 [:find-elements-nested]
+                 [:find-elements-nested-1]
+                 [:find-elements-nested-2]))
+    ;; 4. [[ ] [ ]] [ ]
+    (is (e/query *driver*
+                 [[:find-elements-nested] [:find-elements-nested-1]]
+                 [:find-elements-nested-2]))
+    ;; 5. [ ] [[ ] [ ]]
+    (is (e/query *driver*
+                 [:find-elements-nested]
+                 [[:find-elements-nested-1] [:find-elements-nested-2]])))
   (testing "negative test cases"
-    ;; TODO:
     ;; 1. searching for nothing
     (testing "zero-length vector queries"
       ;; 1. pass a vector of length 0 to query
@@ -938,9 +1008,7 @@
     ;; 6. unknown :fn/... keywords
     (testing "unknown :fn/* keywords"
       ;; ":fn/indx" is probably a typo and the user really wants ":fn/index"
-      (is (thrown+? [:type :etaoin/argument] (e/query *driver* {:tag :div :fn/indx 1}))))
-    ;; 7. vector queries with vector elements (vectors in vectors)
-    ))
+      (is (thrown+? [:type :etaoin/argument] (e/query *driver* {:tag :div :fn/indx 1}))))))
 
 (deftest test-query-all
   (testing "simple case"
