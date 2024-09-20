@@ -728,10 +728,10 @@ Here are some examples of the map syntax:
 ;; => true
 ----
 
-=== Vector Syntax Queries
+=== Sequential Queries
 
-A query can be a vector of any valid query expressions.
-For vector queries, every expression matches the output from the previous expression.
+A query can be a sequential collection (e.g., vectors, lists, seqs, etc.) of any valid query expressions, including other sequential collections.
+For sequential queries, every expression matches the output from the previous expression.
 
 A simple, somewhat contrived, example:
 
@@ -757,6 +757,29 @@ TIP: Reminder: the leading dot in an XPath expression means starting at the curr
 ;; our sample page shows link clicks, did it work?
 (e/get-element-text driver :clicked)
 ;; => "link 2 (active)"
+----
+
+You can also create a query from multiple pieces and pull them together by wrapping them in a sequence.
+For instance, you might have a common prefix in the query that leads to a particular component in the DOM tree and you want to use that repeatedly in multiple queries.
+
+[source,clojure]
+----
+;; first we define our prefix
+(def prefix [{:class :some-links} {:tag :ul}])
+;; now use it in a query
+;; this query structure is flattened to
+;; [{:class :some-links} {:tag :ul} {:tag :a}]
+(e/get-element-text driver [prefix {:tag :a}])
+;; => "link 1"
+----
+
+You can also create portions of the query structure using other sequence functions and leave it to `query` to flatten everything for you.
+
+[source,clojure]
+----
+(e/get-element-text driver [{:class :some-links}
+                            (filter identity [{:tag :ul} nil {:tag :a} nil])])
+;; => "link 1"
 ----
 
 === Advanced Queries
