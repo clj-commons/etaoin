@@ -36,6 +36,8 @@ A release with an intentional breaking changes is marked with:
 ** {issue}668[#668]: Throw an exception for unknown `:fn/*` keywords in map queries.
 * Docs
 ** {issue}656[#656]: Correctly describe behavior when query's parameter is a string. The User Guide and `query` doc strings say that a string passed to `query` is interpreted as an XPath expression. In fact, `query` interprets this as either XPath or CSS depending on the setting of the driver's `:locator` parameter, which can be changed. ({person}dgr[@dgr])
+** {issue}671[#671]: The `query` function now supports sequentials of all types (vectors, lists, seqs, etc.) with the same behavior as the previous vector-only syntax. ({person}dgr[@dgr])
+** {issue}672[#672]: Queries support hierarchical arrangements of sequences (sequences in sequences), which are flattened into a single sequence before query traversal. ({person}dgr[@dgr])
 * Quality
 ** {issue}640[#640]: Significantly improved test coverage. ({person}dgr[@dgr])
 
