@@ -38,6 +38,8 @@ A release with an intentional breaking changes is marked with:
 ** {issue}656[#656]: Correctly describe behavior when query's parameter is a string. The User Guide and `query` doc strings say that a string passed to `query` is interpreted as an XPath expression. In fact, `query` interprets this as either XPath or CSS depending on the setting of the driver's `:locator` parameter, which can be changed. ({person}dgr[@dgr])
 * Quality
 ** {issue}640[#640]: Significantly improved test coverage. ({person}dgr[@dgr])
+** {issue}646[#646]: Fixed race condition leading to unreliable test. ({person}dgr[@dgr])
+** {issue}674[#674]: Fixed race condition leading to unreliable test. ({person}dgr[@dgr])
 
 == v1.1.41 [minor breaking] - 2024-08-14 [[v1.1.41]]
 
