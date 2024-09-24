@@ -135,12 +135,14 @@
   (e/wait-visible *driver* {:id :document-end}))
 
 (defmacro wait-url-change
-  [& body]
+  [re & body]
   `(let [old-url# (e/get-url *driver*)]
      ~@body
-     (e/wait-predicate (fn [] (not= old-url# (e/get-url *driver*)))
+     (e/wait-predicate (fn [] (let [new-url# (e/get-url *driver*)]
+                                (and (not= old-url# new-url#)
+                                     (re-find ~re new-url#))))
                        {:timeout 30     ; 30 second timeout total
-                        :interval 0.100 ;
+                        :interval 0.100 ; poll at 100 msec interval
                         :message "Timeout waiting for URL change"})))
 
 (deftest test-browser-conditionals
@@ -204,7 +206,7 @@
   (e/fill-multi *driver* {:simple-input    1
                           :simple-password 2
                           :simple-textarea 3})
-  (wait-url-change
+  (wait-url-change #"login"
    (e/submit *driver* :simple-input))
   (is (str/ends-with? (e/get-url *driver*) "?login=1&password=2&message=3")))
 
@@ -214,14 +216,14 @@
     (e/fill-multi *driver* {:simple-input    1
                             :simple-password 2
                             :simple-textarea 3})
-    (wait-url-change (e/click *driver* :simple-submit))
+    (wait-url-change #"login" (e/click *driver* :simple-submit))
     (is (str/ends-with? (e/get-url *driver*) "?login=1&password=2&message=3"))
     ;; Test with vector form
     (e/fill-multi *driver*
                   [:simple-input    4
                    :simple-password 5
                    :simple-textarea 6])
-    (wait-url-change (e/click *driver* :simple-submit))
+    (wait-url-change #"login" (e/click *driver* :simple-submit))
     (is (str/ends-with? (e/get-url *driver*) "?login=4&password=5&message=6")))
   (testing "fill-multi bad inputs"
     (is (thrown+? [:type :etaoin/argument]
@@ -236,14 +238,14 @@
                         {:simple-input    "login"
                          :simple-password "123"
                          :simple-textarea "text"})
-    (wait-url-change (e/click *driver* :simple-submit))
+    (wait-url-change #"login" (e/click *driver* :simple-submit))
     (is (str/ends-with? (e/get-url *driver*) "?login=login&password=123&message=text"))
     ;; Test with vector form
     (e/fill-human-multi *driver*
                         [:simple-input    "login2"
                          :simple-password "456"
                          :simple-textarea "text2"])
-    (wait-url-change (e/click *driver* :simple-submit))
+    (wait-url-change #"login" (e/click *driver* :simple-submit))
     (is (str/ends-with? (e/get-url *driver*) "?login=login2&password=456&message=text2")))
   (testing "fill-human-multi bad inputs"
     (is (thrown+? [:type :etaoin/argument]
@@ -254,7 +256,7 @@
                   (e/fill-multi *driver* [:vector :with :odd :length :is :not :allowed]))))
   (testing "fill multiple vars"
     (e/fill *driver* :simple-input 1 "test" 2 \space \A)
-    (wait-url-change (e/click *driver* :simple-submit))
+    (wait-url-change #"login" (e/click *driver* :simple-submit))
     (is (str/ends-with? (e/get-url *driver*) "?login=1test2+A&password=&message=")))
   (testing "fill active"
     (e/click *driver* :simple-input)
@@ -263,7 +265,7 @@
     (e/fill-active *driver* "MyPassword")
     (e/click *driver* :simple-textarea)
     (e/fill-active *driver* "Some text")
-    (wait-url-change (e/click *driver* :simple-submit))
+    (wait-url-change #"login" (e/click *driver* :simple-submit))
     (is (str/ends-with? (e/get-url *driver*)
                         "?login=MyLogin&password=MyPassword&message=Some+text")))
   (testing "fill active human"
@@ -273,7 +275,7 @@
     (e/fill-human-active *driver* "MyPassword2")
     (e/click *driver* :simple-textarea)
     (e/fill-human-active *driver* "Some text 2")
-    (wait-url-change (e/click *driver* :simple-submit))
+    (wait-url-change #"login" (e/click *driver* :simple-submit))
     (is (str/ends-with? (e/get-url *driver*)
                         "?login=MyLogin2&password=MyPassword2&message=Some+text+2"))))
 
@@ -312,7 +314,7 @@
   (testing "simple clear"
     (e/fill *driver* {:id :simple-input} "test")
     (e/clear *driver* {:id :simple-input})
-    (wait-url-change (e/click *driver* {:id :simple-submit}))
+    (wait-url-change #"login" (e/click *driver* {:id :simple-submit}))
     (is (str/ends-with? (e/get-url *driver*) "?login=&password=&message=")))
 
   (testing "multiple clear"
@@ -329,7 +331,7 @@
              :simple-input
              :simple-password
              :simple-textarea)
-    (wait-url-change (e/click *driver* {:id :simple-submit}))
+    (wait-url-change #"login" (e/click *driver* {:id :simple-submit}))
     (is (str/ends-with? (e/get-url *driver*) "?login=&password=&message="))))
 
 (deftest test-enabled
@@ -1140,7 +1142,7 @@
                            (e/add-pointer-click-el textarea)
                            e/add-pause
                            (e/add-pointer-click-el submit))]
-          (wait-url-change
+          (wait-url-change #"login"
            (e/perform-actions *driver* keyboard mouse))
           (is (str/ends-with? (e/get-url *driver*) "?login=1&password=2&message=3")))))
 
