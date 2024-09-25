@@ -828,7 +828,7 @@
       (e/wait-predicate
        (fn [] (= "function" (e/js-execute *driver* "return typeof injected_func;")))
        {:timeout 30
-        :internval 0.1
+        :interval 0.1
         :message "Timeout waiting for JavaScript to be parsed"})
       (let [result (e/js-execute *driver* "return injected_func();")]
         (is (= result "I was injected"))))))
