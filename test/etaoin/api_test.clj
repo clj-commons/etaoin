@@ -821,7 +821,15 @@
   (let [js-url (test-server-url "js/inject.js")]
     (testing "adding a script"
       (e/add-script *driver* js-url)
-      (e/wait 1)
+      ;; We need to wait for the browser to parse the
+      ;; script. Running "typeof <function_name>" will
+      ;; return "function" if the function is defined (and "undefined"
+      ;; if not).
+      (e/wait-predicate
+       (fn [] (= "function" (e/js-execute *driver* "return typeof injected_func;")))
+       {:timeout 30
+        :internval 0.1
+        :message "Timeout waiting for JavaScript to be parsed"})
       (let [result (e/js-execute *driver* "return injected_func();")]
         (is (= result "I was injected"))))))
 
