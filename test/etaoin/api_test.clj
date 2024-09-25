@@ -357,21 +357,23 @@
     (-> (e/absent? {:id :dunno-foo-bar}) is)))
 
 ;; In Safari, alerts work quite slow, so we add some delays.
+;;; Sept 25, 2024: removed the delays. If this test starts to fail
+;;; with Safari, will use `wait-predicate` to be smarter about waiting
+;;; for specific conditions.
 (deftest test-alert
-  (doto *driver*
-    (e/click {:id :button-alert})
-    (e/when-safari (e/wait 1))
-    (-> e/get-alert-text (= "Hello!") is)
-    (-> e/has-alert? is)
-    (e/accept-alert)
-    (e/when-safari (e/wait 1))
-    (-> e/has-alert? not is)
-    (e/click {:id :button-alert})
-    (e/when-safari (e/wait 1))
-    (-> e/has-alert? is)
-    (e/dismiss-alert)
-    (e/when-safari (e/wait 1))
-    (-> e/has-alert? not is)))
+  (e/click *driver* {:id :button-alert})
+  ;;(e/when-safari (e/wait 1))
+  (is (= (e/get-alert-text *driver*) "Hello!"))
+  (is (e/has-alert? *driver*))
+  (e/accept-alert *driver*)
+  ;;(e/when-safari *driver* (e/wait 1))
+  (is (not (e/has-alert? *driver*)))
+  (e/click *driver* {:id :button-alert})
+  ;;(e/when-safari *driver* (e/wait 1))
+  (is (e/has-alert? *driver*))
+  (e/dismiss-alert *driver*)
+  ;;(e/when-safari *driver* (e/wait 1))
+  (is (not (e/has-alert? *driver*))))
 
 (deftest test-properties
   (e/when-firefox *driver*
