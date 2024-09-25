@@ -657,16 +657,28 @@
 
 (deftest test-switch-window-next
   (let [init-handle (e/get-window-handle *driver*)]
-    (doseq [_ (range 3)]
+    (dotimes [n 3]
       ;; press enter on link instead of clicking (safaridriver is not great with click)
       (e/fill *driver* :switch-window k/return)
+      ;; Wait for new window to show up
+      (e/wait-predicate
+       (fn [] (= (+ 1 (inc n)) (count (e/get-window-handles *driver*))))
+       {:timeout 30
+        :interval 0.1
+        :message (format "Timeout waiting for window #%d to be created"
+                         (+ n 2))})
       ;; compensate: safari navigates to target window, others stay at source
       (e/when-safari *driver*
-        (e/wait 3) ;; safari seems to need a breather
-        (e/switch-window *driver* init-handle)))
+                     (e/switch-window *driver* init-handle)
+                     ;; Wait for window switch to "settle" before clicking again
+                     (e/wait-predicate
+                      (fn [] (= init-handle (e/get-window-handle *driver*)))
+                      {:timeout 30
+                       :interval 0.1
+                       :message (format "Timeout waiting for window switch")})))
     (is (= 4 (count (e/get-window-handles *driver*))) "4 windows now exist")
     (is (= init-handle (e/get-window-handle *driver*)) "on first window")
-    (doseq [_ (range 3)]
+    (dotimes [_ 3]
       (e/switch-window-next *driver*)
       (is (not= init-handle (e/get-window-handle *driver*)) "navigating new windows"))
     (e/switch-window-next *driver*)
