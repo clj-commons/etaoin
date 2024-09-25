@@ -130,14 +130,22 @@
   test-server)
 
 (defn reload-test-page
+  "Allows a test to reload the test page, helping to provide an
+  intermediate reset, without having to let the fixture do it."
   []
   (e/go *driver* (test-server-url "test.html"))
   (e/wait-visible *driver* {:id :document-end}))
 
 (defmacro wait-url-change
-  [re & body]
+  "Snapshots the URL in the browser that exists before the `trigger` is
+  executed, then executes `trigger`, and then waits for the URL to
+  change and for the URL `re-find` of the `re` to match the new
+  URL. This can be used to synchronize the test with the load of a new
+  page in the browser, particularly after trigger such as a click or
+  keypress results in a form submission."
+  [re & trigger]
   `(let [old-url# (e/get-url *driver*)]
-     ~@body
+     ~@trigger
      (e/wait-predicate (fn [] (let [new-url# (e/get-url *driver*)]
                                 (and (not= old-url# new-url#)
                                      (re-find ~re new-url#))))
