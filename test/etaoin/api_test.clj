@@ -130,14 +130,22 @@
   test-server)
 
 (defn reload-test-page
+  "Allows a test to reload the test page, helping to provide an
+  intermediate reset, without having to let the fixture do it."
   []
   (e/go *driver* (test-server-url "test.html"))
   (e/wait-visible *driver* {:id :document-end}))
 
 (defmacro wait-url-change
-  [re & body]
+  "Snapshots the URL in the browser that exists before the `trigger` is
+  executed, then executes `trigger`, and then waits for the URL to
+  change and for the URL `re-find` of the `re` to match the new
+  URL. This can be used to synchronize the test with the load of a new
+  page in the browser, particularly after trigger such as a click or
+  keypress results in a form submission."
+  [re & trigger]
   `(let [old-url# (e/get-url *driver*)]
-     ~@body
+     ~@trigger
      (e/wait-predicate (fn [] (let [new-url# (e/get-url *driver*)]
                                 (and (not= old-url# new-url#)
                                      (re-find ~re new-url#))))
@@ -182,11 +190,10 @@
   (is (= (test-server-url "test2.html")  (e/get-url *driver*)) "forward to 2nd page"))
 
 (deftest test-visible
-  (doto *driver*
-    (-> (e/visible? {:id :button-visible}) is)
-    (-> (e/invisible? {:id :button-hidden}) is)
-    (-> (e/invisible? {:id :div-hidden}) is)
-    (-> (e/invisible? {:id :dunno-foo-bar}) is)))
+  (is (e/visible?   *driver* {:id :button-visible}))
+  (is (e/invisible? *driver* {:id :button-hidden}))
+  (is (e/invisible? *driver* {:id :div-hidden}))
+  (is (e/invisible? *driver* {:id :dunno-foo-bar})))
 
 (deftest test-select
   (testing "test `select` on select-box"
@@ -350,21 +357,23 @@
     (-> (e/absent? {:id :dunno-foo-bar}) is)))
 
 ;; In Safari, alerts work quite slow, so we add some delays.
+;;; Sept 25, 2024: removed the delays. If this test starts to fail
+;;; with Safari, will use `wait-predicate` to be smarter about waiting
+;;; for specific conditions.
 (deftest test-alert
-  (doto *driver*
-    (e/click {:id :button-alert})
-    (e/when-safari (e/wait 1))
-    (-> e/get-alert-text (= "Hello!") is)
-    (-> e/has-alert? is)
-    (e/accept-alert)
-    (e/when-safari (e/wait 1))
-    (-> e/has-alert? not is)
-    (e/click {:id :button-alert})
-    (e/when-safari (e/wait 1))
-    (-> e/has-alert? is)
-    (e/dismiss-alert)
-    (e/when-safari (e/wait 1))
-    (-> e/has-alert? not is)))
+  (e/click *driver* {:id :button-alert})
+  ;;(e/when-safari (e/wait 1))
+  (is (= (e/get-alert-text *driver*) "Hello!"))
+  (is (e/has-alert? *driver*))
+  (e/accept-alert *driver*)
+  ;;(e/when-safari *driver* (e/wait 1))
+  (is (not (e/has-alert? *driver*)))
+  (e/click *driver* {:id :button-alert})
+  ;;(e/when-safari *driver* (e/wait 1))
+  (is (e/has-alert? *driver*))
+  (e/dismiss-alert *driver*)
+  ;;(e/when-safari *driver* (e/wait 1))
+  (is (not (e/has-alert? *driver*))))
 
 (deftest test-properties
   (e/when-firefox *driver*
@@ -633,9 +642,10 @@
         init-url      (e/get-url *driver*)]
     ;; press enter on link instead of clicking (safaridriver is not great with the click)
     (e/fill *driver* :switch-window k/return)
-    (e/when-safari *driver*
-      (e/wait 3)) ;;safari seems to need a breather
-    (is (= 2 (count (e/get-window-handles *driver*))) "2 windows now exist")
+    (is (e/wait-predicate (fn [] (= 2 (count (e/get-window-handles *driver*))))
+                          {:timeout 30
+                           :interval 0.1
+                           :message "Timeout waiting for second window creation"}))
     (let [new-handles   (e/get-window-handles *driver*)
           new-handle    (first (filter #(not= % init-handle) new-handles))
           _             (e/switch-window *driver* new-handle)
@@ -647,16 +657,28 @@
 
 (deftest test-switch-window-next
   (let [init-handle (e/get-window-handle *driver*)]
-    (doseq [_ (range 3)]
+    (dotimes [n 3]
       ;; press enter on link instead of clicking (safaridriver is not great with click)
       (e/fill *driver* :switch-window k/return)
+      ;; Wait for new window to show up
+      (e/wait-predicate
+       (fn [] (= (+ 1 (inc n)) (count (e/get-window-handles *driver*))))
+       {:timeout 30
+        :interval 0.1
+        :message (format "Timeout waiting for window #%d to be created"
+                         (+ n 2))})
       ;; compensate: safari navigates to target window, others stay at source
       (e/when-safari *driver*
-        (e/wait 3) ;; safari seems to need a breather
-        (e/switch-window *driver* init-handle)))
+                     (e/switch-window *driver* init-handle)
+                     ;; Wait for window switch to "settle" before clicking again
+                     (e/wait-predicate
+                      (fn [] (= init-handle (e/get-window-handle *driver*)))
+                      {:timeout 30
+                       :interval 0.1
+                       :message (format "Timeout waiting for window switch")})))
     (is (= 4 (count (e/get-window-handles *driver*))) "4 windows now exist")
     (is (= init-handle (e/get-window-handle *driver*)) "on first window")
-    (doseq [_ (range 3)]
+    (dotimes [_ 3]
       (e/switch-window-next *driver*)
       (is (not= init-handle (e/get-window-handle *driver*)) "navigating new windows"))
     (e/switch-window-next *driver*)
@@ -799,7 +821,15 @@
   (let [js-url (test-server-url "js/inject.js")]
     (testing "adding a script"
       (e/add-script *driver* js-url)
-      (e/wait 1)
+      ;; We need to wait for the browser to parse the
+      ;; script. Running "typeof <function_name>" will
+      ;; return "function" if the function is defined (and "undefined"
+      ;; if not).
+      (e/wait-predicate
+       (fn [] (= "function" (e/js-execute *driver* "return typeof injected_func;")))
+       {:timeout 30
+        :interval 0.1
+        :message "Timeout waiting for JavaScript to be parsed"})
       (let [result (e/js-execute *driver* "return injected_func();")]
         (is (= result "I was injected"))))))
 
@@ -847,6 +877,10 @@
         (is (= "ordered 3" (e/get-element-text-el *driver* el))))
       (let [el (e/query *driver* {:class :list :fn/index 3})] ; new syntax
         (is (= "ordered 3" (e/get-element-text-el *driver* el))))
+      (let [items (for [index (range 1 6)]
+                    (->> (e/query *driver* {:class :indexed :fn/index index})
+                         (e/get-element-text-el *driver*)))]
+        (is (= items ["One" "Two" "Three" "Four" "Five"])))
       ;; :fn/text
       (let [el (e/query *driver* {:fn/text "multiple classes"})]
         (is (= "multiple-classes" (e/get-element-attr-el *driver* el "id"))))
@@ -856,6 +890,7 @@
       ;; :fn/has-string
       (let [el (e/query *driver* {:tag :ol :fn/has-string "ordered 3"})]
         (is (= "ordered-list"  (e/get-element-attr-el *driver* el "id"))))
+      (is (boolean (e/query *driver* {:fn/has-string "From the depth"})))
       ;; :fn/has-class
       (let [el (e/query *driver* {:fn/has-class "ol-class1"})]
         (is (= "ordered-list"  (e/get-element-attr-el *driver* el "id"))))
@@ -897,7 +932,6 @@
     (let [el (e/query *driver* {:class :foo} {:class :target})]
       (is (= "target-2" (e/get-element-text-el *driver* el)))))
   (testing "negative test cases"
-    ;; TODO:
     ;; 1. searching for nothing
     (testing "zero-length vector queries"
       ;; 1. pass a vector of length 0 to query
@@ -916,8 +950,22 @@
                                                                   {:tag :div :class :inside}
                                                                   :missing-element]))))
     ;; 3. malformed XPath
+    (testing "invalid XPath"
+      (e/with-xpath *driver*
+        (is (thrown+? [:type :etaoin/http-error] (e/query *driver* "..///[@@]")))))
     ;; 4. malformed CSS
-    ;; 5. query isn't a string, map, or vector. Perhaps a list and set.
+    (testing "invalid CSS"
+      (e/with-css *driver*
+        ;; Turns out "..///[@@]" is also malformed CSS, too.
+        (is (thrown+? [:type :etaoin/http-error] (e/query *driver* "..///[@@]")))))
+    ;; 5. query isn't a string, map, or vector
+    (testing "unsupported query parameter types"
+      ;; 5a. Try a set
+      (is (thrown+? [:type :etaoin/argument] (e/query *driver* #{{:tag :div}})))
+      ;; 5b. Try a list
+      (is (thrown+? [:type :etaoin/argument] (e/query *driver* '({:tag :div}))))
+      ;; 5c. Try a number
+      (is (thrown+? [:type :etaoin/argument] (e/query *driver* 1))))
     ;; 6. unknown :fn/... keywords
     (testing "unknown :fn/* keywords"
       ;; ":fn/indx" is probably a typo and the user really wants ":fn/index"
@@ -954,13 +1002,6 @@
   (testing "css locator"
     (let [driver (e/use-css *driver*)]
       (is (= "target-1" (e/get-element-text driver ".target"))))))
-
-(deftest test-fn-index
-  (testing ":fn/index"
-    (let [items (for [index (range 1 6)]
-                  (->> (e/query *driver* {:class :indexed :fn/index index})
-                       (e/get-element-text-el *driver*)))]
-      (is (= items ["One" "Two" "Three" "Four" "Five"])))))
 
 (deftest test-query-tree
   (let [url            (test-server-url "test2.html")
@@ -1057,9 +1098,7 @@
     (-> (e/has-text? "'quote") is)))
 
 (deftest test-has-text
-  (testing "test :fn/has-string"
-    (is (boolean (e/query *driver* {:fn/has-string "From the depth"}))))
-  (testing "gloval"
+  (testing "global"
     (is (e/has-text? *driver* "From the depths I've come!"))
     (is (e/has-text? *driver* "I've come from the dark")))
   (testing "relative"
