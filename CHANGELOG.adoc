@@ -19,6 +19,9 @@ A release with an intentional breaking changes is marked with:
 //   (adjust these in publish.clj as you see fit)
 == Unreleased
 
+* Changes
+** {issue}679[#679]: Add `new-window` function that exposes WebDriver's New Window endpoint.
+
 == v1.1.42 - 2024-09-27 [[v1.1.42]]
 
 * Changes
