@@ -637,6 +637,16 @@
         (is (not= width width'))
         (is (not= height height'))))))
 
+(deftest test-new-window
+  (is (= 1 (count (e/get-window-handles *driver*))))
+  (let [initial-window (e/get-window-handle *driver*)
+        new-windows (for [_ (range 3)]
+                      (-> (e/new-window *driver* :tab)
+                          :handle))
+        windows (into #{initial-window} new-windows)]
+    (is (= 4 (count (e/get-window-handles *driver*))))
+    (is (= windows (set (e/get-window-handles *driver*))))))
+
 (deftest test-switch-window
   (let [init-handle   (e/get-window-handle *driver*)
         init-url      (e/get-url *driver*)]

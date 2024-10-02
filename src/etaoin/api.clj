@@ -92,7 +92,7 @@
   - [[get-window-size]] [[set-window-size]]
   - [[maximize]]
   - [[switch-window]] [[switch-window-next]]
-  - [[close-window]]
+  - [[new-window]] [[close-window]]
 
   **Frames**
   - [[switch-frame]] [[switch-frame-first]] [[switch-frame-parent]] [[switch-frame-top]] [[with-frame]]
@@ -371,6 +371,27 @@
                            (first hs)
                            (recur hs)))]
     (switch-window driver next-handle)))
+
+(defn new-window
+  "Have `driver` create a new window. The `window-type-hint` parameter
+  must be either `:tab` or `:window` and specifies the type of window
+  that is desired, if supported by the browser. If successful, return
+  a map with keys `:handle` indicating the new window handle and
+  `:type` indicating the type of window that was actually
+  created (either `:tab` or `:window`).
+
+  https://www.w3.org/TR/webdriver2/#dfn-new-window"
+  [driver window-type-hint]
+  (if (#{:tab :window} window-type-hint)
+    (-> (execute {:driver driver
+                  :method :post
+                  :path [:session (:session driver) :window :new]
+                  :data {:type window-type-hint}})
+        :value
+        (update :type keyword))
+    (throw+ {:type :etaoin/argument
+             :message "Argument `window-type-hint` must be either `:tab` or `:window`."
+             :window-type-hint window-type-hint})))
 
 (defn close-window
   "Have `driver` close current browser window.
