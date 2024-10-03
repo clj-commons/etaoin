@@ -3465,6 +3465,7 @@
                       (:post-run-actions driver))
               (recur (inc try-num) (:exception res)))))))))
 
+
 (defn- -connect-driver
   "Connects to a running Webdriver server.
 
@@ -3546,9 +3547,29 @@
                          (drv/set-capabilities (:capabilities defaults-global))
                          (drv/set-capabilities (get-in defaults [type :capabilities]))
                          (drv/set-capabilities capabilities)))
-        caps          (:capabilities driver)
-        session       (create-session driver caps)]
-    (assoc driver :session session)))
+        caps          (:capabilities driver)]
+    (loop [n 1]
+      ;; Wait for driver to be ready before creating the first session.
+      (wait-predicate
+       (fn [] (-> (get-status driver) :ready))
+       {:timeout 30
+        :interval 0.100
+        :message "Timeout waiting for WebDriver to become ready after creation."})
+      (let [driver (assoc driver :session (create-session driver caps))
+            good-session (try (get-window-handle driver)
+                              true
+                              (catch Exception e
+                                (prn e)
+                                false))
+            ]
+        (if good-session
+          driver
+          (do 
+            (delete-session driver)
+            (if (< n 3)                 ; max attempts = 3
+              (recur (inc n))
+              (throw+ {:type :etaoin/retries
+                       :message "Could not create a good session after muiltiple retries"}))))))))
 
 (defn disconnect-driver
   "Returns new `driver` after disconnecting from a running WebDriver process.
