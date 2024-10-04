@@ -27,14 +27,23 @@
 (defn make-handler [_opts]
   (fn handle-request [{:keys [request-method uri] :as _req}]
     (cond
-      (and (= :post request-method) (= "/session" uri))
-      {:status 200
-       :headers {"Content-Type" "application/json"}
-       :body (json/generate-string {:sessionId (random-uuid)})}
+      ;; Get Status
       (and (= :get request-method) (= "/status" uri))
       {:status 200
        :headers {"Content-Type" "application/json"}
-       :body (json/generate-string {:ready true})}
+       :body (json/generate-string {:value {:ready true
+                                            :message "I'm ready"}})}
+      ;; Create Session
+      (and (= :post request-method) (= "/session" uri))
+      {:status 200
+       :headers {"Content-Type" "application/json"}
+       :body (json/generate-string {:value {:sessionId (random-uuid)}})}
+      ;; Get Window Handle
+      (and (= :get request-method) (re-matches #"/session/[^/]+/window" uri))
+      {:status 200
+       :headers {"Content-Type" "application/json"}
+       :body (json/generate-string {:value (random-uuid)})}
+      ;; Fake Driver is... well... fake.
       :else
       {:status 404})))
 
