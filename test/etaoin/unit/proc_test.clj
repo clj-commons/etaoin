@@ -105,23 +105,30 @@
 
 (deftest http-error-on-create-proc-alive
   ;; when etaoin tries to create a session return an http error
-  (with-redefs [client/http-request (fn [_] {:status 400})]
-    (let [ex (try
-               (e/with-firefox _driver
-                 (is false "should not reach here"))
-               (catch Throwable ex
-                 {:exception ex}))
-          exd (-> ex :exception ex-data)]
-      (is (= :etaoin/http-error (:type exd)))
-      (is (= 400 (:status exd)))
-      (is (= nil (-> exd :driver :process :exit)))
-      (is (= 0 (get-count-firefoxdriver-instances))))))
+  (let [orig-http-request client/http-request]
+    (with-redefs [client/http-request (fn [{:keys [method uri] :as params}]
+                                        ;; allow get status and create session through, fail on everything else
+                                        (if (and (= :get method) (str/ends-with? uri "/status"))
+                                          (orig-http-request params)
+                                          {:status 400}))]
+      (let [ex (try
+                 (e/with-firefox _driver
+                   (is false "should not reach here"))
+                 (catch Throwable ex
+                   {:exception ex}))
+            exd (-> ex :exception ex-data)]
+        (is (= :etaoin/http-error (:type exd)))
+        (is (= 400 (:status exd)))
+        (is (= nil (-> exd :driver :process :exit)))
+        (is (= 0 (get-count-firefoxdriver-instances)))))))
 
 (deftest http-exception-after-create-proc-now-dead
   (let [orig-http-request client/http-request]
     (with-redefs [client/http-request (fn [{:keys [method uri] :as params}]
-                                        ;; allow create session through, fail on everything else
-                                        (if (and (= :post method) (str/ends-with? uri "/session"))
+                                        ;; allow get status and create session through, fail on everything else
+                                        (if (or (and (= :get method) (str/ends-with? uri "/status"))
+                                                (and (= :post method) (str/ends-with? uri "/session"))
+                                                (and (= :get method) (re-find #"/session/[^/]+/window" uri)))
                                           (orig-http-request params)
                                           (throw (ex-info "read timeout" {}))))]
       (let [ex (try
@@ -130,7 +137,8 @@
                    (is (= 1 (get-count-firefoxdriver-instances)))
                    (proc/kill (:process driver))
                    ;; we'll now fail on this call
-                   (e/go driver "https://clojure.org"))
+                   (e/go driver "https://clojure.org")
+                   (is false "Should have thrown an exception."))                 
                  (catch Throwable ex
                    {:exception ex}))
             exd (-> ex :exception ex-data)]
@@ -143,8 +151,10 @@
   ;; unlikely, we know we just talked to the driver because it returned an http error, but for completeness
   (let [orig-http-request client/http-request]
     (with-redefs [client/http-request (fn [{:keys [method uri] :as params}]
-                                        ;; allow create session through, fail on everything else
-                                        (if (and (= :post method) (str/ends-with? uri "/session"))
+                                        ;; allow get status and create session through, fail on everything else
+                                        (if (or (and (= :get method) (str/ends-with? uri "/status"))
+                                                (and (= :post method) (str/ends-with? uri "/session"))
+                                                (and (= :get method) (re-find #"/session/[^/]+/window" uri)))
                                           (orig-http-request params)
                                           {:status 418}))]
       (let [ex (try
