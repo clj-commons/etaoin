@@ -3548,7 +3548,7 @@
                          (drv/set-capabilities (get-in defaults [type :capabilities]))
                          (drv/set-capabilities capabilities)))
         caps          (:capabilities driver)
-        max-retries   3]
+        max-tries   3]
     (loop [n 1]
       ;; Wait for driver to be ready before creating the first session.
       (wait-predicate
@@ -3577,8 +3577,8 @@
           driver
           (do 
             (delete-session driver)
-            (if (< n max-retries)                 ; max attempts = 3
-              (do (log/warnf e "Bad session detected. Retrying %d/%d" n max-retries)
+            (if (<= n max-tries)                 ; max total tries = 3
+              (do (log/warnf e "Bad session detected. Try again %d/%d." (inc n) max-tries)
                   (recur (inc n)))
               (throw+ {:type :etaoin/retries
                        :message "Could not create a good session after multiple retries"}
