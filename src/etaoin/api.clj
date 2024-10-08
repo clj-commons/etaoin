@@ -2867,7 +2867,7 @@
      (vector? q-text)
      (if (even? (count q-text))
        (doseq [[q text] (partition 2 q-text)]
-         (fill driver q text))
+         (fill-human driver q text opts))
        (throw+ {:type    :etaoin/argument
                :message "Vector q-text must have even length"
                :q-text  q-text
