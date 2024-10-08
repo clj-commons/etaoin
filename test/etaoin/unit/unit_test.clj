@@ -16,7 +16,9 @@
   (with-redefs
    [etaoin.impl.proc/run  (fn [_ _] {:some :process})
     e/wait-running     identity
+    e/get-status (fn [_] {:ready true :message "I'm ready"})
     e/create-session   (fn [_ _] "session-key")
+    e/get-window-handle (fn [_] "ABCDEFG")
     proc/kill identity
     e/delete-session   identity
     util/get-free-port (constantly 12345)]
@@ -142,7 +144,9 @@
         [etaoin.impl.proc/run  (fn [_ _]
                                  (swap! run-calls inc)
                                  {:some :process})
+         e/get-status (fn [_] {:ready true :message "I'm ready"})
          e/create-session   (fn [_ _] "session-key")
+         e/get-window-handle (fn [_] "ABCDEFG")
          proc/kill (fn [_]
                      (swap! kill-calls inc))
          e/delete-session   identity

@@ -3465,6 +3465,7 @@
                       (:post-run-actions driver))
               (recur (inc try-num) (:exception res)))))))))
 
+
 (defn- -connect-driver
   "Connects to a running Webdriver server.
 
@@ -3547,8 +3548,41 @@
                          (drv/set-capabilities (get-in defaults [type :capabilities]))
                          (drv/set-capabilities capabilities)))
         caps          (:capabilities driver)
-        session       (create-session driver caps)]
-    (assoc driver :session session)))
+        max-tries   3]
+    (loop [n 1]
+      ;; Wait for driver to be ready before creating the first session.
+      (wait-predicate
+       (fn [] (-> (get-status driver) :ready))
+       {:timeout 30
+        :interval 0.100
+        :message "Timeout waiting for WebDriver to become ready after creation."})
+      ;; The following code works around a bug in
+      ;; geckodriver/Firefox. In some cases, calling create-session on
+      ;; a geckodriver will return a "bad" session instance. That
+      ;; session instance will throw errors for the simplest queries.
+      ;; The root problem appears to be a race condition somewhere in
+      ;; the geckodriver/marionette/Firefox pathway as it is
+      ;; inconsistent and difficult to reproduce. To work around this,
+      ;; we try to detect a "bad session" and if we have one, we
+      ;; delete it and create another. Note that the problem is
+      ;; geckodriver/Firefox-specific, but we do this for all drivers
+      ;; because it works anyway (non-Firefox drivers just return
+      ;; a "good session") and it simplifies the logic.
+      (let [driver (assoc driver :session (create-session driver caps))
+            [good-session e] (try (get-window-handle driver)
+                                  [true nil]
+                                  (catch Exception e
+                                    [false e]))]
+        (if good-session
+          driver
+          (do 
+            (delete-session driver)
+            (if (<= n max-tries)                 ; max total tries = 3
+              (do (log/warnf e "Bad session detected. Try again %d/%d." (inc n) max-tries)
+                  (recur (inc n)))
+              (throw+ {:type :etaoin/retries
+                       :message "Could not create a good session after multiple retries"}
+                      e))))))))
 
 (defn disconnect-driver
   "Returns new `driver` after disconnecting from a running WebDriver process.
