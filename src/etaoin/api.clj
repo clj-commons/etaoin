@@ -635,14 +635,26 @@
    - any other map is converted to an XPath expression:
      - `{:tag :div}`
      - is equivalent to XPath: `\".//div\"`
-  - multiple of the above (wrapped in a vector or not).
+  - multiple of the above (wrapped in a sequential -- vector, list, seq -- or not).
     The result of each search anchors the search for the next,
     effectively providing a path through the DOM (though you do not
     have to specify each and every point in the path).
     - `{:tag :div} \".//input[@id='uname']\"`
     - `[{:tag :div} \".//input[@id='uname']\"]`
+    - `'({:tag :div} \".//input[@id='uname']\")`
     Returns the final element's unique identifier, or throws if any element
-    is not found.
+    along the path is not found.
+
+  - Note that sequences of sequences of arbitrary hierarchy are also
+  supported. Before traversing the path, `query` flattens the
+  hierarchy into a single linear sequence. This can allow for
+  sub-paths within the DOM to be stored in variables and simply
+  included in the path vector.
+    - e.g., `[[:id1 :id2 ] [ :id3 :id4 ]]` is flattened to
+       `[:id1 :id2 :id3 :id4]`.
+    - If `prefix` is bound to `[:id1 :id2]`, then Clojure will convert
+      `[prefix :id3 :id4]` to `[[:id1 :id2] :id3 :id4]` and `query`
+      will then flatten this to `[:id1 :id2 :id3 :id4]`.
 
   See [Selecting Elements](/doc/01-user-guide.adoc#querying) for more details.
 
@@ -656,10 +668,10 @@
      (= q :active)
      (get-active-element driver)
 
-     (vector? q)
+     (sequential? q)
      (if (empty? q)
        (throw+ {:type :etaoin/argument
-                :message "Vector query must be non-empty"
+                :message "Queries must be non-empty"
                 :q q})
        (apply query driver q))
 
@@ -668,10 +680,16 @@
        (find-element* driver loc term))))
 
   ([driver q & more]
-   (letfn [(folder [el q]
-             (let [[loc term] (query/expand driver q)]
-               (find-element-from* driver el loc term)))]
-     (reduce folder (query driver q) more))))
+   (let [[q & more :as full-q] (flatten (cons q more))]
+     (if (empty? full-q)
+       (throw+ {:type :etaoin/argument
+                :message "Queries must be non-empty"
+                :q full-q})
+       (reduce (fn [el q]
+                 (let [[loc term] (query/expand driver q)]
+                   (find-element-from* driver el loc term)))
+               (query driver q)
+               more)))))
 
 (defn query-all
   "Use `driver` to return a vector of all elements on current page matching `q`.
