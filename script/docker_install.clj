@@ -58,7 +58,7 @@
   "`id` is also name of executable"
   [{:keys [id version url]}]
   (status/line :head "Installing %s %s" id version)
-  (let [dl-file (str "/tmp/%s.zip")
+  (let [dl-file "/tmp/chrome-installer.zip"
         install-dir (str "/opt/" id "-" version)]
     (fs/create-dirs install-dir)
     (status/line :head "%s: downloading: %s" id url)

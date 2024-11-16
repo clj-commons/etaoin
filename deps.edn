@@ -2,7 +2,7 @@
  :deps {org.clojure/clojure {:mvn/version "1.10.3"} ;; min clojure version
         babashka/fs {:mvn/version "0.5.22"}
         babashka/process {:mvn/version "0.5.22"}
-        org.babashka/http-client {:mvn/version "0.4.20"}
+        org.babashka/http-client {:mvn/version "0.4.22"}
         slingshot/slingshot {:mvn/version "0.12.2"}
         cheshire/cheshire {:mvn/version "5.13.0"}
         org.clojure/tools.cli {:mvn/version "1.1.230"}
@@ -17,11 +17,11 @@
                    :github-coords clj-commons/etaoin}}
 
   :1.11 {:replace-deps {org.clojure/clojure {:mvn/version "1.11.4"}}}
-  :1.12 {:replace-deps {org.clojure/clojure {:mvn/version "1.12.0-rc1"}}}
+  :1.12 {:replace-deps {org.clojure/clojure {:mvn/version "1.12.0"}}}
   :debug {:extra-paths ["env/dev/resources"]}
   :test {:extra-paths ["test" "env/test/resources" "build"]
          :extra-deps {io.github.cognitect-labs/test-runner {:git/tag "v0.5.1" :git/sha "dfb30dd"}
-                      org.babashka/cli {:mvn/version "0.8.60"}
+                      org.babashka/cli {:mvn/version "0.8.61"}
                       ch.qos.logback/logback-classic {:mvn/version "1.3.14"}
                       ;; for http-client which uses apache http client 4.x which uses commons logging
                       org.slf4j/jcl-over-slf4j {:mvn/version "2.0.16"}}
@@ -33,7 +33,7 @@
   :script {:extra-paths ["script"]}
 
   ;; test-doc-blocks - gen tests
-  :test-doc-blocks {:replace-deps {org.clojure/clojure {:mvn/version "1.11.4"}
+  :test-doc-blocks {:replace-deps {org.clojure/clojure {:mvn/version "1.12.0"}
                                    com.github.lread/test-doc-blocks  {:mvn/version "1.1.20"}}
                     :replace-paths []
                     :ns-default lread.test-doc-blocks
@@ -41,7 +41,7 @@
 
   ;; test-doc-blocks - run tests
   ;; usage: test:test-docs
-  :test-docs {:override-deps {org.clojure/clojure {:mvn/version "1.11.4"}}
+  :test-docs {:override-deps {org.clojure/clojure {:mvn/version "1.12.0"}}
               :extra-paths ["target/test-doc-blocks/test"]
               :exec-fn cognitect.test-runner.api/test
               :exec-args {:dirs ["target/test-doc-blocks/test"]}
@@ -51,8 +51,8 @@
               :main-opts ["-m" "babashka.cli.exec"]}
 
   :clofidence {:classpath-overrides {org.clojure/clojure nil}
-               :extra-deps {com.github.flow-storm/clojure {:mvn/version "1.11.4"}
-                            com.github.flow-storm/clofidence {:mvn/version "0.3.1"}}
+               :extra-deps {com.github.flow-storm/clojure {:mvn/version "1.12.0-1"}
+                            com.github.flow-storm/clofidence {:mvn/version "0.4.0"}}
                :exec-fn clofidence.main/run
                :exec-args {:report-name "Etaoin Test Coverage"
                            :output-folder "target/clofidence"
@@ -61,7 +61,7 @@
                :jvm-opts ["-Dclojure.storm.instrumentOnlyPrefixes=etaoin"]}
 
   ;; for consistent linting we use a specific version of clj-kondo through the jvm
-  :clj-kondo {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2024.08.01"}}
+  :clj-kondo {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2024.11.14"}}
               :main-opts ["-m" "clj-kondo.main"]}
 
   :eastwood {:extra-deps {jonase/eastwood {:mvn/version "1.4.3"}}
@@ -80,8 +80,8 @@
   ;; caused by, I think, conflicting maven deps
   :deploy {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.2"}}}
 
-  :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version  "2.8.1206"}
-                          org.clojure/clojure {:mvn/version "1.11.1"}
+  :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version  "2.11.1250"}
+                          org.clojure/clojure {:mvn/version "1.12.0"}
                           org.slf4j/slf4j-simple {:mvn/version "2.0.16"} ;; to rid ourselves of logger warnings
                           }
              :main-opts ["-m" "antq.core"
@@ -90,9 +90,9 @@
                          ]}
 
   :repl/cider
-  {:extra-deps {org.clojure/clojure {:mvn/version "1.11.4"}
+  {:extra-deps {org.clojure/clojure {:mvn/version "1.12.0"}
                 nrepl/nrepl                {:mvn/version "1.3.0"}
-                cider/cider-nrepl          {:mvn/version "0.49.2"}
+                cider/cider-nrepl          {:mvn/version "0.50.2"}
                 refactor-nrepl/refactor-nrepl {:mvn/version "3.10.0"}}
    :jvm-opts ["-XX:-OmitStackTraceInFastThrow"]
    :main-opts  ["-m" "nrepl.cmdline"
