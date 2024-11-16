@@ -160,9 +160,9 @@
                  ;; followed by any attributes
                  "$1"
                   ;; followed by datestamp
-                 (str " - " (yyyy-mm-dd-now-utc))
+                 " - " (yyyy-mm-dd-now-utc)
                   ;; followed by an AsciiDoc anchor for easy referencing
-                 (str " [[v" version  "]]")
+                 " [[v" version  "]]"
                   ;; followed by section content
                  "$2"
                   ;; followed by link to commit log

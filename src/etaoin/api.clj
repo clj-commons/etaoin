@@ -226,7 +226,7 @@
   (let [obj (get web-driver-obj identifier ::not-found)]
     (if (= obj ::not-found)
       (throw (ex-info (str "Could not find object tagged with " identifier
-                           " in " (str web-driver-obj))
+                           " in " web-driver-obj)
                       {:web-driver-obj web-driver-obj
                        :identifier identifier}))
       obj)))

@@ -41,12 +41,12 @@
    :desc (str "test-doc " os " jdk" jdk-version)} )
 
 (defn- github-actions-matrix []
-  (let [jdks ["11" "17" "21"]
+  (let [jdks ["11" "17" "21" "23"]
         oses ["ubuntu" "macos" "windows"]
         ide-browsers ["chrome" "firefox"]
         api-browsers ["chrome" "firefox" "edge" "safari"]
         platforms ["jvm" "bb"]
-        default-opts {:jdk-version "21"}]
+        default-opts {:jdk-version "21"}] ;; if only testing on one, test on latest LTS
     (->> (concat
            (for [os oses
                  platform platforms]
