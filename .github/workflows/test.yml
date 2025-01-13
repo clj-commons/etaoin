@@ -95,6 +95,11 @@ jobs:
       if: ${{ matrix.os == 'macos' && contains(matrix.needs, 'imagemagick') }}
       run: brew install imagemagick
 
+    # No longer pre-install on ubuntu github action runners
+    - name: Install Image Magick on macOS
+      if: ${{ matrix.os == 'ubuntu' && contains(matrix.needs, 'imagemagick') }}
+      run: sudo apt-get -y install imagemagick
+
     # No longer pre-installed on macOS github action runners
     - name: Install Microsoft Edge on macOS
       if: ${{ matrix.os == 'macos' && contains(matrix.needs, 'edge') }}
