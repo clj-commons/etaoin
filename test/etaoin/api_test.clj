@@ -1159,16 +1159,17 @@
                   :wheel true
                   :back false
                   :forward false} button-state)))))
-    (testing "release actions wipes state"
-      (e/release-actions *driver*)
-      (let [button-state (-> (e/get-element-text *driver* :mouseButtonState)
-                             (json/parse-string true))]
+    (e/when-not-safari *driver* ;; now failing on safari/safaridriver 18.2 as witnessed on 2025-01-14
+      (testing "release actions wipes state"
+        (e/release-actions *driver*)
+        (let [button-state (-> (e/get-element-text *driver* :mouseButtonState)
+                               (json/parse-string true))]
           (is (= {:type "mouseup"
                   :left false
                   :right false
                   :wheel false
                   :back false
-                  :forward false} button-state))))))
+                  :forward false} button-state)))))))
 
 (deftest test-combined-actions
     (testing "input key and mouse click"
