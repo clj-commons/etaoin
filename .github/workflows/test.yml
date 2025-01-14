@@ -96,7 +96,7 @@ jobs:
       run: brew install imagemagick
 
     # No longer pre-install on ubuntu github action runners
-    - name: Install Image Magick on macOS
+    - name: Install Image Magick on ubuntu
       if: ${{ matrix.os == 'ubuntu' && contains(matrix.needs, 'imagemagick') }}
       run: sudo apt-get -y install imagemagick
 
