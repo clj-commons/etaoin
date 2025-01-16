@@ -1,0 +1,27 @@
+(ns etaoin.api2
+  (:require [clj-kondo.hooks-api :as api]
+            [etaoin.hooks-util :as h]))
+
+(defn with-browser
+  "Newer variants for api2
+  [[bind & [options]] & body]"
+  [{:keys [node]}]
+  (let [macro-args (rest (:children node))
+        binding-like-vector (first macro-args)]
+    (if-not (api/vector-node? binding-like-vector)
+      ;; could use clj-kondo findings, but I think this is good for now
+      (throw (ex-info "Expected vector for first arg" {}))
+      (let [binding-sym (-> binding-like-vector :children first)]
+        (if-not (h/symbol-node? binding-sym)
+          (throw (ex-info "Expected binding symbol for first arg in vector" {}))
+          (let [other-args (rest binding-like-vector)
+                body (rest macro-args)]
+            {:node (api/list-node
+                    (list*
+                     (api/token-node 'let)
+                     ;; simulate the effect, macro is creating a new thing (driver for example)
+                     ;; via binding it. I don't think the bound value matters for the linting process
+                     (api/vector-node [binding-sym (api/map-node [])])
+                     ;; reference the other args so that they are not linted as unused
+                     (api/vector-node other-args)
+                     body))}))))))
