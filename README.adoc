@@ -65,6 +65,7 @@ Some companies:
 
 Some examples usages:
 
+* https://bogoyavlensky.com/blog/e2e-tests-in-clojure-with-testcontainers[End-to-end tests in Clojure with Etaoin and Testcontainers].
 * Control a https://github.com/DaniruKun/spacex-iss-docking-sim-autopilot[SpaceX ISS Docking Simulator].
 * Automatically https://github.com/babashka/book/blob/9853d7ed1d72b328e30342f546071cd450035a3f/script/watch.clj[watch/refresh] the browser when making edits to https://book.babashka.org/[Babashka book].
 * Generate contributor badges for https://github.com/clj-commons/rewrite-clj#people[rewrite-clj], https://github.com/cljdoc/cljdoc#contributors[cljdoc] and https://github.com/lread/test-doc-blocks#people[test-doc-blocks] via a https://github.com/clj-commons/rewrite-clj/blob/1795a71b7f8937a1482cf63de7f8dd90579c2007/script/doc_update_readme.clj[doc-update-readme babashka task].

@@ -3130,6 +3130,8 @@ At the moment, we only support Chrome and Firefox for IDE files.
 
 == Webdriver in Docker
 
+TIP: See also a great blog post by https://github.com/abogoyavlensky/[@abogoyavlensky] on https://bogoyavlensky.com/blog/e2e-tests-in-clojure-with-testcontainers/[End-to-end tests in Clojure with Etaoin and Testcontainers].
+
 To work with the WebDrivers in Docker, you can take ready-made images:
 
 Example for https://hub.docker.com/r/robcherry/docker-chromedriver/[Chrome]:
