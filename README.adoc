@@ -14,7 +14,7 @@ image::art/pattern-small.jpg[]
 link:{url-doc}[image:https://cljdoc.org/badge/{project-mvn-coords}[cljdoc]]
 https://github.com/{project-src-coords}/actions/workflows/test.yml[image:https://github.com/{project-src-coords}/actions/workflows/test.yml/badge.svg[GitHub Actions Tests]]
 https://clojars.org/{project-mvn-coords}[image:https://img.shields.io/clojars/v/{project-mvn-coords}.svg[Clojars project]]
-https://babashka.org[image:https://raw.githubusercontent.com/babashka/babashka/master/logo/badge.svg[bb compatible]]
+https://book.babashka.org#badges[image:https://raw.githubusercontent.com/babashka/babashka/master/logo/badge.svg[bb compatible]]
 https://clojurians.slack.com/archives/C7KDM0EKW[image:https://img.shields.io/badge/slack-join_chat-brightgreen.svg[Join chat]]
 
 A pure Clojure implementation of the link:{url-webdriver}[Webdriver] protocol, named after link:{url-short-story}[Etaoin Shrdlu] -- a typing machine that came to life after a mysterious note was produced on it.
