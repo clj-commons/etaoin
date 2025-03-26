@@ -41,7 +41,7 @@
    :desc (str "test-doc " os " jdk" jdk-version)} )
 
 (defn- github-actions-matrix []
-  (let [jdks ["11" "17" "21" "23"]
+  (let [jdks ["11" "17" "21" "24"]
         oses ["ubuntu" "macos" "windows"]
         ide-browsers ["chrome" "firefox"]
         api-browsers ["chrome" "firefox" "edge" "safari"]
