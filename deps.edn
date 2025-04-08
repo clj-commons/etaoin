@@ -1,7 +1,7 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.3"} ;; min clojure version
         babashka/fs {:mvn/version "0.5.24"}
-        babashka/process {:mvn/version "0.5.22"}
+        babashka/process {:mvn/version "0.6.23"}
         org.babashka/http-client {:mvn/version "0.4.22"}
         slingshot/slingshot {:mvn/version "0.12.2"}
         cheshire/cheshire {:mvn/version "5.13.0"}
@@ -63,7 +63,7 @@
                :jvm-opts ["-Dclojure.storm.instrumentOnlyPrefixes=etaoin"]}
 
   ;; for consistent linting we use a specific version of clj-kondo through the jvm
-  :clj-kondo {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2025.02.20"}}
+  :clj-kondo {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2025.04.07"}}
               :main-opts ["-m" "clj-kondo.main"]}
 
   :eastwood {:extra-deps {jonase/eastwood {:mvn/version "1.4.3"}}
@@ -91,7 +91,7 @@
   :repl/cider
   {:extra-deps {org.clojure/clojure {:mvn/version "1.12.0"}
                 nrepl/nrepl {:mvn/version "1.3.1"}
-                cider/cider-nrepl {:mvn/version "0.53.2"}
+                cider/cider-nrepl {:mvn/version "0.54.0"}
                 refactor-nrepl/refactor-nrepl {:mvn/version "3.10.0"}}
    :jvm-opts ["-XX:-OmitStackTraceInFastThrow"]
    :main-opts  ["-m" "nrepl.cmdline"
