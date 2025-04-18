@@ -50,9 +50,7 @@
 
 (defn- parse-json [body]
   (let [body* (str/replace body #"Invalid Command Method -" "")]
-    (try
-      (json/parse-string body* true)
-      (catch Throwable _ body))))
+    (json/parse-string body* true)))
 
 (defn- error-response [body]
   (if (string? body)
