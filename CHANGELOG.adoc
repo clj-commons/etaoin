@@ -22,6 +22,8 @@ A release with an intentional breaking changes is marked with:
 * Changes
 ** Bumped deps.
 ({lread})
+** {issue}696[#696]: Stop hiding json parse exceptions
+({lread})
 ** {issue}676[#676]: Fix new driver creation so that it sidesteps some underlying Firefox race conditions and improves CI test stability. ({person}dgr[@dgr])
 ** {issue}679[#679]: Add `new-window` function that exposes WebDriver's New Window endpoint. ({person}dgr[@dgr])
 ** {issue}682[#682]: Fixed a bug in `fill-human-multi` to correctly call `fill-human` rather than `fill`. ({person}dgr[@dgr])
