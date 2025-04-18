@@ -1335,14 +1335,17 @@
             true))))
 
 (deftest test-json-parse-error
-  ;; output pdf should never be created, but just in case...
-  (let [out-pdf (-> (fs/create-temp-file {:prefix "print-page" :suffix "pdf"})
-                    fs/delete-on-exit)]
-    (is (thrown-with-msg?
-          Exception #"(?i)string.*exceeds.*512"
-          (binding [cheshire-factory/*json-factory* (cheshire-factory/make-json-factory
-                                                      {:max-input-string-length 512})]
-            (e/print-page *driver* out-pdf))))))
+  ;; as of 2025-04-18 the safari driver does not support print page,
+  ;; that's OK this test is less driver specific and more json parse specific
+  (e/when-not-safari *driver*
+    ;; output pdf should never be created, but just in case...
+    (let [out-pdf (-> (fs/create-temp-file {:prefix "print-page" :suffix "pdf"})
+                      fs/delete-on-exit)]
+      (is (thrown-with-msg?
+            Exception #"(?i)string.*exceeds.*512"
+            (binding [cheshire-factory/*json-factory* (cheshire-factory/make-json-factory
+                                                        {:max-input-string-length 512})]
+              (e/print-page *driver* out-pdf)))))))
 
 (comment
   ;; start test server
