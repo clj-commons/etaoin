@@ -2,6 +2,7 @@
   (:require
    [babashka.http-client :as client]
    [cheshire.core :as json]
+   [cheshire.factory :as cheshire-factory]
    [clojure.string :as str]
    [clojure.tools.logging :as log]
    [etaoin.impl.proc :as proc]
@@ -37,6 +38,12 @@
 ;;
 ;; helpers
 ;;
+(def ^:private default-jackson-factory
+  "The default jackson input string length is 20mb which is low for Etaoin.
+  For example a webdriver print page returns the page pdf as a base64 encoded string.
+  The current underlying jackson 2.8.3 option type is an `int` so we are effectively using the max
+  possible for this option (just under 2GiB)."
+  (cheshire-factory/make-json-factory {:max-input-string-length Integer/MAX_VALUE}))
 
 (defn- url-item-str [item]
   (cond
@@ -50,7 +57,11 @@
 
 (defn- parse-json [body]
   (let [body* (str/replace body #"Invalid Command Method -" "")]
-    (json/parse-string body* true)))
+    ;; override jackson options, prefer user specified binding
+    ;; (not officially supported but convenient for testing)
+    (binding [cheshire-factory/*json-factory* (or cheshire-factory/*json-factory*
+                                                  default-jackson-factory)]
+      (json/parse-string body* true))))
 
 (defn- error-response [body]
   (if (string? body)

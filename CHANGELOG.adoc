@@ -22,6 +22,8 @@ A release with an intentional breaking changes is marked with:
 * Changes
 ** Bumped deps.
 ({lread})
+** {issue}691[#691]: Allow for large json strings in webdriver responses
+({lread})
 ** {issue}696[#696]: Stop hiding json parse exceptions
 ({lread})
 ** {issue}676[#676]: Fix new driver creation so that it sidesteps some underlying Firefox race conditions and improves CI test stability. ({person}dgr[@dgr])
