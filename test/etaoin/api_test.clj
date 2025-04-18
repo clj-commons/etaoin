@@ -47,12 +47,21 @@
 
 (def default-opts
   {:chrome  {}
-   :firefox (cond-> {}
+   :firefox {}
+            #_
+            ;; I don't typically leave commented code in, but this might be nice to quickly turn
+            ;; back on for ci on windows someday
+            (cond-> {}
               ;; add logging for typically flaky CI scenario
               (and (ci?) (fs/windows?)) (merge {:log-stdout :inherit
                                                 :log-stderr :inherit
                                                 :driver-log-level "info"}))
-   :safari (cond-> {}
+
+   :safari {}
+           #_
+           ;; I don't typically leave commented code in, but this might be nice to quickly turn
+           ;; back on for ci someday, there are no log levels, it is extremely verbose or off
+           (cond-> {}
              ;; add logging for kind of flaky CI scenario (maybe we'll answer why we need
              ;; to retry launching safaridriver automatically)
              (ci?) (merge {:log-stdout :inherit
