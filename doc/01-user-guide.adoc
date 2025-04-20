@@ -1065,6 +1065,9 @@ For multiple inputs, use `fill-human-multi`
                             :pause-max 0.1})
 ----
 
+WARNING: The fill human functions can compete with browser form/input autocomplete and occassionally give unexpected results.
+We noticed this in our own tests for Microsoft Edge running on macOS.
+
 === Mouse Clicks
 
 The `click` function triggers the left mouse click on an element found by a query term:
