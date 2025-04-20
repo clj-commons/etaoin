@@ -62,7 +62,7 @@
       "target": "id=simple-password",
       "targets": [
         ["id=simple-password", "id"],
-        ["name=password", "name"],
+        ["name=passphrase", "name"],
         ["css=#simple-password", "css:finder"],
         ["xpath=//input[@id='simple-password']", "xpath:attributes"],
         ["xpath=//form[@id='submit-test']/input[2]", "xpath:idRelative"],
@@ -76,7 +76,7 @@
       "target": "id=simple-password",
       "targets": [
         ["id=simple-password", "id"],
-        ["name=password", "name"],
+        ["name=passphrase", "name"],
         ["css=#simple-password", "css:finder"],
         ["xpath=//input[@id='simple-password']", "xpath:attributes"],
         ["xpath=//form[@id='submit-test']/input[2]", "xpath:idRelative"],
@@ -377,7 +377,7 @@
       "target": "id=simple-password",
       "targets": [
         ["id=simple-password", "id"],
-        ["name=password", "name"],
+        ["name=passphrase", "name"],
         ["css=#simple-password", "css:finder"],
         ["xpath=//input[@id='simple-password']", "xpath:attributes"],
         ["xpath=//form[@id='submit-test']/input[2]", "xpath:idRelative"],

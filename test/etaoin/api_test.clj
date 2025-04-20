@@ -142,9 +142,9 @@
 (defn reload-test-page
   "Allows a test to reload the test page, helping to provide an
   intermediate reset, without having to let the fixture do it."
-  []
-  (e/go *driver* (test-server-url "test.html"))
-  (e/wait-visible *driver* {:id :document-end}))
+  [driver]
+  (e/go driver (test-server-url "test.html"))
+  (e/wait-visible driver {:id :document-end}))
 
 (defmacro wait-url-change
   "Snapshots the URL in the browser that exists before the `trigger` is
@@ -153,10 +153,10 @@
   URL. This can be used to synchronize the test with the load of a new
   page in the browser, particularly after trigger such as a click or
   keypress results in a form submission."
-  [re & trigger]
-  `(let [old-url# (e/get-url *driver*)]
+  [driver re & trigger]
+  `(let [old-url# (e/get-url ~driver)]
      ~@trigger
-     (e/wait-predicate (fn [] (let [new-url# (e/get-url *driver*)]
+     (e/wait-predicate (fn [] (let [new-url# (e/get-url ~driver)]
                                 (and (not= old-url# new-url#)
                                      (re-find ~re new-url#))))
                        {:timeout 30     ; 30 second timeout total
@@ -223,9 +223,9 @@
   (e/fill-multi *driver* {:simple-input    1
                           :simple-password 2
                           :simple-textarea 3})
-  (wait-url-change #"login"
+  (wait-url-change *driver* #"login"
    (e/submit *driver* :simple-input))
-  (is (str/ends-with? (e/get-url *driver*) "?login=1&password=2&message=3")))
+  (is (str/ends-with? (e/get-url *driver*) "?login=1&passphrase=2&message=3")))
 
 (deftest test-input
   (testing "fill multiple inputs"
@@ -233,16 +233,18 @@
     (e/fill-multi *driver* {:simple-input    1
                             :simple-password 2
                             :simple-textarea 3})
-    (wait-url-change #"login" (e/click *driver* :simple-submit))
-    (is (str/ends-with? (e/get-url *driver*) "?login=1&password=2&message=3"))
+    (wait-url-change *driver* #"login" (e/click *driver* :simple-submit))
+    (is (str/ends-with? (e/get-url *driver*) "?login=1&passphrase=2&message=3"))
     ;; Test with vector form
+    (reload-test-page *driver*)
     (e/fill-multi *driver*
                   [:simple-input    4
                    :simple-password 5
                    :simple-textarea 6])
-    (wait-url-change #"login" (e/click *driver* :simple-submit))
-    (is (str/ends-with? (e/get-url *driver*) "?login=4&password=5&message=6")))
+    (wait-url-change *driver* #"login" (e/click *driver* :simple-submit))
+    (is (str/ends-with? (e/get-url *driver*) "?login=4&passphrase=5&message=6")))
   (testing "fill-multi bad inputs"
+    (reload-test-page *driver*)
     (is (thrown+? [:type :etaoin/argument]
                   (e/fill-multi *driver* #{:set :is :not :allowed})))
     (is (thrown+? [:type :etaoin/argument]
@@ -251,20 +253,23 @@
                   (e/fill-multi *driver* [:vector :with :odd :length :is :not :allowed]))))
   (testing "fill human multiple inputs"
     ;; Test with map form
+    (reload-test-page *driver*)
     (e/fill-human-multi *driver*
                         {:simple-input    "login"
                          :simple-password "123"
                          :simple-textarea "text"})
-    (wait-url-change #"login" (e/click *driver* :simple-submit))
-    (is (str/ends-with? (e/get-url *driver*) "?login=login&password=123&message=text"))
+    (wait-url-change *driver* #"login" (e/click *driver* :simple-submit))
+    (is (str/ends-with? (e/get-url *driver*) "?login=login&passphrase=123&message=text"))
     ;; Test with vector form
+    (reload-test-page *driver*)
     (e/fill-human-multi *driver*
                         [:simple-input    "login2"
                          :simple-password "456"
                          :simple-textarea "text2"])
-    (wait-url-change #"login" (e/click *driver* :simple-submit))
-    (is (str/ends-with? (e/get-url *driver*) "?login=login2&password=456&message=text2")))
+    (wait-url-change *driver* #"login" (e/click *driver* :simple-submit))
+    (is (str/ends-with? (e/get-url *driver*) "?login=login2&passphrase=456&message=text2")))
   (testing "fill-human-multi bad inputs"
+    (reload-test-page *driver*)
     (is (thrown+? [:type :etaoin/argument]
                   (e/fill-multi *driver* #{:set :is :not :allowed})))
     (is (thrown+? [:type :etaoin/argument]
@@ -272,29 +277,32 @@
     (is (thrown+? [:type :etaoin/argument]
                   (e/fill-multi *driver* [:vector :with :odd :length :is :not :allowed]))))
   (testing "fill multiple vars"
+    (reload-test-page *driver*)
     (e/fill *driver* :simple-input 1 "test" 2 \space \A)
-    (wait-url-change #"login" (e/click *driver* :simple-submit))
-    (is (str/ends-with? (e/get-url *driver*) "?login=1test2+A&password=&message=")))
+    (wait-url-change *driver* #"login" (e/click *driver* :simple-submit))
+    (is (str/ends-with? (e/get-url *driver*) "?login=1test2+A&passphrase=&message=")))
   (testing "fill active"
+    (reload-test-page *driver*)
     (e/click *driver* :simple-input)
     (e/fill-active *driver* "MyLogin")
     (e/click *driver* :simple-password)
     (e/fill-active *driver* "MyPassword")
     (e/click *driver* :simple-textarea)
     (e/fill-active *driver* "Some text")
-    (wait-url-change #"login" (e/click *driver* :simple-submit))
+    (wait-url-change *driver* #"login" (e/click *driver* :simple-submit))
     (is (str/ends-with? (e/get-url *driver*)
-                        "?login=MyLogin&password=MyPassword&message=Some+text")))
+                        "?login=MyLogin&passphrase=MyPassword&message=Some+text")))
   (testing "fill active human"
+    (reload-test-page *driver*)
     (e/click *driver* :simple-input)
     (e/fill-human-active *driver* "MyLogin2")
     (e/click *driver* :simple-password)
     (e/fill-human-active *driver* "MyPassword2")
     (e/click *driver* :simple-textarea)
     (e/fill-human-active *driver* "Some text 2")
-    (wait-url-change #"login" (e/click *driver* :simple-submit))
+    (wait-url-change *driver* #"login" (e/click *driver* :simple-submit))
     (is (str/ends-with? (e/get-url *driver*)
-                        "?login=MyLogin2&password=MyPassword2&message=Some+text+2"))))
+                        "?login=MyLogin2&passphrase=MyPassword2&message=Some+text+2"))))
 
 (deftest test-unicode-bmp-input
   (let [data {:simple-input "ĩṋṗṵţ"
@@ -331,15 +339,15 @@
   (testing "simple clear"
     (e/fill *driver* {:id :simple-input} "test")
     (e/clear *driver* {:id :simple-input})
-    (wait-url-change #"login" (e/click *driver* {:id :simple-submit}))
-    (is (str/ends-with? (e/get-url *driver*) "?login=&password=&message=")))
+    (wait-url-change *driver* #"login" (e/click *driver* {:id :simple-submit}))
+    (is (str/ends-with? (e/get-url *driver*) "?login=&passphrase=&message=")))
 
   (testing "multiple clear"
     ;; Note that we need to reload the test page here because the URL
     ;; from the first test is the same as the second and thus if we
     ;; didn't do this we couldn't detect whether anything happened
     ;; after the first test.
-    (reload-test-page)
+    (reload-test-page *driver*)
     (e/fill-multi *driver*
                   {:simple-input    1
                    :simple-password 2
@@ -348,8 +356,8 @@
              :simple-input
              :simple-password
              :simple-textarea)
-    (wait-url-change #"login" (e/click *driver* {:id :simple-submit}))
-    (is (str/ends-with? (e/get-url *driver*) "?login=&password=&message="))))
+    (wait-url-change *driver* #"login" (e/click *driver* {:id :simple-submit}))
+    (is (str/ends-with? (e/get-url *driver*) "?login=&passphrase=&message="))))
 
 (deftest test-enabled
   (doto *driver*
@@ -1202,9 +1210,9 @@
                            (e/add-pointer-click-el textarea)
                            e/add-pause
                            (e/add-pointer-click-el submit))]
-          (wait-url-change #"login"
+          (wait-url-change *driver* #"login"
            (e/perform-actions *driver* keyboard mouse))
-          (is (str/ends-with? (e/get-url *driver*) "?login=1&password=2&message=3")))))
+          (is (str/ends-with? (e/get-url *driver*) "?login=1&passphrase=2&message=3")))))
 
 (deftest test-shadow-dom
   (testing "basic functional sanity"

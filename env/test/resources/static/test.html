@@ -30,12 +30,13 @@
 
         <h3>Input section</h3>
         <div>
-            <form id="submit-test" method="GET">
+            <form id="submit-test" autocomplete="off" method="GET">
                 <label>Login</label>
                 <input id="simple-input" name="login" type="text"><br>
                 <label>Password</label>
+                <!-- name=password causes masking in github actions output, name=passphrase does not -->
                 <input id="simple-password"
-                       name="password" type="password"><br>
+                       name="passphrase" type="password"><br>
                 <label>Message</label>
                 <textarea id="simple-textarea"
                           name="message"></textarea><br>
