@@ -1,6 +1,6 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.3"} ;; min clojure version
-        babashka/fs {:mvn/version "0.5.24"}
+        babashka/fs {:mvn/version "0.5.25"}
         babashka/process {:mvn/version "0.6.23"}
         org.babashka/http-client {:mvn/version "0.4.22"}
         slingshot/slingshot {:mvn/version "0.12.2"}
@@ -36,7 +36,7 @@
 
   ;; test-doc-blocks - gen tests
   :test-doc-blocks {:replace-deps {org.clojure/clojure {:mvn/version "1.12.0"}
-                                   com.github.lread/test-doc-blocks  {:mvn/version "1.1.20"}}
+                                   com.github.lread/test-doc-blocks  {:mvn/version "1.2.21"}}
                     :replace-paths []
                     :ns-default lread.test-doc-blocks
                     :exec-args {:docs ["doc/01-user-guide.adoc"]}}
@@ -74,7 +74,7 @@
                                                :exclude-linters [:local-shadows-var]
                                                :ignored-faults {:deprecations {etaoin.api-test true}}}]}
 
-  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.8"}}
+  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.9"}}
           :extra-paths ["build"]
           :ns-default build}
 
@@ -91,8 +91,8 @@
   :repl/cider
   {:extra-deps {org.clojure/clojure {:mvn/version "1.12.0"}
                 nrepl/nrepl {:mvn/version "1.3.1"}
-                cider/cider-nrepl {:mvn/version "0.55.1"}
-                refactor-nrepl/refactor-nrepl {:mvn/version "3.10.0"}}
+                cider/cider-nrepl {:mvn/version "0.55.7"}
+                refactor-nrepl/refactor-nrepl {:mvn/version "3.11.0"}}
    :jvm-opts ["-XX:-OmitStackTraceInFastThrow"]
    :main-opts  ["-m" "nrepl.cmdline"
                 "--middleware" "[refactor-nrepl.middleware/wrap-refactor,cider.nrepl/cider-middleware]"
