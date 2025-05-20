@@ -19,8 +19,9 @@ A release with an intentional breaking changes is marked with:
 //   (adjust these in publish.clj as you see fit)
 == Unreleased
 
-Changes
+* Changes
 ** Bumped deps
+({lread})
 
 == v1.1.43 - 2025-04-18 [[v1.1.43]]
 
