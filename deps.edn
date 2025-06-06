@@ -2,7 +2,7 @@
  :deps {org.clojure/clojure {:mvn/version "1.10.3"} ;; min clojure version
         babashka/fs {:mvn/version "0.5.25"}
         babashka/process {:mvn/version "0.6.23"}
-        org.babashka/http-client {:mvn/version "0.4.22"}
+        org.babashka/http-client {:mvn/version "0.4.23"}
         slingshot/slingshot {:mvn/version "0.12.2"}
         cheshire/cheshire {:mvn/version "6.0.0"}
         org.clojure/tools.cli {:mvn/version "1.1.230"}
@@ -53,7 +53,7 @@
               :main-opts ["-m" "babashka.cli.exec"]}
 
   :clofidence {:classpath-overrides {org.clojure/clojure nil}
-               :extra-deps {com.github.flow-storm/clojure {:mvn/version "1.12.0-10"}
+               :extra-deps {com.github.flow-storm/clojure {:mvn/version "1.12.1"}
                             com.github.flow-storm/clofidence {:mvn/version "0.4.1"}}
                :exec-fn clofidence.main/run
                :exec-args {:report-name "Etaoin Test Coverage"
@@ -63,7 +63,7 @@
                :jvm-opts ["-Dclojure.storm.instrumentOnlyPrefixes=etaoin"]}
 
   ;; for consistent linting we use a specific version of clj-kondo through the jvm
-  :clj-kondo {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2025.04.07"}}
+  :clj-kondo {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2025.06.05"}}
               :main-opts ["-m" "clj-kondo.main"]}
 
   :eastwood {:extra-deps {jonase/eastwood {:mvn/version "1.4.3"}}
