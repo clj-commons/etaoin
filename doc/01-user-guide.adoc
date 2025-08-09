@@ -258,11 +258,11 @@ endif::[]
 ;; search for something interesting
 (e/fill driver {:tag :input :name :search} "Clojure programming language")
 (e/wait driver 1)
-(e/fill driver {:tag :input :name :search} k/enter)
-(e/wait-visible driver {:class :mw-search-results})
 
-;; click on first match
-(e/click driver [{:class :mw-search-results} {:class :mw-search-result-heading} {:tag :a}])
+;; select first match presented in drop down
+(e/fill driver {:tag :input :name :search} k/arrow-down)
+(e/fill driver {:tag :input :name :search} k/enter)
+
 (e/wait-visible driver {:id :firstHeading})
 
 ;; check our new url location
@@ -286,8 +286,8 @@ endif::[]
 ;; => "Clojure - Wikipedia"
 
 ;; let's explore the info box
-;; What's its caption? Let's select it with a css query:
-(e/get-element-text driver {:css "table.infobox caption"})
+;; What's header? Let's select it with a css query:
+(e/get-element-text driver {:css "table.infobox tr th"})
 ;; => "Clojure"
 
 ;; Ok, now let's try something trickier

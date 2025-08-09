@@ -123,4 +123,4 @@
 
 (defn test-jvm [& args]
   (when-let [{:keys [shell-opts test-runner-args]} (prep args)]
-    (apply shell/clojure shell-opts "-M:test" test-runner-args)))
+    (apply shell/clojure shell-opts "-J-Dclojure.main.report=stderr" "-M:test" test-runner-args)))
