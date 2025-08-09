@@ -7,6 +7,7 @@
    [clojure.edn :as edn]
    [clojure.java.io :as io]
    [clojure.java.shell :as shell]
+   [clojure.set :as cset]
    [clojure.string :as str]
    [clojure.test :refer [deftest is testing use-fixtures]]
    [etaoin.api :as e]
@@ -686,24 +687,40 @@
 (deftest test-switch-window-next
   (let [init-handle (e/get-window-handle *driver*)]
     (dotimes [n 3]
-      ;; press enter on link instead of clicking (safaridriver is not great with click)
-      (e/fill *driver* :switch-window k/return)
-      ;; Wait for new window to show up
-      (e/wait-predicate
-       (fn [] (= (+ 1 (inc n)) (count (e/get-window-handles *driver*))))
-       {:timeout 30
-        :interval 0.1
-        :message (format "Timeout waiting for window #%d to be created"
-                         (+ n 2))})
-      ;; compensate: safari navigates to target window, others stay at source
-      (e/when-safari *driver*
-                     (e/switch-window *driver* init-handle)
-                     ;; Wait for window switch to "settle" before clicking again
-                     (e/wait-predicate
-                      (fn [] (= init-handle (e/get-window-handle *driver*)))
-                      {:timeout 30
-                       :interval 0.1
-                       :message (format "Timeout waiting for window switch")})))
+      (let [old-handles (e/get-window-handles *driver*)]
+        ;; press enter on link instead of clicking (safaridriver is not great with click)
+        (println "clicking switch-window link on h" (e/get-window-handle *driver*))
+        (e/fill *driver* :switch-window k/return)
+        ;; Wait for new window to show up
+        (println "waiting for new handle to be created")
+        (e/wait-predicate
+         (fn [] (= (+ 1 (inc n)) (count (e/get-window-handles *driver*))))
+         {:timeout 30
+          :interval 0.1
+          :message (format "Timeout waiting for window #%d to be created"
+                           (+ n 2))})
+        (e/when-safari *driver*
+          ;; anomaly last checked: 2025-08-09
+          ;; other drivers stay on source window and return handle for source window
+          ;; safari, navigates to target window but returns handle for source window, which confuses it
+          (let [new-handles (e/get-window-handles *driver*)
+                new-handle (first (cset/difference (set new-handles) (set old-handles)))]
+            ;; tell safari to switch to the window it is displaying
+            (e/switch-window *driver* new-handle)
+            ;; give it some time
+            (e/wait-predicate
+             (fn [] (= new-handle (e/get-window-handle *driver*)))
+             {:timeout 30
+              :interval 0.1
+              :message (format "Timeout waiting for window switch to new-handle")})
+            ;; tell safari to switch to the inital window
+            (e/switch-window *driver* init-handle)
+            ;; give it some time
+            (e/wait-predicate
+             (fn [] (= init-handle (e/get-window-handle *driver*)))
+             {:timeout 30
+              :interval 0.1
+              :message (format "Timeout waiting for window switch to init-handle")})))))
     (is (= 4 (count (e/get-window-handles *driver*))) "4 windows now exist")
     (is (= init-handle (e/get-window-handle *driver*)) "on first window")
     (dotimes [_ 3]
