@@ -153,6 +153,9 @@ jobs:
       run: bb tools-versions
 
     - name: Run Tests
+      env:
+        # default is 1min, try 4min to see if that helps with Windows http timeouts
+        ETAOIN_TIMEOUT: ${{ (matrix.os == 'windows' && '240') || '60' }}
       run: ${{ matrix.cmd }}
 
     - name: Upload test debug output
