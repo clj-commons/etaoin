@@ -5,7 +5,7 @@
         lread/status-line {:git/url "https://github.com/lread/status-line.git"
                            :sha "cf44c15f30ea3867227fa61ceb823e5e942c707f"}
         dev.nubank/docopt {:mvn/version "0.6.1-fix7"}
-        org.babashka/http-server {:mvn/version "0.1.13"}
+        org.babashka/http-server {:mvn/version "0.1.14"}
         wevre/natural-compare {:mvn/version "0.0.10"}
         io.github.babashka/neil {:git/tag "v0.3.68" :git/sha "78ffab1"}}
  :tasks
