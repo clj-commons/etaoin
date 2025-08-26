@@ -18,7 +18,7 @@ jobs:
       tests: ${{ steps.set-tests.outputs.tests }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Clojure deps cache
       uses: actions/cache@v4
@@ -32,7 +32,7 @@ jobs:
         restore-keys: cljdeps-
 
     - name: "Setup Java"
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         distribution: 'temurin'
         java-version: '11'
@@ -115,7 +115,7 @@ jobs:
         unzip edgedriver_mac64_m1.zip -d $RUNNER_TEMP/edgedriver
         echo "$RUNNER_TEMP/edgedriver" >> $GITHUB_PATH
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Restore Clojure deps from cache
       uses: actions/cache/restore@v4
@@ -139,7 +139,7 @@ jobs:
       shell: bash
 
     - name: Setup Java
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         distribution: 'temurin'
         java-version: ${{ matrix.jdk-version }}
