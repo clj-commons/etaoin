@@ -53,7 +53,7 @@
               :main-opts ["-m" "babashka.cli.exec"]}
 
   :clofidence {:classpath-overrides {org.clojure/clojure nil}
-               :extra-deps {com.github.flow-storm/clojure {:mvn/version "1.12.2"}
+               :extra-deps {com.github.flow-storm/clojure {:mvn/version "1.12.3-1"}
                             com.github.flow-storm/clofidence {:mvn/version "0.4.2"}}
                :exec-fn clofidence.main/run
                :exec-args {:report-name "Etaoin Test Coverage"
