@@ -5,8 +5,8 @@
   Why do folks need to use this directly?
   Maybe they are extending defmulti with more conversions?"
   (:require
-   [etaoin.impl.xpath :as xpath]
-   [slingshot.slingshot :refer [throw+]]))
+   [clj-commons.slingshot :refer [throw+]]
+   [etaoin.impl.xpath :as xpath]))
 
 (set! *warn-on-reflection* true)
 

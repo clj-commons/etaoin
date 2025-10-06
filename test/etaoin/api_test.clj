@@ -4,6 +4,8 @@
    [babashka.process :as p]
    [cheshire.core :as json]
    [cheshire.factory :as cheshire-factory]
+   [clj-commons.slingshot :refer [try+]]
+   [clj-commons.slingshot.test]
    [clojure.edn :as edn]
    [clojure.java.io :as io]
    [clojure.java.shell :as shell]
@@ -14,9 +16,7 @@
    [etaoin.impl.util :as util]
    [etaoin.impl.client :as client]
    [etaoin.keys :as k]
-   [etaoin.test-report :as test-report]
-   [slingshot.slingshot :refer [try+]]
-   [slingshot.test])
+   [etaoin.test-report :as test-report])
   (:import [java.net ServerSocket]))
 
 (defn numeric? [val]

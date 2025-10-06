@@ -3,11 +3,11 @@
    [babashka.http-client :as client]
    [cheshire.core :as json]
    [cheshire.factory :as cheshire-factory]
+   [clj-commons.slingshot :refer [throw+]]
    [clojure.string :as str]
    [clojure.tools.logging :as log]
    [etaoin.impl.proc :as proc]
-   [etaoin.impl.util :as util]
-   [slingshot.slingshot :refer [throw+]]))
+   [etaoin.impl.util :as util]))
 
 (set! *warn-on-reflection* true)
 
