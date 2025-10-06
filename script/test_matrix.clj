@@ -46,7 +46,7 @@
         ide-browsers ["chrome" "firefox"]
         api-browsers ["chrome" "firefox" "edge" "safari"]
         platforms ["jvm" "bb"]
-        default-opts {:jdk-version "21"}] ;; if only testing on one, test on latest LTS
+        default-opts {:jdk-version "25"}] ;; if only testing on one, test on latest LTS
     (->> (concat
            (for [os oses
                  platform platforms]
