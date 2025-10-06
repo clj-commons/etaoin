@@ -149,6 +149,7 @@
    [babashka.fs :as fs]
    [babashka.process :as p]
    [cheshire.core :as json]
+   [clj-commons.slingshot :refer [throw+ try+]]
    [clojure.java.io :as io]
    [clojure.string :as str]
    [clojure.tools.logging :as log]
@@ -158,8 +159,7 @@
    [etaoin.impl.util :as util :refer [defmethods]]
    [etaoin.impl.xpath :as xpath]
    [etaoin.keys :as k]
-   [etaoin.query :as query]
-   [slingshot.slingshot :refer [throw+ try+]])
+   [etaoin.query :as query])
   (:import
    (java.text SimpleDateFormat)
    (java.util Base64 Date)))

@@ -20,6 +20,7 @@ A release with an intentional breaking changes is marked with:
 == Unreleased
 
 * Changes
+** Migrate to org.clj-commons/slingshot
 ** Bumped deps
 ({lread})
 

@@ -1,7 +1,7 @@
 (ns ^:no-doc etaoin.impl.xpath
   "A special module to work with XPath language."
-  (:require [clojure.string :as string]
-            [slingshot.slingshot :refer [throw+]]))
+  (:require [clj-commons.slingshot :refer [throw+]]
+            [clojure.string :as string]))
 
 (set! *warn-on-reflection* true)
 
