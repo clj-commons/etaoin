@@ -18,10 +18,10 @@ jobs:
       tests: ${{ steps.set-tests.outputs.tests }}
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
 
     - name: Clojure deps cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           ~/.m2/repository
@@ -115,10 +115,10 @@ jobs:
         unzip edgedriver_mac64_m1.zip -d $RUNNER_TEMP/edgedriver
         echo "$RUNNER_TEMP/edgedriver" >> $GITHUB_PATH
 
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
 
     - name: Restore Clojure deps from cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         path: |
           ~/.m2/repository
@@ -160,7 +160,7 @@ jobs:
 
     - name: Upload test debug output
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ matrix.id }}-debug-screenshots
         path: target/debug-screenshots/*
