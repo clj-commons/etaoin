@@ -89,7 +89,7 @@
   :repl/cider
   {:extra-deps {org.clojure/clojure {:mvn/version "1.12.3"}
                 nrepl/nrepl {:mvn/version "1.4.0"}
-                cider/cider-nrepl {:mvn/version "0.57.0"}
+                cider/cider-nrepl {:mvn/version "0.58.0"}
                 refactor-nrepl/refactor-nrepl {:mvn/version "3.11.0"}}
    :jvm-opts ["-XX:-OmitStackTraceInFastThrow"]
    :main-opts  ["-m" "nrepl.cmdline"
