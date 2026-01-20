@@ -1,13 +1,13 @@
 {:min-bb-version "0.8.2"
  :paths ["script" "build"]
  :deps {doric/doric {:mvn/version "0.9.0"}
-        org.clj-commons/pretty {:mvn/version "3.6.7"}
+        org.clj-commons/pretty {:mvn/version "3.6.8"}
         lread/status-line {:git/url "https://github.com/lread/status-line.git"
-                           :sha "cf44c15f30ea3867227fa61ceb823e5e942c707f"}
+                           :sha "eace48e2e0fcc65a3986d696fb0b910fa5790a1c"}
         dev.nubank/docopt {:mvn/version "0.6.1-fix7"}
         org.babashka/http-server {:mvn/version "0.1.14"}
         wevre/natural-compare {:mvn/version "0.0.10"}
-        io.github.babashka/neil {:git/tag "v0.3.68" :git/sha "78ffab1"}}
+        io.github.babashka/neil {:git/tag "v0.3.69" :git/sha "fa79321"}}
  :tasks
  {;; setup
   :requires ([babashka.classpath :as cp]

@@ -38,7 +38,7 @@ jobs:
         java-version: '25'
 
     - name: Install Clojure Tools
-      uses: DeLaGuardo/setup-clojure@13.4
+      uses: DeLaGuardo/setup-clojure@13.5.2
       with:
         bb: 'latest'
 
@@ -100,21 +100,6 @@ jobs:
       if: ${{ matrix.os == 'ubuntu' && contains(matrix.needs, 'imagemagick') }}
       run: sudo apt-get -y install imagemagick
 
-    # No longer pre-installed on macOS github action runners
-    - name: Install Microsoft Edge on macOS
-      if: ${{ matrix.os == 'macos' && contains(matrix.needs, 'edge') }}
-      run: |
-        brew install --cask microsoft-edge
-        EDGE_VERSION=$(defaults read /Applications/Microsoft\ Edge.app/Contents/Info CFBundleShortVersionString)
-        MAJOR_VERSION=$(echo $EDGE_VERSION | cut -d'.' -f1)
-        DRIVER_VERSION=$(curl -s "https://msedgedriver.microsoft.com/LATEST_RELEASE_${MAJOR_VERSION}_MACOS" | iconv -f UTF-16LE -t UTF-8 | sed 's/^\xEF\xBB\xBF//' | tr -d '\r\n')
-        echo "Installing msedgedriver version ${DRIVER_VERSION} for Edge version ${EDGE_VERSION}"
-        DRIVER_URL="https://msedgedriver.microsoft.com/${DRIVER_VERSION}/edgedriver_mac64_m1.zip"
-        wget $DRIVER_URL
-        mkdir $RUNNER_TEMP/edgedriver
-        unzip edgedriver_mac64_m1.zip -d $RUNNER_TEMP/edgedriver
-        echo "$RUNNER_TEMP/edgedriver" >> $GITHUB_PATH
-
     - uses: actions/checkout@v6
 
     - name: Restore Clojure deps from cache
@@ -145,7 +130,7 @@ jobs:
         java-version: ${{ matrix.jdk-version }}
 
     - name: Install Clojure Tools
-      uses: DeLaGuardo/setup-clojure@13.4
+      uses: DeLaGuardo/setup-clojure@13.5.2
       with:
         bb: 'latest'
 
