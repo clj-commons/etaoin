@@ -712,7 +712,7 @@
              (fn [] (= new-handle (e/get-window-handle *driver*)))
              {:timeout 30
               :interval 0.1
-              :message (format "Timeout waiting for window switch to new-handle")})
+              :message "Timeout waiting for window switch to new-handle"})
             ;; tell safari to switch to the inital window
             (e/switch-window *driver* init-handle)
             ;; give it some time
@@ -720,7 +720,7 @@
              (fn [] (= init-handle (e/get-window-handle *driver*)))
              {:timeout 30
               :interval 0.1
-              :message (format "Timeout waiting for window switch to init-handle")})))))
+              :message "Timeout waiting for window switch to init-handle"})))))
     (is (= 4 (count (e/get-window-handles *driver*))) "4 windows now exist")
     (is (= init-handle (e/get-window-handle *driver*)) "on first window")
     (dotimes [_ 3]
