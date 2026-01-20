@@ -7,7 +7,7 @@
         dev.nubank/docopt {:mvn/version "0.6.1-fix7"}
         org.babashka/http-server {:mvn/version "0.1.14"}
         wevre/natural-compare {:mvn/version "0.0.10"}
-        io.github.babashka/neil {:git/tag "v0.3.68" :git/sha "78ffab1"}}
+        io.github.babashka/neil {:git/tag "v0.3.69" :git/sha "fa79321"}}
  :tasks
  {;; setup
   :requires ([babashka.classpath :as cp]
