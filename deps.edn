@@ -72,7 +72,7 @@
                                                :exclude-linters [:local-shadows-var]
                                                :ignored-faults {:deprecations {etaoin.api-test true}}}]}
 
-  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.11"}}
+  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.12"}}
           :extra-paths ["build"]
           :ns-default build}
 
