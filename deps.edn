@@ -1,7 +1,7 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.3"} ;; min clojure version
         babashka/fs {:mvn/version "0.5.30"}
-        babashka/process {:mvn/version "0.6.24"}
+        babashka/process {:mvn/version "0.6.25"}
         org.babashka/http-client {:mvn/version "0.4.23"}
         org.clj-commons/slingshot {:mvn/version "0.13.0"}
         cheshire/cheshire {:mvn/version "6.1.0"}
