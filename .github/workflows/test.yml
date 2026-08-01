@@ -18,7 +18,7 @@ jobs:
       tests: ${{ steps.set-tests.outputs.tests }}
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Clojure deps cache
       uses: actions/cache@v5
@@ -100,7 +100,7 @@ jobs:
       if: ${{ matrix.os == 'ubuntu' && contains(matrix.needs, 'imagemagick') }}
       run: sudo apt-get -y install imagemagick
 
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Restore Clojure deps from cache
       uses: actions/cache/restore@v5
