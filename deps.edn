@@ -82,7 +82,7 @@
 
   :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version  "2.11.1276"}
                           org.clojure/clojure {:mvn/version "1.12.3"}
-                          org.slf4j/slf4j-simple {:mvn/version "2.0.17"} ;; to rid ourselves of logger warnings
+                          org.slf4j/slf4j-simple {:mvn/version "2.0.18"} ;; to rid ourselves of logger warnings
                           }
              :main-opts ["-m" "antq.core"]}
 
