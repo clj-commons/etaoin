@@ -93,7 +93,10 @@ jobs:
     # No longer pre-installed on macOS github action runners
     - name: Install Image Magick on macOS
       if: ${{ matrix.os == 'macos' && contains(matrix.needs, 'imagemagick') }}
-      run: brew install imagemagick
+      run: |
+        # Remove pre-installed untrusted (and unused) tap
+        brew untap aws/tap || true
+        brew install imagemagick
 
     # No longer pre-install on ubuntu github action runners
     - name: Install Image Magick on ubuntu
