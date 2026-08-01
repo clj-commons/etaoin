@@ -18,10 +18,10 @@ jobs:
       tests: ${{ steps.set-tests.outputs.tests }}
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Clojure deps cache
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: |
           ~/.m2/repository
@@ -38,7 +38,7 @@ jobs:
         java-version: '25'
 
     - name: Install Clojure Tools
-      uses: DeLaGuardo/setup-clojure@13.5.2
+      uses: DeLaGuardo/setup-clojure@13.6.1
       with:
         bb: 'latest'
 
@@ -93,17 +93,20 @@ jobs:
     # No longer pre-installed on macOS github action runners
     - name: Install Image Magick on macOS
       if: ${{ matrix.os == 'macos' && contains(matrix.needs, 'imagemagick') }}
-      run: brew install imagemagick
+      run: |
+        # Remove pre-installed untrusted (and unused) tap
+        brew untap aws/tap || true
+        brew install imagemagick
 
     # No longer pre-install on ubuntu github action runners
     - name: Install Image Magick on ubuntu
       if: ${{ matrix.os == 'ubuntu' && contains(matrix.needs, 'imagemagick') }}
       run: sudo apt-get -y install imagemagick
 
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Restore Clojure deps from cache
-      uses: actions/cache/restore@v5
+      uses: actions/cache/restore@v6
       with:
         path: |
           ~/.m2/repository
@@ -130,7 +133,7 @@ jobs:
         java-version: ${{ matrix.jdk-version }}
 
     - name: Install Clojure Tools
-      uses: DeLaGuardo/setup-clojure@13.5.2
+      uses: DeLaGuardo/setup-clojure@13.6.1
       with:
         bb: 'latest'
 
@@ -145,7 +148,7 @@ jobs:
 
     - name: Upload test debug output
       if: always()
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ matrix.id }}-debug-screenshots
         path: target/debug-screenshots/*
