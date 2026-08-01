@@ -20,6 +20,8 @@ A release with an intentional breaking changes is marked with:
 == Unreleased
 
 * Changes
+** {issue}98[#98]: `etaoin.dev` now reports the HTTP status of a response.
+The status was read from the response headers, where DevTools does not put it, so the `[:response :status]` of every request returned by `get-requests`/`get-ajax`/`logs->requests` was always `nil`.
 ** Migrate to org.clj-commons/slingshot
 ** Bumped deps
 ({lread})

@@ -8,10 +8,15 @@
 (set! *warn-on-reflection* true)
 
 (defn- try-parse-int
-  [line]
-  (try (Integer/parseInt line)
-       (catch Exception _e
-         line)))
+  "Return `v` as an int when it is a string that parses as one, else `v` unchanged.
+
+  DevTools reports the response status as a number, but we stay lenient about it."
+  [v]
+  (if (string? v)
+    (try (Integer/parseInt v)
+         (catch Exception _e
+           v))
+    v))
 
 (defn- parse-json
   [string]
@@ -81,9 +86,8 @@
                          :headers headers}))
 
       :network/responsereceived
-      (let [{:keys [response]}                         params
-            {:keys [headers mimeType remoteIPAddress]} response
-            {:keys [status]}                           headers]
+      (let [{:keys [response]}                                params
+            {:keys [status headers mimeType remoteIPAddress]} response]
         (assoc acc
                :state 2
                :response {:status    (try-parse-int status)
