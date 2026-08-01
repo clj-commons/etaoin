@@ -51,6 +51,8 @@
     (is (= :etaoin/file (:type exd)))
     (testing "the message still names the file"
       (is (str/includes? (:message exd) "file-xyz.txt")))
+    (testing "the path is available as data, not only prose in the message"
+      (is (str/ends-with? (:path exd) "file-xyz.txt")))
     (testing "the driver is still identifiable"
       (is (= :safari (-> exd :driver :type))))
     (testing "no secret survives anywhere in ex-data"

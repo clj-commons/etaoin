@@ -2957,6 +2957,7 @@
       (fill driver q path)
       (throw+ {:type    :etaoin/file
                :message message
+               :path    path
                :driver  (util/driver-for-report driver)}))))
 
 ;;

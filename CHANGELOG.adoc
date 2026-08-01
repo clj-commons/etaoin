@@ -23,6 +23,8 @@ A release with an intentional breaking changes is marked with:
 ** The exceptions thrown by `upload-file` (when the file does not exist) and `print-page` (when the driver does not support it) no longer carry credentials.
 Both attached the whole driver map to their ex-data, including `:capabilities` -- which the user guide tells you to put provider tokens and proxy credentials in -- and an unredacted `:webdriver-url`.
 They now attach a driver map with `:capabilities` and `:env` dropped and any credentials stripped from `:webdriver-url`; the driver remains identifiable by `:type`, `:host` and `:port`.
+** `upload-file` now includes the offending `:path` in the ex-data of the `:etaoin/file` exception it throws.
+Previously the path was only available as prose in `:message`.
 ** Migrate to org.clj-commons/slingshot
 ** Bumped deps
 ({lread})
