@@ -20,6 +20,13 @@ A release with an intentional breaking changes is marked with:
 == Unreleased
 
 * Changes
+** {issue}716[#716]: The exceptions thrown by `upload-file` (when the file does not exist) and `print-page` (when the driver does not support it) no longer carry credentials.
+Both attached the whole driver map to their ex-data, including `:capabilities` -- which the user guide tells you to put provider tokens and proxy credentials in -- and an unredacted `:webdriver-url`.
+They now attach a driver map with `:capabilities` and `:env` dropped and any credentials stripped from `:webdriver-url`; the driver remains identifiable by `:type`, `:host` and `:port`.
+({person}andriytyurnikov[@andriytyurnikov])
+** {pr}717[#717]: `upload-file` now includes the offending `:path` in the ex-data of the `:etaoin/file` exception it throws.
+Previously the path was only available as prose in `:message`.
+({person}andriytyurnikov[@andriytyurnikov])
 ** {pr}721[#721]: `wait-predicate`, and therefore every `wait-*` fn, now measures its `:timeout` against real elapsed time.
 It previously subtracted `:interval` once per attempt and never accounted for time spent inside the predicate, so the real limit was the requested one plus the total time spent in the predicate.
 How far over depends on how slow the predicate is relative to `:interval`. A `wait-visible` against a local driver at default settings overshot by about 8%; a predicate taking 200ms against `{:timeout 1 :interval 0.05}` ran 5136ms instead of 1000ms.
