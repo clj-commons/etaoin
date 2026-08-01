@@ -2450,6 +2450,14 @@
   ([seconds]
    (Thread/sleep (long (* seconds 1000)))))
 
+(defn- monotonic-ms
+  "Milliseconds from an arbitrary origin, for measuring elapsed time.
+
+  Monotonic, so unlike wall-clock time it cannot jump backwards when the system
+  clock is adjusted mid-wait."
+  []
+  (quot (System/nanoTime) 1000000))
+
 (defmacro with-wait
   "Execute `body` waiting `seconds` before each form.
 
@@ -2467,9 +2475,9 @@
      ~@(interleave (repeat `(wait ~seconds)) body)))
 
 (defn wait-predicate
-  "Wakes up every `:interval` seconds to call `pred`.
-  Keeps this up until either `pred` returns truthy or `:timeout` has elapsed.
-  When `:timeout` has elapsed a slingshot exception is throws with `:message`.
+  "Calls `pred` repeatedly until it returns truthy or `:timeout` elapses,
+  sleeping `:interval` seconds between calls.
+  When `:timeout` elapses a slingshot exception is thrown with `:message`.
 
   Arguments:
 
@@ -2477,32 +2485,42 @@
   - `opts`: a map of optional parameters:
     - `:timeout` wait limit in seconds, [[*wait-timeout*]] by default;
     - `:interval` how long to wait between calls, [[*wait-interval*]] by default;
-    - `:message` a message that becomes a part of exception when timeout is reached."
+    - `:message` a message that becomes a part of exception when timeout is reached.
+
+  `:timeout` is real elapsed time, so it includes time spent inside `pred`
+  itself. A `pred` that talks to the WebDriver spends at least a round trip per
+  call, which can dominate `:interval`. The timeout is only checked between
+  calls; it never interrupts a `pred` that is already running.
+
+  `pred` is always called at least once, whatever `:timeout` is.
+
+  The thrown exception carries `:elapsed-ms`, the time actually spent waiting,
+  and `:times`, the number of calls made to `pred`."
 
   ([pred]
    (wait-predicate pred {}))
   ([pred opts]
-   (let [timeout   (get opts :timeout *wait-timeout*) ;; refactor this (call for java millisec)
-         time-rest (get opts :time-rest timeout)
-         interval  (get opts :interval *wait-interval*)
-         times     (get opts :times 0)
-         message   (get opts :message)]
-     (when (< time-rest 0)
-       (throw+ {:type      :etaoin/timeout
-                :message   message
-                :timeout   timeout
-                :interval  interval
-                :times     times
-                :predicate pred}))
-     (let [res (with-http-error
-                 (pred))]
-       (or res
-           (do
-             (wait interval)
-             (recur pred (assoc
-                           opts
-                           :time-rest (- time-rest interval)
-                           :times (inc times)))))))))
+   (let [timeout  (get opts :timeout *wait-timeout*)
+         interval (get opts :interval *wait-interval*)
+         message  (get opts :message)
+         start    (monotonic-ms)
+         deadline (+ start (long (* 1000 timeout)))]
+     (loop [times 0]
+       (or (with-http-error
+             (pred))
+           (let [times (inc times)
+                 now   (monotonic-ms)]
+             (if (<= deadline now)
+               (throw+ {:type       :etaoin/timeout
+                        :message    message
+                        :timeout    timeout
+                        :interval   interval
+                        :times      times
+                        :elapsed-ms (- now start)
+                        :predicate  pred})
+               (do
+                 (wait interval)
+                 (recur times)))))))))
 
 (defn wait-exists
   "Waits until `driver` finds element [[exists?]] via `q`.
