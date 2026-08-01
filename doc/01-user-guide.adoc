@@ -300,11 +300,11 @@ endif::[]
                                                        (e/query-from driver row {:tag :th})))]
         :when (= "Family" header-col-text)]
     (e/get-element-text-el driver (e/query-from driver row {:tag :td}))))
-;; => ("Lisp")
+;; => ("JVM-hosted; Lisp")
 
 ;; Etaoin gives you many options; we can do the same-ish in one swoop in XPath:
 (e/get-element-text driver "//table[@class='infobox vevent']/tbody/tr/th[text()='Family']/../td")
-;; => "Lisp"
+;; => "JVM-hosted; Lisp"
 
 ;; When we are done, we quit, which stops the Firefox WebDriver
 (e/quit driver) ;; the Firefox Window should close
