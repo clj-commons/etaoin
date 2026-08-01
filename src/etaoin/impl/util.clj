@@ -77,6 +77,24 @@
       (dissoc :user :password)
       uri/uri-str))
 
+(def ^:private credential-bearing-driver-keys
+  "Driver map keys that can hold secrets.
+
+  `:capabilities` is where the user guide tells folks to put provider tokens and
+  proxy credentials, and `:env` is arbitrary user-supplied environment."
+  [:capabilities :env])
+
+(defn driver-for-report
+  "Return `driver` with anything that can hold credentials dropped or masked.
+
+  Use when attaching a driver map to an exception, since ex-data routinely ends up
+  in test runner and CI output. A `:webdriver-url` is kept, minus any credentials
+  embedded in it, because knowing which endpoint you were talking to is the whole
+  point of including the driver."
+  [driver]
+  (cond-> (apply dissoc driver credential-bearing-driver-keys)
+    (:webdriver-url driver) (update :webdriver-url strip-url-creds)))
+
 (defn assoc-some
   "Associates a key with a value in a map, if and only if the value is
   not nil. From medley."

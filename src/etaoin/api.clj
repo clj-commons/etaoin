@@ -2957,7 +2957,7 @@
       (fill driver q path)
       (throw+ {:type    :etaoin/file
                :message message
-               :driver  driver}))))
+               :driver  (util/driver-for-report driver)}))))
 
 ;;
 ;; submit
@@ -3156,7 +3156,7 @@
   [driver _file & [_opts]]
   (throw+ {:type :etaoin/unsupported
            :message "This driver doesn't support printing pages to PDF."
-           :driver driver}))
+           :driver (util/driver-for-report driver)}))
 
 (defmethods print-page
   [:chrome :edge :firefox]
