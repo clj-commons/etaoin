@@ -13,19 +13,31 @@
 (def valid-browsers ["chrome" "firefox" "edge" "safari"])
 (def valid-suites ["api" "ide" "unit"])
 
+(defn- one-of
+  "Return a `:validate` `:pred` accepting any of `valid`.
+
+  Takes a single value or a collection of them, because babashka.cli has handed
+  repeatable option values to a pred both ways."
+  [valid]
+  (let [valid? (set valid)]
+    (fn [v]
+      (if (coll? v)
+        (every? valid? v)
+        (boolean (valid? v))))))
+
 (def cli-spec {:help {:desc "This usage help" :alias :h}
                :browsers {:ref "<name>"
                           :desc (str "Browsers to test against: " (str-coll valid-browsers))
                           :coerce []
                           :alias :b
-                          :validate {:pred #(every? (set valid-browsers) %)
+                          :validate {:pred (one-of valid-browsers)
                                      :ex-msg (fn [_m]
                                                (str "--browsers must specify from: " valid-browsers))}}
                :suites {:ref "<id>"
                         :desc (str "Suites to run: " (str-coll valid-suites))
                         :coerce []
                         :alias :s
-                        :validate {:pred #(every? (set valid-suites) %)
+                        :validate {:pred (one-of valid-suites)
                                    :ex-msg (fn [_m]
                                              (str "--suites must specify from: " valid-suites))}}
                :launch-virtual-display {:desc "Launch virtual display support for browsers (linux)"
