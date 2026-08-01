@@ -78,7 +78,7 @@
 
   ;; keep deploy deps separate from build deps to avoid download-deps issues
   ;; caused by, I think, conflicting maven deps
-  :deploy {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.2"}}}
+  :deploy {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.5"}}}
 
   :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version  "2.11.1276"}
                           org.clojure/clojure {:mvn/version "1.12.3"}
