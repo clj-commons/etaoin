@@ -24,7 +24,7 @@
                       org.babashka/cli {:mvn/version "0.12.85"}
                       ch.qos.logback/logback-classic {:mvn/version "1.5.25"}
                       ;; for http-client which uses apache http client 4.x which uses commons logging
-                      org.slf4j/jcl-over-slf4j {:mvn/version "2.0.17"}}
+                      org.slf4j/jcl-over-slf4j {:mvn/version "2.0.18"}}
          :exec-fn test-shared/test
          :org.babashka/cli {:coerce {:nses [:symbol]
                                      :patterns [:string]
