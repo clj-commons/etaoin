@@ -35,8 +35,13 @@
                 <input id="simple-input" name="login" type="text"><br>
                 <label>Password</label>
                 <!-- name=password causes masking in github actions output, name=passphrase does not -->
+                <!-- autocomplete=new-password stops Safari treating this as a saved-credential
+                     login form. Safari ignores autocomplete=off on password forms, and its
+                     AutoFill then moves focus on its own a few hundred ms after page load,
+                     stealing keystrokes from whichever field a test is filling. -->
                 <input id="simple-password"
-                       name="passphrase" type="password"><br>
+                       name="passphrase" type="password"
+                       autocomplete="new-password"><br>
                 <label>Message</label>
                 <textarea id="simple-textarea"
                           name="message"></textarea><br>
