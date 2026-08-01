@@ -19,7 +19,7 @@ jobs:
       uses: actions/checkout@v7
 
     - name: Restore Clojure deps from cache
-      uses: actions/cache/restore@v5
+      uses: actions/cache/restore@v6
       with:
         path: |
           ~/.m2/repository
