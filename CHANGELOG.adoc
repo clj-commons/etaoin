@@ -20,7 +20,7 @@ A release with an intentional breaking changes is marked with:
 == Unreleased
 
 * Changes
-** `wait-predicate`, and therefore every `wait-*` fn, now measures its `:timeout` against real elapsed time.
+** {pr}721[#721]: `wait-predicate`, and therefore every `wait-*` fn, now measures its `:timeout` against real elapsed time.
 It previously subtracted `:interval` once per attempt and never accounted for time spent inside the predicate, so the real limit was the requested one plus the total time spent in the predicate.
 How far over depends on how slow the predicate is relative to `:interval`. A `wait-visible` against a local driver at default settings overshot by about 8%; a predicate taking 200ms against `{:timeout 1 :interval 0.05}` ran 5136ms instead of 1000ms.
 It matters most where a round trip rivals the interval: remote drivers, and the `{:timeout 30 :interval 0.100}` readiness poll used while connecting to a driver.
@@ -31,6 +31,10 @@ The thrown `:etaoin/timeout` map gains `:elapsed-ms`. `:times` is unchanged in m
 +
 The predicate is now always called at least once, whatever the `:timeout`.
 The undocumented `:time-rest` and `:times` opts were internal recursion state and are now ignored as inputs.
+({person}andriytyurnikov[@andriytyurnikov])
+** {issue}98[#98]: `etaoin.dev` now reports the HTTP status of a response.
+The status was read from the response headers, where DevTools does not put it, so the `[:response :status]` of every request returned by `get-requests`/`get-ajax`/`logs->requests` was always `nil`.
+({person}andriytyurnikov[@andriytyurnikov])
 ** Migrate to org.clj-commons/slingshot
 ** Bumped deps
 ({lread})
