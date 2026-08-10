@@ -518,12 +518,14 @@
                        {:timeout 1})
       (is false "should not be executed")
       (catch [:type :etaoin/timeout] data
-        (is (= (-> data (dissoc :predicate :time-rest))
+        (is (= (-> data (dissoc :predicate :times :elapsed-ms))
                {:type     :etaoin/timeout
                 :message  "Wait until :wait-span element has text -secret-"
                 :timeout  1
-                :interval 0.33
-                :times    4})))))
+                :interval 0.33}))
+        ;; :times is bounded by real elapsed time now, so how many calls
+        ;; fit depends on how long each one takes
+        (is (pos-int? (:times data))))))
   (testing "wait for non-existing text"
     (doto *driver*
       (e/refresh)
@@ -535,12 +537,14 @@
                        {:timeout 2})
       (is false "should not be executed")
       (catch [:type :etaoin/timeout] data
-        (is (= (-> data (dissoc :predicate :time-rest))
+        (is (= (-> data (dissoc :predicate :times :elapsed-ms))
                {:type     :etaoin/timeout
                 :message  "Wait until :wait-span element has text -dunno-whatever-foo-bar-"
                 :timeout  2
-                :interval 0.33
-                :times    7}))))))
+                :interval 0.33}))
+        ;; :times is bounded by real elapsed time now, so how many calls
+        ;; fit depends on how long each one takes
+        (is (pos-int? (:times data)))))))
 
 (deftest test-wait-has-text-everywhere
   (testing "wait for text simple"
@@ -560,12 +564,14 @@
                                   {:timeout 1})
       (is false "should not be executed")
       (catch [:type :etaoin/timeout] data
-        (is (= (-> data (dissoc :predicate :time-rest))
+        (is (= (-> data (dissoc :predicate :times :elapsed-ms))
                {:type     :etaoin/timeout
                 :message  "Wait until {:xpath \"*\"} element has text -secret-"
                 :timeout  1
-                :interval 0.33
-                :times    4})))))
+                :interval 0.33}))
+        ;; :times is bounded by real elapsed time now, so how many calls
+        ;; fit depends on how long each one takes
+        (is (pos-int? (:times data))))))
   (testing "wait for non-existing text"
     (doto *driver*
       (e/refresh)
@@ -576,12 +582,14 @@
                                   {:timeout 2})
       (is false "should not be executed")
       (catch [:type :etaoin/timeout] data
-        (is (= (-> data (dissoc :predicate :time-rest))
+        (is (= (-> data (dissoc :predicate :times :elapsed-ms))
                {:type     :etaoin/timeout
                 :message  "Wait until {:xpath \"*\"} element has text -dunno-whatever-foo-bar-"
                 :timeout  2
-                :interval 0.33
-                :times    7}))))))
+                :interval 0.33}))
+        ;; :times is bounded by real elapsed time now, so how many calls
+        ;; fit depends on how long each one takes
+        (is (pos-int? (:times data)))))))
 
 (deftest test-wait-has-class
   (testing "wait for an element has class"

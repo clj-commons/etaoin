@@ -1940,7 +1940,7 @@ The results will be different when you try this, but here's what I experienced:
 ;;       :User-Agent
 ;;       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.61 Safari/537.36"}},
 ;;     :response
-;;     {:status nil,
+;;     {:status 200,
 ;;      :headers
 ;;      {:date "Sat, 04 Jun 2022 00:11:36 GMT",
 ;;       :x-xss-protection "0",
@@ -2004,7 +2004,7 @@ Since we're mostly interested in AJAX requests, there is a function `get-ajax` t
 ;;    :User-Agent
 ;;    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.61 Safari/537.36"}},
 ;;  :response
-;;  {:status nil,
+;;  {:status 200,
 ;;   :headers
 ;;   {:bfcache-opt-in "unload",
 ;;    :date "Sat, 04 Jun 2022 04:10:35 GMT",
@@ -2126,7 +2126,7 @@ Unlike `get-requests` and `get-ajax`, they are pure functions and won't flush an
 ;;       :User-Agent
 ;;       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.61 Safari/537.36"}},
 ;;     :response
-;;     {:status nil,
+;;     {:status 204,
 ;;      :headers
 ;;      {:alt-svc
 ;;       "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000,h3-Q050=\":443\"; ma=2592000,h3-Q046=\":443\"; ma=2592000,h3-Q043=\":443\"; ma=2592000,quic=\":443\"; ma=2592000; v=\"46,43\"",
