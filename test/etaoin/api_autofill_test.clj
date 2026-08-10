@@ -23,10 +23,16 @@
 (def ^:private fixtures
   "Pages differ only in where the password field sits. `:keeps-focus` is what each
   browser does. Safari classifies a password next to a text input as a login form;
-  proximity is the trigger, not form membership."
+  proximity is the trigger, not form membership.
+
+  `::machine-dependent` marks an outcome that is not a property of the browser build,
+  so it is observed rather than asserted."
   [{:page        "autofill-off.html"
     :markup      "in form, next to username, autocomplete=off"
-    :keeps-focus {:safari false, :chrome true, :firefox true, :edge true}}
+    ;; Safari steals focus here only when AutoFill "Usernames and passwords" is on:
+    ;; switch it off and the steal stops. That is a setting of the machine, so it
+    ;; cannot be asserted in CI. test.html uses new-password because of it.
+    :keeps-focus {:safari ::machine-dependent, :chrome true, :firefox true, :edge true}}
    {:page        "autofill-distant-password.html"
     :markup      "in form, after submit button, autocomplete=off"
     :keeps-focus {:safari true, :chrome true, :firefox true, :edge true}}
@@ -60,26 +66,21 @@
       (do (Thread/sleep (long autofill-window-ms))
           (active-id driver)))))
 
-(deftest autofill-moves-focus-only-on-safari-and-only-next-to-a-username
-  (doseq [{:keys [page markup keeps-focus]} fixtures]
-    (testing markup
-      (let [browser (e/driver-type api-test/*driver*)
-            keeps?  (get keeps-focus browser ::unknown)
-            landed  (focus-then-wait api-test/*driver* page)]
-        (cond
-          (= ::unknown keeps?)
-          (is false (format "%s: no recorded behaviour for %s, landed on %s"
-                            (name browser) page landed))
-
-          keeps?
-          (is (= "af-pass" landed)
-              (format "%s should keep focus with %s but moved it to %s; fill-active now types into the wrong element"
-                      (name browser) markup landed))
-
-          :else
-          (is (= "af-user" landed)
-              (format "%s should ignore autocomplete=off and pull focus to the username field, but focus stayed on %s; if fixed, test.html no longer needs new-password"
-                      (name browser) landed)))))))
+(deftest autofill-leaves-focus-alone
+  (let [browser (e/driver-type api-test/*driver*)]
+    (doseq [{:keys [page markup keeps-focus]} fixtures]
+      (testing markup
+        (let [keeps? (get keeps-focus browser ::unknown)]
+          (if (= ::machine-dependent keeps?)
+            (println (format "  (not asserted: %s on %s depends on this machine's AutoFill settings)"
+                             (name browser) page))
+            (let [landed (focus-then-wait api-test/*driver* page)]
+              (if (= ::unknown keeps?)
+                (is false (format "%s: no recorded behaviour for %s, landed on %s"
+                                  (name browser) page landed))
+                (is (= "af-pass" landed)
+                    (format "%s should keep focus with %s but moved it to %s; fill-active now types into the wrong element"
+                            (name browser) markup landed))))))))))
 
 (deftest automation-clicks-count-as-genuine-user-activation
   (testing "a WebDriver click is user-initiated as far as the browser is concerned"
