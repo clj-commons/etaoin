@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>AutoFill fixture - autocomplete=off</title>
+    </head>
+    <body>
+        <!-- Login-shaped form declaring autocomplete=off, which Safari ignores on
+             password forms: reproduces the AutoFill focus steal. -->
+        <form id="af-form" autocomplete="off" method="GET">
+            <input id="af-user" name="login" type="text"><br>
+            <input id="af-pass" name="passphrase" type="password" autocomplete="off"><br>
+            <textarea id="af-text" name="message"></textarea><br>
+            <input id="af-submit" type="submit" value="Send"><br>
+        </form>
+        <h3 id="af-end">Document end</h3>
+    </body>
+</html>

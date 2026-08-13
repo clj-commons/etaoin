@@ -147,6 +147,18 @@
   (e/go driver (test-server-url "test.html"))
   (e/wait-visible driver {:id :document-end}))
 
+(defn is-active
+  "Assert that `driver` has element `q` focused.
+
+  `fill-active` fills whatever element happens to be focused, so a test that
+  clicks a field and then fills it is relying on the browser to leave focus
+  where it was put. State that dependency here, so a browser that moves focus
+  on its own fails on this assertion instead of on a corrupted field value
+  several steps later."
+  [driver q]
+  (is (= (e/query driver q) (e/get-active-element driver))
+      (format "%s should be the active element" q)))
+
 (defmacro wait-url-change
   "Snapshots the URL in the browser that exists before the `trigger` is
   executed, then executes `trigger`, and then waits for the URL to
@@ -285,10 +297,13 @@
   (testing "fill active"
     (reload-test-page *driver*)
     (e/click *driver* :simple-input)
+    (is-active *driver* :simple-input)
     (e/fill-active *driver* "MyLogin")
     (e/click *driver* :simple-password)
+    (is-active *driver* :simple-password)
     (e/fill-active *driver* "MyPassword")
     (e/click *driver* :simple-textarea)
+    (is-active *driver* :simple-textarea)
     (e/fill-active *driver* "Some text")
     (wait-url-change *driver* #"login" (e/click *driver* :simple-submit))
     (is (str/ends-with? (e/get-url *driver*)
@@ -296,10 +311,13 @@
   (testing "fill active human"
     (reload-test-page *driver*)
     (e/click *driver* :simple-input)
+    (is-active *driver* :simple-input)
     (e/fill-human-active *driver* "MyLogin2")
     (e/click *driver* :simple-password)
+    (is-active *driver* :simple-password)
     (e/fill-human-active *driver* "MyPassword2")
     (e/click *driver* :simple-textarea)
+    (is-active *driver* :simple-textarea)
     (e/fill-human-active *driver* "Some text 2")
     (wait-url-change *driver* #"login" (e/click *driver* :simple-submit))
     (is (str/ends-with? (e/get-url *driver*)
